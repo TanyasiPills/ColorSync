@@ -1,2 +1,2 @@
 # ColorSync
-Broup broject by bhe bros
+select the branch of your platform to continue
