@@ -5,10 +5,14 @@ import App from './App.tsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { NavBar } from './components/Navbar_components.tsx';
 import WebGLCanvas from './pages/webgl/WebGLCanvas.tsx';
+import Home from './pages/Home.tsx';
 
 const router = createBrowserRouter([
-  {path: "/", element: <App/>},
+  {path: "/", element: <Home/>},
   {path: "/Draw", element: <WebGLCanvas/>},
+  {path: "/Download", element: <App />},
+  {path: "/SignIn", element: <App />},
+  {path: "/SignUp", element: <App />},
 ]);
 
 createRoot(document.getElementById('root')!).render(

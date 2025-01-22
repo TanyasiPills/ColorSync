@@ -3,8 +3,6 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 
 function App() {
-
-  console.log("itt van")
   return (
     <>
       <h1>Work in progress</h1>
