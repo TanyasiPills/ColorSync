@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Client Test</title>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    function connect() {
+      const token = document.getElementById("token").value;
+      const name = document.getElementById("name").value;
+      const password = document.getElementById("password").value;
+      const create = document.getElementById("create").checked;
+
+      const socket = io('http://localhost:3000', {
+        auth: {
+          token: token,
+          password: password
+        },
+        query: {
+          name: name,
+          create: create
+        }
+      });
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server!');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from WebSocket server');
+      });
+
+      socket.on('message', (data) => {
+        console.log('Received message:', data);
+      });
+
+      socket.on('error', (error) => {
+        console.error('Error:', error.message);
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <form onsubmit="connect(); return false;">
+    <label for="name">Room name:</label>
+    <input type="text" name="name" id="name">
+    <br>
+    <label for="password">Password:</label>
+    <input type="text" name="password" id="password">
+    <br>
+    <label for="create">Create:</label>
+    <input type="checkbox" name="create" id="create">
+    <br>
+    <label for="token">Token:</label>
+    <input type="text" name="token" id="token">
+    <br>
+    <input type="submit" value="Connect">
+  </form>
+</body>
+
+</html>

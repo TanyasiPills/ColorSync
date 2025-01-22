@@ -8,22 +8,76 @@ import {
 } from "@nestjs/websockets";
 
 import { Server, Socket } from "socket.io";
+import { AuthService } from "src/auth/auth.service";
+import { Room } from "./room";
+import { Client } from "./client";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 
 export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  constructor (private readonly authService: AuthService) {}
   private readonly logger = new Logger(DrawingWS.name);
   //private rooms: Map<string, {password: string | null, history: Map<string, {history: { action: string, data: string }[], undo: { action: string, data: string }[]}>}> = new Map();
+  private rooms: Room[] = [];
 
   @WebSocketServer() server: Server;
 
   afterInit() {
     this.logger.log("Initialized");
+    Room.init(this.server);
   }
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client id: ${client.id} connected`);
+  async handleConnection(socket: Socket) {
+    const token = socket.handshake.auth.token;
+    const password = socket.handshake.auth.password;
+    let name = socket.handshake.query.name;
+
+    if (!name) {
+      socket.emit('error', {message: 'Name is required!'});
+      socket.disconnect();
+      return;
+    }
+    if (Array.isArray(name)) name = name[0];
+
+    if (!token) {
+      socket.emit('error', {message: 'Token is required!'});
+      socket.disconnect();
+      return;
+    } 
+    const user = await this.authService.validateToken(token);
+    if (!user) {
+      socket.emit('error', {message: 'Invalid token!'});
+      socket.disconnect();
+      return;
+    }
+
+    const client = new Client(user, socket)
+    const create = socket.handshake.query.create;
+    if (create && create === 'true') {
+      let maxClientsQuery = socket.handshake.query.maxClients;
+      let maxClients = 4;
+      if (maxClientsQuery) {
+        try {
+          if (Array.isArray(maxClientsQuery)) maxClientsQuery = maxClientsQuery[0]; 
+          maxClients = parseInt(maxClientsQuery);
+        } catch {}
+      }
+      this.rooms.push(new Room(name, password, Math.min(maxClients, 10), client));
+    } else {
+      const room = this.rooms.find(room => room.getName() === name);
+      if (!room) {
+        socket.emit('error', {message: 'Room not found!'});
+        socket.disconnect();
+        return;
+      }
+      if (!room.connect(client, password)) {
+        socket.disconnect();
+        return;
+      }
+    }
+    
+    this.logger.log(`Connected client id: ${socket.id}\nroom: ${name}\ntoken: ${token}\npassword: ${password}`);
   }
 
   handleDisconnect(client: any) {
