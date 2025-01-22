@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
 
-export function Register() {
+export function SignUp() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +32,7 @@ export function Register() {
 
       if (!res.ok) {
         const errorData = await res.json(); 
-        setError(errorData.message || 'Failed to register');
+        setError(errorData.message || 'Failed to Sign Up');
         setIsSubmitting(false);
         return;
       }
@@ -59,7 +59,7 @@ export function Register() {
       <Row className="w-100">
         <Col md={6} lg={4} className="mx-auto">
           <div className="text-center mb-4">
-            <h2>Register</h2>
+            <h2>Sign Up</h2>
             <p className="text-muted">Create a new account</p>
           </div>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -111,7 +111,7 @@ export function Register() {
               {error && <Form.Text className="text-danger">{error}</Form.Text>}
             </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
+            <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
               {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Submit'}
             </Button>
           </Form>

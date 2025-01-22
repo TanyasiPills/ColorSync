@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Form, Button, Alert, Spinner, Container, Row, Col } from 'react-bootstrap';
 import { redirect } from 'react-router-dom';
 
-export function Login() {
+export function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +26,7 @@ export function Login() {
       <Row className="w-100">
         <Col md={6} lg={4} className="mx-auto">
           <div className="text-center mb-4">
-            <h2>Login</h2>
+            <h2>Sign in</h2>
             <p className="text-muted">Please enter your credentials to log in</p>
           </div>
           {error && <Alert variant="danger">{error}</Alert>}
@@ -56,7 +56,7 @@ export function Login() {
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
+            <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
               {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Login'}
             </Button>
           </Form>
