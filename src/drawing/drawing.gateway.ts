@@ -18,8 +18,9 @@ export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor (private readonly authService: AuthService) {}
   private readonly logger = new Logger(DrawingWS.name);
-  //private rooms: Map<string, {password: string | null, history: Map<string, {history: { action: string, data: string }[], undo: { action: string, data: string }[]}>}> = new Map();
   private rooms: Room[] = [];
+  private connections: Map<Client, Room> = new Map<Client, Room>;
+  private clients: Map<string, Client> = new Map<string, Client>;
 
   @WebSocketServer() server: Server;
 
@@ -52,8 +53,9 @@ export class DrawingWS
       return;
     }
 
-    const client = new Client(user, socket)
+    const client = new Client(user, socket);
     const create = socket.handshake.query.create;
+    let room: Room;
     if (create && create === 'true') {
       let maxClientsQuery = socket.handshake.query.maxClients;
       let maxClients = 4;
@@ -63,9 +65,10 @@ export class DrawingWS
           maxClients = parseInt(maxClientsQuery);
         } catch {}
       }
-      this.rooms.push(new Room(name, password, Math.min(maxClients, 10), client));
+      room = new Room(name, password, Math.min(maxClients, 10), client);
+      this.rooms.push(room);
     } else {
-      const room = this.rooms.find(room => room.getName() === name);
+      room = this.rooms.find(room => room.getName() === name);
       if (!room) {
         socket.emit('error', {message: 'Room not found!'});
         socket.disconnect();
@@ -77,11 +80,16 @@ export class DrawingWS
       }
     }
     
+    this.connections.set(client, room);
+    this.clients.set(socket.id, client);
     this.logger.log(`Connected client id: ${socket.id}\nroom: ${name}\ntoken: ${token}\npassword: ${password}`);
   }
 
-  handleDisconnect(client: any) {
-    this.logger.log(`Cliend id: ${client.id} disconnected`);
+  handleDisconnect(socket: Socket) {
+    const client = this.clients.get(socket.id);
+    const room = this.connections.get(client);
+    if (room) room.disconnect(client);
+    this.logger.log(`Cliend id: ${client.getUsername()} disconnected`);
   }
 
   /*
