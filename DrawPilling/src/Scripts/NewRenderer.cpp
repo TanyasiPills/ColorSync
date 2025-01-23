@@ -162,6 +162,53 @@ void NewRenderer::RenderCursor()
 
 }
 
+void DockSpaces() 
+{
+	/*
+	// Get the main viewport
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+	// Create a dockspace over a limited area instead of the whole screen
+	ImGui::SetNextWindowPos(viewport->Pos);                              // Align with the viewport's top-left
+	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, viewport->Size.y)); // Use viewport's size
+
+	ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background if desired
+
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoBringToFrontOnFocus |
+		ImGuiWindowFlags_NoNavFocus |
+		ImGuiWindowFlags_NoDocking;
+
+	// Parent dock space window
+	ImGui::Begin("DockSpaceWindow", nullptr, windowFlags);
+	ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+
+	// Configure the dock layout
+	ImGuiID dockspaceID = ImGui::GetID("MyDockspace");
+	ImGui::DockSpace
+	ImGui::DockBuilderRemoveNode(dockspaceID); // Reset layout
+	ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
+	ImGui::DockBuilderSetNodeSize(dockspaceID, ImVec2(viewport->Size.x, viewport->Size.y));
+
+	// Split dock into left and right regions
+	ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.3f, nullptr, &dockspaceID);
+	ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.7f, nullptr, &dockspaceID);
+
+	// Assign windows to dock regions
+	ImGui::DockBuilderDockWindow("LeftPanel", dockLeft);
+	ImGui::DockBuilderDockWindow("RightPanel", dockRight);
+
+	// Finalize the dock layout
+	ImGui::DockBuilderFinish(dockspaceID);
+
+	ImGui::End();
+	*/
+}
+
+
 void RenderImGui()
 {
 	ImGui_ImplOpenGL3_NewFrame();
