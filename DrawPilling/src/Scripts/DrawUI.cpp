@@ -10,7 +10,9 @@ ImVec2 BrushWindowPos(0, 450);
 ImVec2 ServerWindowSize(100, 200);
 ImVec2 ServerWindowPos;
 ImVec2 LayerWindowSize(100, 200);
-ImVec2 LayerWindowPos(100, 200);
+ImVec2 LayerWindowPos(0, 200);
+ImVec2 ChatWindowSize(100, 200);
+ImVec2 ChatWindowPos(0, 450);
 int leftSize = 200;
 int rightSize = 200;
 
@@ -110,12 +112,36 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 void DrawUI::ServerWindow() 
 {
-	ImGui::SetNextWindowPos(ImVec2(windowSizeY-rightSize, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX-rightSize, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar);
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
+	ImGui::End();
+}
+
+void DrawUI::LayerWindow()
+{
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
+
+	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar);
+	LayerWindowSize = ImGui::GetWindowSize();
+	rightSize = LayerWindowSize.x;
+	LayerWindowPos = ImGui::GetWindowPos();
+	ImGui::End();
+}
+
+void DrawUI::ChatWindow()
+{
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
+
+	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ChatWindowSize = ImGui::GetWindowSize();
+	rightSize = ChatWindowSize.x;
+	ChatWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
 }

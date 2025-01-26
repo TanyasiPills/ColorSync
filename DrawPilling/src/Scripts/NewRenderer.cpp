@@ -182,6 +182,9 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius);
 	DrawUI::BrushWindow(window);
+	DrawUI::ServerWindow();
+	DrawUI::LayerWindow();
+	DrawUI::ChatWindow();
 
 	if (ImGui::GetMouseCursor() == ImGuiMouseCursor_ResizeNWSE)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
