@@ -24,8 +24,9 @@ bool GLLogCall(const char* function, const char* file, int line) {
 GLFWwindow* window;
 std::vector<RenderData> layers;
 RenderData cursor;
+
 float cursorRadius = 0.01;
-float initialCanvasRatio[2] = { 1,1 };
+float initialCanvasRatio[2] = { 1.0f,1.0f };
 float canvasRatio[2] = {1,1};
 float identityRatio[2] = {1,1};
 float offset[2] = {0,0};
@@ -33,7 +34,22 @@ float cursorScale[3] = {1.0,1.0, 1};
 float identityOffset[2] = {0,0};
 float prevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
+
 unsigned int fbo;
+
+ImVec2 ColorWindowSize(100, 200);
+ImVec2 ColorWindowPos;
+ImVec2 SizeWindowSize(100, 200);
+ImVec2 SizeWindowPos(0,200);
+ImVec2 BrushWindowSize(100, 200);
+ImVec2 BrushWindowPos(0,450);
+
+ImVec2 ServerWindowSize(100,200);
+ImVec2 ServerWindowPos;
+ImVec2 LayerWindowSize(100,200);
+ImVec2 LayerWindowPos;
+int leftSize = 200;
+int rightSize = 200;
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
@@ -162,64 +178,34 @@ void NewRenderer::RenderCursor()
 
 }
 
-void DockSpaces() 
-{
-	/*
-	// Get the main viewport
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-	// Create a dockspace over a limited area instead of the whole screen
-	ImGui::SetNextWindowPos(viewport->Pos);                              // Align with the viewport's top-left
-	ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, viewport->Size.y)); // Use viewport's size
-
-	ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background if desired
-
-	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoCollapse |
-		ImGuiWindowFlags_NoBringToFrontOnFocus |
-		ImGuiWindowFlags_NoNavFocus |
-		ImGuiWindowFlags_NoDocking;
-
-	// Parent dock space window
-	ImGui::Begin("DockSpaceWindow", nullptr, windowFlags);
-	ImGui::DockSpace(ImGui::GetID("MyDockspace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
-
-	// Configure the dock layout
-	ImGuiID dockspaceID = ImGui::GetID("MyDockspace");
-	ImGui::DockSpace
-	ImGui::DockBuilderRemoveNode(dockspaceID); // Reset layout
-	ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_DockSpace);
-	ImGui::DockBuilderSetNodeSize(dockspaceID, ImVec2(viewport->Size.x, viewport->Size.y));
-
-	// Split dock into left and right regions
-	ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.3f, nullptr, &dockspaceID);
-	ImGuiID dockRight = ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Right, 0.7f, nullptr, &dockspaceID);
-
-	// Assign windows to dock regions
-	ImGui::DockBuilderDockWindow("LeftPanel", dockLeft);
-	ImGui::DockBuilderDockWindow("RightPanel", dockRight);
-
-	// Finalize the dock layout
-	ImGui::DockBuilderFinish(dockspaceID);
-
-	ImGui::End();
-	*/
-}
-
-
 void RenderImGui()
 {
+	int windowSizeX, windowSizeY;
+	glfwGetWindowSize(window, &windowSizeX, &windowSizeY);
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::Begin("Controls", 0);
+	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
+
+	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar);
 	static float color[3] = { 0.0f, 0.0f, 1.0f };
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+
+	ColorWindowSize = ImGui::GetWindowSize();
+	leftSize = ColorWindowSize.x;
+	ColorWindowPos = ImGui::GetWindowPos();
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
+
+	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar);
 
 	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
@@ -246,8 +232,50 @@ void RenderImGui()
 			ImGui::PopID();
 		}
 	}
-	
+	SizeWindowSize = ImGui::GetWindowSize();
+	leftSize = SizeWindowSize.x;
+	SizeWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y+SizeWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY-(SizeWindowPos.y+SizeWindowSize.y)));
+
+	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+
+	for (int y = 0; y < 4; y++) {
+		for (int x = 0; x < 4; x++)
+		{
+			int index = y * 4 + x + 1;
+			//int indexText = std::pow(2, (float)index);
+			std::string label = "Bruh "+std::to_string(index);
+
+			if (x > 0) ImGui::SameLine();
+
+			ImGui::PushID(y * 4 + x);
+			if (ImGui::Selectable(label.c_str(), selectedBrush[y][x] != 0, 0, ImVec2(50, 50)))
+			{
+				for (int i = 0; i < 4; ++i) {
+					for (int j = 0; j < 4; ++j) {
+						selectedBrush[i][j] = 0;
+					}
+				}
+				cursorRadius = 0.01 * index;
+				selectedBrush[y][x] ^= 1;
+			}
+			ImGui::PopID();
+		}
+	}
+	BrushWindowSize = ImGui::GetWindowSize();
+	leftSize = BrushWindowSize.x;
+	BrushWindowPos = ImGui::GetWindowPos();
+	ImGui::End();
+
+	if (ImGui::GetMouseCursor() == ImGuiMouseCursor_ResizeNWSE)
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+
+	ImGui::PopStyleColor();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
