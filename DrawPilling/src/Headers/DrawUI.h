@@ -1,15 +1,19 @@
 #pragma once
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_glfw.h"
+#include "ImGui/imgui_impl_opengl3.h"
+#include "NewRenderer.h"
 
 class DrawUI
 {
 private:
 
 public:
-	void ColorWindow();
-	void SizeWindow();
-	void BrushWindow();
+    static void ColorWindow(RenderData& cursor);
+    static void SizeWindow(float& cursorRadius);
+    static void BrushWindow(GLFWwindow* window);
 
-	void ServerWindow();
-	void LayerWindow();
-	void ChatWindow();
+    static void ServerWindow();
+    static void LayerWindow();
+    static void ChatWindow();
 };

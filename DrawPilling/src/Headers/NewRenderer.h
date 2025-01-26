@@ -32,6 +32,8 @@ bool GLLogCall(const char* function, const char* file, int line);
 
 class NewRenderer {
 public:
+	bool onUI;
+
 	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);
 	void Draw(const RenderData& data);
 	void Clear();

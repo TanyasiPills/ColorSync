@@ -19,6 +19,8 @@ int originalSizeX = 1.0, originalSizeY = 1.0;
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	ImGui_ImplGlfw_ScrollCallback(window, xoffset,yoffset);
+	if (renderer->onUI) return;
+
 	if (yoffset > 0) {
 		offset[0] -= (GlCursorPos[0] - offset[0]) * 0.25;
 		offset[1] -= (GlCursorPos[1] - offset[1]) * 0.25;
@@ -56,6 +58,8 @@ static void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
 	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+	if (renderer->onUI) return;
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		switch (action)
 		{

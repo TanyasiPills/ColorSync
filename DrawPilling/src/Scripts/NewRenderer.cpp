@@ -1,13 +1,15 @@
-#include "NewRenderer.h"
-#include "Texture.h"
-#include "NewDraw.h"
-#include "CallBacks.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
 #include <iostream>
 #include <vector>
 #include <math.h>
+
+#include "NewRenderer.h"
+#include "Texture.h"
+#include "NewDraw.h"
+#include "CallBacks.h"
+#include "DrawUI.h"
 
 void GLClearError() {
 	while (glGetError() != GL_NO_ERROR);
@@ -37,19 +39,6 @@ unsigned int canvasSize[2] = {1,1};
 
 unsigned int fbo;
 
-ImVec2 ColorWindowSize(100, 200);
-ImVec2 ColorWindowPos;
-ImVec2 SizeWindowSize(100, 200);
-ImVec2 SizeWindowPos(0,200);
-ImVec2 BrushWindowSize(100, 200);
-ImVec2 BrushWindowPos(0,450);
-
-ImVec2 ServerWindowSize(100,200);
-ImVec2 ServerWindowPos;
-ImVec2 LayerWindowSize(100,200);
-ImVec2 LayerWindowPos;
-int leftSize = 200;
-int rightSize = 200;
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
@@ -178,99 +167,21 @@ void NewRenderer::RenderCursor()
 
 }
 
-void RenderImGui()
+void RenderImGui(bool& onUIIn)
 {
-	int windowSizeX, windowSizeY;
-	glfwGetWindowSize(window, &windowSizeX, &windowSizeY);
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+	onUIIn = ImGui::GetIO().WantCaptureMouse;
+
+	bool yes = true;
+	//ImGui::ShowDemoWindow(&yes);
 
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
-
-	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar);
-	static float color[3] = { 0.0f, 0.0f, 1.0f };
-	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview);
-	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
-	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
-
-	ColorWindowSize = ImGui::GetWindowSize();
-	leftSize = ColorWindowSize.x;
-	ColorWindowPos = ImGui::GetWindowPos();
-	ImGui::End();
-
-	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
-
-	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar);
-
-	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
-
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
-		{
-			int index = y * 4 + x+1;
-			//int indexText = std::pow(2, (float)index);
-			std::string label = std::to_string(index);
-
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selected[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selected[i][j] = 0;
-					}
-				}
-				cursorRadius = 0.01 * index;
-				selected[y][x] ^= 1;
-			}
-			ImGui::PopID();
-		}
-	}
-	SizeWindowSize = ImGui::GetWindowSize();
-	leftSize = SizeWindowSize.x;
-	SizeWindowPos = ImGui::GetWindowPos();
-	ImGui::End();
-
-	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y+SizeWindowSize.y), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY-(SizeWindowPos.y+SizeWindowSize.y)));
-
-	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar);
-
-	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
-
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
-		{
-			int index = y * 4 + x + 1;
-			//int indexText = std::pow(2, (float)index);
-			std::string label = "Bruh "+std::to_string(index);
-
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selectedBrush[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selectedBrush[i][j] = 0;
-					}
-				}
-				cursorRadius = 0.01 * index;
-				selectedBrush[y][x] ^= 1;
-			}
-			ImGui::PopID();
-		}
-	}
-	BrushWindowSize = ImGui::GetWindowSize();
-	leftSize = BrushWindowSize.x;
-	BrushWindowPos = ImGui::GetWindowPos();
-	ImGui::End();
+	DrawUI::ColorWindow(cursor);
+	DrawUI::SizeWindow(cursorRadius);
+	DrawUI::BrushWindow(window);
 
 	if (ImGui::GetMouseCursor() == ImGuiMouseCursor_ResizeNWSE)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
@@ -279,11 +190,6 @@ void RenderImGui()
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	GLFWwindow* backup_current_context = glfwGetCurrentContext();
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-	glfwMakeContextCurrent(backup_current_context);
 }
 
 
@@ -292,7 +198,7 @@ void NewRenderer::Render()
 	Clear();
 	RenderLayers();
 	RenderCursor();
-	RenderImGui();
+	RenderImGui(onUI);
 
 	glfwSwapBuffers(window);
 }
