@@ -1,0 +1,77 @@
+* {
+    margin: 0;
+    max-height: 100vh;
+}
+
+#root {
+    height: 100vh;
+}
+
+html,
+body {
+    height: 100vh;
+    overflow-y: clip;
+}
+
+
+.layout {
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.sideBar {
+    background-color: gray;
+    width: fit-content;
+    padding: 10px;
+    position: relative;
+}
+
+.sideBar#left{
+    float: inline-start;
+}
+
+.rsz {
+    width: 1px;
+    height: 100%;
+    background-color: black;
+    position: absolute;
+}
+
+#leftResize {
+    right: 0;
+    top: 0;
+}
+
+#rightResize{
+    left: 0;
+    top: 0;
+}
+
+
+.sideBar#right{
+    float: inline-end;
+}
+
+.canvasContainer {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: #23961481;
+}
+
+canvas {
+    width: 700px;
+    height: 700px;
+    margin: auto;
+}
+
+button,
+input {
+    margin: 10px 0;
+    padding: 5px;
+}
+
+p {
+    margin-top: 20px;
+}

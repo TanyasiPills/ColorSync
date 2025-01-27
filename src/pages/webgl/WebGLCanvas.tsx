@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders";
 import { VertexArrayFunction } from "./VertexArray ";
-import { Container, Row, Col } from "react-bootstrap";
+import "./WebGlCanvas.css"
 
 const WebGLCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -162,26 +162,26 @@ const WebGLCanvas: React.FC = () => {
 
 
   return (
-    <>
-      <Container fluid style={{ height: "94vh ", margin: 0}}>
-      <Row style={{ flex: 1 }}>
-        <Col xs={1} order="first" style={{backgroundColor: "gray", margin: 0, paddingTop: "2%", paddingBottom: "2%",  display: "fluid", flexDirection: "column", height: "94vh",}}>
-        <button ref={clearButtonRef}>Clear Canvas</button>
-        <input ref={colorPickerRef} type="color" />
+    <div className="layout">
+      <div className="sideBar" id="left">
+        <button ref={clearButtonRef}>Clear Canvas</button><br />
+        <input ref={colorPickerRef} type="color" /><br />
         <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} />
-        </Col>
-        <Col xs= {11} style={{margin: 0, display: "fluid"}}>
+        <div id="leftResize" className="rsz"></div>
+      </div>
+      <div className="canvasContainer">
         <canvas
           ref={canvasRef}
           id="gl-canvas"
           width={700}
           height={700}
-          style={{ border: "1px solid black", margin: 0 }}
         />
-        </Col>
-        </Row>
-      </Container>
-    </>
+      </div>
+      <div className="sideBar" id="right">
+        <p>Itt majd lesz valami</p>
+        <div id="rightResize" className="rsz"></div>
+      </div>
+    </div>
   );
 };
 
