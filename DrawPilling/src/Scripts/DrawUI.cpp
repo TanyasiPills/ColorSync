@@ -18,6 +18,8 @@ int rightSize = 200;
 
 int windowSizeX, windowSizeY;
 
+std::string username = "Maychii";
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -136,10 +138,35 @@ void DrawUI::LayerWindow()
 
 void DrawUI::ChatWindow()
 {
+	static std::vector<std::string> chatLog;
+	static char inputBuffer[256] = "";
+
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
 
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+	float inputBarHeight = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().FramePadding.y * 3 + ImGui::GetStyle().ItemSpacing.y;
+
+	ImGui::BeginChild("ChatLog", ImVec2(0, ChatWindowSize.y - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+	for (const auto& message : chatLog)
+	{
+		ImGui::TextWrapped("%s: %s", username.c_str(), message.c_str());
+	}
+	ImGui::EndChild();
+	ImGui::Separator();
+	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight), false);
+	if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+	{
+		if (strlen(inputBuffer) > 0)
+		{
+			chatLog.push_back(inputBuffer);
+			memset(inputBuffer, 0, sizeof(inputBuffer)); 
+		}
+		ImGui::SetKeyboardFocusHere(-1);
+	}
+	ImGui::EndChild();
+
 	ChatWindowSize = ImGui::GetWindowSize();
 	rightSize = ChatWindowSize.x;
 	ChatWindowPos = ImGui::GetWindowPos();

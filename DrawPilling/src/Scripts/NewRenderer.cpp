@@ -175,7 +175,7 @@ void RenderImGui(bool& onUIIn)
 	onUIIn = ImGui::GetIO().WantCaptureMouse;
 
 	bool yes = true;
-	//ImGui::ShowDemoWindow(&yes);
+	ImGui::ShowDemoWindow(&yes);
 
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
