@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { User } from "./entities/user.entity";
+import { Action, ActionList, User } from "./types";
 import { checkUser } from "./error";
 
 export class Room {
@@ -9,14 +9,18 @@ export class Room {
   private clients: Socket[];
   private maxClients: number;
   private owner: Socket;
+  private history: {userId: number, action: Action}[];
+  private redo: 
 
   public constructor(name: string, password: string | undefined, maxClients: number, owner: Socket) {
     this.name = name;
     this.password = password;
     this.maxClients = maxClients;
     this.clients = [owner];
+    this.history = new Map<string, {undo: ActionList<Action>, redo: ActionList<Action>}>;
     this.owner = owner;
     owner.join(name);
+    this.history.set(owner.id, {undo: new ActionList<Action>(30), redo: new ActionList<Action>(30)});
   }
 
   public static init(server: Server) {
@@ -32,6 +36,7 @@ export class Room {
     }
     socket.join(this.name);
     this.clients.push(socket);
+    this.history.set(socket.id, {undo: new ActionList<Action>(30), redo: new ActionList<Action>(30)});
     this.emit('message', `${user.username} joined the room!`);
     return true;
   }
@@ -52,6 +57,18 @@ export class Room {
 
   public emitFromSocket(event: string, message: any, socket: Socket) {
     socket.to(this.name).emit(event, message);
+  }
+
+  public action(socket: Socket, action: Action) {
+    const user = checkUser(socket);
+    if (!user) return;
+    const history = this.history.get(socket.id);
+    history.undo.add(action);
+    this.emitFromSocket('action', action, socket);
+  }
+
+  public undo(socket: Socket) {
+    const user =
   }
 
   public getName(): string {

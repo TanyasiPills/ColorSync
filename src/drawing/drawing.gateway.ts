@@ -14,7 +14,7 @@ import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
 import { checkUser } from "./error";
-import { User } from "./entities/user.entity";
+import { User } from "./types";
 @WebSocketGateway({ cors: { origin: "*" } })
 
 export class DrawingWS
@@ -113,6 +113,22 @@ export class DrawingWS
     if (!user) return;
     const room = this.connections.get(socket.id);
     room.emitFromSocket('message', {message: message}, socket);
+  }
+
+  @SubscribeMessage('mouse')
+  handleMouse(@ConnectedSocket() socket: Socket, @MessageBody('position') position: {x: number, y: number}) {
+    const user = checkUser(socket);
+    if (!user) return;
+    const room = this.connections.get(socket.id);
+    room.emitFromSocket('mouse', {userId: user.id, position: position}, socket);
+  }
+
+  @SubscribeMessage('action')
+  handleAction(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
+    const user = checkUser(socket);
+    if (!user) return;
+    const room = this.connections.get(socket.id);
+    room.emitFromSocket('action', {type, data}, socket);
   }
 
   /*

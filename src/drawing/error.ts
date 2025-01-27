@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { User } from "./entities/user.entity";
+import { User } from "./types";
 
 export function checkUser(socket: Socket): User {
   const user: User = socket.data.user;
