@@ -124,12 +124,60 @@ void DrawUI::ServerWindow()
 	ImGui::End();
 }
 
+void DrawLayerTree(Layer& layer) {
+	bool cheese = ImGui::TreeNode(("##" + layer.name).c_str());
+	ImGui::SameLine();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
+	ImGui::Checkbox(("e##" + layer.name + "visibility").c_str(), &layer.visible);
+	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+		layer.editing = true;
+	}
+	ImGui::PopStyleVar();
+	/*
+	if (layer.visible) {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(200);
+		static char inputBuffer[256];
+		strncpy(inputBuffer, layer.name.c_str(), sizeof(inputBuffer) - 1);
+		inputBuffer[sizeof(inputBuffer) - 1] = '\0';
+		if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			if (strlen(inputBuffer) > 0)
+			{
+				layer.name = inputBuffer;
+				memset(inputBuffer, 0, sizeof(inputBuffer));
+				layer.editing = false;
+			}
+		}
+	}*/
+
+	if (cheese) {
+		for (auto& child : layer.children) {
+			DrawLayerTree(child);
+		}
+
+		ImGui::TreePop();
+	}
+}
+
 void DrawUI::LayerWindow()
 {
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
+	static Layer rootLayer("Root Layer");
+
+	if (rootLayer.children.empty()) {
+		rootLayer.children.push_back(Layer("Background"));
+		rootLayer.children.push_back(Layer("Foreground"));
+		rootLayer.children[1].children.push_back(Layer("Sub-layer 1"));
+		rootLayer.children[1].children.push_back(Layer("Sub-layer 2"));
+	}
+
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+	DrawLayerTree(rootLayer);
+
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
 	LayerWindowPos = ImGui::GetWindowPos();
