@@ -126,7 +126,7 @@ void DrawUI::ServerWindow()
 
 void DrawLayerTree(Layer& layer) {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-	bool cheese = ImGui::TreeNode(("##" + layer.name).c_str());
+	layer.open = ImGui::TreeNodeEx(("##" + layer.name).c_str(), ImGuiTreeNodeFlags_FramePadding | (layer.open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
 	ImGui::SameLine();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 10));
 	ImGui::Checkbox(("##" + layer.name + "visibility").c_str(), &layer.visible);
@@ -134,13 +134,12 @@ void DrawLayerTree(Layer& layer) {
 	
 	if(layer.visible && !layer.editing) ImGui::Text((layer.name).c_str());
 
-	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+	if (layer.visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
 		layer.editing = true;
 	}
 
 	ImGui::PopStyleVar();
 
-	// When the layer is visible and we are in editing mode, show the input text box
 	if (layer.visible && layer.editing) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
@@ -157,7 +156,7 @@ void DrawLayerTree(Layer& layer) {
 		}
 	}
 
-	if (cheese) {
+	if (layer.open) {
 		for (auto& child : layer.children) {
 			DrawLayerTree(child);
 		}

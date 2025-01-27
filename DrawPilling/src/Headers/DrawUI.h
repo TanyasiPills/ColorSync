@@ -9,6 +9,7 @@ struct Layer {
     std::vector<Layer> children;
     bool visible = true;
     bool editing = false;
+    bool open = false;
 
     Layer(const std::string& layerName) : name(layerName) {}
 };
