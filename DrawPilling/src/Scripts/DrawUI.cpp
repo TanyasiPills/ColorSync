@@ -125,31 +125,37 @@ void DrawUI::ServerWindow()
 }
 
 void DrawLayerTree(Layer& layer) {
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 	bool cheese = ImGui::TreeNode(("##" + layer.name).c_str());
 	ImGui::SameLine();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 0));
-	ImGui::Checkbox(("e##" + layer.name + "visibility").c_str(), &layer.visible);
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 10));
+	ImGui::Checkbox(("##" + layer.name + "visibility").c_str(), &layer.visible);
+	ImGui::SameLine();
+	
+	if(layer.visible && !layer.editing) ImGui::Text((layer.name).c_str());
+
 	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
 		layer.editing = true;
 	}
+
 	ImGui::PopStyleVar();
-	/*
-	if (layer.visible) {
+
+	// When the layer is visible and we are in editing mode, show the input text box
+	if (layer.visible && layer.editing) {
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(200);
-		static char inputBuffer[256];
-		strncpy(inputBuffer, layer.name.c_str(), sizeof(inputBuffer) - 1);
-		inputBuffer[sizeof(inputBuffer) - 1] = '\0';
-		if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
-		{
-			if (strlen(inputBuffer) > 0)
-			{
-				layer.name = inputBuffer;
-				memset(inputBuffer, 0, sizeof(inputBuffer));
+		ImGui::SetNextItemWidth(100);
+		const char* name = layer.name.c_str();
+		static char editBuffer[256] = "";
+		bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+		ImGui::SetKeyboardFocusHere(-1);
+		if (editing) {
+			if (strlen(editBuffer) > 0) {
+				layer.name = editBuffer;
+				memset(editBuffer, 0, sizeof(editBuffer));
 				layer.editing = false;
 			}
 		}
-	}*/
+	}
 
 	if (cheese) {
 		for (auto& child : layer.children) {
@@ -158,6 +164,7 @@ void DrawLayerTree(Layer& layer) {
 
 		ImGui::TreePop();
 	}
+	ImGui::PopStyleVar();
 }
 
 void DrawUI::LayerWindow()
