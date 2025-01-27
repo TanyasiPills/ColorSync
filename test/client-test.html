@@ -7,13 +7,14 @@
   <title>Socket.IO Client Test</title>
   <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
   <script>
+    var socket;
     function connect() {
       const token = document.getElementById("token").value;
       const name = document.getElementById("name").value;
       const password = document.getElementById("password").value;
       const create = document.getElementById("create").checked;
 
-      const socket = io('http://localhost:3000', {
+      socket = io('http://localhost:3000', {
         auth: {
           token: token,
           password: password
@@ -40,6 +41,44 @@
         console.error('Error:', error.message);
       });
     }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("passwordl").value;
+
+      console.log(password);
+      console.log(email);
+
+      const response = await fetch("http://localhost:3000/user/login", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Flashpost'
+        },
+        body: JSON.stringify({email, password})
+      });
+      console.log((await response.json()));
+    }
+
+    async function register() {
+      const email = document.getElementById("emailr").value;
+      const username = document.getElementById("usernamer").value;
+      const password = document.getElementById("passwordr").value;
+
+      const response = await fetch("http://localhost:3000/user", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({email, password, username})
+      });
+      console.log((await response.json()));
+    }
+
+    function send() {
+      const message = document.getElementById("message").value;
+      socket.emit("message", {message: message});
+    }
   </script>
 </head>
 
@@ -58,6 +97,36 @@
     <input type="text" name="token" id="token">
     <br>
     <input type="submit" value="Connect">
+  </form>
+  <br>
+  <form onsubmit="login(); return false;">
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email">
+    <br>
+    <label for="passwordl">Password:</label>
+    <input type="text" name="passwordl" id="passwordl">
+    <br>
+    <input type="submit" value="Login">
+  </form>
+  <br>
+  <form onsubmit="register(); return false;">
+    <label for="emailr">Email:</label>
+    <input type="email" name="emailr" id="emailr">
+    <br>
+    <label for="usernamer">Username:</label>
+    <input type="text" name="usernamer" id="usernamer">
+    <br>
+    <label for="passwordr">Password:</label>
+    <input type="text" name="passwordr" id="passwordr">
+    <br>
+    <input type="submit" value="Register">
+  </form>
+  <br>
+  <form onsubmit="try {send()} catch(error){console.log(error)} return false;">
+    <label for="message">Message:</label>
+    <input type="text" name="message" id="message">
+    <br>
+    <input type="submit" value="Send">
   </form>
 </body>
 

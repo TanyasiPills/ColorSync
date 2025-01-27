@@ -1,46 +1,58 @@
-import { Server } from "socket.io";
-import { Client } from "./client";
+import { Server, Socket } from "socket.io";
+import { User } from "./entities/user.entity";
+import { checkUser } from "./error";
 
 export class Room {
   private static server: Server;
   private name: string;
   private password: string | undefined;
-  private clients: Client[];
+  private clients: Socket[];
   private maxClients: number;
-  private owner: Client;
+  private owner: Socket;
 
-  public constructor(name: string, password: string | undefined, maxClients: number, owner: Client) {
+  public constructor(name: string, password: string | undefined, maxClients: number, owner: Socket) {
     this.name = name;
     this.password = password;
     this.maxClients = maxClients;
     this.clients = [owner];
     this.owner = owner;
-    owner.getSocket().join(name);
+    owner.join(name);
   }
 
   public static init(server: Server) {
     Room.server = server;
   }
 
-  public connect(client: Client, pasword: string | undefined) {
+  public connect(socket: Socket, pasword: string | undefined) {
+    const user : User = checkUser(socket);
+    if (!user) return;
     if (this.password && pasword !== this.password) {
-      client.getSocket().emit('error', {message: 'Invalid password!'});
+      socket.emit('error', {message: 'Invalid password!'});
       return false;
     }
-    client.getSocket().join(this.name);
-    this.clients.push(client);
-    Room.server.in(this.name).emit('message', `${client.getUsername()} joined the room!`);
+    socket.join(this.name);
+    this.clients.push(socket);
+    this.emit('message', `${user.username} joined the room!`);
     return true;
   }
 
-  public disconnect(client: Client) {
-    client.getSocket().leave(this.name);
-    this.clients = this.clients.filter(c => c !== client);
-    Room.server.in(this.name).emit('message', `${client.getUsername()} left the room!`);
-    client.getSocket().disconnect();
+  public disconnect(socket: Socket) {
+    const user : User = socket.data.user as User;
+    socket.leave(this.name);
+    console.log(`Number of clients before disconnect: ${this.clients.length}`);
+    this.clients = this.clients.filter(c => c !== socket);
+    console.log(`Number of clients after disconnect: ${this.clients.length}`);
+    this.emit('message', `${user.username} left the room!`);
+    socket.disconnect();
   }
 
+  public emit(event: string, message: string) {
+    Room.server.in(this.name).emit(event, message);
+  }
 
+  public emitFromSocket(event: string, message: any, socket: Socket) {
+    socket.to(this.name).emit(event, message);
+  }
 
   public getName(): string {
     return this.name;
@@ -54,11 +66,11 @@ export class Room {
     return this.maxClients;
   }
 
-  public getClients(): Client[] {
+  public getClients(): Socket[] {
     return this.clients;
   }
 
-  public getOwner(): Client {
+  public getOwner(): Socket {
     return this.owner;
   }
 }

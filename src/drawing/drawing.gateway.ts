@@ -1,8 +1,11 @@
 import { Logger } from "@nestjs/common";
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer
 } from "@nestjs/websockets";
@@ -10,23 +13,26 @@ import {
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
-import { Client } from "./client";
-
+import { checkUser } from "./error";
+import { User } from "./entities/user.entity";
 @WebSocketGateway({ cors: { origin: "*" } })
 
 export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor (private readonly authService: AuthService) {}
   private readonly logger = new Logger(DrawingWS.name);
-  private rooms: Room[] = [];
-  private connections: Map<Client, Room> = new Map<Client, Room>;
-  private clients: Map<string, Client> = new Map<string, Client>;
+  private rooms: Room[];
+  private connections: Map<string, Room>;
+  private connectedUsers: number[];
 
   @WebSocketServer() server: Server;
 
   afterInit() {
-    this.logger.log("Initialized");
     Room.init(this.server);
+    this.rooms = [];
+    this.connections = new Map<string, Room>;
+    this.connectedUsers = [];
+    this.logger.log("Initialized");
   }
 
   async handleConnection(socket: Socket) {
@@ -45,7 +51,8 @@ export class DrawingWS
       socket.emit('error', {message: 'Token is required!'});
       socket.disconnect();
       return;
-    } 
+    }
+
     const user = await this.authService.validateToken(token);
     if (!user) {
       socket.emit('error', {message: 'Invalid token!'});
@@ -53,7 +60,14 @@ export class DrawingWS
       return;
     }
 
-    const client = new Client(user, socket);
+    if (this.connectedUsers.includes(user.id)) {
+      socket.emit('error', {message: 'Account already in use!'});
+      socket.disconnect();
+      return;
+    }
+    
+    socket.data.user = user;
+
     const create = socket.handshake.query.create;
     let room: Room;
     if (create && create === 'true') {
@@ -65,7 +79,7 @@ export class DrawingWS
           maxClients = parseInt(maxClientsQuery);
         } catch {}
       }
-      room = new Room(name, password, Math.min(maxClients, 10), client);
+      room = new Room(name, password, Math.min(maxClients, 10), socket);
       this.rooms.push(room);
     } else {
       room = this.rooms.find(room => room.getName() === name);
@@ -74,22 +88,31 @@ export class DrawingWS
         socket.disconnect();
         return;
       }
-      if (!room.connect(client, password)) {
+      if (!room.connect(socket, password)) {
         socket.disconnect();
         return;
       }
     }
     
-    this.connections.set(client, room);
-    this.clients.set(socket.id, client);
+    this.connections.set(socket.id, room);
+    this.connectedUsers.push(user.id);
     this.logger.log(`Connected client id: ${socket.id}\nroom: ${name}\ntoken: ${token}\npassword: ${password}`);
   }
 
   handleDisconnect(socket: Socket) {
-    const client = this.clients.get(socket.id);
-    const room = this.connections.get(client);
-    if (room) room.disconnect(client);
-    this.logger.log(`Cliend id: ${client.getUsername()} disconnected`);
+    const user = socket.data.user as User;
+    if (!user) return;
+    const room = this.connections.get(socket.id);
+    if (room) room.disconnect(socket);
+    this.logger.log(`Cliend id: ${user.username} disconnected`);
+  }
+
+  @SubscribeMessage('message')
+  handleMessage(@ConnectedSocket() socket: Socket, @MessageBody('message') message: string) {
+    const user = checkUser(socket);
+    if (!user) return;
+    const room = this.connections.get(socket.id);
+    room.emitFromSocket('message', {message: message}, socket);
   }
 
   /*

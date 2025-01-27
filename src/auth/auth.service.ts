@@ -11,11 +11,10 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<any> {;
     const user = await this.db.user.findUnique({where: {email}});
     if (!user) return null;
-    if (!verify(user.password, pass)) return null;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    if (!(await verify(user.password, pass))) return null;
     delete user.password;
     return user;
   }
@@ -44,6 +43,6 @@ export class AuthService {
 
   async register(dto: CreateUserDto) {
     dto.password = await hash(dto.password);
-    return this.db.user.create({data: dto, select: {password: false}});
+    return this.db.user.create({data: dto, select: {username: true, email: true}});
   }
 }
