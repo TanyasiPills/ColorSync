@@ -100,13 +100,12 @@ export class DrawingWS
   }
 
   handleDisconnect(socket: Socket) {
-    console.log("Disconnected: ", socket.id);
     this.connectedUsers = this.connectedUsers.filter(id => id !== socket.data.user.id);
     const user = socket.data.user as User;
     if (!user) return;
     const room = this.connections.get(socket.id);
     if (room) room.disconnect(socket);
-    this.logger.log(`Cliend id: ${user.username} disconnected`);
+    this.logger.log(`${user.username} disconnected`);
   }
 
   @SubscribeMessage('message')
