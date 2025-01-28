@@ -39,6 +39,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "HighsManager.h"
 
+#include "SocketSource/sio_client.h"
+
 //definitions
 #define PI 3.1415927f
 
@@ -59,6 +61,17 @@ unsigned int canvasX = 1080, canvasY = 1080;
 // Main code
 int main()
 {
+    sio::client h;
+    h.set_close_listener([](const sio::client::close_reason& reason) {
+        std::cout << "Connection closed nya!: " << std::endl;
+        });
+    h.socket()->on("error", [](sio::event& ev) {
+        std::cout << "Connection failed nya!" << std::endl;
+    });
+
+    h.connect("http://25.16.177.252:3000");
+
+
     SessionData data = Manager::Assembly();
 
     NewRenderer renderer;
