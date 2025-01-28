@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,14 +15,18 @@ export class UserController {
 
 
   @UseGuards(LocalAuthGuard)
+  @HttpCode(200)
   @Post('login')
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const status = await this.authService.register(createUserDto);
+    if (status == true) return this.authService.login(createUserDto);
+    else if (status == false) throw new HttpException('Email already in use.', HttpStatus.BAD_REQUEST); 
+    else throw new HttpException('Error creating user.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @UseGuards(JwtAuthGuard)

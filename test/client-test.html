@@ -15,7 +15,7 @@
       const create = document.getElementById("create").checked;
 
       socket = io('http://localhost:3000', {
-        auth: {
+        headers: { //Headers not working
           token: token,
           password: password
         },

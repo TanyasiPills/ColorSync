@@ -13,7 +13,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
-import { checkUser } from "./error";
+import { checkUser, socketError } from "./error";
 import { User } from "./types";
 @WebSocketGateway({ cors: { origin: "*" } })
 
@@ -32,37 +32,38 @@ export class DrawingWS
     this.rooms = [];
     this.connections = new Map<string, Room>;
     this.connectedUsers = [];
-    this.logger.log("Initialized");
   }
 
   async handleConnection(socket: Socket) {
-    const token = socket.handshake.auth.token;
-    const password = socket.handshake.auth.password;
+    const token = socket.handshake.headers.token as string;
+    let password = socket.handshake.headers.password as string;
     let name = socket.handshake.query.name;
 
+    if (password === "") password = undefined;
+
+    console.log("Token: ", token);
+    console.log("Password: ", password);
+
     if (!name) {
-      socket.emit('error', {message: 'Name is required!'});
-      socket.disconnect();
+      socketError(socket, "Name is required", 20);
       return;
     }
     if (Array.isArray(name)) name = name[0];
 
     if (!token) {
-      socket.emit('error', {message: 'Token is required!'});
-      socket.disconnect();
+      socketError(socket, "Token is required", 20);
       return;
     }
 
     const user = await this.authService.validateToken(token);
     if (!user) {
-      socket.emit('error', {message: 'Invalid token!'});
-      socket.disconnect();
+      socketError(socket, "Invalid token", 30);
       return;
     }
+    delete user.password;
 
     if (this.connectedUsers.includes(user.id)) {
-      socket.emit('error', {message: 'Account already in use!'});
-      socket.disconnect();
+      socketError(socket, "User is already connected", 40);
       return;
     }
     
@@ -79,13 +80,12 @@ export class DrawingWS
           maxClients = parseInt(maxClientsQuery);
         } catch {}
       }
-      room = new Room(name, password, Math.min(maxClients, 10), socket);
+      room = new Room(name, password, Math.min(maxClients, 10), socket, user);
       this.rooms.push(room);
     } else {
       room = this.rooms.find(room => room.getName() === name);
       if (!room) {
-        socket.emit('error', {message: 'Room not found!'});
-        socket.disconnect();
+        socketError(socket, "Room not found", 50);
         return;
       }
       if (!room.connect(socket, password)) {
@@ -96,10 +96,12 @@ export class DrawingWS
     
     this.connections.set(socket.id, room);
     this.connectedUsers.push(user.id);
-    this.logger.log(`Connected client id: ${socket.id}\nroom: ${name}\ntoken: ${token}\npassword: ${password}`);
+    this.logger.log(`${user.username} connected to room "${name}"`);
   }
 
   handleDisconnect(socket: Socket) {
+    console.log("Disconnected: ", socket.id);
+    this.connectedUsers = this.connectedUsers.filter(id => id !== socket.data.user.id);
     const user = socket.data.user as User;
     if (!user) return;
     const room = this.connections.get(socket.id);
@@ -112,7 +114,7 @@ export class DrawingWS
     const user = checkUser(socket);
     if (!user) return;
     const room = this.connections.get(socket.id);
-    room.emitFromSocket('message', {message: message}, socket);
+    room.emitFromSocket(socket, 'message', {userId: user.id, username: user.username, message: message});
   }
 
   @SubscribeMessage('mouse')
@@ -120,7 +122,7 @@ export class DrawingWS
     const user = checkUser(socket);
     if (!user) return;
     const room = this.connections.get(socket.id);
-    room.emitFromSocket('mouse', {userId: user.id, position: position}, socket);
+    room.emitFromSocket(socket, 'mouse', {userId: user.id, position: position});
   }
 
   @SubscribeMessage('action')
@@ -128,76 +130,6 @@ export class DrawingWS
     const user = checkUser(socket);
     if (!user) return;
     const room = this.connections.get(socket.id);
-    room.emitFromSocket('action', {type, data}, socket);
+    room.emitFromSocket(socket, 'action', {type, data});
   }
-
-  /*
-
-  @SubscribeMessage('message')
-  handleMessage(@ConnectedSocket() client: Socket, @MessageBody('text') text: string) {
-    this.logger.log(`Message received from client id: ${client.id}`);
-    this.logger.debug(`Payload: ${text}`);
-    this.server.in(Array.from(client.rooms)[1]).emit('message', { text: text });
-  }
-
-  @SubscribeMessage('join')
-  handleJoin(@ConnectedSocket() client: Socket, @MessageBody('room') roomName: string, @MessageBody('password') password: string) {
-    const room = this.rooms.get(roomName);
-    if (!room) return;
-    if (room.password) {
-      if (!password) {
-        client.emit('error', { text: 'password required' });
-        return;
-      }
-      if (room.password != password) {
-        client.emit('error', { text: 'wrong password' });
-        return;
-      }
-    }
-    this.logger.log(`client (${client.id}) joined ${roomName}`)
-    this.server.in(client.id).socketsJoin(roomName);
-    this.server.in(roomName).emit('message', `${client.id} joined the room`);
-    client.emit('message', Object.fromEntries(room.history.entries()));
-  }
-
-  @SubscribeMessage('create')
-  handleCreate(@ConnectedSocket() client: Socket, @MessageBody('room') roomName: string, @MessageBody('password') password: string) {
-    if (this.rooms.get(roomName)) {
-      client.emit('error', 'room already exists');
-      return;
-    }
-    this.logger.log(`client (${client.id}) created ${roomName}`)
-    this.server.in(client.id).socketsJoin(roomName);
-    const room = {password: password, history: new Map<string, {history: { action: string, data: string }[], undo: { action: string, data: string }[]}>};
-    this.rooms.set(roomName, room);
-    client.emit('log', 'room created');
-  }
-
-  @SubscribeMessage('drawAction')
-  handleDrawAction(@ConnectedSocket() client: Socket, @MessageBody('action') action: string, @MessageBody('data') data: string) {
-    const roomName: string = this.GetRoom(client);
-    if (!roomName) {
-      client.emit('error', 'You are not in any room!');
-      return;
-    }
-    const roomPtr = this.rooms.get(roomName);
-    const clientPtr = roomPtr.history.get(client.id);
-    clientPtr.push({action, data}); //???
-
-    console.log(this.rooms);
-    this.server.in(roomName).emit('action', {action, data});
-  }
-
-  GetRoom(client: Socket): string {
-    return Array.from(client.rooms)[1];
-  }
-
-  @SubscribeMessage('action')
-  handelAction(@ConnectedSocket() client: Socket, @MessageBody('action') action: string, @MessageBody('data') data: string) {
-    switch (action) {
-      case 'undo':
-
-    }
-  }
-  */
 }

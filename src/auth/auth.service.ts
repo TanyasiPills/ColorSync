@@ -42,7 +42,13 @@ export class AuthService {
   }
 
   async register(dto: CreateUserDto) {
-    dto.password = await hash(dto.password);
-    return this.db.user.create({data: dto, select: {username: true, email: true}});
+    try {
+      dto.password = await hash(dto.password);
+      await this.db.user.create({data: dto, select: {username: true, email: true}});
+      return true;
+    } catch (e) {
+      if (e.code == 'P2002') return false;
+      else return undefined;
+    }
   }
 }

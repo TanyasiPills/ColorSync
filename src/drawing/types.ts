@@ -50,30 +50,76 @@ export class ActionList<T> {
 export class History {
   private ids: number[];
   private actions: Action[];
+  private undoLimit: number;
+  private undoPosition: number;
 
-  constructor() {
+  private redoActions : Map<number, ActionList<Action>>;
+
+  constructor(size: number) {
     this.ids = [];
     this.actions = [];
+    this.undoLimit = size;
+    this.undoPosition = -1;
+
+    this.redoActions = new Map<number, ActionList<Action>>();
   }
 
-  public add(userId: number, action: Action) {
-    this.ids.push(userId);
+  public join(id: number): void {
+    this.redoActions.set(id, new ActionList<Action>(this.undoLimit));
+  }
+
+  public add(id: number, action: Action): void {
+    this.ids.push(id);
     this.actions.push(action);
   }
 
-  public getActions() {
+  public getActions(): Action[] {
     return this.actions;
   }
 
-  public getIds() {
+  public getIds(): number[] {
     return this.ids;
   }
 
-  public undo(id: number) {
-    //WIP
+  public undo(id: number): {history: Action[], compilePostition: number} {
+    let index = undefined;
+    const count = new Map<number, number>();
+    let last;
+    for (let i = this.actions.length - 1; i >= Math.max(Math.max(this.actions.length - this.undoLimit * 10, 0), this.undoPosition + 1); i--) {
+      if (index === undefined && this.ids[i] === id) index = i;
+      if (count[i] >= this.undoLimit) continue;
+      else {
+        count[i] = (count[i] || 0) + 1;
+        last = i;
+      }
+    }
+    if (index === undefined) return null;
+    for (let value of count.values()) {
+      if (value < 30) {
+        last = Math.max(this.actions.length - this.undoLimit * 10 - 1, 0);
+        break;
+      }
+    }
+    last--;
+
+    this.redoActions[id].add(this.actions[index]);
+
+    this.ids.splice(index, 1);
+    this.actions.splice(index, 1);
+
+    let result = this.actions.slice(this.undoPosition + 1);
+    let compilePostition = last - this.undoPosition;
+    return {history: result, compilePostition};
   }
 
+  public redo(id: number): Action {
+    const action = this.redoActions[id].pop();
+    if (action === undefined) return undefined;
+    this.add(id, action);
+    return action;
+  }
 
-
-
+  public clear(id: number): void {
+    this.redoActions[id].clear();
+  }
 }
