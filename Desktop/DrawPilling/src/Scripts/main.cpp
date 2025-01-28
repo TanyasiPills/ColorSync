@@ -56,21 +56,33 @@ bool hover = false;
 
 unsigned int canvasX = 1080, canvasY = 1080;
 
-
+std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vdGJvYiIsInN1YiI6MSwiaWF0IjoxNzM4MDc4MTczfQ.KB15yq4a6n7D5gouRj3EW5HqE0ncO67v_gfIRoUQ9Cg";
 
 // Main code
 int main()
 {
     sio::client h;
     h.set_close_listener([](const sio::client::close_reason& reason) {
-        std::cout << "Connection closed nya!: " << std::endl;
+        std::cout << "Connection closed nya! " << std::endl;
         });
     h.socket()->on("error", [](sio::event& ev) {
         std::cout << "Connection failed nya!" << std::endl;
     });
+    h.set_fail_listener([]() {
+        std::cout << "The nyaggers crashed the server >:c" << std::endl;
+        });
 
-    h.connect("http://25.16.177.252:3000");
 
+    std::map<std::string, std::string> query_params;
+    query_params["name"] = "nya";
+    query_params["create"] = "true";
+
+    std::map<std::string, std::string> headers;
+    headers["token"] = token;
+
+    h.connect("http://25.16.177.252:3000", query_params, headers);
+
+    h.socket()->close();
 
     SessionData data = Manager::Assembly();
 

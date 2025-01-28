@@ -22,6 +22,8 @@ int windowSizeX, windowSizeY;
 std::string username = "Maychii";
 bool inited = false;
 
+std::string tokenHere;
+
 void DrawUI::InitData(std::string usernameIn)
 {
 	username = usernameIn;
@@ -272,7 +274,12 @@ void DrawUI::LoginWindow()
 		std::cout << "Sending JSON: " << body.dump() << std::endl;
 		nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
 		std::cout << res["access_token"] << std::endl;
+		tokenHere = res["access_token"];
 	}
 
 	ImGui::End();
+}
+
+std::string GetToken() {
+	return tokenHere;
 }
