@@ -26,4 +26,8 @@ public:
     static void ServerWindow();
     static void LayerWindow();
     static void ChatWindow();
+
+    static void LoginWindow();
+
+    static void InitData(std::string usernameIn);
 };

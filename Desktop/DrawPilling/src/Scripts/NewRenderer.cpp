@@ -59,6 +59,8 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	initialCanvasRatio[1] = canvasData.canvasY;
 	canvasRatio[0] = canvasData.canvasX;
 	canvasRatio[1] = canvasData.canvasY;
+
+	DrawUI::InitData("Maychii");
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -175,6 +177,7 @@ void RenderImGui(bool& onUIIn)
 	onUIIn = ImGui::GetIO().WantCaptureMouse;
 
 	bool yes = true;
+	ImGui::SetNextWindowViewport(10);
 	ImGui::ShowDemoWindow(&yes);
 
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
@@ -193,6 +196,11 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	GLFWwindow* backup_current_context = glfwGetCurrentContext();
+	ImGui::UpdatePlatformWindows();
+	ImGui::RenderPlatformWindowsDefault();
+	glfwMakeContextCurrent(backup_current_context);
 }
 
 

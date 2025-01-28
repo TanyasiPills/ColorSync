@@ -163,6 +163,7 @@
     <ClCompile Include="Dependencies\Includes\stb_image\stb_image.cpp" />
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
+    <ClCompile Include="src\Scripts\HighsManager.cpp" />
     <ClCompile Include="src\Scripts\IndexBuffer.cpp" />
     <ClCompile Include="src\Scripts\main.cpp" />
     <ClCompile Include="src\Scripts\NewDraw.cpp" />
@@ -503,6 +504,7 @@
     <ClInclude Include="Dependencies\Includes\stb_image\stb_image.h" />
     <ClInclude Include="src\Headers\CallBacks.h" />
     <ClInclude Include="src\Headers\DrawUI.h" />
+    <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />
     <ClInclude Include="src\Headers\NewDraw.h" />
     <ClInclude Include="src\Headers\NewRenderer.h" />

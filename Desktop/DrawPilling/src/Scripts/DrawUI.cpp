@@ -20,6 +20,12 @@ int windowSizeX, windowSizeY;
 
 std::string username = "Maychii";
 
+
+void DrawUI::InitData(std::string usernameIn)
+{
+	username = usernameIn;
+}
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
@@ -223,5 +229,12 @@ void DrawUI::ChatWindow()
 	ChatWindowSize = ImGui::GetWindowSize();
 	rightSize = ChatWindowSize.x;
 	ChatWindowPos = ImGui::GetWindowPos();
+	ImGui::End();
+}
+
+void DrawUI::LoginWindow()
+{
+	ImGui::Begin("Brushes");
+
 	ImGui::End();
 }
