@@ -8,9 +8,9 @@
 class HManager
 {
 private:
-	CURL* curl;
+
 public:
-	HManager();
-	~HManager();
-	nlohmann::json Request(std::string query);
+	static void Init();
+	static void Down();
+	nlohmann::json Request(std::string query, std::string body);
 };

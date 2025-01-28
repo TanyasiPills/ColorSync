@@ -189,6 +189,8 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::LayerWindow();
 	DrawUI::ChatWindow();
 
+	DrawUI::LoginWindow();
+
 	if (ImGui::GetMouseCursor() == ImGuiMouseCursor_ResizeNWSE)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
 
@@ -196,11 +198,12 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+	/*
 	GLFWwindow* backup_current_context = glfwGetCurrentContext();
 	ImGui::UpdatePlatformWindows();
 	ImGui::RenderPlatformWindowsDefault();
 	glfwMakeContextCurrent(backup_current_context);
+	*/
 }
 
 

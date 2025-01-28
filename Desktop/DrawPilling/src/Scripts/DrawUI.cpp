@@ -19,7 +19,7 @@ int rightSize = 200;
 int windowSizeX, windowSizeY;
 
 std::string username = "Maychii";
-
+bool inited = false;
 
 void DrawUI::InitData(std::string usernameIn)
 {
@@ -234,7 +234,38 @@ void DrawUI::ChatWindow()
 
 void DrawUI::LoginWindow()
 {
-	ImGui::Begin("Brushes");
+	if (!inited) {
+		ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
+		ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
+		inited = true;
+	}
+	ImGui::Begin("Nem");
+
+	// Center the cursor in the window
+	ImVec2 windowSize = ImGui::GetWindowSize();
+	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+
+	// Set the size for input field and position
+	ImGui::SetNextItemWidth(150); // Set input width
+	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
+	ImGui::SetCursorPos(inputPos);
+
+	static char usernameText[13] = "";
+	ImGui::InputTextWithHint("##usernameInput", "Username", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
+	inputPos.y += 30;
+
+	ImGui::SetCursorPos(inputPos);
+	ImGui::SetNextItemWidth(150);
+	static char passwordText[24] = "";
+	ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
+	
+	inputPos.y += 30;
+	ImGui::SetNextItemWidth(100);
+	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
+	ImGui::SetCursorPos(buttonPos);
+
+	if (ImGui::Button("Login")) {
+	}
 
 	ImGui::End();
 }
