@@ -143,7 +143,6 @@ void DrawLayerTree(Layer& layer) {
 	if (layer.visible && layer.editing) {
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(100);
-		const char* name = layer.name.c_str();
 		static char editBuffer[256] = "";
 		bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
 		ImGui::SetKeyboardFocusHere(-1);
