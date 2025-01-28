@@ -1,4 +1,5 @@
 #include "DrawUI.h"
+#include "HighsManager.h"
 
 ImVec2 ColorWindowSize(100, 200);
 ImVec2 ColorWindowPos;
@@ -250,8 +251,8 @@ void DrawUI::LoginWindow()
 	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
 	ImGui::SetCursorPos(inputPos);
 
-	static char usernameText[13] = "";
-	ImGui::InputTextWithHint("##usernameInput", "Username", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
+	static char usernameText[100] = "";
+	ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
 	inputPos.y += 30;
 
 	ImGui::SetCursorPos(inputPos);
@@ -265,6 +266,12 @@ void DrawUI::LoginWindow()
 	ImGui::SetCursorPos(buttonPos);
 
 	if (ImGui::Button("Login")) {
+		nlohmann::json body;
+		body["email"] = usernameText;
+		body["password"] = passwordText;
+		std::cout << "Sending JSON: " << body.dump() << std::endl;
+		nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
+		std::cout << res["access_token"] << std::endl;
 	}
 
 	ImGui::End();

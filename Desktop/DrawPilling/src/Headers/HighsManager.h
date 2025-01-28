@@ -5,6 +5,13 @@
 #include "curl/curl.h"
 #include "json/json.hpp"
 
+enum Method {
+	GET,
+	POST,
+	DEL,
+	PATCH
+};
+
 class HManager
 {
 private:
@@ -12,5 +19,5 @@ private:
 public:
 	static void Init();
 	static void Down();
-	nlohmann::json Request(std::string query, std::string body);
+	static nlohmann::json Request(std::string query, std::string body, Method method);
 };

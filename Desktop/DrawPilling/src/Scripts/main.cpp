@@ -59,14 +59,6 @@ unsigned int canvasX = 1080, canvasY = 1080;
 // Main code
 int main()
 {
-    HManager hManager;
-    nlohmann::json jsonResponse = hManager.Request("localhost:3000/item", "");
-    if (jsonResponse[0].contains("purity") && jsonResponse[0]["purity"].is_string()) {
-        std::string purity = jsonResponse[0]["purity"].get<std::string>();
-        float purityNumber = std::stof(purity);
-        std::cout << "Purity: " << purityNumber << std::endl;
-    }
-
     SessionData data = Manager::Assembly();
 
     NewRenderer renderer;

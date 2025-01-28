@@ -514,6 +514,7 @@
     <ClInclude Include="src\Headers\old\NCallBacks.h" />
     <ClInclude Include="src\Headers\old\Renderer.h" />
     <ClInclude Include="src\Headers\old\Shader.h" />
+    <ClInclude Include="src\Headers\SocksManager.h" />
     <ClInclude Include="src\Headers\Texture.h" />
     <ClInclude Include="src\Headers\VertexArray.h" />
     <ClInclude Include="src\Headers\VertexBuffer.h" />

@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h> 
 #include "SessionManager.h"
 
+#include "HighsManager.h"
+
 SessionData Manager::Assembly() {
     SessionData data;
 
@@ -42,6 +44,8 @@ SessionData Manager::Assembly() {
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ZERO);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    HManager::Init();
 
     return data;
 }
