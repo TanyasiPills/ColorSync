@@ -9,15 +9,20 @@ export class UserService {
   constructor (private readonly db: PrismaService) {}
   
   findOne(id: number) {
-    return this.db.user.findUnique({where: {id}, select: {id: true, username: true, profile_picture: true}});
+    return this.db.user.findUnique({where: {id}, select: {id: true, username: true}});
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    return this.db.user.update({where: {id}, data: updateUserDto});
+    return this.db.user.update({where: {id}, data: updateUserDto, select: {username: true, email: true}});
   }
 
-  remove(id: number) {
-    return this.db.user.delete({where: {id}});
+  async remove(id: number) {
+    try {
+      await this.db.user.delete({where: {id}});
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async upload(file: Express.Multer.File, id: number) {

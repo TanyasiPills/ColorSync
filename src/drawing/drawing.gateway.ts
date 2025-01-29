@@ -15,9 +15,9 @@ import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
 import { checkUser, socketError } from "./error";
 import { User } from "./types";
-import { console } from "inspector";
-@WebSocketGateway({ cors: { origin: "*" } })
+import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 
+@WebSocketGateway({ cors: { origin: "*" } })
 export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor (private readonly authService: AuthService) {}
@@ -35,6 +35,12 @@ export class DrawingWS
     this.connectedUsers = [];
   }
 
+  @ApiOperation({description: 'Connect to a room.'})
+  @ApiQuery({name: 'name', description: 'Name of the rooom', type: 'string', required: true})
+  @ApiQuery({name: 'create', description: 'Is the room being created or joined? false for join, true for create', type: 'boolean', required: false, default: 'false'})
+  @ApiHeader({name: 'token', description: 'User token', required: true})
+  @ApiHeader({name: 'password', description: 'Password of the room', required: false})
+  
   async handleConnection(socket: Socket) {
     const token = socket.handshake.headers.token as string;
     let password = socket.handshake.headers.password as string;

@@ -1,5 +1,5 @@
-import { LoginBody } from './api.types';
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res } from '@nestjs/common';
+import { FileAPIType, LoginBody, LoginResponse, UserInfo } from './dto/api.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,7 +10,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -19,7 +19,15 @@ export class UserController {
     private readonly authService: AuthService
   ) {}
 
+
+  /**
+   * Login for the user
+   * @returns {Promise<LoginResponse>} Login response
+   */
   @ApiBody({type: LoginBody})
+  @ApiResponse({status: 200, description: 'Login successful', type: LoginResponse})
+  @ApiResponse({status: 401, description: 'Invalid credentials'})
+
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('login')
@@ -27,13 +35,32 @@ export class UserController {
     return this.authService.login(req.user);
   }
 
+
+  /**
+   * Creates a user, email must be unique
+   * @param createUserDto The data to create the user
+   * @returns 
+   */
+  @ApiResponse({status: 201, description: 'User created', type: LoginResponse})
+  @ApiResponse({status: 409, description: 'Email already in use'})
+
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const status = await this.authService.register(createUserDto);
     if (status == true) return this.authService.login(createUserDto);
-    else if (status == false) throw new HttpException('Email already in use.', HttpStatus.BAD_REQUEST); 
+    else if (status == false) throw new HttpException('Email already in use.', HttpStatus.CONFLICT); 
     else throw new HttpException('Error creating user.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
+
+  /**
+   * Upload a profile picture for the user
+   * @param file image to upload
+   */
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({description: 'Profile picture to upload', type: FileAPIType})
+  @ApiResponse({status: 204, description: 'Profile picture uploaded'})
+  @ApiResponse({status: 401, description: 'Invalid token'})
 
   @Post('pfp')
   @UseGuards(JwtAuthGuard)
@@ -54,15 +81,23 @@ export class UserController {
       }
     })
   )
+  @HttpCode(204)
   uploadPfp(@UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
 
-    this.userService.upload(file, req.user.userId);
-
-    return {filename: file.filename};
+    this.userService.upload(file, req.user.id);
   }
+
+  /**
+   * Gets the profile picture of a specific user
+   * @param id Id of the user
+   * @returns Image file
+   */
+  @ApiParam({name: 'id', type: 'int', description: 'Id of the user', required: true})
+  @ApiResponse({status: 200, description: 'Returns the profile picture of the user'})
+  @ApiResponse({status: 404, description: 'Image not found'})
 
   @Get(':id/pfp')
   async getPfp(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
@@ -71,28 +106,68 @@ export class UserController {
       res.sendFile(path);
       return;
     } else {
-      return;
+      throw new NotFoundException('Image not found')
     }
   }
   
+  /**
+   * Returns data about the currently logged in user
+   * @returns {UserInfo} Information about the logged in user
+   */
+  @ApiBearerAuth()
+  @ApiResponse({status: 200, description: 'Returns data about the currently logged in user', type: UserInfo})
+  @ApiResponse({status: 401, description: 'Invalid token'})
+
   @UseGuards(JwtAuthGuard)
   @Get()
   test(@Request() req: any) {
     return req.user;
   }
   
+  /**
+   * Returns data about a specific user
+   * @param id Id of the user
+   * @returns {UserInfo} Infromation about the user
+   */
+  @ApiParam({name: 'id', type: 'int', description: 'Id of the user', required: true})
+  @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfo})
+  @ApiResponse({status: 404, description: 'User not found'})
+
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.userService.findOne(id);
+    if (user) return user;
+    else throw new NotFoundException('User not found');
   }
 
-  @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  /**
+   * Updates the user data
+   * @param updateUserDto The data to update
+   * @returns {UserInfo} User information after the update
+   */
+  @ApiBearerAuth()
+  @ApiResponse({status: 200, description: 'Returns the updated user data', type: UserInfo})
+  @ApiResponse({status: 401, description: 'Invalid token'})
+
+  @UseGuards(JwtAuthGuard)
+  @Patch()
+  update(@Req() req : any, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(req.user.id, updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.remove(+id);
+  /**
+   * Delets the user
+   */
+  @ApiBearerAuth()
+  @ApiResponse({status: 204, description: 'User deleted successfully'})
+  @ApiResponse({status: 401, description: 'Invalid token'})
+  @ApiResponse({status: 500, description: 'Failed to delete the user'})
+
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  @HttpCode(204)
+  remove(@Req() req: any) {
+    const status = this.userService.remove(req.user.id);
+    if (!status) throw new HttpException('Failed to delete the user', HttpStatus.INTERNAL_SERVER_ERROR)
   }
 }
