@@ -15,7 +15,6 @@ static float scale = 1.0;
 float yRatio = 1.0;
 int originalSizeX = 1.0, originalSizeY = 1.0;
 
-
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	ImGui_ImplGlfw_ScrollCallback(window, xoffset,yoffset);

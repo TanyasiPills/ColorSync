@@ -4,12 +4,13 @@
 #include "ImGui/imgui_impl_opengl3.h"
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h> 
+
 #include "SessionManager.h"
-
 #include "HighsManager.h"
+#include "DataManager.h"
 
-SessionData Manager::Assembly() {
-    SessionData data;
+SessionData Manager::Assembly(SessionData& data) {
+
 
     glfwInit(); //!!!!!!!!
 
@@ -45,16 +46,19 @@ SessionData Manager::Assembly() {
     //glBlendFunc(GL_ONE, GL_ZERO);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    DataManager::LoadAppData();
+
     HManager::Init();
 
     return data;
 }
-void Manager::DisAssembly(GLFWwindow* window, unsigned int shader) {
+void Manager::DisAssembly(GLFWwindow* window) {
+    std::cout << "heooooo2" << std::endl;
+    DataManager::SaveAppData();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
-    glDeleteProgram(shader);
     glfwTerminate();
 }

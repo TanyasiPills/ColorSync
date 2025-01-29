@@ -108,6 +108,12 @@
     <ClCompile Include="Dependencies\Includes\SocketSource\sio_socket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scripts\SocksManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scripts\DataManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\Libaries\glew32s.lib" />
@@ -3395,6 +3401,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Dependencies\Includes\boost\weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Headers\DataManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

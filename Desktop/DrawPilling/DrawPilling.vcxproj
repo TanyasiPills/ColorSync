@@ -121,9 +121,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;$(SolutionDir)DrawPilling\Dependencies\Includes\SocketIO</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,9 +139,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;$(SolutionDir)DrawPilling\Dependencies\Includes\SocketIO</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -167,6 +169,7 @@
     <ClCompile Include="Dependencies\Includes\SocketSource\sio_socket.cpp" />
     <ClCompile Include="Dependencies\Includes\stb_image\stb_image.cpp" />
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
+    <ClCompile Include="src\Scripts\DataManager.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
     <ClCompile Include="src\Scripts\HighsManager.cpp" />
     <ClCompile Include="src\Scripts\IndexBuffer.cpp" />
@@ -180,6 +183,7 @@
     <ClCompile Include="src\Scripts\old\Renderer.cpp" />
     <ClCompile Include="src\Scripts\old\Shader.cpp" />
     <ClCompile Include="src\Scripts\SessionManager.cpp" />
+    <ClCompile Include="src\Scripts\SocksManager.cpp" />
     <ClCompile Include="src\Scripts\Texture.cpp" />
     <ClCompile Include="src\Scripts\VertexArray.cpp" />
     <ClCompile Include="src\Scripts\VertexBuffer.cpp" />
@@ -1267,6 +1271,7 @@
     <ClInclude Include="Dependencies\Includes\SocketSource\sio_socket.h" />
     <ClInclude Include="Dependencies\Includes\stb_image\stb_image.h" />
     <ClInclude Include="src\Headers\CallBacks.h" />
+    <ClInclude Include="src\Headers\DataManager.h" />
     <ClInclude Include="src\Headers\DrawUI.h" />
     <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />

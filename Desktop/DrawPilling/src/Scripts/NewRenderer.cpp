@@ -60,7 +60,6 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	canvasRatio[0] = canvasData.canvasX;
 	canvasRatio[1] = canvasData.canvasY;
 
-	DrawUI::InitData("Maychii");
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)

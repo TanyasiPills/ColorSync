@@ -4,6 +4,9 @@
 #include "ImGui/imgui_impl_opengl3.h"
 #include "NewRenderer.h"
 
+#include <map>
+#include <string>
+
 struct Layer {
     std::string name;
     std::vector<Layer> children;
@@ -29,5 +32,7 @@ public:
 
     static void LoginWindow();
 
-    static void InitData(std::string usernameIn);
+    static void InitData(std::string usernameIn, std::string tokenIn);
+
+    static void GetMsg(std::map<std::string, std::string> messageObject);
 };

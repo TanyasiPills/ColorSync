@@ -1,5 +1,7 @@
 #include "DrawUI.h"
 #include "HighsManager.h"
+#include "SocksManager.h"
+#include <thread>
 
 ImVec2 ColorWindowSize(100, 200);
 ImVec2 ColorWindowPos;
@@ -19,14 +21,31 @@ int rightSize = 200;
 
 int windowSizeX, windowSizeY;
 
-std::string username = "Maychii";
+std::string username;
 bool inited = false;
+bool needLogin = true;
+std::string create = "false";
+
+static std::vector<std::string> chatLog;
 
 std::string tokenHere;
 
-void DrawUI::InitData(std::string usernameIn)
+void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
 {
-	username = usernameIn;
+	if (usernameIn[0] != '\0') {
+		username = usernameIn;
+	}
+	else {
+		std::cerr << "no username" << std::endl;
+	}
+
+	if (tokenIn[0] != '\0') {
+		needLogin = false;
+		tokenHere = tokenIn;
+	}
+	else {
+		std::cerr << "no token" << std::endl;
+	}
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
@@ -127,6 +146,38 @@ void DrawUI::ServerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar);
+
+	ImVec2 windowSize = ImGui::GetWindowSize();
+	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+
+	// Set the size for input field and position
+	ImGui::SetNextItemWidth(150); // Set input width
+	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
+	ImGui::SetCursorPos(inputPos);
+
+	static char lobbyName[100] = "";
+	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
+
+	inputPos.y += 30;
+	ImGui::SetNextItemWidth(100);
+	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
+	ImGui::SetCursorPos(buttonPos);
+
+	if (ImGui::Button("Create") && lobbyName != "") {
+		std::map<std::string, std::string> room;
+		room["name"] = lobbyName;
+		room["create"] = "true";
+		SManager::Connect("http://10.4.117.21:3000", tokenHere.c_str(), room);
+	}
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(300);
+	if (ImGui::Button("Join") && lobbyName != "") {
+		std::map<std::string, std::string> room;
+		room["name"] = lobbyName;
+		room["create"] = "false";
+		SManager::Connect("http://10.4.117.21:3000", tokenHere.c_str(), room);
+	}
+
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
@@ -200,7 +251,6 @@ void DrawUI::LayerWindow()
 
 void DrawUI::ChatWindow()
 {
-	static std::vector<std::string> chatLog;
 	static char inputBuffer[256] = "";
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
@@ -213,7 +263,7 @@ void DrawUI::ChatWindow()
 	ImGui::BeginChild("ChatLog", ImVec2(0, ChatWindowSize.y - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
 	{
-		ImGui::TextWrapped("%s: %s", username.c_str(), message.c_str());
+		ImGui::TextWrapped("%s", message.c_str());
 	}
 	ImGui::EndChild();
 	ImGui::Separator();
@@ -222,7 +272,9 @@ void DrawUI::ChatWindow()
 	{
 		if (strlen(inputBuffer) > 0)
 		{
-			chatLog.push_back(inputBuffer);
+			std::string msg = username+": " + inputBuffer;
+			chatLog.push_back(msg);
+			SManager::SendMsg(inputBuffer);
 			memset(inputBuffer, 0, sizeof(inputBuffer)); 
 		}
 		ImGui::SetKeyboardFocusHere(-1);
@@ -237,49 +289,62 @@ void DrawUI::ChatWindow()
 
 void DrawUI::LoginWindow()
 {
-	if (!inited) {
-		ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
-		ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
-		inited = true;
+	if (needLogin) {
+		if (!inited) {
+			ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
+			ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
+			inited = true;
+		}
+		ImGui::Begin("Nem");
+
+		// Center the cursor in the window
+		ImVec2 windowSize = ImGui::GetWindowSize();
+		ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+
+		// Set the size for input field and position
+		ImGui::SetNextItemWidth(150); // Set input width
+		ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
+		ImGui::SetCursorPos(inputPos);
+
+		static char usernameText[100] = "";
+		ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
+		inputPos.y += 30;
+
+		ImGui::SetCursorPos(inputPos);
+		ImGui::SetNextItemWidth(150);
+		static char passwordText[24] = "";
+		ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
+
+		inputPos.y += 30;
+		ImGui::SetNextItemWidth(100);
+		ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
+		ImGui::SetCursorPos(buttonPos);
+
+		if (ImGui::Button("Login")) {
+			std::thread([]() {
+				nlohmann::json body;
+				body["email"] = usernameText;
+				body["password"] = passwordText;
+
+				std::cout << "Sending JSON: " << body.dump() << std::endl;
+				nlohmann::json res = HManager::Request("10.4.117.21:3000/user/login", body.dump(), POST);
+
+				if (res.contains("access_token") && res.contains("username")) {
+					std::cout << "got this JSON: " << res["access_token"] << std::endl;
+					tokenHere = res["access_token"];
+					username = res["username"];
+					needLogin = false;
+				}
+			}).detach();
+		}
+
+		ImGui::End();
 	}
-	ImGui::Begin("Nem");
-
-	// Center the cursor in the window
-	ImVec2 windowSize = ImGui::GetWindowSize();
-	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
-
-	// Set the size for input field and position
-	ImGui::SetNextItemWidth(150); // Set input width
-	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
-	ImGui::SetCursorPos(inputPos);
-
-	static char usernameText[100] = "";
-	ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
-	inputPos.y += 30;
-
-	ImGui::SetCursorPos(inputPos);
-	ImGui::SetNextItemWidth(150);
-	static char passwordText[24] = "";
-	ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
-	
-	inputPos.y += 30;
-	ImGui::SetNextItemWidth(100);
-	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
-	ImGui::SetCursorPos(buttonPos);
-
-	if (ImGui::Button("Login")) {
-		nlohmann::json body;
-		body["email"] = usernameText;
-		body["password"] = passwordText;
-		std::cout << "Sending JSON: " << body.dump() << std::endl;
-		nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
-		std::cout << res["access_token"] << std::endl;
-		tokenHere = res["access_token"];
-	}
-
-	ImGui::End();
 }
 
-std::string GetToken() {
-	return tokenHere;
+void DrawUI::GetMsg(std::map<std::string, std::string> messageObject)
+{
+	std::string msg = messageObject["username"] + ": " + messageObject["message"];
+	std::cout << msg << std::endl;
+	chatLog.push_back(msg);
 }
