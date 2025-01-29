@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
-import { fragmentShaderSource, vertexShaderSource } from "./Shaders";
-import { VertexArrayFunction } from "./VertexArray ";
+import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
+import { VertexArrayFunction } from "./Shaders/VertexArray ";
 import "./WebGlCanvas.css"
 
 const WebGLCanvas: React.FC = () => {
@@ -12,6 +12,8 @@ const WebGLCanvas: React.FC = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const leftResize = document.getElementById("leftResize");
+    const rightResize = document.getElementById("rightResize");
 
     if (!canvas) {
       console.error("Canvas element not found.");
@@ -33,6 +35,42 @@ const WebGLCanvas: React.FC = () => {
     var colour: Float32Array = new Float32Array([0, 0, 0]);
     let size = parseFloat(sizeRef.current?.value || "0.1");
 
+    let wd = 100;
+    let x: number, dx: number;
+
+    const startResize = (evt: { screenX: number }) => {
+      x = evt.screenX;
+    };
+
+    const resize = (evt: { screenX: number }, side: 'left' | 'right') => {
+      dx = evt.screenX - x;
+      x = evt.screenX;
+
+      if (side === 'left') {
+        wd += dx;
+        const main = document.querySelector("#sideBar#left") as HTMLElement;
+        main.style.width = wd + "px";
+      } else if (side === 'right') {
+        const mainRight = document.querySelector("#sideBar#right") as HTMLElement;
+        mainRight.style.width = (wd + dx) + "px";
+      }
+    };
+
+    leftResize?.addEventListener("mousedown", (evt) => {
+      startResize(evt);
+      document.body.addEventListener("mousemove", (e) => resize(e, 'left'));
+      document.body.addEventListener("mouseup", () => {
+        document.body.removeEventListener("mousemove", (e) => resize(e, 'left'));
+      });
+    });
+
+    rightResize?.addEventListener("mousedown", (evt) => {
+      startResize(evt);
+      document.body.addEventListener("mousemove", (e) => resize(e, 'right'));
+      document.body.addEventListener("mouseup", () => {
+        document.body.removeEventListener("mousemove", (e) => resize(e, 'right'));
+      });
+    });
 
     clearCanvas(gl);
 
@@ -157,6 +195,7 @@ const WebGLCanvas: React.FC = () => {
     return () => {
       isRunning = false;
     };
+    
   }, []);
 
 
