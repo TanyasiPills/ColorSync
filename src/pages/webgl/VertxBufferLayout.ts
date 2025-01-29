@@ -1,7 +1,22 @@
-interface VertexBufferElement {
+export class VertexBufferElement {
     type: number;
     count: number;
     normalized: boolean;
+
+    constructor(type: number, count: number, normalized: boolean) {
+        this.type = type;
+        this.count = count;
+        this.normalized = normalized;
+    }
+
+    static getSizeOfType(type: number): number {
+        switch (type) {
+            case WebGL2RenderingContext.FLOAT: return 4;
+            case WebGL2RenderingContext.UNSIGNED_INT: return 4;
+            case WebGL2RenderingContext.UNSIGNED_BYTE: return 1;
+            default: return 0;
+        }
+    }
 }
 
 export class VertexBufferLayout {

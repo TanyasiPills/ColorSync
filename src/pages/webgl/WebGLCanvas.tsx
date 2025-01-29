@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
-import { VertexArrayFunction } from "./Shaders/VertexArray ";
 import "./WebGlCanvas.css"
 
 const WebGLCanvas: React.FC = () => {
@@ -20,11 +19,11 @@ const WebGLCanvas: React.FC = () => {
       return;
     }
 
-    const gl = canvas.getContext("webgl");
+    const gl = canvas.getContext("webgl2");
 
     if (!gl) {
       alert(
-        "Unable to initialize WebGL. Your browser or machine may not support it."
+        "Unable to initialize WebGL 2. Your browser or machine may not support it."
       );
       return;
     }
@@ -109,13 +108,7 @@ const WebGLCanvas: React.FC = () => {
       const centerX = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
       const centerY = 1 - ((event.clientY - rect.top) / canvas.height) * 2;
 
-      let vertex = VertexArrayFunction(size, 50, centerX, centerY);
-      circleVertices = new Float32Array(vertex.length + 3);
-      circleVertices.set(colour);
-      circleVertices.set(vertex, 3);
-      if (mousehold) {
-        drawn.push(circleVertices);
-      }
+      
     });
 
 
@@ -146,11 +139,6 @@ const WebGLCanvas: React.FC = () => {
       const centerY = 1 - ((event.clientY - rect.top) / canvas.height) * 2;
 
       mousehold = true;
-      let vertex = VertexArrayFunction(size, 50, centerX, centerY);
-      circleVertices = new Float32Array(vertex.length + 3);
-      circleVertices.set(colour);
-      circleVertices.set(vertex, 3);
-      drawn.push(circleVertices);
     });
 
     addEventListener("mouseup", () => {

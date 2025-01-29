@@ -1,8 +1,8 @@
 export class VertexBuffer {
     private buffer: WebGLBuffer | null;
-    private gl: WebGLRenderingContext;
+    private gl: WebGL2RenderingContext;
 
-    constructor(gl: WebGLRenderingContext, data: ArrayBuffer) {
+    constructor(gl: WebGL2RenderingContext, data: ArrayBuffer) {
         this.gl = gl;
         this.buffer = gl.createBuffer();
         if (!this.buffer) {
