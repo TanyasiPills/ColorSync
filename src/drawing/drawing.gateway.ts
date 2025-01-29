@@ -35,14 +35,12 @@ export class DrawingWS
   }
 
   async handleConnection(socket: Socket) {
+    console.log(socket);
     const token = socket.handshake.headers.token as string;
     let password = socket.handshake.headers.password as string;
     let name = socket.handshake.query.name;
 
     if (password === "") password = undefined;
-
-    console.log("Token: ", token);
-    console.log("Password: ", password);
 
     if (!name) {
       socketError(socket, "Name is required", 20);

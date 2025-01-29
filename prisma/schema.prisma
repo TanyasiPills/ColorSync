@@ -18,7 +18,7 @@ model User {
   username String
   email String @unique
   password String
-  profile_picture String? @default("default.jpg")
+  profile_picture String?
 
   Post Post[]
   Image Image[]

@@ -15,7 +15,7 @@
       const create = document.getElementById("create").checked;
 
       socket = io('http://localhost:3000', {
-        headers: { //Headers not working
+        extraHeaders: {
           token: token,
           password: password
         },
@@ -40,6 +40,14 @@
       socket.on('error', (error) => {
         console.error('Error:', error.message);
       });
+
+      socket.on('action', (data) => {
+        console.log("Recived action:", action);
+      });
+
+      socket.on('mouse', (data) => {
+        console.log("Recived mouse:", data);
+      });
     }
 
     async function login() {
@@ -52,12 +60,13 @@
       const response = await fetch("http://localhost:3000/user/login", {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Flashpost'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({email, password})
       });
-      console.log((await response.json()));
+      const res = await response.json();
+      console.log(res);
+      const token = document.getElementById("token").value = res.access_token;
     }
 
     async function register() {
@@ -78,6 +87,30 @@
     function send() {
       const message = document.getElementById("message").value;
       socket.emit("message", {message: message});
+    }
+
+    async function upload() {
+      const files = document.getElementById("file").files;
+      const token = document.getElementById("token").value;
+
+      if (files.length === 0) {
+        alert('No files :c');
+        return;
+      }
+
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch("http://localhost:3000/user/pfp", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      console.log("File upload: ", result);
     }
   </script>
 </head>
@@ -127,6 +160,14 @@
     <input type="text" name="message" id="message">
     <br>
     <input type="submit" value="Send">
+  </form>
+  <br>
+  <form onsubmit="upload(); return false;">
+    <p>Profile Picture Upload</p>
+    <label for="file">File:</label>
+    <input type="file" name="file" id="file">
+    <br>
+    <input type="submit" value="Upload">
   </form>
 </body>
 

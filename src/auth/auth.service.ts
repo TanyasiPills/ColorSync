@@ -37,7 +37,7 @@ export class AuthService {
     else {
       const token = await this.jwtService.sign(payload);
       await this.db.token.create({data: {token, userId: user.id}});
-      return {access_token: token};
+      return {access_token: token, username: user.username, id: user.id};
     }
   }
 
