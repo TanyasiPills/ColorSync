@@ -4,7 +4,7 @@ interface VertexBufferElement {
     normalized: boolean;
 }
 
-class VertexBufferLayout {
+export class VertexBufferLayout {
     private elements: VertexBufferElement[] = [];
     private stride: number = 0;
 
