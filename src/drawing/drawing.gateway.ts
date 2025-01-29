@@ -35,7 +35,6 @@ export class DrawingWS
   }
 
   async handleConnection(socket: Socket) {
-    console.log(socket);
     const token = socket.handshake.headers.token as string;
     let password = socket.handshake.headers.password as string;
     let name = socket.handshake.query.name;

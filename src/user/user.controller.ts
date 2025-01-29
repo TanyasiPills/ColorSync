@@ -21,7 +21,6 @@ export class UserController {
   @HttpCode(200)
   @Post('login')
   async login(@Request() req) {
-    console.log(req.user);
     return this.authService.login(req.user);
   }
 
@@ -57,6 +56,8 @@ export class UserController {
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
+
+    console.log("req.user", req.user);
 
     this.userService.upload(file, req.user);
 

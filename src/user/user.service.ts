@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
-import { User } from '@prisma/client';
+import { unlink } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -19,8 +19,8 @@ export class UserService {
     return this.db.user.delete({where: {id}});
   }
 
-  upload(file: Express.Multer.File, user: User) {
-    console.log(user.profile_picture);
-    console.log(user.id);
+  async upload(file: Express.Multer.File, id: number) {
+    const user = await this.db.user.findUnique({where: {id}});
+    //unlink(); wip
   }
 }

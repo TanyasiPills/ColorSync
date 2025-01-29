@@ -33,7 +33,7 @@ export class AuthService {
   async login(user: any) {
     const payload = {username: user.username, sub: user.id};
     const storedToken = await this.db.token.findFirst({where: {userId: user.id}})
-    if (storedToken) return {access_token: storedToken.token};
+    if (storedToken) return {access_token: storedToken.token, username: user.username, id: user.id};
     else {
       const token = await this.jwtService.sign(payload);
       await this.db.token.create({data: {token, userId: user.id}});
