@@ -36,7 +36,7 @@ export class Room {
     socket.join(this.name);
     this.clients.push(socket);
     this.history.join(user.id);
-    this.emit('system message', {message: `${user.username} joined the room!`});
+    this.emit('system message', {message: `${user.username} joined the room!`, id: user.id});
     return true;
   }
 
@@ -44,7 +44,7 @@ export class Room {
     const user : User = socket.data.user as User;
     socket.leave(this.name);
     this.clients = this.clients.filter(c => c !== socket);
-    this.emit('system message', {message: `${user.username} left the room!`});
+    this.emit('system message', {message: `${user.username} left the room!`, id: user.id});
     socket.disconnect();
   }
 

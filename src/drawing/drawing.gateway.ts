@@ -15,6 +15,7 @@ import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
 import { checkUser, socketError } from "./error";
 import { User } from "./types";
+import { console } from "inspector";
 @WebSocketGateway({ cors: { origin: "*" } })
 
 export class DrawingWS
@@ -127,5 +128,10 @@ export class DrawingWS
     if (!user) return;
     const room = this.connections.get(socket.id);
     room.emitFromSocket(socket, 'action', {type, data});
+  }
+
+  @SubscribeMessage('manage')
+  handleAdmin(@ConnectedSocket() socket: Socket) {
+    //WIP
   }
 }

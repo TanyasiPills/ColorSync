@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { LoginBody } from './api.types';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,6 +9,8 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { Response } from 'express';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -16,7 +19,7 @@ export class UserController {
     private readonly authService: AuthService
   ) {}
 
-
+  @ApiBody({type: LoginBody})
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('login')
@@ -39,7 +42,6 @@ export class UserController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, callback) => {
-          console.log("filename", req.user);
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
         }
@@ -57,35 +59,40 @@ export class UserController {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
 
-    console.log("req.user", req.user);
-
-    this.userService.upload(file, req.user);
+    this.userService.upload(file, req.user.userId);
 
     return {filename: file.filename};
   }
 
   @Get(':id/pfp')
-  getPfp(@Param('id') id: string) {
+  async getPfp(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const path = await this.userService.getPfp(id);
+    if (path) {
+      res.sendFile(path);
+      return;
+    } else {
+      return;
+    }
   }
-
+  
   @UseGuards(JwtAuthGuard)
   @Get()
   test(@Request() req: any) {
     return req.user;
   }
-
+  
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.remove(+id);
   }
 }

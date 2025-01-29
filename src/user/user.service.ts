@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
-import { unlink } from 'fs';
+import { existsSync, unlink, unlinkSync } from 'fs';
+import { resolve } from 'path';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,36 @@ export class UserService {
 
   async upload(file: Express.Multer.File, id: number) {
     const user = await this.db.user.findUnique({where: {id}});
-    //unlink(); wip
+    if (!user) {
+      return false;
+    }
+    if (user.profile_picture) {
+      const path = resolve(`uploads/${user.profile_picture}`);
+      try {
+        if (existsSync(path)) {
+          unlinkSync(path);
+        }
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    }
+    try {
+      await this.db.user.update({where: {id}, data: {profile_picture: file.filename}});
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getPfp(id: number) {
+    const picture = await this.db.user.findUnique({where: {id}, select: {profile_picture: true}});
+    if (!picture) return null;
+
+    let path;
+    if (picture.profile_picture == null) path = resolve('images/defaultPfp.jpg');
+    else path = resolve(`uploads/${picture.profile_picture}`);
+    if (!existsSync(path)) return null;
+    return path;
   }
 }

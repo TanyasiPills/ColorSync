@@ -15,9 +15,9 @@ datasource db {
 
 model User {
   id Int @id @default(autoincrement())
-  username String
+  username String @db.VarChar(24)
   email String @unique
-  password String
+  password String @db.VarChar(24)
   profile_picture String?
 
   Post Post[]
