@@ -19,8 +19,10 @@ layout(location = 0) out vec4 color;
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
 
+uniform vec3 Kolor;
+
 void main() {
     vec4 textColor = texture(u_Texture, v_TextCoord)
-    fragColor = vec4(v_TexCoord, 0.0, 1.0);
+    color = textColor * vec4(Kolor, 1.0);
 }
 `;
