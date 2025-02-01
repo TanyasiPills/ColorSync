@@ -79,7 +79,7 @@ int main()
     glfwSetWindowCloseCallback(data.window, onCloseCallback);
 
 
-    while (true)
+    while (!glfwWindowShouldClose(data.window))
     {
         glfwPollEvents();
 
