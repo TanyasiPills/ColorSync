@@ -26,6 +26,9 @@ int main()
 
     renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
 
+    glfwSetWindowCloseCallback(data.window, onCloseCallback);
+
+
     while (true)
     {
         glfwPollEvents();

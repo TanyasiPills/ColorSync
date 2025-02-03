@@ -19,6 +19,9 @@ ImVec2 ChatWindowPos(0, 450);
 int leftSize = 200;
 int rightSize = 200;
 
+int leftMinSize = 200;
+int rightMinSize = 200;
+
 int windowSizeX, windowSizeY;
 
 std::string username;
@@ -44,18 +47,22 @@ void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
 		tokenHere = tokenIn;
 	}
 	else {
+		needLogin = false; //need to remove this later !!!!
 		std::cerr << "no token" << std::endl;
 	}
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
 {
+
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
-	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 	static float color[3] = { 0.0f, 0.0f, 0.0f };
-	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview);
+	ImGui::SetNextItemWidth(-1);
+	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
 
@@ -63,14 +70,19 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	leftSize = ColorWindowSize.x;
 	ColorWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (ColorWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::SizeWindow(float& cursorRadius)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
+
 	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
 
-	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
@@ -101,6 +113,10 @@ void DrawUI::SizeWindow(float& cursorRadius)
 	leftSize = SizeWindowSize.x;
 	SizeWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (SizeWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::BrushWindow(GLFWwindow* window) 
@@ -109,7 +125,7 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y + SizeWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
-	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
@@ -138,14 +154,20 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	leftSize = BrushWindowSize.x;
 	BrushWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (BrushWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::ServerWindow() 
 {
+	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
+
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX-rightSize, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
-	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
@@ -182,6 +204,11 @@ void DrawUI::ServerWindow()
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+
+	if (ServerWindowSize.x < 200) {
+		rightSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawLayerTree(Layer& layer) {
@@ -239,7 +266,7 @@ void DrawUI::LayerWindow()
 		rootLayer.children[1].children.push_back(Layer("Sub-layer 2"));
 	}
 
-	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	DrawLayerTree(rootLayer);
 
@@ -247,6 +274,10 @@ void DrawUI::LayerWindow()
 	rightSize = LayerWindowSize.x;
 	LayerWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (LayerWindowSize.x < 200) {
+		rightSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::ChatWindow()
@@ -256,7 +287,7 @@ void DrawUI::ChatWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
 
-	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	float inputBarHeight = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().FramePadding.y * 3 + ImGui::GetStyle().ItemSpacing.y;
 
@@ -285,6 +316,10 @@ void DrawUI::ChatWindow()
 	rightSize = ChatWindowSize.x;
 	ChatWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (ChatWindowSize.x < 200) {
+		rightSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::LoginWindow()
