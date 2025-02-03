@@ -1,4 +1,5 @@
 #include "CallBacks.h"
+#include "SessionManager.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
@@ -117,6 +118,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	}
 }
 
+void onCloseCallback(GLFWwindow* window) {
+	std::cout << "Window close event intercepted. Doing necessary cleanup before closing.\n";
+	Manager::DisAssembly(window);
+}
 
 void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 {
@@ -131,6 +136,7 @@ void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwGetWindowSize(window, &screenWidth, &screenHeight);
+	glfwSetWindowCloseCallback(window, onCloseCallback);
 }
 
 float* Callback::GlCursorPosition()
