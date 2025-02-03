@@ -95,7 +95,7 @@ export class UserController {
    * @param id Id of the user
    * @returns Image file
    */
-  @ApiParam({name: 'id', type: 'int', description: 'Id of the user', required: true})
+  @ApiParam({name: 'id', description: 'Id of the user'})
   @ApiResponse({status: 200, description: 'Returns the profile picture of the user'})
   @ApiResponse({status: 404, description: 'Image not found'})
 
@@ -120,7 +120,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  test(@Request() req: any) {
+  getLoggedIn(@Request() req: any) {
     return req.user;
   }
   

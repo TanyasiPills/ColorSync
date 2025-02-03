@@ -22,24 +22,11 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  docConfig.tags.push({name: 'socket.io', description: 'WebSocket endpoints'});
+  docConfig.tags.push({name: 'socket.io', description: 'WebSocket endpoints', externalDocs: {url: "/docs/websocket", description: "Websocket documentation."}});
     
-  SwaggerModule.setup('docs', app, () => {
-    const doc = SwaggerModule.createDocument(app, docConfig);
-    console.log(doc.paths);
-    let p : Record<string, PathItemObject> = {'/join/' : {get: {
-      operationId: 'WebSocket_join',
-      parameters: [],
-      requestBody: null,
-      responses: null,
-      summary: 'Join a room',
-      tags: ['socket.io']
-    }}};
-    doc.paths = p;
-    return doc;
-  });
+  SwaggerModule.setup('docs', app, () => SwaggerModule.createDocument(app, docConfig));
+  
     
-
   await app.listen(3000);
 }
 bootstrap();
