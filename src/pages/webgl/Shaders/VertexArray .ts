@@ -27,13 +27,11 @@ export class VertexArray {
             this.gl.enableVertexAttribArray(i);
             this.gl.vertexAttribPointer(i, element.count, element.type, element.normalized, this.layout.getStride(), offset);
             offset += element.count * VertexBufferElement.getSizeOfType(element.type);
-
         }
     }
     bind() {
         if (this.vao) {
             this.gl.bindVertexArray(this.vao);
-            
         }
     }
 
