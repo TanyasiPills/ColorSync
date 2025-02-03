@@ -11,8 +11,6 @@ const WebGLCanvas: React.FC = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const leftResize = document.getElementById("leftResize");
-    const rightResize = document.getElementById("rightResize");
 
     if (!canvas) {
       console.error("Canvas element not found.");
@@ -32,45 +30,7 @@ const WebGLCanvas: React.FC = () => {
     let isRunning = true;
     var mousehold: boolean = false;
     var colour: Float32Array = new Float32Array([0, 0, 0]);
-    let size = parseFloat(sizeRef.current?.value || "0.1");
-
-    let wd = 100;
-    let x: number, dx: number;
-
-    const startResize = (evt: { screenX: number }) => {
-      x = evt.screenX;
-    };
-
-    const resize = (evt: { screenX: number }, side: 'left' | 'right') => {
-      dx = evt.screenX - x;
-      x = evt.screenX;
-
-      if (side === 'left') {
-        wd += dx;
-        const main = document.querySelector("#sideBar#left") as HTMLElement;
-        main.style.width = wd + "px";
-      } else if (side === 'right') {
-        const mainRight = document.querySelector("#sideBar#right") as HTMLElement;
-        mainRight.style.width = (wd + dx) + "px";
-      }
-    };
-
-    leftResize?.addEventListener("mousedown", (evt) => {
-      startResize(evt);
-      document.body.addEventListener("mousemove", (e) => resize(e, 'left'));
-      document.body.addEventListener("mouseup", () => {
-        document.body.removeEventListener("mousemove", (e) => resize(e, 'left'));
-      });
-    });
-
-    rightResize?.addEventListener("mousedown", (evt) => {
-      startResize(evt);
-      document.body.addEventListener("mousemove", (e) => resize(e, 'right'));
-      document.body.addEventListener("mouseup", () => {
-        document.body.removeEventListener("mousemove", (e) => resize(e, 'right'));
-      });
-    });
-
+    
     clearCanvas(gl);
 
     const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
@@ -172,12 +132,6 @@ const WebGLCanvas: React.FC = () => {
 
       colour = new Float32Array([r, g, b]);
     });
-
-    const sizeInput = sizeRef.current;
-    sizeInput?.addEventListener("input", () => {
-      size = parseFloat(sizeInput.value);
-    });
-
     render();
 
     return () => {
@@ -200,11 +154,12 @@ const WebGLCanvas: React.FC = () => {
         <canvas
           ref={canvasRef}
           id="gl-canvas"
-          width={700}
-          height={700}
+          width={'100%'}
+          height={'100%'}
         />
       </div>
       <div className="sideBar" id="right">
+        
         <p>Itt majd lesz valami</p>
         <div id="rightResize" className="rsz"></div>
       </div>
