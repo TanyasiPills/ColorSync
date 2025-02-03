@@ -168,10 +168,11 @@
     <ClCompile Include="Dependencies\Includes\SocketSource\sio_client.cpp" />
     <ClCompile Include="Dependencies\Includes\SocketSource\sio_socket.cpp" />
     <ClCompile Include="Dependencies\Includes\stb_image\stb_image.cpp" />
-    <ClCompile Include="src\Headers\DrawMenu.h" />
+    <ClCompile Include="src\Headers\Menu.h" />
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
     <ClCompile Include="src\Scripts\DataManager.cpp" />
-    <ClCompile Include="src\Scripts\DrawMenu.cpp" />
+    <ClCompile Include="src\Scripts\lss.cpp" />
+    <ClCompile Include="src\Scripts\Menu.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
     <ClCompile Include="src\Scripts\HighsManager.cpp" />
     <ClCompile Include="src\Scripts\IndexBuffer.cpp" />
@@ -1278,6 +1279,7 @@
     <ClInclude Include="src\Headers\Headers.h" />
     <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />
+    <ClInclude Include="src\Headers\lss.h" />
     <ClInclude Include="src\Headers\NewDraw.h" />
     <ClInclude Include="src\Headers\NewRenderer.h" />
     <ClInclude Include="src\Headers\NewShader.h" />

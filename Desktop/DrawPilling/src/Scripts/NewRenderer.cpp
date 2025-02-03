@@ -10,6 +10,7 @@
 #include "NewDraw.h"
 #include "CallBacks.h"
 #include "DrawUI.h"
+#include "Menu.h"
 
 void GLClearError() {
 	while (glGetError() != GL_NO_ERROR);
@@ -140,7 +141,7 @@ void NewRenderer::RenderCursorToCanvas()
 
 void NewRenderer::Clear() 
 {
-	glClearColor(0.2, 0.2, 0.2, 0);
+	glClearColor(0.188, 0.188, 0.313, 0);
 	GLCall(glClear(GL_COLOR_BUFFER_BIT));
 }
 
@@ -205,13 +206,40 @@ void RenderImGui(bool& onUIIn)
 	*/
 }
 
+void RenderMenu()
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+
+	int width, height;
+	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
+
+	int sideWidth = width * (2.0f / 7.0f);
+	int mainWidth = width * (3.0f / 7.0f);
+	int windowHeight = (float)height;
+
+	int totalWidth = sideWidth + mainWidth + sideWidth;
+	mainWidth += (width - totalWidth); 
+	
+
+	Menu::LeftSide(0,sideWidth, windowHeight);
+	Menu::MainFeed(sideWidth, mainWidth, windowHeight);
+	Menu::RightSide(sideWidth+mainWidth, sideWidth, windowHeight);
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 
 void NewRenderer::Render()
 {
 	Clear();
-	RenderLayers();
-	RenderCursor();
-	RenderImGui(onUI);
+	//RenderLayers();
+	//RenderCursor();
+	//RenderImGui(onUI);
+	RenderMenu();
 
 	glfwSwapBuffers(window);
 }

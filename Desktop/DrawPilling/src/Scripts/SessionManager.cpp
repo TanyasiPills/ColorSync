@@ -31,10 +31,18 @@ SessionData Manager::Assembly(SessionData& data) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.Fonts->Clear();
+    ImFont* hihi = io.Fonts->AddFontFromFileTTF("Aptos.ttf", 100);
+    //ImGui::PushFont(hihi);
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     ImGui::StyleColorsDark();
+
+    ImVec4 window_bg_color = ImVec4(0.188, 0.188, 0.313, 1.0);
+    ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = window_bg_color;
+    ImVec4 child_bg_color = ImVec4(0.2, 0.2, 0.333, 1.0);
+    ImGui::GetStyle().Colors[ImGuiCol_ChildBg] = child_bg_color;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 #ifdef __EMSCRIPTEN__
