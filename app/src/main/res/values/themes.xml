@@ -8,7 +8,6 @@
         <item name="android:strokeColor">#FF0000</item> <!-- TEST -->
 
         <item name="cardViewStyle">@style/CardViewColorStyle</item>
-
     </style>
 
     <style name="Theme.ColorSync" parent="Base.Theme.ColorSync" />

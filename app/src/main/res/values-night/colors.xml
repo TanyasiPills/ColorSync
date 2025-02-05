@@ -1,3 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="bgPrimary">#303050</color>
+    <color name="bgSecondary">#333354</color>
+    <color name="bgSmallHigliht">#35355A</color>
+    <color name="bgHighlight">#404069</color>
+    <color name="border">#515177</color>
+    <color name="text">#B0B0E0</color>
 </resources>
