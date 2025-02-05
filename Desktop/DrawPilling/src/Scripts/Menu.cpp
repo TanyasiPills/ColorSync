@@ -22,44 +22,17 @@ void Menu::LeftSide(float position, float width, float height)
 {
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
-    ImGui::Begin("Left Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Left Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     
     float originalFontSize = ImGui::GetFont()->FontSize;
 
+    Lss::Text("ColorSync", 5 * Lss::VH, Centered);
 
-    for (size_t i = 0; i < 100; i++)
-    {
-        Lss::Text("test", 10 * Lss::VH, true);
-    }
-    /*
     ImGui::Separator();
-    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 50);
-
-    ImGui::BeginChild("Editor", ImVec2(0, 100), true);
-
-    ImGui::EndChild();
-    ImGui::BeginChild("Lobbies", ImVec2(0, 100), true);
-    ImGui::EndChild();
-
-    // Restore the original font size
-    ImGui::GetFont()->FontSize = originalFontSize;
-
-    ImVec4 originalBtnBgColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
-    ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
-    float originalRounding = ImGui::GetStyle().FrameRounding;
-    ImGui::GetStyle().FrameRounding = 2.0f;
-    ImVec2 buttonSize(200.0f, 50.0f);
-    // Add buttons or other stuff to the left side window
-    if (ImGui::Button("Button 1", buttonSize)) {
-        // Handle button click
-    }
-    if (ImGui::Button("Button 2", buttonSize)) {
-        // Handle button click
-    }
-    ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
-    ImGui::GetStyle().FrameRounding = originalRounding;
-    */
-
+    
+    Lss::Button("Heooo", ImVec2(10*Lss::VH, 4*Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded);
+    
+    Lss::End();
     ImGui::End();
 }
 void Menu::RightSide(float position, float width, float height)

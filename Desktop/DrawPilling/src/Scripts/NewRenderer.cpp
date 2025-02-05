@@ -213,7 +213,7 @@ void RenderMenu()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	Lss::Update();
+	//Lss::Update();
 
 
 	int width, height;

@@ -57,8 +57,10 @@ SessionData Manager::Assembly(SessionData& data) {
     DataManager::LoadAppData();
 
     HManager::Init();
-
-    Lss::Init(window);
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    int screenWidth = mode->width;
+    int screenHeight = mode->height;
+    Lss::Init(window, screenWidth, screenHeight);
 
     return data;
 }
