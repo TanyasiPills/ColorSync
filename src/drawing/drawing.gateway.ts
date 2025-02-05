@@ -153,6 +153,9 @@ export class DrawingWS
         if (
           !isPositiveInt(data.layer) ||
           !isPositiveInt(data.brush) ||
+          !Array.isArray(data.color) ||
+          data.color.length != 3 ||
+          !data.color.every(e => Number.isFinite(e)) ||
           !data.positions ||
           !Number.isFinite(data.positions.x) ||
           !Number.isFinite(data.positions.x)
