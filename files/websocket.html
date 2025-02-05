@@ -48,6 +48,12 @@
       filter: brightness(80%);
     }
 
+
+    .endpoint h2>span {
+      font-size: smaller;
+      filter: brightness(90%);
+    }
+
     tr.required>td:first-child>span::after {
       content: '*';
       color: #FFB0B0;
@@ -64,14 +70,50 @@
     .types td:first-child {
       text-align: center;
     }
+
+    .endpoint .sl {
+      font-size: x-large;
+    }
+
+    .endpoint .sl+h3 {
+      margin-top: 1px;
+    }
+
+    .sl>span {
+      font-size: large;
+      filter: brightness(90%);
+    }
+
+    h1 > span {
+      font-size: large;
+      filter: brightness(90%);
+    }
+
+    a.docs {
+      float: right;
+      text-decoration: none;
+      color: var(--text);
+      margin: 15px;
+      transition: filter .2s ease;
+    }
+
+    a.docs:hover {
+      filter: brightness(150%);
+    }
+
+    .endpoint .mb {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 
 <body>
-  <h1>Websocket</h1>
+  <a href="/docs" class="docs">HTML documentation</a>
+
+  <h1>Websocket <span>socket.io</span></h1>
 
   <div class="endpoint">
-    <h2>join</h2>
+    <h2>join <span>Joining the socket</span></h2>
     <div>
       <h3>Headers</h3>
       <table>
@@ -99,6 +141,10 @@
       </table>
     </div>
     <div>
+      <h3 class="sl">Receive <span>system message</span></h3>
+      <h3 class="mb">Joining the room</h3>
+    </div>
+    <div>
       <h3>Errors</h3>
       <ul>
         <li>10 - Not logged in</li>
@@ -112,9 +158,9 @@
   </div>
 
   <div class="endpoint">
-    <h2>action</h2>
+    <h2>action <span>The draw actions</span></h2>
     <div>
-      <h3>Body</h3>
+      <h3 class="sl">Send</h3>
       <table>
         <tr class="required">
           <td>type<span>string</span></td>
@@ -137,16 +183,56 @@
                 <td>{layer: int, brush: int, positions: {x: float, y: float}[]}</td>
               </tr>
               <tr>
+                <td>add layer</td>
+                <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
                 <td>undo</td>
-                <td>{}</td>
+                <td>null</td>
               </tr>
               <tr>
                 <td>redo</td>
-                <td>{}</td>
+                <td>null</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>type<span>string</span></td>
+          <td>Type of the action</td>
+        </tr>
+        <tr>
+          <td>data<span>any</span></td>
+          <td>The data needed for the action</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <table class="types">
+              <tr>
+                <th>type</th>
+                <th>data</th>
+              </tr>
+              <tr>
+                <td>draw</td>
+                <td>{layer: int, brush: int, positions: Position[]}</td>
               </tr>
               <tr>
                 <td>add layer</td>
                 <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
+                <td>undo</td>
+                <td>{history: Action[], compilePosition: number}</td>
+              </tr>
+              <tr>
+                <td>redo</td>
+                <td>Action</td>
               </tr>
             </table>
           </td>
@@ -157,8 +243,134 @@
       <h3>Errors</h3>
       <ul>
         <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
         <li>20 - Bad request format</li>
       </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>message <span>The messages sent in chat</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+        <tr class="required">
+          <td>userId<span>int</span></td>
+          <td>The id of the sender.</td>
+        </tr>
+        <tr class="required">
+          <td>username<span>string</span></td>
+          <td>The username of the sender.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>mouse <span>The position of the mouse</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>position<span>Position</span></td>
+          <td>The position of the mouse.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>userId<span>int</span></td>
+          <td>The id of the sender.</td>
+        </tr>
+        <tr class="required">
+          <td>position<span>Position</span></td>
+          <td>The position of the sender's mouse.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>system message <span>The system messages</span></h2>
+    <div>
+      <h3 class="sl mb">Listen</h3>
+      <h3>Other user joined the room</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the joined user</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Joining the room</h3>
+      <table>
+        <tr class="required">
+          <td>history<span>Action[]</span></td>
+          <td>All the past actions.</td>
+        </tr>
+        <tr>
+          <td>compilePosition<span>int</span></td>
+          <td>Save the rendered image up to this index in the history.</td>
+        </tr>
+        <tr>
+          <td>users<span>{id: int, username: string}[]</span></td>
+          <td>List of all the connected users.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>Types</h2>
+    <div>
+      <h3>Action</h3>
+      <p>{<br>
+        &emsp;type: string*<br>
+        &emsp;data: any<br>
+        }</p>
+    </div>
+    <div>
+      <h3>Postiion</h3>
+      <p>{<br>
+        &emsp;x: float*<br>
+        &emsp;y: float*<br>
+        }</p>
     </div>
   </div>
 </body>

@@ -13,7 +13,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
-import { checkUser, isPositiveInt, socketError } from "./error";
+import { checkUser, getUserData, isPositiveInt, socketError } from "./helper";
 import { User } from "./types";
 
 @WebSocketGateway({ cors: { origin: "*" } })
@@ -57,7 +57,10 @@ export class DrawingWS
       socketError(socket, "Invalid token", 30, true);
       return;
     }
+
     delete user.password;
+    delete user.email;
+    delete user.profile_picture;
 
     if (this.connectedUsers.includes(user.id)) {
       socketError(socket, "User is already connected", 40, true);
@@ -101,31 +104,42 @@ export class DrawingWS
     const user = socket.data.user as User;
     if (!user) return;
     const room = this.connections.get(socket.id);
-    if (room) room.disconnect(socket);
+    if (room) {
+      room.disconnect(socket);
+      this.connections.delete(socket.id);
+    }
     this.logger.log(`${user.username} disconnected`);
   }
 
   @SubscribeMessage('message')
   handleMessage(@ConnectedSocket() socket: Socket, @MessageBody('message') message: string) {
-    const user = checkUser(socket);
+    const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
-    const room = this.connections.get(socket.id);
+
+    if (!message) {
+      socketError(socket, 'Message is required', 20);
+      return;
+    }
     room.emitFromSocket(socket, 'message', { userId: user.id, username: user.username, message: message });
   }
 
   @SubscribeMessage('mouse')
   handleMouse(@ConnectedSocket() socket: Socket, @MessageBody('position') position: { x: number, y: number }) {
-    const user = checkUser(socket);
+    const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
-    const room = this.connections.get(socket.id);
+
+    if (!position || !Number.isFinite(position.x) || ! Number.isFinite(position.y)) {
+      socketError(socket, 'Bad request format', 20);
+      return;
+    }
     room.emitFromSocket(socket, 'mouse', { userId: user.id, position: position });
   }
 
   @SubscribeMessage('action')
   handleAction(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
-    const user = checkUser(socket);
+    const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
-    const room = this.connections.get(socket.id);
+
     if (!type) {
       socketError(socket, 'Type is required', 20);
       return;
@@ -181,8 +195,8 @@ export class DrawingWS
 
   @SubscribeMessage('manage')
   handleAdmin(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
-    const user = checkUser(socket);
+    const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
-    const room = this.connections.get(socket.id);
+
   }
 }

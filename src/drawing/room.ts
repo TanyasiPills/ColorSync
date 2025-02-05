@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { Action, History, User } from "./types";
-import { checkUser, socketError } from "./error";
+import { checkUser, socketError } from "./helper";
 
 export class Room {
   private static server: Server;
@@ -18,7 +18,7 @@ export class Room {
     this.clients = [owner];
     this.owner = owner;
     this.history = new History(30);
-    this.history.join(ownerUser.id);
+    this.history.connect(ownerUser.id);
     owner.join(name);
   }
 
@@ -34,9 +34,14 @@ export class Room {
       return false;
     }
     socket.join(this.name);
+    socket.emit('system message', {
+      history: this.history.getActions(),
+      compilePosition: this.history.getUndoPosition(),
+      users: this.clients.map(e => e.data.user)
+    });
     this.clients.push(socket);
-    this.history.join(user.id);
-    this.emit('system message', {message: `${user.username} joined the room!`, id: user.id});
+    this.history.connect(user.id);
+    this.emitFromSocket(socket, 'system message', {message: `${user.username} joined the room!`, id: user.id});
     return true;
   }
 
@@ -44,6 +49,7 @@ export class Room {
     const user : User = socket.data.user as User;
     socket.leave(this.name);
     this.clients = this.clients.filter(c => c !== socket);
+    this.history.disconnect(user.id);
     this.emit('system message', {message: `${user.username} left the room!`, id: user.id});
     socket.disconnect();
   }

@@ -64,8 +64,12 @@ export class History {
     this.redoActions = new Map<number, ActionList<Action>>();
   }
 
-  public join(id: number): void {
+  public connect(id: number): void {
     this.redoActions.set(id, new ActionList<Action>(this.undoLimit));
+  }
+
+  public disconnect(id: number) : void {
+    this.redoActions.delete(id);
   }
 
   public add(id: number, action: Action): void {
@@ -79,6 +83,10 @@ export class History {
 
   public getIds(): number[] {
     return this.ids;
+  }
+
+  public getUndoPosition() {
+    return this.undoPosition;
   }
 
   public undo(id: number): {history: Action[], compilePostition: number} {
