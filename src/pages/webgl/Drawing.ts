@@ -2,7 +2,7 @@ import { RenderData } from "./Render";
 import { VertexBuffer } from "./VertexBuffer";
 import { VertexBufferLayout } from "./VertxBufferLayout";
 
-class CanvasData{
+export class CanvasData{
     public data!: RenderData;
     public canvasX!: number;
     public canvasY!: number;
@@ -91,7 +91,7 @@ export class Drawing{
         this.initData(data, positions, null);
     }
 
-    initBrush(data: RenderData, radius: number): void{
+    public initBrush(data: RenderData, radius: number): void{
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, radius, radius);
         this.initData(data, positions, "Resources/Texture/circle.png", 1);
@@ -106,7 +106,7 @@ export class Drawing{
         cursor.va.unbind();
     }
 
-    moveCanvas(canvas: RenderData, size: Float32Array, offset: Float32Array): void{
+    public moveCanvas(canvas: RenderData, size: Float32Array, offset: Float32Array): void{
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, size[0], size[1], offset[0], offset[1]);
         const vb: VertexBuffer = new VertexBuffer(this.gl, positions);
