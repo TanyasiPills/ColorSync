@@ -11,6 +11,7 @@
 #include "CallBacks.h"
 #include "DrawUI.h"
 #include "Menu.h"
+#include "lss.h"
 
 void GLClearError() {
 	while (glGetError() != GL_NO_ERROR);
@@ -211,6 +212,8 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	Lss::Update();
 
 
 	int width, height;

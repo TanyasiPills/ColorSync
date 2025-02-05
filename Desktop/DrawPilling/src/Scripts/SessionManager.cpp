@@ -8,6 +8,7 @@
 #include "SessionManager.h"
 #include "HighsManager.h"
 #include "DataManager.h"
+#include "lss.h"
 
 SessionData Manager::Assembly(SessionData& data) {
 
@@ -32,7 +33,6 @@ SessionData Manager::Assembly(SessionData& data) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.Fonts->Clear();
-    ImFont* hihi = io.Fonts->AddFontFromFileTTF("Aptos.ttf", 100);
     //ImGui::PushFont(hihi);
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
@@ -57,6 +57,8 @@ SessionData Manager::Assembly(SessionData& data) {
     DataManager::LoadAppData();
 
     HManager::Init();
+
+    Lss::Init(window);
 
     return data;
 }

@@ -1,5 +1,6 @@
 #include "Menu.h"
 #include <iostream>
+#include "lss.h"
 
 void Menu::MainFeed(float position, float width, float height)
 {
@@ -25,12 +26,12 @@ void Menu::LeftSide(float position, float width, float height)
     
     float originalFontSize = ImGui::GetFont()->FontSize;
 
-    ImGui::GetFont()->FontSize = 200.0f;
 
-    float textWidth = ImGui::CalcTextSize("ColorSync").x;
-    ImGui::SetCursorPosX((width - textWidth) * 0.5f);
-    ImGui::Text("ColorSync");
-    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 50);
+    for (size_t i = 0; i < 100; i++)
+    {
+        Lss::Text("test", 10 * Lss::VH, true);
+    }
+    /*
     ImGui::Separator();
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 50);
 
@@ -57,6 +58,7 @@ void Menu::LeftSide(float position, float width, float height)
     }
     ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
     ImGui::GetStyle().FrameRounding = originalRounding;
+    */
 
     ImGui::End();
 }
