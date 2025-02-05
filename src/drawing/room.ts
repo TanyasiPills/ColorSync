@@ -83,6 +83,17 @@ export class Room {
     if (action) this.emitFromSocket(socket, 'action', action);
   }
 
+  public kick(socket: Socket, id: number): boolean {
+    const client: Socket = this.clients.find(e => e.data.user.id == id);
+    if (!socket) {
+      socketError(socket, 'User not found', 51);
+      return false;
+    }
+    this.disconnect(client);
+    client.emit('system message', {message: 'You have been kicked from the room!'});
+    return true;
+  }
+
   public getName(): string {
     return this.name;
   }

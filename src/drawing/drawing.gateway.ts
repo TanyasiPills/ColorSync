@@ -67,10 +67,12 @@ export class DrawingWS
       return;
     }
 
-
     const create = socket.handshake.query.create;
     let room: Room;
     if (create && create === 'true') {
+      if (this.rooms.some(e => e.getName().toLowerCase() === name)) {
+        socketError(socket, "Name already in use", 41);
+      }
       let maxClientsQuery = socket.handshake.query.maxClients;
       let maxClients = 4;
       if (maxClientsQuery) {
@@ -197,9 +199,25 @@ export class DrawingWS
   }
 
   @SubscribeMessage('manage')
-  handleAdmin(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
+  handleManage(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
     const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
 
+    switch (type) {
+      case 'kick':
+        if (room.getOwner() != socket) {
+          socketError(socket, 'Unauthorized', 32);
+          return;
+        }
+        if (!data) {
+          socketError(socket, 'Data is requierd', 20);
+          return;
+        }
+        if (!isPositiveInt(data.id)) {
+          socketError(socket, 'Id must be a positive integer', 20);
+          return;
+        }
+        room.kick(socket, data.id);
+    }
   }
 }

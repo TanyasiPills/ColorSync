@@ -84,7 +84,7 @@
       filter: brightness(90%);
     }
 
-    h1 > span {
+    h1>span {
       font-size: large;
       filter: brightness(90%);
     }
@@ -147,11 +147,11 @@
     <div>
       <h3>Errors</h3>
       <ul>
-        <li>10 - Not logged in</li>
         <li>20 - Bad request format</li>
         <li>30 - Invalid token</li>
         <li>31 - Invalid password</li>
         <li>40 - User is already logged in</li>
+        <li>41 - Name already in use</li>
         <li>50 - Room not found</li>
       </ul>
     </div>
@@ -184,6 +184,10 @@
               </tr>
               <tr>
                 <td>add layer</td>
+                <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
+                <td>rename layer</td>
                 <td>{name: string, location: int}</td>
               </tr>
               <tr>
@@ -224,6 +228,10 @@
               </tr>
               <tr>
                 <td>add layer</td>
+                <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
+                <td>rename layer</td>
                 <td>{name: string, location: int}</td>
               </tr>
               <tr>
@@ -321,10 +329,62 @@
     </div>
   </div>
 
+
+  <div class="endpoint">
+    <h2>manage <span>The position of the mouse</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>type<span>string</span></td>
+          <td>Type of the action</td>
+        </tr>
+        <tr>
+          <td>data<span>any</span></td>
+          <td>The data needed for the action</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <table class="types">
+              <tr>
+                <th>type</th>
+                <th>data</th>
+              </tr>
+              <tr>
+                <td>kick</td>
+                <td>{id: int}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+        <li>32 - Unauthorized</li>
+        <li>51 - User not found</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="endpoint">
     <h2>system message <span>The system messages</span></h2>
     <div>
       <h3 class="sl mb">Listen</h3>
+      <h3>Message from the server</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+      </table>
+    </div>
+    <div>
       <h3>Other user joined the room</h3>
       <table>
         <tr class="required">
