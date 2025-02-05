@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ColorSync</string>
+    <string name="profile_picture_ContentDescription">profile picture</string>
+</resources>

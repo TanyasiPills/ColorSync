@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.ColorSync" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bgPrimary</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textColorHighlight">@color/bgHighlight</item>
+
+        <item name="android:colorBackground">#00FF00</item> <!-- TEST -->
+        <item name="android:strokeColor">#FF0000</item> <!-- TEST -->
+
+        <item name="cardViewStyle">@style/CardViewColorStyle</item>
+
+    </style>
+
+    <style name="Theme.ColorSync" parent="Base.Theme.ColorSync" />
+</resources>
