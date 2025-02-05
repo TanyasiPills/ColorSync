@@ -30,9 +30,10 @@ model Post {
   id Int @id @default(autoincrement())
   user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: Cascade)
   userId Int
-  image Image @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
-  imageId Int
-  date DateTime
+  image Image? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  imageId Int?
+  text String @db.VarChar(500)
+  date DateTime @default(now())
 
   Comment Comment[]
 }
