@@ -10,7 +10,7 @@ MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0
 void MyTexture::Init(const std::string& path)
 {
 	filePath = path;
-	stbi_set_flip_vertically_on_load(1);
+	//stbi_set_flip_vertically_on_load(1);
 	localBuffer = stbi_load(path.c_str(), &width, &height, &bpp, 4);
 
 	glGenTextures(1, &TO);

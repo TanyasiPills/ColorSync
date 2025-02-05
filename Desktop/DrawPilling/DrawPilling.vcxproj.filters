@@ -3845,5 +3845,8 @@
     <Image Include="Resources\Textures\circle.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\Textures\fish.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

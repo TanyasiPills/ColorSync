@@ -1440,6 +1440,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Textures\circle.png" />
+    <Image Include="Resources\Textures\fish.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

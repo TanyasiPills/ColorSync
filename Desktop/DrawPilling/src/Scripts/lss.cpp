@@ -1,12 +1,16 @@
 #include "lss.h"
 #include <vector>
 #include <iostream>
+#include "stb_image/stb_image.h"
+#include "Texture.h"
 
 static GLFWwindow* window = nullptr;
 
 bool centered = false;
 bool haveFont = false;
 int fontPopCount = 0;
+
+ImVec2 originalCursorPosition(-FLT_MAX,0);
 
 std::vector<ImFont*> fonts;
 
@@ -15,7 +19,12 @@ float Lss::VH = 0;
 
 int prevType = -1;
 
-void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight) {
+MyTexture texture;
+
+void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight, std::string path)
+{
+	int width, height, bpp;
+	texture.Init("Resources/Textures/fish.jpg");
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	VH = (float)screenHeight / 100;
@@ -91,6 +100,31 @@ void Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	if (invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
 
 }
+
+void Lss::Left(float distance) {
+	ImGui::SameLine();
+	ImGui::Dummy(ImVec2(distance, 0));
+}
+
+void Lss::Image() {
+	ImVec2 childSize = ImGui::GetContentRegionAvail();
+	ImGui::Image(texture.GetId(), ImVec2(childSize.x, childSize.x));
+}
+void Lss::Top(float distance) {
+	ImGui::Dummy(ImVec2(0, distance));
+}
+void Lss::Bottom(float distance) {
+	if (originalCursorPosition.x == -FLT_MAX) {
+		originalCursorPosition = ImGui::GetCursorPos();
+		ImGui::SetCursorPosY(originalCursorPosition.y - distance);
+	}
+}
+void Lss::Back() {
+	ImGui::SetCursorPos(originalCursorPosition);
+	originalCursorPosition.x = -FLT_MAX;
+}
+
+
 
 
 void Lss::Text(std::string textIn, float size, int flags) {

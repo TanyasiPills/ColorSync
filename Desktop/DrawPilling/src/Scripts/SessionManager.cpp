@@ -60,7 +60,7 @@ SessionData Manager::Assembly(SessionData& data) {
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     int screenWidth = mode->width;
     int screenHeight = mode->height;
-    Lss::Init(window, screenWidth, screenHeight);
+    Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
 
     return data;
 }

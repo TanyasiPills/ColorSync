@@ -20,12 +20,19 @@ public:
 	static float VH;
 	static float VW;
 
-	static void Init(GLFWwindow* windowIn, int screenWidth, int screenHeight);
+	static void Init(GLFWwindow* windowIn, int screenWidth, int screenHeight, std::string path);
 	static void Update();
 	static void SetFontSize(float size);
 
 	static void Text(std::string textIn, float size, int flags = None);
 	static void Button(std::string textIn, ImVec2 size, float textSizeIn, int flags = None);
+
+	static void Left(float distance);
+	static void Top(float disctance);
+	static void Bottom(float distance);
+	static void Back();
+
+	static void Image();
 
 	static void End();
 };
