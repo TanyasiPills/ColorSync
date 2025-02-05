@@ -15,7 +15,7 @@ export class IndexBuffer {
         this.init(data);
     }
 
-    private init(data: Uint32Array): void {
+    public init(data: Uint32Array): void {
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.ibo);
         this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, data, this.gl.DYNAMIC_DRAW);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);

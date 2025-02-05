@@ -4,33 +4,49 @@ import { VertexArray } from "./Shaders/VertexArray ";
 import { Texture } from "./Texture";
 import { VertexBufferLayout } from "./VertxBufferLayout";
 
-class RenderData {
+export class RenderData {
     va!: VertexArray;
     ib!: IndexBuffer;
     shader!: Shader;
     texture!: Texture;
-    
 }
 
 
 export class Render {
     private gl: WebGL2RenderingContext;
-    private layers: RenderData[] = []; 
-    private cursor!: RenderData;
+    private layers: RenderData[];
+    public cursor!: RenderData;
 
-    private cursorRadius: number = 0.01;
-    private initialCanvasRatio: [number, number] = [1.0, 1.0];
-    private canvasRatio: [number, number] = [1.0, 1.0];
-    private identityRatio: [number, number] = [1.0, 1.0];
-    private offset: [number, number] = [0, 0];
-    private cursorScale: [number, number, number] = [1.0, 1.0, 1.0];
-    private identityOffset: [number, number] = [0, 0];
-    private prevPos: [number, number] = [0, 0];
-    private canvasSize: [number, number] = [1, 1];
-    private fbo: WebGLFramebuffer | null = null;
+    private cursorRadius: number;
+    private initialCanvasRatio: [number, number];
+    private canvasRatio: [number, number];
+    private identityRatio: [number, number];
+    private offset: [number, number];
+    private cursorScale: [number, number, number];
+    private identityOffset: [number, number];
+    private prevPos: [number, number];
+    private canvasSize: [number, number];
+    private fbo: WebGLFramebuffer | null;
 
-    constructor(gl: WebGL2RenderingContext, layout: VertexBufferLayout, indexData: Uint32Array) {
+    constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
+        this.layers = [];
+        this.cursor = new RenderData();
+    
+        this.cursorRadius = 0.01;
+        this.initialCanvasRatio = [1.0, 1.0];
+        this.canvasRatio = [1.0, 1.0];
+        this.identityRatio = [1.0, 1.0];
+        this.offset = [0, 0];
+        this.cursorScale = [1.0, 1.0, 1.0];
+        this.identityOffset = [0, 0];
+        this.prevPos = [0, 0];
+        this.canvasSize = [1, 1];
+        this.fbo = null;
     }
+    
+    init(): void {}
+
+
 
 }
