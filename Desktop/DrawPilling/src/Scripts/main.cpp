@@ -29,6 +29,7 @@ int main()
 
     while (true)
     {
+        glfwSetWindowPos(data.window, 0, 0);
         glfwPollEvents();
 
         if (glfwGetWindowAttrib(data.window, GLFW_ICONIFIED) != 0)

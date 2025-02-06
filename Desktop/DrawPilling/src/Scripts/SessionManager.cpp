@@ -19,15 +19,25 @@ SessionData Manager::Assembly(SessionData& data) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    int screenWidth = mode->width;
+    int screenHeight = mode->height;
+
+   // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No window borders
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // No resizing
+
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1080, 720, "I hate Jazz", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "I hate Jazz", nullptr, nullptr);
+    glfwSetWindowPos(window, 0, 0);
     data.window = window;
-    data.screenWidth = 720;
-    data.screenHeight = 720;
+    data.screenWidth = screenWidth;
+    data.screenHeight = screenHeight;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
     glewInit(); //!!!!!!!!
+
+    glfwMaximizeWindow(window);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -57,9 +67,6 @@ SessionData Manager::Assembly(SessionData& data) {
     DataManager::LoadAppData();
 
     HManager::Init();
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    int screenWidth = mode->width;
-    int screenHeight = mode->height;
     Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
 
     return data;

@@ -8,15 +8,11 @@ void Menu::MainFeed(float position, float width, float height)
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
     ImGui::Begin("Main Feed", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::GetStyle().ChildBorderSize = 0.0f;
 
-    ImGui::BeginChild("Feed", ImVec2(0, 0), true);
+    ImGui::BeginChild("Feed", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar);
     for (int i = 0; i < 10; ++i) {
-        char childName[32];
-        snprintf(childName, sizeof(childName), "Fish%d", i);
-
-        ImGui::BeginChild(childName, ImVec2(30 * Lss::VW, 30 * Lss::VH), true);
         Lss::Image();
-        ImGui::EndChild();
 
         ImGui::Separator();
     }
@@ -35,8 +31,7 @@ void Menu::LeftSide(float position, float width, float height)
     Lss::Text("ColorSync", 5 * Lss::VH, Centered);
 
     ImGui::Separator();
-    //Lss::Top(2 * Lss::VH);
-    Lss::Bottom(2 * Lss::VH);
+    Lss::Top(2 * Lss::VH);
     Lss::Button("Heooo", ImVec2(10*Lss::VH, 4*Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded);
     Lss::Back();
     Lss::End();

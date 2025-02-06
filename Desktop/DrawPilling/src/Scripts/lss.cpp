@@ -69,6 +69,7 @@ void Lss::SetFontSize(float size) {
 
 }
 
+
 void Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	SetFontSize(textSizeIn);
 
@@ -101,15 +102,28 @@ void Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 
 }
 
-void Lss::Left(float distance) {
-	ImGui::SameLine();
-	ImGui::Dummy(ImVec2(distance, 0));
+void Lss::Text(std::string textIn, float size, int flags) {
+	SetFontSize(size);
+
+	ImVec2 textSize = ImGui::CalcTextSize(textIn.c_str());
+	if (flags & Centered) {
+		Center(textSize.x);
+	}
+
+	ImGui::Text(textIn.c_str());
 }
 
 void Lss::Image() {
 	ImVec2 childSize = ImGui::GetContentRegionAvail();
 	ImGui::Image(texture.GetId(), ImVec2(childSize.x, childSize.x));
 }
+
+
+void Lss::Left(float distance) {
+	ImGui::SameLine();
+	ImGui::Dummy(ImVec2(distance, 0));
+}
+
 void Lss::Top(float distance) {
 	ImGui::Dummy(ImVec2(0, distance));
 }
@@ -124,21 +138,6 @@ void Lss::Back() {
 	originalCursorPosition.x = -FLT_MAX;
 }
 
-
-
-
-void Lss::Text(std::string textIn, float size, int flags) {
-	SetFontSize(size);
-
-	ImVec2 textSize = ImGui::CalcTextSize(textIn.c_str());
-	if (flags & Centered) {
-		Center(textSize.x);
-	}
-
-	ImGui::Text(textIn.c_str());
-
-	//ImGui::SetCursorPosY(ImGui::GetCursorPosY() - (textSize.y / 2));
-}
 
 void Lss::End() {
 	prevType = -1;
