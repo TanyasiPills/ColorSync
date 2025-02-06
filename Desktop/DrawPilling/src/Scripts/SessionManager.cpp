@@ -9,6 +9,11 @@
 #include "HighsManager.h"
 #include "DataManager.h"
 #include "lss.h"
+#include "WindowManager.h"
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include "GLFW/glfw3native.h"
+#include <windows.h>
 
 SessionData Manager::Assembly(SessionData& data) {
 
@@ -23,12 +28,14 @@ SessionData Manager::Assembly(SessionData& data) {
     int screenWidth = mode->width;
     int screenHeight = mode->height;
 
-   // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No window borders
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // No resizing
+    //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // No window borders
+    //glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // No resizing
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "I hate Jazz", nullptr, nullptr);
-    glfwSetWindowPos(window, 0, 0);
+    WindowManager::ToggleFullscreen(window);
+
+
     data.window = window;
     data.screenWidth = screenWidth;
     data.screenHeight = screenHeight;
@@ -36,8 +43,6 @@ SessionData Manager::Assembly(SessionData& data) {
     glfwSwapInterval(1); // Enable vsync
 
     glewInit(); //!!!!!!!!
-
-    glfwMaximizeWindow(window);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
