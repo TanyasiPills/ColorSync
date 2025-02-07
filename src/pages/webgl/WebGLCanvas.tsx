@@ -54,50 +54,19 @@ const WebGLCanvas: React.FC = () => {
     gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aVertexPosition);
 
-    canvas.addEventListener("mouseenter", () => {
+/*    canvas.addEventListener("mouseenter", () => {
       canvas.style.cursor = "none";
-    })
+    })*/
     canvas.addEventListener("mouseleave", () => {
       canvas.style.cursor = "default";
     });
 
-    var circleVertices = new Float32Array();
 
     canvas.addEventListener("mousemove", (event) => {
-      const rect = canvas.getBoundingClientRect();
-      const centerX = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-      const centerY = 1 - ((event.clientY - rect.top) / canvas.height) * 2;
-
       
     });
 
-
-    const render = () => {
-      if (!isRunning) return;
-
-
-      clearCanvas(gl);
-
-      for (let index = 0; index < drawn.length; index++) {
-        gl.uniform3f(colourLoc, drawn[index][0], drawn[index][1], drawn[index][2]);
-        var drawnElement = drawn[index].slice(3);
-        gl.bufferData(gl.ARRAY_BUFFER, drawnElement, gl.DYNAMIC_DRAW);
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, drawnElement.length / 2);
-
-      }
-      var cursorToRender = circleVertices.slice(3);
-      gl.bufferData(gl.ARRAY_BUFFER, cursorToRender, gl.STATIC_DRAW);
-      gl.drawArrays(gl.TRIANGLE_FAN, 0, cursorToRender.length / 2);
-
-
-      requestAnimationFrame(render);
-    };
-
     canvas.addEventListener("mousedown", (event) => {
-      const rect = canvas.getBoundingClientRect();
-      const centerX = ((event.clientX - rect.left) / canvas.width) * 2 - 1;
-      const centerY = 1 - ((event.clientY - rect.top) / canvas.height) * 2;
-
       mousehold = true;
     });
 
@@ -119,20 +88,6 @@ const WebGLCanvas: React.FC = () => {
         clearStuffOnCanvas();
       });
     }
-
-    const colorPicker = colorPickerRef.current;
-    colorPicker?.addEventListener("change", () => {
-      let hex = colorPicker.value;
-      hex = hex.replace(/^#/, '');
-
-      const bigInt: number = parseInt(hex, 16)
-      const r = ((bigInt >> 16) & 255) / 255;
-      const g = ((bigInt >> 8) & 255) / 255;
-      const b = (bigInt & 255) / 255;
-
-      colour = new Float32Array([r, g, b]);
-    });
-    render();
 
     return () => {
       isRunning = false;
