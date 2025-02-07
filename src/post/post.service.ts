@@ -6,23 +6,34 @@ import { PrismaService } from 'src/prisma.service';
 @Injectable()
 export class PostService {
   constructor(private readonly db: PrismaService) {}
-  create(createPostDto: CreatePostDto) {
-    return this.db.post.create({data: {userId: 1, ...createPostDto}}); //TODO
+  create(createPostDto: CreatePostDto, userId: number) {
+    return this.db.post.create({data: {userId, ...createPostDto, }});
   }
 
   findAll() {
-    return `This action returns all post`;
+    return this.db.post.findMany();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} post`;
+    return this.db.post.findUnique({where: {id}});
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, updatePostDto: UpdatePostDto, userId: number) {
+    try {
+      const result = await this.db.post.update({where: {id, userId}, data: updatePostDto});
+      return result;
+    } catch {
+      return null;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await this.db.post.delete({where: {id, userId}});
+      if (result) return true;
+      else return false;
+    } catch {
+      return false;
+    }
   }
 }
