@@ -27,7 +27,7 @@ bool GLLogCall(const char* function, const char* file, int line) {
 }
 
 GLFWwindow* window;
-std::vector<RenderData> layers;
+std::vector<Layer> layers;
 RenderData cursor;
 
 float cursorRadius = 0.01;
@@ -56,7 +56,8 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	canvasSize[1] = canvasHeightIn;
 	NewDraw::InitBrush(cursor, cursorRadius);
 	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
-	layers.push_back(canvasData.data);
+	layers.push_back(Layer("Main", lastLayerIndex, canvasData.data));
+	lastLayerIndex++;
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, canvasData.data.texture->GetId(), 0);
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -73,8 +74,8 @@ void NewRenderer::MoveLayers(static float* offsetIn)
 {
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
-	for (RenderData& item : layers) {
-		NewDraw::MoveCanvas(item, canvasRatio, offset);
+	for (Layer& item : layers) {
+		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
 	}
 }
 void NewRenderer::Zoom(static float scale, static float* offsetIn)
@@ -86,8 +87,8 @@ void NewRenderer::Zoom(static float scale, static float* offsetIn)
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
 
-	for (RenderData& item : layers) {
-		NewDraw::MoveCanvas(item, canvasRatio, offset);
+	for (Layer& item : layers) {
+		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
 	}
 
 	cursorRadius *= scale;
@@ -102,8 +103,8 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
 
-	for (RenderData& item : layers) {
-		NewDraw::MoveCanvas(item, canvasRatio, offset);
+	for (Layer& item : layers) {
+		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
 	}
 }
 
@@ -121,7 +122,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayer)
 		return;
 	}
 
-	RenderData& layer = layers[currentLayer];
+	RenderData& layer = layers[currentLayer].data;
 
 	layer.va->Bind();
 	layer.ib->Bind();
@@ -202,8 +203,8 @@ void NewRenderer::Draw(const RenderData& data)
 
 void NewRenderer::RenderLayers()
 {
-	for (RenderData& item : layers) {
-		Draw(item);
+	for (Layer& item : layers) {
+		Draw(item.data);
 	}
 }
 

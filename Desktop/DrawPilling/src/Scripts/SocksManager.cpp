@@ -58,11 +58,21 @@ void SManager::OnAction(sio::event& ev) {
             try {
                 drawMessage.layer = data["layer"]->get_int();
                 drawMessage.brush = data["brush"]->get_int();
+
                 std::vector<sio::message::ptr> positionArray = data["positions"]->get_vector();
                 for (int i = 0; i < positionArray.size(); ++i) {
                     std::map<std::string, sio::message::ptr> position = positionArray[i]->get_map();
-                    std::cout << position["x"]->get_double() << ", " << position["y"]->get_double() << std::endl;
+                    drawMessage.positions.push_back(Position(position["x"]->get_double(), position["y"]->get_double()));
                 }
+
+                std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
+                drawMessage.color[0] = colors["r"]->get_double();
+                drawMessage.color[1] = colors["g"]->get_double();
+                drawMessage.color[2] = colors["b"]->get_double();
+
+                std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
+                drawMessage.offset.x = offsets["x"]->get_double();
+                drawMessage.offset.y = offsets["y"]->get_double();
             }
             catch(...){
                 std::cerr << "hihi" << std::endl;
@@ -117,9 +127,9 @@ void SManager::SendAction(int type, DrawMessage dataIn)
             try {
                 sio::message::ptr colorObj = sio::object_message::create();
 
-                colorObj->get_map()["b"] = sio::double_message::create(dataIn.color[2]);
-                colorObj->get_map()["g"] = sio::double_message::create(dataIn.color[1]);
                 colorObj->get_map()["r"] = sio::double_message::create(dataIn.color[0]);
+                colorObj->get_map()["g"] = sio::double_message::create(dataIn.color[1]);
+                colorObj->get_map()["b"] = sio::double_message::create(dataIn.color[2]);
 
                 data->get_map()["color"] = colorObj;
             }

@@ -73,8 +73,7 @@ SessionData Manager::Assembly(SessionData& data) {
 
     DataManager::LoadAppData();
 
-    HManager::Init()
-        ;
+    HManager::Init();
     Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
 
     return data;

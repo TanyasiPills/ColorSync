@@ -34,6 +34,36 @@ struct Position {
 	Position(float xIn, float yIn) : x(xIn), y(yIn){}
 };
 
+struct Node {
+	std::string name;
+	bool visible = true;
+	bool editing = false;
+	bool open = false;
+	int id;
+
+	Node(const std::string& nodeName, int idIn) : name(nodeName), id(idIn) {}
+	virtual ~Node() = default;
+};
+
+struct Layer : public Node {
+	RenderData data;
+
+	Layer(const std::string& layerName, int idIn, RenderData dataIn)
+		: Node(layerName, idIn), data(dataIn) {
+	}
+};
+
+struct Folder : public Node {
+	std::vector<std::unique_ptr<Node>> children;
+
+	Folder(const std::string& folderName, int idIn)
+		: Node(folderName, idIn) {
+	}
+
+	void AddChild(std::unique_ptr<Node> child) {
+		children.push_back(std::move(child));
+	}
+};
 
 void GLClearError();
 bool GLLogCall(const char* function, const char* file, int line);
@@ -41,6 +71,8 @@ bool GLLogCall(const char* function, const char* file, int line);
 class NewRenderer {
 public:
 	bool onUI;
+	int currentLayer;
+	int lastLayerIndex = 0;
 
 	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);
 	void Draw(const RenderData& data);

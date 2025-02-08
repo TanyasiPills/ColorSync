@@ -255,15 +255,31 @@ void DrawLayerTree(Layer& layer) {
 			}
 		}
 	}
-
-	if (layer.open) {
-		for (auto& child : layer.children) {
-			DrawLayerTree(child);
-		}
-
-		ImGui::TreePop();
-	}
 	ImGui::PopStyleVar();
+}
+
+void DrawLayerTreeTwo(Node& node) {
+	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+
+	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
+		if (folder->id == 0) {
+			for (auto& child : folder->children) {
+				DrawLayerTreeTwo(*child);
+			}
+		}
+		else {
+			bool open = ImGui::TreeNodeEx(folder->name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick);
+			if (open) {
+				for (auto& child : folder->children) {
+					DrawLayerTreeTwo(*child);
+				}
+				ImGui::TreePop();
+			}
+		}
+	}
+	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
+		ImGui::TreeNodeEx(layer->name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+	}
 }
 
 void DrawUI::LayerWindow()
@@ -271,18 +287,19 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
-	static Layer rootLayer("Root Layer");
-
-	if (rootLayer.children.empty()) {
-		rootLayer.children.push_back(Layer("Background"));
-		rootLayer.children.push_back(Layer("Foreground"));
-		rootLayer.children[1].children.push_back(Layer("Sub-layer 1"));
-		rootLayer.children[1].children.push_back(Layer("Sub-layer 2"));
+	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	
+	static Folder root("Root", 0);
+	static bool initialized = false;
+	if (!initialized) {
+		root.AddChild(std::make_unique<Layer>("Main Layer", 1, RenderData{}));
+		auto folder = std::make_unique<Folder>("Folder", 2);
+		folder->AddChild(std::make_unique<Layer>("Layer Inside Folder", 3, RenderData{}));
+		root.AddChild(std::move(folder));
+		initialized = true;
 	}
 
-	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
-	DrawLayerTree(rootLayer);
+	DrawLayerTreeTwo(root);
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
