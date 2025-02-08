@@ -3,6 +3,7 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
+#include "WindowManager.h"
 
 double prevCursorPos[2];
 float GlCursorPos[2];
@@ -113,7 +114,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			else if (action == GLFW_RELEASE) 
 				moveCanvas = false;
 			break;
+		case GLFW_KEY_F9:
+			if (action == GLFW_PRESS) {
+				WindowManager::ToggleFullscreen(window);
+			}
 		default:
+			std::cout << key << std::endl;
 			break;
 	}
 }
