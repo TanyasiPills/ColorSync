@@ -6,6 +6,7 @@
 #include "Texture.h"
 #include <iostream>
 #include "GLEW/glew.h"
+#include "json/json.hpp"
 
 #ifndef ASSERT
 #define ASSERT(x) if (!(x)) __debugbreak()
@@ -26,6 +27,13 @@ struct RenderData
 	std::shared_ptr<MyTexture> texture;
 };
 
+struct Position {
+	float x, y;
+
+	Position() : x(0), y(0) {}
+	Position(float xIn, float yIn) : x(xIn), y(yIn){}
+};
+
 
 void GLClearError();
 bool GLLogCall(const char* function, const char* file, int line);
@@ -40,9 +48,12 @@ public:
 	void Render();
 	void RenderLayers();
 	void RenderCursor();
-	void RenderCursorToCanvas();
+	void RenderCursorToCanvas(int currentLayer = 0);
 	void MoveLayers(static float* offset);
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
 	void LoadPrevCursor(float* GlCursorPos);
+	void SetDrawData();
+	void SendDraw();
+	void SetColor(float* color);
 };

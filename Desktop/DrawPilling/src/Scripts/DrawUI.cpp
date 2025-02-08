@@ -33,6 +33,19 @@ static std::vector<std::string> chatLog;
 
 std::string tokenHere;
 
+NewRenderer renderer;
+
+std::string DrawUI::GetToken() {
+	return tokenHere;
+}
+std::string DrawUI::GetUsername() {
+	return username;
+}
+
+void DrawUI::SetRenderer(NewRenderer& rendererIn) {
+	renderer = rendererIn;
+}
+
 void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
 {
 	if (usernameIn[0] != '\0') {
@@ -47,7 +60,7 @@ void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
 		tokenHere = tokenIn;
 	}
 	else {
-		needLogin = false; //need to remove this later !!!!
+		//needLogin = false; //need to remove this later !!!!
 		std::cerr << "no token" << std::endl;
 	}
 }
@@ -65,6 +78,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	renderer.SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
 	leftSize = ColorWindowSize.x;
@@ -189,7 +203,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "true";
-		SManager::Connect("http://10.4.117.21:3000", tokenHere.c_str(), room);
+		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
 	}
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(300);
@@ -197,7 +211,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "false";
-		SManager::Connect("http://10.4.117.21:3000", tokenHere.c_str(), room);
+		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
@@ -276,7 +290,6 @@ void DrawUI::LayerWindow()
 	ImGui::End();
 	if (LayerWindowSize.x < 200) {
 		rightSize = 200;
-		std::cout << leftSize << std::endl;
 	}
 }
 
@@ -289,16 +302,19 @@ void DrawUI::ChatWindow()
 
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	float inputBarHeight = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().FramePadding.y * 3 + ImGui::GetStyle().ItemSpacing.y;
+	float availableHeight = ImGui::GetContentRegionAvail().y;
+	float inputBarHeight = ImGui::GetTextLineHeight() * 2 - ImGui::GetStyle().FramePadding.y * 2; //+ ImGui::GetStyle().FramePadding.y * 3; //+ ImGui::GetStyle().ItemSpacing.y;
 
-	ImGui::BeginChild("ChatLog", ImVec2(0, ChatWindowSize.y - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+	ImGui::BeginChild("ChatLog", ImVec2(0, availableHeight - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
 	{
 		ImGui::TextWrapped("%s", message.c_str());
 	}
 	ImGui::EndChild();
 	ImGui::Separator();
-	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight), false);
+	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight - ImGui::GetStyle().ItemSpacing.y * 2), false);
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 	if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		if (strlen(inputBuffer) > 0)
@@ -315,10 +331,11 @@ void DrawUI::ChatWindow()
 	ChatWindowSize = ImGui::GetWindowSize();
 	rightSize = ChatWindowSize.x;
 	ChatWindowPos = ImGui::GetWindowPos();
+
 	ImGui::End();
+
 	if (ChatWindowSize.x < 200) {
 		rightSize = 200;
-		std::cout << leftSize << std::endl;
 	}
 }
 
@@ -362,7 +379,7 @@ void DrawUI::LoginWindow()
 				body["password"] = passwordText;
 
 				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request("10.4.117.21:3000/user/login", body.dump(), POST);
+				nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
 
 				if (res.contains("access_token") && res.contains("username")) {
 					std::cout << "got this JSON: " << res["access_token"] << std::endl;

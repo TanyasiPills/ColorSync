@@ -15,5 +15,5 @@ public:
     static void SaveData(const ApplicationData& data, const std::string& filename);
     static ApplicationData LoadData(const std::string& filename);
     static void LoadAppData();
-    static void SaveAppData();
+    static void SaveAppData(std::string nameIn, std::string tokenIn);
 };

@@ -11,8 +11,9 @@ void SetValue(char* dest, const char* value, size_t size) {
     dest[size - 1] = '\0';
 }
 
-void SetData(ApplicationData& data) {
-    SetValue(data.name, "nyagger", sizeof(data.name));
+void SetData(ApplicationData& data, std::string nameIn, std::string tokenIn) {
+    SetValue(data.name, nameIn.c_str(), sizeof(data.name));
+    SetValue(data.token, tokenIn.c_str(), sizeof(data.token));
 }
 
 void DataManager::SaveData(const ApplicationData& data, const std::string& filename) {
@@ -32,8 +33,8 @@ void DataManager::LoadAppData()
     appdata = DataManager::LoadData("appdata.bin");
     DrawUI::InitData(appdata.name, appdata.token);
 }
-void DataManager::SaveAppData()
+void DataManager::SaveAppData(std::string nameIn, std::string tokenIn)
 {
-    SetData(appdata);
+    SetData(appdata, nameIn, tokenIn);
     DataManager::SaveData(appdata, "appdata.bin");
 }

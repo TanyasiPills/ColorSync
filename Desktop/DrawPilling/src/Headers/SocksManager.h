@@ -3,14 +3,26 @@
 #include <map>
 #include <string>
 #include "json/json.hpp"
+#include <vector>
+#include "NewRenderer.h"
 
 enum Type {
-	None = 0,
-	Draw = 1 << 0,
-	AddLayer = 1 << 1,
-	RenameLayer = 1 << 2,
-	Undo = 1 << 3,
-	Redo = 1 << 4,
+	Draw = 0,
+	AddLayer = 1,
+	RenameLayer = 2,
+	Undo = 3,
+	Redo = 4,
+};
+
+struct DrawMessage {
+	int layer;
+	int brush;
+	float size;
+	std::vector<Position> positions;
+	Position offset;
+	float* color;
+
+	DrawMessage(): layer(0), brush(0), size(0.0f), positions(), offset(), color(nullptr) {}
 };
 
 class SManager {
@@ -23,6 +35,6 @@ public:
 	static void SendMsg(std::string msg);
 
 	static void OnAction(sio::event& ev);
-	static void SendAction(int type, std::map<std::string, std::string> data);
+	static void SendAction(int type, DrawMessage data);
 
 };

@@ -35,4 +35,9 @@ public:
     static void InitData(std::string usernameIn, std::string tokenIn);
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
+
+    static std::string GetUsername();
+    static std::string GetToken();
+
+    static void SetRenderer(NewRenderer& renderer);
 };

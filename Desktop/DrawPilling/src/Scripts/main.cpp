@@ -23,6 +23,7 @@ int main()
     NewRenderer renderer;
 
     Callback::Init(data.window, renderer);
+    DrawUI::SetRenderer(renderer);
 
     renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
 

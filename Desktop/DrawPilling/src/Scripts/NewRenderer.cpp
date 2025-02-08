@@ -12,6 +12,7 @@
 #include "DrawUI.h"
 #include "Menu.h"
 #include "lss.h"
+#include "SocksManager.h"
 
 void GLClearError() {
 	while (glGetError() != GL_NO_ERROR);
@@ -41,6 +42,11 @@ unsigned int canvasSize[2] = {1,1};
 
 unsigned int fbo;
 
+std::vector<Position> drawPositions;
+Position sentOffset;
+float color[3];
+float sentBrushSize;
+
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
@@ -61,7 +67,6 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	initialCanvasRatio[1] = canvasData.canvasY;
 	canvasRatio[0] = canvasData.canvasX;
 	canvasRatio[1] = canvasData.canvasY;
-
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -108,8 +113,21 @@ void NewRenderer::LoadPrevCursor(float* prevIn)
 	prevPos[1] = prevIn[1];
 }
 
-void NewRenderer::RenderCursorToCanvas()
+void NewRenderer::RenderCursorToCanvas(int currentLayer)
 {
+
+	if (currentLayer < 0 || currentLayer >= layers.size()) {
+		std::cerr << "Invalid layer index!" << std::endl;
+		return;
+	}
+
+	RenderData& layer = layers[currentLayer];
+
+	layer.va->Bind();
+	layer.ib->Bind();
+	layer.shader->Bind();
+	layer.texture->Bind();
+
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
@@ -128,6 +146,8 @@ void NewRenderer::RenderCursorToCanvas()
 		float vy = prevPos[1] * (1 - t) + pos[1] * t;
 		float tmp[2] = { vx, vy };
 
+		drawPositions.push_back(Position(vx, vy));
+		
 		NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
 		Draw(cursor);
 	}
@@ -140,6 +160,32 @@ void NewRenderer::RenderCursorToCanvas()
 	glViewport(0, 0, width, height);
 }
 
+void NewRenderer::SendDraw() 
+{
+	DrawMessage msg;
+	msg.layer = 1;
+	msg.brush = 2;
+	msg.size = sentBrushSize;
+	msg.positions = drawPositions;
+	msg.offset = sentOffset;
+	msg.color = color;
+	SManager::SendAction(Type::Draw, msg);
+
+	drawPositions.clear();
+}
+
+void NewRenderer::SetColor(float* colorIn) {
+	color[0] = colorIn[0];
+	color[1] = colorIn[1];
+	color[2] = colorIn[2];
+}
+
+void NewRenderer::SetDrawData()
+{
+	sentBrushSize = cursorRadius;
+	sentOffset.x = offset[0];
+	sentOffset.y = offset[1];
+}
 void NewRenderer::Clear() 
 {
 	glClearColor(0.188, 0.188, 0.313, 0);
@@ -148,7 +194,6 @@ void NewRenderer::Clear()
 
 void NewRenderer::Draw(const RenderData& data)
 {
-	GLCall(data.va->Bind());
 	GLCall(data.va->Bind());
 	GLCall(data.shader->Bind());
 	GLCall(data.texture->Bind());
@@ -176,6 +221,7 @@ void RenderImGui(bool& onUIIn)
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	onUIIn = ImGui::GetIO().WantCaptureMouse;
+	Lss::SetFontSize(2 * Lss::VH);
 
 	bool yes = true;
 	ImGui::SetNextWindowViewport(10);
@@ -197,6 +243,8 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::PopStyleColor();
 
+	Lss::End();
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	/*
@@ -213,7 +261,6 @@ void RenderMenu()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	//Lss::Update();
 
 
 	int width, height;
@@ -231,6 +278,7 @@ void RenderMenu()
 	Menu::MainFeed(sideWidth, mainWidth, windowHeight);
 	Menu::RightSide(sideWidth+mainWidth, sideWidth, windowHeight);
 
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -239,10 +287,10 @@ void RenderMenu()
 void NewRenderer::Render()
 {
 	Clear();
-	//RenderLayers();
-	//RenderCursor();
-	//RenderImGui(onUI);
-	RenderMenu();
+	RenderLayers();
+	RenderCursor();
+	RenderImGui(onUI);
+	//RenderMenu();
 
 	glfwSwapBuffers(window);
 }

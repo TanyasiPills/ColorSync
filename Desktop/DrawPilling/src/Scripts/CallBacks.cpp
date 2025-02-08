@@ -68,10 +68,12 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 				mouseDown = true;
 				renderer->LoadPrevCursor(GlCursorPos);
 				renderer->RenderCursorToCanvas();
+				renderer->SetDrawData();
 				break;
 
 			case GLFW_RELEASE:
 				mouseDown = false;
+				renderer->SendDraw();
 				break;
 		}
 	}
@@ -119,7 +121,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 				WindowManager::ToggleFullscreen(window);
 			}
 		default:
-			std::cout << key << std::endl;
 			break;
 	}
 }

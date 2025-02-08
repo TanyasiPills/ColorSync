@@ -43,5 +43,7 @@
 
 #include "SocketSource/sio_client.h"
 
+#include "DrawUI.h"
+
 //definitions
 #define PI 3.1415927f

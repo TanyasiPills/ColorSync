@@ -15,6 +15,8 @@
 #include "GLFW/glfw3native.h"
 #include <windows.h>
 
+#include "DrawUI.h"
+
 SessionData Manager::Assembly(SessionData& data) {
 
 
@@ -33,7 +35,7 @@ SessionData Manager::Assembly(SessionData& data) {
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "I hate Jazz", nullptr, nullptr);
-    WindowManager::ToggleFullscreen(window);
+    //WindowManager::ToggleFullscreen(window);
 
 
     data.window = window;
@@ -71,14 +73,15 @@ SessionData Manager::Assembly(SessionData& data) {
 
     DataManager::LoadAppData();
 
-    HManager::Init();
+    HManager::Init()
+        ;
     Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
 
     return data;
 }
 void Manager::DisAssembly(GLFWwindow* window) {
     std::cout << "heooooo2" << std::endl;
-    DataManager::SaveAppData();
+    DataManager::SaveAppData(DrawUI::GetUsername(), DrawUI::GetToken());
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
