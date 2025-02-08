@@ -22,6 +22,7 @@ void SManager::Connect(const char* ip, std::string token, std::map<std::string, 
         });
 
     h.socket()->on("message", OnMessage);
+    h.socket()->on("action", OnAction);
 
     std::map<std::string, std::string> headers;
     headers["token"] = token;
@@ -32,6 +33,28 @@ void SManager::Connect(const char* ip, std::string token, std::map<std::string, 
 void SManager::Down()
 {
     h.socket()->close();
+}
+
+void SManager::OnAction(sio::event& ev) {
+
+}
+
+void SManager::SendAction(int type, std::map<std::string, std::string> dataIn)
+{
+    sio::message::ptr msg = sio::object_message::create();
+    sio::message::ptr data = sio::object_message::create();
+
+    switch (type)
+    {
+        case Draw:
+            msg->get_map()["type"] = sio::string_message::create("draw");
+            //data->get_map()[""] = 
+        default:
+            break;
+    }
+    msg->get_map()["data"] = data;
+
+    h.socket()->emit("action", msg);
 }
 
 void SManager::OnMessage(sio::event& ev)
