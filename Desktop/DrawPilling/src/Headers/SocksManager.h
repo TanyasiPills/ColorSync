@@ -8,10 +8,12 @@
 
 enum Type {
 	Draw = 0,
-	AddLayer = 1,
-	RenameLayer = 2,
+	AddNode = 1,
+	RenameNode = 2,
 	Undo = 3,
 	Redo = 4,
+	Delete = 5,
+	Move = 6
 };
 
 struct DrawMessage {

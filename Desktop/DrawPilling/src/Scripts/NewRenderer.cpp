@@ -27,7 +27,7 @@ bool GLLogCall(const char* function, const char* file, int line) {
 }
 
 GLFWwindow* window;
-std::vector<Layer> layers;
+std::vector<int> layers;
 RenderData cursor;
 
 float cursorRadius = 0.01;
@@ -40,8 +40,6 @@ float identityOffset[2] = {0,0};
 float prevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
 
-unsigned int fbo;
-
 std::vector<Position> drawPositions;
 Position sentOffset;
 float color[3];
@@ -50,32 +48,46 @@ float sentBrushSize;
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
-	glGenFramebuffers(1, &fbo);
 	window = windowIn;
 	canvasSize[0] = canvasWidthIn;
 	canvasSize[1] = canvasHeightIn;
 	NewDraw::InitBrush(cursor, cursorRadius);
 	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
-	layers.push_back(Layer("Main", lastLayerIndex, canvasData.data));
-	lastLayerIndex++;
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, canvasData.data.texture->GetId(), 0);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	initialCanvasRatio[0] = canvasData.canvasX;
 	initialCanvasRatio[1] = canvasData.canvasY;
 	canvasRatio[0] = canvasData.canvasX;
 	canvasRatio[1] = canvasData.canvasY;
+
+	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
+	nextFreeNodeIndex++;
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData.data);
+	layers.push_back(nextFreeNodeIndex);
+	currentNode = nextFreeNodeIndex;
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
+
+	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Folder", nextFreeNodeIndex);
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(nextFreeNodeIndex);
+	int folder = nextFreeNodeIndex;
+	nextFreeNodeIndex++;
+
+	RenderData layerTwo;
+	NewDraw::initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
+	std::cout << layerTwo.texture->GetId() << std::endl;
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Not main", nextFreeNodeIndex, layerTwo);
+	layers.push_back(nextFreeNodeIndex);
+	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
+	nextFreeNodeIndex++;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
 {
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
-	for (Layer& item : layers) {
-		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
+	for (int item : layers) {
+		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
+		NewDraw::MoveCanvas(layer.data, canvasRatio, offset);
 	}
 }
 void NewRenderer::Zoom(static float scale, static float* offsetIn)
@@ -87,8 +99,9 @@ void NewRenderer::Zoom(static float scale, static float* offsetIn)
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
 
-	for (Layer& item : layers) {
-		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
+	for (int item : layers) {
+		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
+		NewDraw::MoveCanvas(layer.data, canvasRatio, offset);
 	}
 
 	cursorRadius *= scale;
@@ -103,8 +116,9 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 	offset[0] = offsetIn[0];
 	offset[1] = offsetIn[1];
 
-	for (Layer& item : layers) {
-		NewDraw::MoveCanvas(item.data, canvasRatio, offset);
+	for (int item : layers) {
+		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
+		NewDraw::MoveCanvas(layer.data, canvasRatio, offset);
 	}
 }
 
@@ -114,51 +128,46 @@ void NewRenderer::LoadPrevCursor(float* prevIn)
 	prevPos[1] = prevIn[1];
 }
 
-void NewRenderer::RenderCursorToCanvas(int currentLayer)
+void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 {
+	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
+		RenderData& layer = layerPtr->data;
+		std::cout << layer.fbo << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
+		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
-	if (currentLayer < 0 || currentLayer >= layers.size()) {
-		std::cerr << "Invalid layer index!" << std::endl;
-		return;
-	}
-
-	RenderData& layer = layers[currentLayer].data;
-
-	layer.va->Bind();
-	layer.ib->Bind();
-	layer.shader->Bind();
-	layer.texture->Bind();
-
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	glViewport(0, 0, canvasSize[0], canvasSize[1]);
-
-	float* pos = Callback::GlCursorPosition();
-	float dx = pos[0] - prevPos[0];
-	float dy = pos[1] - prevPos[1];
-	dx *= canvasSize[0];
-	dy *= canvasSize[1];
-	float distance = std::sqrt(dx * dx + dy * dy);
-	int num_samples = std::min(static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0]))), 100);
-	if (num_samples < 1) num_samples = 100;
+		float* pos = Callback::GlCursorPosition();
+		float dx = pos[0] - prevPos[0];
+		float dy = pos[1] - prevPos[1];
+		dx *= canvasSize[0];
+		dy *= canvasSize[1];
+		float distance = std::sqrt(dx * dx + dy * dy);
+		int num_samples = std::min(static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0]))), 100);
+		if (num_samples < 1) num_samples = 100;
 	
-	for (int i = 0; i <= num_samples; ++i) {
-		float t = static_cast<float>(i) / num_samples;
-		float vx = prevPos[0] * (1 - t) + pos[0] * t;
-		float vy = prevPos[1] * (1 - t) + pos[1] * t;
-		float tmp[2] = { vx, vy };
+		for (int i = 0; i <= num_samples; ++i) {
+			float t = static_cast<float>(i) / num_samples;
+			float vx = prevPos[0] * (1 - t) + pos[0] * t;
+			float vy = prevPos[1] * (1 - t) + pos[1] * t;
+			float tmp[2] = { vx, vy };
 
-		drawPositions.push_back(Position(vx, vy));
+			drawPositions.push_back(Position(vx, vy));
 		
-		NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
-		Draw(cursor);
-	}
-	prevPos[0] = pos[0];
-	prevPos[1] = pos[1];
+			NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
+			Draw(cursor);
+		}
+		prevPos[0] = pos[0];
+		prevPos[1] = pos[1];
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	int width, height;
-	glfwGetFramebufferSize(window, &width, &height);
-	glViewport(0, 0, width, height);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		layer.texture->Bind();
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		glViewport(0, 0, width, height);
+	}
+	else {
+		std::cerr << "Error: Node is not of type Layer!" << std::endl;
+	}
 }
 
 void NewRenderer::SendDraw() 
@@ -203,8 +212,11 @@ void NewRenderer::Draw(const RenderData& data)
 
 void NewRenderer::RenderLayers()
 {
-	for (Layer& item : layers) {
-		Draw(item.data);
+	for (int item : layers) {
+		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
+		if (layer.visible) {
+			Draw(layer.data);
+		}
 	}
 }
 

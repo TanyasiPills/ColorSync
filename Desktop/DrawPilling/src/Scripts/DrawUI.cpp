@@ -33,7 +33,7 @@ static std::vector<std::string> chatLog;
 
 std::string tokenHere;
 
-NewRenderer renderer;
+static NewRenderer* renderer;
 
 std::string DrawUI::GetToken() {
 	return tokenHere;
@@ -43,7 +43,7 @@ std::string DrawUI::GetUsername() {
 }
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
-	renderer = rendererIn;
+	renderer = &rendererIn;
 }
 
 void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
@@ -78,7 +78,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
-	renderer.SetColor(color);
+	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
 	leftSize = ColorWindowSize.x;
@@ -224,7 +224,7 @@ void DrawUI::ServerWindow()
 		std::cout << leftSize << std::endl;
 	}
 }
-
+/*
 void DrawLayerTree(Layer& layer) {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
 	layer.open = ImGui::TreeNodeEx(("##" + layer.name).c_str(), ImGuiTreeNodeFlags_FramePadding | (layer.open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
@@ -257,29 +257,86 @@ void DrawLayerTree(Layer& layer) {
 	}
 	ImGui::PopStyleVar();
 }
+*/
 
 void DrawLayerTreeTwo(Node& node) {
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
 	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
 		if (folder->id == 0) {
-			for (auto& child : folder->children) {
-				DrawLayerTreeTwo(*child);
+			for (int childId : folder->childrenIds) {
+				Node* childNode = renderer->nodes[childId].get();
+				DrawLayerTreeTwo(*childNode);
 			}
 		}
 		else {
-			bool open = ImGui::TreeNodeEx(folder->name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick);
+			bool open = ImGui::TreeNodeEx(("##" +folder->name).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | (folder->open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
+			ImGui::SameLine();
+			ImGui::Checkbox(("##" + folder->name + "visibility").c_str(), &folder->visible);
+			ImGui::SameLine();
+			if (folder->visible && !folder->editing) ImGui::Text((folder->name).c_str());
+
+			if (folder->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+				folder->editing = true;
+			}
+
 			if (open) {
-				for (auto& child : folder->children) {
-					DrawLayerTreeTwo(*child);
+				folder->open = true;
+				for (int childId : folder->childrenIds) {
+					Node* childNode = renderer->nodes[childId].get();
+					DrawLayerTreeTwo(*childNode);
 				}
 				ImGui::TreePop();
+			}
+			else {
+				folder->open = false;
+			}
+			if (folder->visible && folder->editing) {
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(100);
+				static char editBuffer[256] = "";
+				bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+				ImGui::SetKeyboardFocusHere(-1);
+				if (editing) {
+					if (strlen(editBuffer) > 0) {
+						folder->name = editBuffer;
+						memset(editBuffer, 0, sizeof(editBuffer));
+						folder->editing = false;
+					}
+				}
 			}
 		}
 	}
 	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
-		ImGui::TreeNodeEx(layer->name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+		bool clicked = ImGui::Selectable(("##SelectableLayer" + layer->name).c_str(), (renderer->currentNode == layer->id));
+		if (clicked) {
+			renderer->currentNode = layer->id;
+		}
+		ImGui::TreeNodeEx(("##" + layer->name).c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+		ImGui::SameLine();
+		ImGui::Checkbox(("##" + layer->name + "visibility").c_str(), &layer->visible);
+		ImGui::SameLine();
+		if (layer->visible && !layer->editing) ImGui::Text((layer->name).c_str());
+
+		if (layer->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+			layer->editing = true;
+		}
+		if (layer->visible && layer->editing) {
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(100);
+			static char editBuffer[256] = "";
+			bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+			ImGui::SetKeyboardFocusHere(-1);
+			if (editing) {
+				if (strlen(editBuffer) > 0) {
+					layer->name = editBuffer;
+					memset(editBuffer, 0, sizeof(editBuffer));
+					layer->editing = false;
+				}
+			}
+		}
 	}
+
 }
 
 void DrawUI::LayerWindow()
@@ -288,18 +345,8 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-	
-	static Folder root("Root", 0);
-	static bool initialized = false;
-	if (!initialized) {
-		root.AddChild(std::make_unique<Layer>("Main Layer", 1, RenderData{}));
-		auto folder = std::make_unique<Folder>("Folder", 2);
-		folder->AddChild(std::make_unique<Layer>("Layer Inside Folder", 3, RenderData{}));
-		root.AddChild(std::move(folder));
-		initialized = true;
-	}
 
-	DrawLayerTreeTwo(root);
+	DrawLayerTreeTwo(*renderer->nodes[0].get());
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;

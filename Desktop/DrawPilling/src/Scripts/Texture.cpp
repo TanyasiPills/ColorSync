@@ -29,7 +29,7 @@ void MyTexture::Init(const std::string& path)
 	}
 }
 
-void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn)
+void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn, int transparent)
 {
 	width = widthIn;
 	height = heightIn;
@@ -44,7 +44,12 @@ void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn)
 	unsigned char* data = new unsigned char[width * height * 4];
 	for (int i = 0; i < width * height * 4; ++i) {
 		if ((i+1) % 4 == 0) {
-			data[i] = 255;
+			if (transparent) {
+				data[i] = 0;
+			}
+			else {
+				data[i] = 255;
+			}
 		}
 		else {
 			data[i] = 100;
