@@ -12,7 +12,7 @@
 #include "DrawUI.h"
 #include "Menu.h"
 #include "lss.h"
-#include "SocksManager.h"
+
 
 void GLClearError() {
 	while (glGetError() != GL_NO_ERROR);
@@ -208,6 +208,36 @@ void NewRenderer::Draw(const RenderData& data)
 	GLCall(data.shader->Bind());
 	GLCall(data.texture->Bind());
 	GLCall(glDrawElements(GL_TRIANGLES, data.ib->GetCount(), GL_UNSIGNED_INT, nullptr));
+}
+
+void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
+{
+	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get()))
+	{
+		RenderData& layer = layerPtr->data;
+		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
+		glViewport(0, 0, canvasSize[0], canvasSize[1]);
+
+		cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
+
+		Position offs = drawMessage.offset;
+		float offse[2] = { offs.x, offs.y };
+
+		float radius = drawMessage.size;
+
+		for (size_t i = 0; i < drawMessage.positions.size(); i++)
+		{
+			Position pos = drawMessage.positions[i];
+			float tmp[2] = { pos.x, pos.y };
+			NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp);
+			Draw(cursor);
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	else {
+		std::cerr << "sent layer not found" << std::endl;
+	}
 }
 
 void NewRenderer::RenderLayers()

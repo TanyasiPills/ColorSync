@@ -284,6 +284,7 @@ void DrawLayerTreeTwo(Node& node) {
 				folder->open = true;
 				for (int childId : folder->childrenIds) {
 					Node* childNode = renderer->nodes[childId].get();
+					//childNode->visible = folder->visible;
 					DrawLayerTreeTwo(*childNode);
 				}
 				ImGui::TreePop();

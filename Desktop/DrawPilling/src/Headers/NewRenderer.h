@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include "SocksManager.h"
 
 #ifndef ASSERT
 #define ASSERT(x) if (!(x)) __debugbreak()
@@ -95,4 +96,5 @@ public:
 	void SetDrawData();
 	void SendDraw();
 	void SetColor(float* color);
+	void RenderDrawMessage(const DrawMessage& drawMessage);
 };
