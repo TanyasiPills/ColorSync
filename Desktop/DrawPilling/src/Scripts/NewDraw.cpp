@@ -123,7 +123,7 @@ void NewDraw::InitBrush(RenderData& data, float& radius)
 void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, float* position, int debug) {
 	float positions[16];
 	float yMult = aspect[0] / aspect[1];
-	fillPositions(positions, radius, radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
+	fillPositions(positions, radius / aspect[0] * scale[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
 	VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 	cursor.va->SetBuffer(vb);
 	cursor.va->UnBind();
