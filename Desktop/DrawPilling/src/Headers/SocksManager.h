@@ -5,6 +5,9 @@
 #include "json/json.hpp"
 #include <vector>
 #include "NewRenderer.h"
+#include "Messages.h"
+#include "GLEW/glew.h"
+#include <GLFW/glfw3.h> 
 
 enum Type {
 	Draw = 0,

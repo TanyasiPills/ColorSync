@@ -6,7 +6,9 @@
 #include "Texture.h"
 #include <iostream>
 #include "GLEW/glew.h"
+#include "Messages.h"
 #include "json/json.hpp"
+#include "ThreadSafeQueue.h"
 
 #include <unordered_map>
 #include <string>
@@ -30,13 +32,6 @@ struct RenderData
 	std::shared_ptr<NewShader> shader;
 	std::shared_ptr<MyTexture> texture;
 	unsigned int fbo = 0;
-};
-
-struct Position {
-	float x, y;
-
-	Position() : x(0), y(0) {}
-	Position(float xIn, float yIn) : x(xIn), y(yIn){}
 };
 
 struct Node {
@@ -70,39 +65,16 @@ struct Folder : public Node {
 	}
 };
 
-struct Message {
-	int type;
 
-	virtual ~Message() = default;
-};
-
-struct DrawMessage : public Message {
-	int layer;
-	int brush;
-	float size;
-	std::vector<Position> positions;
-	Position offset;
-	float* color;
-
-	DrawMessage() : layer(0), brush(0), size(0.0f), positions(), offset(), color(nullptr) {}
-};
-
-struct NodeAddMessage : public Message {
-	std::string name;
-	int location;
-	int nodeType;
-};
-
-struct NodeRenameMessage : public Message {
-	std::string name;
-	int location;
-};
 
 void GLClearError();
 bool GLLogCall(const char* function, const char* file, int line);
 
 class NewRenderer {
+private:
+	std::function<void(const DrawMessage&)> mainThreadCallback;
 public:
+	bool recieving = false;
 	bool onUI;
 	int currentNode;
 	int nextFreeNodeIndex = 0;
@@ -128,4 +100,22 @@ public:
 
 	void AddLayer(std::string name, int location);
 	void AddFolder(std::string name, int location);
+
+	ThreadSafeQueue taskQueue;
+
+
+	void ExecuteMainThreadTask(const DrawMessage& drawMessage) {
+		taskQueue.push(drawMessage);
+	}
+
+	void ProcessTasks() {
+		DrawMessage task;
+		while (taskQueue.pop(task)) {
+			RenderDrawMessage(task);
+		}
+	}
+
+	void SetMainThreadCallback(std::function<void(const DrawMessage&)> callback) {
+		mainThreadCallback = callback;
+	}
 };

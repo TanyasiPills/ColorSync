@@ -31,7 +31,7 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight, std::st
 	VW = (float)screenWidth / 100;
 	for (int x = VH; x < 10*(int)VH; x += VH)
 	{
-		fonts.push_back(io.Fonts->AddFontFromFileTTF("Aptos.ttf", x));
+		fonts.push_back(io.Fonts->AddFontFromFileTTF("Resources/fonts/Aptos.ttf", x));
 	}
 }
 

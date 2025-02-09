@@ -24,6 +24,7 @@ int main()
 
     Callback::Init(data.window, renderer);
     DrawUI::SetRenderer(renderer);
+    SManager::SetRenderer(renderer);
 
     renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
 
@@ -37,6 +38,7 @@ int main()
             ImGui_ImplGlfw_Sleep(10);
         }
 
+        renderer.ProcessTasks();
         renderer.Render();
     }
 }

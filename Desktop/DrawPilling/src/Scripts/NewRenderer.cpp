@@ -10,9 +10,9 @@
 #include "NewDraw.h"
 #include "CallBacks.h"
 #include "DrawUI.h"
-#include "Menu.h"
 #include "lss.h"
 #include "SocksManager.h"
+#include "SocialMedia.h"
 
 
 void GLClearError() {
@@ -49,6 +49,10 @@ float sentBrushSize;
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
+	SetMainThreadCallback([this](const DrawMessage& msg) {
+		taskQueue.push(msg);
+	});
+
 	window = windowIn;
 	canvasSize[0] = canvasWidthIn;
 	canvasSize[1] = canvasHeightIn;
@@ -147,6 +151,7 @@ void NewRenderer::LoadPrevCursor(float* prevIn)
 
 void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 {
+	if (recieving) return;
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
 		RenderData& layer = layerPtr->data;
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
@@ -189,12 +194,15 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 void NewRenderer::SendDraw() 
 {
 	DrawMessage msg;
+	msg.type = 0;
 	msg.layer = 1;
 	msg.brush = 2;
 	msg.size = sentBrushSize;
 	msg.positions = drawPositions;
 	msg.offset = sentOffset;
-	msg.color = color;
+	msg.color[0] = color[0];
+	msg.color[1] = color[1];
+	msg.color[2] = color[2];
 	SManager::SendAction(msg);
 
 	drawPositions.clear();
@@ -202,6 +210,7 @@ void NewRenderer::SendDraw()
 
 void NewRenderer::SendLayerRename(std::string nameIn, int locationIn) {
 	NodeRenameMessage msg;
+	msg.type = 2;
 	msg.name = nameIn;
 	msg.location = locationIn;
 }
@@ -235,28 +244,27 @@ void NewRenderer::Draw(const RenderData& data)
 void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 {
 	try{
-		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get()))
+		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get()))
 		{
 			RenderData& layer = layerPtr->data;
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
-
 			cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
-
 			Position offs = drawMessage.offset;
 			float offse[2] = { offs.x, offs.y };
-
 			float radius = drawMessage.size;
-
 			for (size_t i = 0; i < drawMessage.positions.size(); i++)
 			{
 				Position pos = drawMessage.positions[i];
 				float tmp[2] = { pos.x, pos.y };
-				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp);
+				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp,1);
 				Draw(cursor);
 			}
-
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			layer.texture->Bind();
+			int width, height;
+			glfwGetFramebufferSize(window, &width, &height);
+			glViewport(0, 0, width, height);
 		}
 		else {
 			std::cerr << "sent layer not found" << std::endl;
@@ -265,6 +273,7 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 	catch (...){
 		std::cerr << "cant render drawMessage, bad data" << std::endl;
 	}
+	recieving = false;
 }
 
 void NewRenderer::RenderLayers()
@@ -344,9 +353,9 @@ void RenderMenu()
 	mainWidth += (width - totalWidth); 
 	
 
-	Menu::LeftSide(0,sideWidth, windowHeight);
-	Menu::MainFeed(sideWidth, mainWidth, windowHeight);
-	Menu::RightSide(sideWidth+mainWidth, sideWidth, windowHeight);
+	SocialMedia::LeftSide(0,sideWidth, windowHeight);
+	SocialMedia::MainFeed(sideWidth, mainWidth, windowHeight);
+	SocialMedia::RightSide(sideWidth+mainWidth, sideWidth, windowHeight);
 
 
 	ImGui::Render();

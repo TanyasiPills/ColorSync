@@ -1,15 +1,17 @@
 #include "SocksManager.h"
 #include "DrawUI.h"
 #include <iostream>
+#include <GLFW/glfw3.h>
+
 
 sio::client h;
 const char* ip;
 bool onserver = false;
-static NewRenderer* renderer;
+NewRenderer* rendererSocks;
 
 void SManager::SetRenderer(NewRenderer& rendererIn)
 {
-    renderer = &rendererIn;
+    rendererSocks = &rendererIn;
 }
 
 void SManager::Connect(const char* ip, std::string token, std::map<std::string, std::string> room)
@@ -64,6 +66,7 @@ void SManager::OnAction(sio::event& ev) {
                 DrawMessage drawMessage;
                 drawMessage.layer = data["layer"]->get_int();
                 drawMessage.brush = data["brush"]->get_int();
+                drawMessage.size = data["size"]->get_double();
 
                 std::vector<sio::message::ptr> positionArray = data["positions"]->get_vector();
                 for (int i = 0; i < positionArray.size(); ++i) {
@@ -72,6 +75,7 @@ void SManager::OnAction(sio::event& ev) {
                 }
 
                 std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
+                std::cout << colors["r"]->get_double() << std::endl;
                 drawMessage.color[0] = colors["r"]->get_double();
                 drawMessage.color[1] = colors["g"]->get_double();
                 drawMessage.color[2] = colors["b"]->get_double();
@@ -79,7 +83,9 @@ void SManager::OnAction(sio::event& ev) {
                 std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
                 drawMessage.offset.x = offsets["x"]->get_double();
                 drawMessage.offset.y = offsets["y"]->get_double();
-                renderer->RenderDrawMessage(drawMessage);
+                
+                rendererSocks->ExecuteMainThreadTask(drawMessage);
+                //rendererSocks->RenderDrawMessage(drawMessage);
             }
             catch(...){
                 std::cerr << "Error recieving DrawMessage" << std::endl;
@@ -89,10 +95,10 @@ void SManager::OnAction(sio::event& ev) {
             try {
                 int typeOfNode = data["node"]->get_int();
                 if (typeOfNode == 0) {
-                    renderer->AddLayer(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->AddLayer(data["name"]->get_string(), data["location"]->get_int());
                 }
                 else if (typeOfNode == 1) {
-                    renderer->AddFolder(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->AddFolder(data["name"]->get_string(), data["location"]->get_int());
                 }
             }
             catch (...) {
@@ -101,7 +107,7 @@ void SManager::OnAction(sio::event& ev) {
             break;
         case RenameNode:
             try {
-                Node* node = dynamic_cast<Node*>(renderer->nodes[data["location"]->get_int()].get());
+                Node* node = dynamic_cast<Node*>(rendererSocks->nodes[data["location"]->get_int()].get());
                 node->name = data["name"]->get_string();
             }
             catch (...) {

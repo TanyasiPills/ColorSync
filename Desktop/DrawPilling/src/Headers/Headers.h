@@ -37,13 +37,12 @@
 #include "NewDraw.h"
 #include "NewRenderer.h"
 #include "CallBacks.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "HighsManager.h"
 
 #include "SocketSource/sio_client.h"
 
 #include "DrawUI.h"
+#include "SocksManager.h"
 
 //definitions
 #define PI 3.1415927f
