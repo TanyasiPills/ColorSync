@@ -1,19 +1,3 @@
-* {
-    margin: 0;
-    max-height: 100vh;
-}
-
-#root {
-    height: 100vh;
-}
-
-html,
-body {
-    height: 100vh;
-    overflow-y: clip;
-}
-
-
 .layout {
     height: 100%;
     width: 100%;
@@ -21,40 +5,19 @@ body {
 }
 
 .sideBar {
-    background-color: gray;
     width: fit-content;
     padding: 10px;
     position: relative;
 }
 
 .sideBar#left{
-    float: inline-start;
+    border-right: 0.15rem solid #7A74A6;
+    background-color: #303050 !important;
 }
-
-.rsz {
-    width: 2px;
-    height: 100%;
-    background-color: black;
-    position: absolute;
-}
-
-.rsz:hover {
-    cursor: e-resize;
-}
-
-#leftResize {
-    right: 0;
-    top: 0;
-}
-
-#rightResize{
-    left: 0;
-    top: 0;
-}
-
 
 .sideBar#right{
-    float: inline-end;
+    border-left: 0.15rem solid #7A74A6;
+    background-color: #303050 !important;
 }
 
 .canvasContainer {
@@ -67,6 +30,7 @@ canvas {
     width: 100%;
     height: 100%;
     margin: auto;
+    background-color: white;
 }
 
 button,

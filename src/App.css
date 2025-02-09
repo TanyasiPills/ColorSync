@@ -1,9 +1,19 @@
 * {
   margin: 0;
+  max-height: 100vh;
 }
 
-html, body {
-  height: 100%;
+#root {
+  height: 100vh;
+  
+  color: #A5A0D4;
+  background-color: #303050;
+}
+
+html,
+body {
+  height: 100vh;
+  overflow-y: clip;
 }
 
 ul {
@@ -25,11 +35,12 @@ ul {
   margin: auto;
 }
 
-a{
-  text-decoration: none;
-  color: black;
+a:not(.navbar-brand) {
+  text-decoration: none !important;
+  color: #A5A0D4 !important;
 }
+
 a:hover{
-  color: gray;
+  background-color: #35355A;
   text-decoration: none;
 }

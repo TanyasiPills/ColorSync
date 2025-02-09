@@ -1,15 +1,18 @@
-export function SocialMedia(){
-return (
-    <div className="layout">
-      <div className="sideBar" id="left">
-        
-      </div>
-      <div className="mainDiv">
-        <div className="smFeed"></div>
-      </div>
-      <div className="sideBar" id="right">
-        <div id="rightResize" className="rsz"></div>
-      </div>
-    </div>
+import "./SocialMedia.scss";
+import { Container, Row, Col } from 'react-bootstrap';
+
+export function SocialMedia() {
+  return (
+    <Container fluid className="vh-100 d-flex">
+      <Row className="flex-grow-1 w-100">
+        <Col xs="2" id="left" className="h-100">
+        </Col>
+        <Col id="middle" className="h-100 d-flex justify-content-center align-items-center">
+          <div id="feed"></div>
+        </Col>
+        <Col xs="2" id="right" className="h-100">
+        </Col>
+      </Row>
+    </Container>
   );
-};
+}

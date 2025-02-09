@@ -26,7 +26,7 @@ const WebGLCanvas: React.FC = () => {
       return;
     }
 
-    var drawn: Float32Array[] = [];
+    /*var drawn: Float32Array[] = [];
     let isRunning = true;
     var mousehold: boolean = false;
     var colour: Float32Array = new Float32Array([0, 0, 0]);
@@ -54,7 +54,7 @@ const WebGLCanvas: React.FC = () => {
     gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aVertexPosition);
 
-/*    canvas.addEventListener("mouseenter", () => {
+      canvas.addEventListener("mouseenter", () => {
       canvas.style.cursor = "none";
     })*/
     canvas.addEventListener("mouseleave", () => {
@@ -67,19 +67,19 @@ const WebGLCanvas: React.FC = () => {
     });
 
     canvas.addEventListener("mousedown", (event) => {
-      mousehold = true;
+      //mousehold = true;
     });
 
     addEventListener("mouseup", () => {
-      mousehold = false;
+      //mousehold = false;
     });
 
 
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, drawn.length / 2);
+    //gl.drawArrays(gl.TRIANGLE_FAN, 0, drawn.length / 2);
 
 
     const clearStuffOnCanvas = () => {
-      drawn = [];
+      //drawn = [];
     }
 
     const clearButton = clearButtonRef.current;
@@ -90,7 +90,7 @@ const WebGLCanvas: React.FC = () => {
     }
 
     return () => {
-      isRunning = false;
+      //isRunning = false;
     };
     
   }, []);
@@ -106,12 +106,7 @@ const WebGLCanvas: React.FC = () => {
         <div id="leftResize" className="rsz"></div>
       </div>
       <div className="canvasContainer">
-        <canvas
-          ref={canvasRef}
-          id="gl-canvas"
-          width={'100%'}
-          height={'100%'}
-        />
+        <canvas ref={canvasRef} id="gl-canvas"/>
       </div>
       <div className="sideBar" id="right">
         
