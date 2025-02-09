@@ -1,4 +1,4 @@
-import "./SocialMedia.scss";
+import "./SocialMedia.css";
 import { Container, Row, Col } from 'react-bootstrap';
 
 export function SocialMedia() {

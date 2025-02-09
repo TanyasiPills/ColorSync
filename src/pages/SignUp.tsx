@@ -60,7 +60,7 @@ export function SignUp() {
         <Col md={6} lg={4} className="mx-auto">
           <div className="text-center mb-4">
             <h2>Sign Up</h2>
-            <p className="text-muted">Create a new account</p>
+            <p>Create a new account</p>
           </div>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
             <Form.Group controlId="formUsername">
@@ -83,7 +83,7 @@ export function SignUp() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <Form.Text className="text-muted">
+              <Form.Text>
                 We'll never share your email with anyone else.
               </Form.Text>
             </Form.Group>

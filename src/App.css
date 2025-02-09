@@ -6,7 +6,7 @@
 #root {
   height: 100vh;
   
-  color: #A5A0D4;
+  color: #A5A0D4 !important;
   background-color: #303050;
 }
 
@@ -43,4 +43,9 @@ a:not(.navbar-brand) {
 a:hover{
   background-color: #35355A;
   text-decoration: none;
+}
+
+button{
+  background-color: #1F1F4C !important;
+  color: #7A74A6 !important;
 }

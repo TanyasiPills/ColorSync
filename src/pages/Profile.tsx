@@ -1,4 +1,4 @@
-import "./Profile.scss";
+import "./Profile.css";
 import { Container, Row, Col } from 'react-bootstrap';
 
 export function Profile() {

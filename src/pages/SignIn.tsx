@@ -27,7 +27,7 @@ export function SignIn() {
         <Col md={6} lg={4} className="mx-auto">
           <div className="text-center mb-4">
             <h2>Sign in</h2>
-            <p className="text-muted">Please enter your credentials to log in</p>
+            <p>Please enter your credentials to log in</p>
           </div>
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
@@ -40,7 +40,7 @@ export function SignIn() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <Form.Text className="text-muted">
+              <Form.Text>
                 We'll never share your email with anyone else.
               </Form.Text>
             </Form.Group>
