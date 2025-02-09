@@ -13,7 +13,7 @@ export class User {
 }
 
 export type Action = {
-  type: string;
+  type: number;
   data: any;
 }
 

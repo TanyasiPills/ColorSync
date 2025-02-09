@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
-import { existsSync, unlink, unlinkSync } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor (private readonly db: PrismaService) {}
   
   findOne(id: number) {
@@ -58,5 +58,9 @@ export class UserService {
     else path = resolve(`uploads/${picture.profile_picture}`);
     if (!existsSync(path)) return null;
     return path;
+  }
+
+  getLoggedIn(id: number) {
+    return this.db.user.findUnique({where: {id}, select: {id: true, username: true, email: true}});
   }
 }

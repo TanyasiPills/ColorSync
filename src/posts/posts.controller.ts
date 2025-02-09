@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException } from '@nestjs/common';
-import { PostService } from './post.service';
+import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 
-@Controller('post')
-export class PostController {
-  constructor(private readonly postService: PostService) {}
+@Controller('posts')
+export class PostsController {
+  constructor(private readonly postService: PostsService) {}
 
   /**
    * Create a post from the logged in user

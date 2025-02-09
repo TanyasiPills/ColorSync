@@ -13,7 +13,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
-import { checkUser, getUserData, isPositiveInt, socketError } from "./helper";
+import { getUserData, isPositiveInt, socketError } from "./helper";
 import { User } from "./types";
 
 @WebSocketGateway({ cors: { origin: "*" } })
@@ -62,6 +62,9 @@ export class DrawingWS
     delete user.email;
     delete user.profile_picture;
 
+    socket.data.user = user;
+
+
     if (this.connectedUsers.includes(user.id)) {
       socketError(socket, "User is already connected", 40, true);
       return;
@@ -95,20 +98,22 @@ export class DrawingWS
       }
     }
 
-    socket.data.user = user;
     this.connections.set(socket.id, room);
     this.connectedUsers.push(user.id);
     this.logger.log(`${user.username} connected to room "${name}"`);
   }
 
   handleDisconnect(socket: Socket) {
-    this.connectedUsers = this.connectedUsers.filter(id => id !== socket.data.user.id);
     const user = socket.data.user as User;
     if (!user) return;
+    this.connectedUsers = this.connectedUsers.filter(id => id !== socket.data.user.id);
     const room = this.connections.get(socket.id);
     if (room) {
-      room.disconnect(socket);
+      const close = room.disconnect(socket);
       this.connections.delete(socket.id);
+      if (close) {
+        this.rooms = this.rooms.filter(e => e !== room);
+      }
     }
     this.logger.log(`${user.username} disconnected`);
   }
@@ -130,7 +135,7 @@ export class DrawingWS
     const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
 
-    if (!position || !Number.isFinite(position.x) || ! Number.isFinite(position.y)) {
+    if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) {
       socketError(socket, 'Bad request format', 20);
       return;
     }
@@ -138,16 +143,17 @@ export class DrawingWS
   }
 
   @SubscribeMessage('action')
-  handleAction(@ConnectedSocket() socket: Socket, @MessageBody('type') type: string, @MessageBody('data') data: any) {
+  handleAction(@ConnectedSocket() socket: Socket, @MessageBody('type') type: number, @MessageBody('data') data: any) {
+    console.log("action\ntype", type);
+    console.log("data", data);
     const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
 
-    if (!type) {
-      socketError(socket, 'Type is required', 20);
-      return;
+    if (!isPositiveInt(type)) {
+      socketError(socket, 'Type must be a positive integer', 20);
     }
     switch (type) {
-      case 'draw':
+      case 0: // draw
         if (!data) {
           socketError(socket, 'Data is required', 20);
           return;
@@ -155,20 +161,38 @@ export class DrawingWS
         if (
           !isPositiveInt(data.layer) ||
           !isPositiveInt(data.brush) ||
-          !Array.isArray(data.color) ||
-          data.color.length != 3 ||
-          !data.color.every(e => Number.isFinite(e)) ||
-          !data.positions ||
-          !Number.isFinite(data.positions.x) ||
-          !Number.isFinite(data.positions.x)
+          !Number.isFinite(data.color.r) ||
+          !Number.isFinite(data.color.g) ||
+          !Number.isFinite(data.color.b) ||
+          !Number.isFinite(data.size) ||
+          !Number.isFinite(data.offset.x) ||
+          !Number.isFinite(data.offset.y) ||
+          !Array.isArray(data.positions) ||
+          !data.positions.every(e => Number.isFinite(e.x) && Number.isFinite(e.y))
         ) {
           socketError(socket, 'Bad data format', 20);
           return;
         }
-        room.emitFromSocket(socket, 'action', { type, data });
+        room.action(socket, { type, data });
         break;
 
-      case 'add layer':
+      case 1: // add node
+        if (!data) {
+          socketError(socket, 'Data is required', 20);
+          return;
+        }
+        if (
+          !data.name ||
+          !isPositiveInt(data.location) ||
+          !isPositiveInt(data.node)
+        ) {
+          socketError(socket, 'Bad data format', 20);
+          return;
+        }
+        room.action(socket, { type, data });
+        break;
+
+      case 2: // remame node
         if (!data) {
           socketError(socket, 'Data is required', 20);
           return;
@@ -180,21 +204,47 @@ export class DrawingWS
           socketError(socket, 'Bad data format', 20);
           return;
         }
-        room.emitFromSocket(socket, 'action', { type, data });
+        room.action(socket, { type, data });
         break;
 
-      case 'undo':
+      case 3: // undo
         room.undo(socket);
         break;
-      
 
-      case 'redo':
+      case 4: // redo
         room.redo(socket);
         break;
 
+      case 5: // delete node
+        if (!data) {
+          socketError(socket, 'Data is required', 20);
+          return;
+        }
+        if (isPositiveInt(data.location)) {
+          socketError(socket, 'Location must be a positive integer', 20);
+          return;
+        }
+        room.action(socket, { type, data });
+        break;
+
+      case 6: // move node
+        if (!data) {
+          socketError(socket, 'Data is required', 20);
+          return;
+        }
+        if (
+          !isPositiveInt(data.node) ||
+          !isPositiveInt(data.to)
+        ) {
+          socketError(socket, 'Bad data format', 20);
+          return;
+        }
+        room.action(socket, { type, data });
+        break;
+
       default:
-         socketError(socket, 'Unknown type', 20);
-         return;
+        socketError(socket, 'Unknown type', 20);
+        return;
     }
   }
 

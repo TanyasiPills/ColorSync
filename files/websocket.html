@@ -13,6 +13,13 @@
       --bgHigh2: #404069;
       --border: #515177;
       --text: #B0B0E0;
+
+      --bg: #303050;
+      --bg2: #1F1F1F;
+      --bgHigh: #35355A;
+      --bgHigh2: #494873;
+      --border: #7474A6;
+      --text: #A5A0D0;
     }
 
     body {
@@ -163,7 +170,7 @@
       <h3 class="sl">Send</h3>
       <table>
         <tr class="required">
-          <td>type<span>string</span></td>
+          <td>type<span>int</span></td>
           <td>Type of the action</td>
         </tr>
         <tr>
@@ -179,24 +186,32 @@
                 <th>data</th>
               </tr>
               <tr>
-                <td>draw</td>
-                <td>{layer: int, brush: int, color: float[3] positions: {x: float, y: float}[]}</td>
+                <td>draw - 0</td>
+                <td>{layer: int, brush: int, size: float, offset: Position, color: {r: float, g: float, b: float} positions: Position[]}</td>
               </tr>
               <tr>
-                <td>add layer</td>
+                <td>add node - 1</td>
+                <td>{name: string, location: int, node: int}</td>
+              </tr>
+              <tr>
+                <td>rename node - 2</td>
                 <td>{name: string, location: int}</td>
               </tr>
               <tr>
-                <td>rename layer</td>
-                <td>{name: string, location: int}</td>
-              </tr>
-              <tr>
-                <td>undo</td>
+                <td>undo - 3</td>
                 <td>null</td>
               </tr>
               <tr>
-                <td>redo</td>
+                <td>redo - 4</td>
                 <td>null</td>
+              </tr>
+              <tr>
+                <td>delete node - 5</td>
+                <td>{location: int}</td>
+              </tr>
+              <tr>
+                <td>move node - 6</td>
+                <td>{node: int, to: int}</td>
               </tr>
             </table>
           </td>
@@ -223,24 +238,32 @@
                 <th>data</th>
               </tr>
               <tr>
-                <td>draw</td>
-                <td>{layer: int, brush: int, positions: Position[]}</td>
+                <td>draw - 0</td>
+                <td>{layer: int, brush: int, size: float, offset: Position, color: {r: float, g: float, b: float} positions: Position[]}</td>
               </tr>
               <tr>
-                <td>add layer</td>
+                <td>add node - 1</td>
+                <td>{name: string, location: int, node: int}</td>
+              </tr>
+              <tr>
+                <td>rename node - 2</td>
                 <td>{name: string, location: int}</td>
               </tr>
               <tr>
-                <td>rename layer</td>
-                <td>{name: string, location: int}</td>
-              </tr>
-              <tr>
-                <td>undo</td>
+                <td>undo - 3</td>
                 <td>{history: Action[], compilePosition: number}</td>
               </tr>
               <tr>
-                <td>redo</td>
+                <td>redo - 4</td>
                 <td>Action</td>
+              </tr>
+              <tr>
+                <td>delete node - 5</td>
+                <td>{location: int}</td>
+              </tr>
+              <tr>
+                <td>move node - 6</td>
+                <td>{node: int, to: int}</td>
               </tr>
             </table>
           </td>
@@ -369,6 +392,23 @@
         <li>32 - Unauthorized</li>
         <li>51 - User not found</li>
       </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>error <span>Socket errors</span></h2>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+        <tr class="required">
+          <td>statusCode<span>int</span></td>
+          <td>The status code of the error.</td>
+        </tr>
+      </table>
     </div>
   </div>
 

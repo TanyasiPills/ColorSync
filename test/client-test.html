@@ -41,12 +41,16 @@
         console.error('Error:', error.message);
       });
 
-      socket.on('action', (data) => {
+      socket.on('action', (action) => {
         console.log("Recived action:", action);
       });
 
       socket.on('mouse', (data) => {
         console.log("Recived mouse:", data);
+      });
+
+      socket.on('system message', (data) => {
+        console.log("Recived system message:", data);
       });
     }
 
@@ -62,7 +66,7 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({email, password})
+        body: JSON.stringify({ email, password })
       });
       const res = await response.json();
       console.log(res);
@@ -79,14 +83,14 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({email, password, username})
+        body: JSON.stringify({ email, password, username })
       });
       console.log((await response.json()));
     }
 
     function send() {
       const message = document.getElementById("message").value;
-      socket.emit("message", {message: message});
+      socket.emit("message", { message: message });
     }
 
     async function upload() {
@@ -111,6 +115,30 @@
 
       const result = await response.json();
       console.log("File upload: ", result);
+    }
+
+    async function uploadImage() {
+      const files = document.getElementById("fileImage").files;
+      const token = document.getElementById("token").value;
+      const visibility = document.getElementById("visibility").value;
+
+      if (files.length === 0) {
+        alert('No files :c');
+        return;
+      }
+
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('visibility', visibility);
+      const response = await fetch("http://localhost:3000/image", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log("File upload: ", response.ok);
     }
   </script>
 </head>
@@ -169,6 +197,15 @@
     <br>
     <input type="submit" value="Upload">
   </form>
+  <form onsubmit="uploadImage(); return false;">
+    <p>Image Upload</p>
+    <label for="fileImage">File:</label>
+    <input type="file" name="fileImage" id="fileImage">
+    <br>
+    <label for="visibility">Visibility:</label>
+    <input type="text" name="visibility" id="visibility">
+    <br>
+    <input type="submit" value="Upload">
+  </form>
 </body>
-
 </html>

@@ -45,13 +45,16 @@ export class Room {
     return true;
   }
 
-  public disconnect(socket: Socket): void {
+  public disconnect(socket: Socket): boolean {
     const user : User = socket.data.user as User;
     socket.leave(this.name);
     this.clients = this.clients.filter(c => c !== socket);
     this.history.disconnect(user.id);
     this.emit('system message', {message: `${user.username} left the room!`, id: user.id});
     socket.disconnect();
+
+    if (this.clients.length === 0) return true;
+    else return false;
   }
 
   public emit(event: string, message: any): void {

@@ -1,4 +1,4 @@
-import { CreateUserDto } from './../user/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
@@ -36,7 +36,7 @@ export class AuthService {
     if (storedToken) return {access_token: storedToken.token, username: user.username, id: user.id};
     else {
       const token = await this.jwtService.sign(payload);
-      await this.db.token.create({data: {token, userId: user.id}});
+      await this.db.token.create({data: {token: token, userId: user.id}});
       return {access_token: token, username: user.username, id: user.id};
     }
   }
@@ -44,10 +44,10 @@ export class AuthService {
   async register(dto: CreateUserDto) {
     try {
       dto.password = await hash(dto.password);
-      await this.db.user.create({data: dto, select: {username: true, email: true}});
-      return true;
+      const user = await this.db.user.create({data: dto});
+      return user;
     } catch (e) {
-      if (e.code == 'P2002') return false;
+      if (e.code == 'P2002') return null;
       else return undefined;
     }
   }

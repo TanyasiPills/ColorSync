@@ -1,6 +1,6 @@
 import { FileAPIType, LoginBody, LoginResponse, UserInfo } from './dto/api.dto';
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
@@ -12,10 +12,10 @@ import { extname } from 'path';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiResponse } from '@nestjs/swagger';
 
-@Controller('user')
-export class UserController {
+@Controller('users')
+export class UsersController {
   constructor(
-    private readonly userService: UserService,
+    private readonly userService: UsersService,
     private readonly authService: AuthService
   ) {}
 
@@ -47,8 +47,8 @@ export class UserController {
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const status = await this.authService.register(createUserDto);
-    if (status == true) return this.authService.login(createUserDto);
-    else if (status == false) throw new HttpException('Email already in use.', HttpStatus.CONFLICT); 
+    if (status) return this.authService.login(status);
+    else if (status == null) throw new HttpException('Email already in use.', HttpStatus.CONFLICT); 
     else throw new HttpException('Error creating user.', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
@@ -104,7 +104,6 @@ export class UserController {
     const path = await this.userService.getPfp(id);
     if (path) {
       res.sendFile(path);
-      return;
     } else {
       throw new NotFoundException('Image not found')
     }
@@ -121,7 +120,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getLoggedIn(@Request() req: any) {
-    return req.user;
+    return this.userService.getLoggedIn(req.user.id);
   }
   
   /**
