@@ -224,40 +224,6 @@ void DrawUI::ServerWindow()
 		std::cout << leftSize << std::endl;
 	}
 }
-/*
-void DrawLayerTree(Layer& layer) {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-	layer.open = ImGui::TreeNodeEx(("##" + layer.name).c_str(), ImGuiTreeNodeFlags_FramePadding | (layer.open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
-	ImGui::SameLine();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 10));
-	ImGui::Checkbox(("##" + layer.name + "visibility").c_str(), &layer.visible);
-	ImGui::SameLine();
-	
-	if(layer.visible && !layer.editing) ImGui::Text((layer.name).c_str());
-
-	if (layer.visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-		layer.editing = true;
-	}
-
-	ImGui::PopStyleVar();
-
-	if (layer.visible && layer.editing) {
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		static char editBuffer[256] = "";
-		bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-		ImGui::SetKeyboardFocusHere(-1);
-		if (editing) {
-			if (strlen(editBuffer) > 0) {
-				layer.name = editBuffer;
-				memset(editBuffer, 0, sizeof(editBuffer));
-				layer.editing = false;
-			}
-		}
-	}
-	ImGui::PopStyleVar();
-}
-*/
 
 void DrawLayerTreeTwo(Node& node) {
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -299,10 +265,11 @@ void DrawLayerTreeTwo(Node& node) {
 				bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
 				ImGui::SetKeyboardFocusHere(-1);
 				if (editing) {
-					if (strlen(editBuffer) > 0) {
+					if (strlen(editBuffer) > 0 && folder->name != editBuffer) {
 						folder->name = editBuffer;
 						memset(editBuffer, 0, sizeof(editBuffer));
 						folder->editing = false;
+						renderer->SendLayerRename(folder->name, folder->id);
 					}
 				}
 			}
@@ -329,10 +296,11 @@ void DrawLayerTreeTwo(Node& node) {
 			bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
 			ImGui::SetKeyboardFocusHere(-1);
 			if (editing) {
-				if (strlen(editBuffer) > 0) {
+				if (strlen(editBuffer) > 0 && layer->name != editBuffer) {
 					layer->name = editBuffer;
 					memset(editBuffer, 0, sizeof(editBuffer));
 					layer->editing = false;
+					renderer->SendLayerRename(layer->name, layer->id);
 				}
 			}
 		}

@@ -11,7 +11,6 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
-#include "SocksManager.h"
 
 #ifndef ASSERT
 #define ASSERT(x) if (!(x)) __debugbreak()
@@ -71,6 +70,28 @@ struct Folder : public Node {
 	}
 };
 
+struct Message {
+	int type;
+
+	virtual ~Message() = default;
+};
+
+struct DrawMessage : public Message {
+	int layer;
+	int brush;
+	float size;
+	std::vector<Position> positions;
+	Position offset;
+	float* color;
+
+	DrawMessage() : layer(0), brush(0), size(0.0f), positions(), offset(), color(nullptr) {}
+};
+
+struct NodeMessage : public Message {
+	std::string name;
+	int location;
+};
+
 void GLClearError();
 bool GLLogCall(const char* function, const char* file, int line);
 
@@ -94,7 +115,11 @@ public:
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
 	void LoadPrevCursor(float* GlCursorPos);
 	void SetDrawData();
-	void SendDraw();
 	void SetColor(float* color);
 	void RenderDrawMessage(const DrawMessage& drawMessage);
+	void SendDraw();
+	void SendLayerRename(std::string nameIn, int locationIn);
+
+	void AddLayer(std::string name, int location);
+	void AddFolder(std::string name, int location);
 };

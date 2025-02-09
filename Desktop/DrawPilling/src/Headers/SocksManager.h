@@ -16,20 +16,10 @@ enum Type {
 	Move = 6
 };
 
-struct DrawMessage {
-	int layer;
-	int brush;
-	float size;
-	std::vector<Position> positions;
-	Position offset;
-	float* color;
-
-	DrawMessage(): layer(0), brush(0), size(0.0f), positions(), offset(), color(nullptr) {}
-};
-
 class SManager {
 private:
 public:
+	static void SetRenderer(NewRenderer& renderer);
 	static void Connect(const char* ip, std::string token, std::map<std::string, std::string> room);
 	static void Down();
 
@@ -37,6 +27,6 @@ public:
 	static void SendMsg(std::string msg);
 
 	static void OnAction(sio::event& ev);
-	static void SendAction(int type, DrawMessage data);
+	static void SendAction(Message& data);
 
 };

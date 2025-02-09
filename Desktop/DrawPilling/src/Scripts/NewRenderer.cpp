@@ -12,6 +12,7 @@
 #include "DrawUI.h"
 #include "Menu.h"
 #include "lss.h"
+#include "SocksManager.h"
 
 
 void GLClearError() {
@@ -74,11 +75,25 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 
 	RenderData layerTwo;
 	NewDraw::initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
-	std::cout << layerTwo.texture->GetId() << std::endl;
 	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Not main", nextFreeNodeIndex, layerTwo);
 	layers.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
+}
+
+void NewRenderer::AddLayer(std::string name, int location) 
+{
+	RenderData layer;
+	NewDraw::initLayer(layer, canvasRatio[0], canvasRatio[1]);
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>(name, nextFreeNodeIndex, layer);
+	layers.push_back(nextFreeNodeIndex);
+	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
+	nextFreeNodeIndex++;
+}
+
+void newRenderer::AddFolder(std::string name, int location)
+{
+
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -132,7 +147,6 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 {
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
 		RenderData& layer = layerPtr->data;
-		std::cout << layer.fbo << std::endl;
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
@@ -145,7 +159,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		int num_samples = std::min(static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0]))), 100);
 		if (num_samples < 1) num_samples = 100;
 	
-		for (int i = 0; i <= num_samples; ++i) {
+		for (int i = 0; i < num_samples; ++i) {
 			float t = static_cast<float>(i) / num_samples;
 			float vx = prevPos[0] * (1 - t) + pos[0] * t;
 			float vy = prevPos[1] * (1 - t) + pos[1] * t;
@@ -179,9 +193,15 @@ void NewRenderer::SendDraw()
 	msg.positions = drawPositions;
 	msg.offset = sentOffset;
 	msg.color = color;
-	SManager::SendAction(Type::Draw, msg);
+	SManager::SendAction(msg);
 
 	drawPositions.clear();
+}
+
+void NewRenderer::SendLayerRename(std::string nameIn, int locationIn) {
+	NodeMessage msg;
+	msg.name = nameIn;
+	msg.location = locationIn;
 }
 
 void NewRenderer::SetColor(float* colorIn) {
@@ -212,31 +232,36 @@ void NewRenderer::Draw(const RenderData& data)
 
 void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 {
-	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get()))
-	{
-		RenderData& layer = layerPtr->data;
-		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
-		glViewport(0, 0, canvasSize[0], canvasSize[1]);
-
-		cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
-
-		Position offs = drawMessage.offset;
-		float offse[2] = { offs.x, offs.y };
-
-		float radius = drawMessage.size;
-
-		for (size_t i = 0; i < drawMessage.positions.size(); i++)
+	try{
+		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get()))
 		{
-			Position pos = drawMessage.positions[i];
-			float tmp[2] = { pos.x, pos.y };
-			NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp);
-			Draw(cursor);
-		}
+			RenderData& layer = layerPtr->data;
+			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
+			glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
+
+			Position offs = drawMessage.offset;
+			float offse[2] = { offs.x, offs.y };
+
+			float radius = drawMessage.size;
+
+			for (size_t i = 0; i < drawMessage.positions.size(); i++)
+			{
+				Position pos = drawMessage.positions[i];
+				float tmp[2] = { pos.x, pos.y };
+				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp);
+				Draw(cursor);
+			}
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		else {
+			std::cerr << "sent layer not found" << std::endl;
+		}
 	}
-	else {
-		std::cerr << "sent layer not found" << std::endl;
+	catch (...){
+		std::cerr << "cant render drawMessage, bad data" << std::endl;
 	}
 }
 

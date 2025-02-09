@@ -5,6 +5,12 @@
 sio::client h;
 const char* ip;
 bool onserver = false;
+static NewRenderer* renderer;
+
+void SManager::SetRenderer(NewRenderer& rendererIn)
+{
+    renderer = &rendererIn;
+}
 
 void SManager::Connect(const char* ip, std::string token, std::map<std::string, std::string> room)
 {
@@ -51,11 +57,11 @@ void SManager::OnAction(sio::event& ev) {
     sio::object_message::ptr dataIn = ev.get_message();
     int type = dataIn->get_map()["type"]->get_int();
     std::map<std::string, sio::message::ptr> data = dataIn->get_map()["data"]->get_map();
-    DrawMessage drawMessage;
     switch (type)
     {
         case Draw:
             try {
+                DrawMessage drawMessage;
                 drawMessage.layer = data["layer"]->get_int();
                 drawMessage.brush = data["brush"]->get_int();
 
@@ -73,9 +79,31 @@ void SManager::OnAction(sio::event& ev) {
                 std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
                 drawMessage.offset.x = offsets["x"]->get_double();
                 drawMessage.offset.y = offsets["y"]->get_double();
+                renderer->RenderDrawMessage(drawMessage);
             }
             catch(...){
-                std::cerr << "hihi" << std::endl;
+                std::cerr << "Error recieving DrawMessage" << std::endl;
+            }
+            break;
+        case AddNode:
+            try {
+                Folder* node = dynamic_cast<Folder*>(renderer->nodes[data["location"]->get_int()].get());
+                //need to change so it can be folder or layer!!!!!
+                
+            }
+            catch (...) {
+                std::cerr << "Error recieving AddNodeMessage" << std::endl;
+            }
+
+            break;
+        case RenameNode:
+            try {
+                Node* node = dynamic_cast<Node*>(renderer->nodes[data["location"]->get_int()].get());
+                node->name = data["name"]->get_string();
+
+            }
+            catch (...) {
+                std::cerr << "Error recieving RenameNodeMessage" << std::endl;
             }
             break;
         default:
@@ -83,58 +111,85 @@ void SManager::OnAction(sio::event& ev) {
     }
 }
 
-void SManager::SendAction(int type, DrawMessage dataIn)
+void SManager::SendAction(Message& dataIn)
 {
     if (!onserver) return;
     sio::message::ptr msg = sio::object_message::create();
     sio::message::ptr data = sio::object_message::create();
 
 
-    switch (type)
+    switch (dataIn.type)
     {
         case Draw:
-            msg->get_map()["type"] = sio::int_message::create(Draw);
-            data->get_map()["layer"] = sio::int_message::create(dataIn.layer);
-            data->get_map()["brush"] = sio::int_message::create(dataIn.brush);
-            data->get_map()["size"] = sio::double_message::create(dataIn.size);
-
             try {
-                sio::message::ptr positionsArray = sio::array_message::create();
-                for (int i = 0; i < dataIn.positions.size(); i++)
-                {
-                    sio::message::ptr posObj = sio::object_message::create();
-                    posObj->get_map()["x"] = sio::double_message::create(dataIn.positions[i].x);
-                    posObj->get_map()["y"] = sio::double_message::create(dataIn.positions[i].y);
-                    positionsArray->get_vector().push_back(posObj);
+                DrawMessage* draw = dynamic_cast<DrawMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(Draw);
+                data->get_map()["layer"] = sio::int_message::create(draw->layer);
+                data->get_map()["brush"] = sio::int_message::create(draw->brush);
+                data->get_map()["size"] = sio::double_message::create(draw->size);
+                try {
+                    sio::message::ptr positionsArray = sio::array_message::create();
+                    for (int i = 0; i < draw->positions.size(); i++)
+                    {
+                        sio::message::ptr posObj = sio::object_message::create();
+                        posObj->get_map()["x"] = sio::double_message::create(draw->positions[i].x);
+                        posObj->get_map()["y"] = sio::double_message::create(draw->positions[i].y);
+                        positionsArray->get_vector().push_back(posObj);
+                    }
+                    data->get_map()["positions"] = positionsArray;
+
                 }
-                data->get_map()["positions"] = positionsArray;
+                catch (...) {
+                    std::cerr << "Error parsing positions JSON" << std::endl;
+                }
+                try {
+                    sio::message::ptr offsetObj = sio::object_message::create();
 
+                    offsetObj->get_map()["x"] = sio::double_message::create(draw->offset.x);
+                    offsetObj->get_map()["y"] = sio::double_message::create(draw->offset.y);
+
+                    data->get_map()["offset"] = offsetObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing offset JSON" << std::endl;
+                }
+                try {
+                    sio::message::ptr colorObj = sio::object_message::create();
+
+                    colorObj->get_map()["r"] = sio::double_message::create(draw->color[0]);
+                    colorObj->get_map()["g"] = sio::double_message::create(draw->color[1]);
+                    colorObj->get_map()["b"] = sio::double_message::create(draw->color[2]);
+
+                    data->get_map()["color"] = colorObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing color JSON" << std::endl;
+                }
             }
             catch (...) {
-                std::cerr << "Error parsing positions JSON" << std::endl;
+                std::cerr << "bad data type: not DrawMessage" << std::endl;
             }
+            break;
+        case AddNode:
             try {
-                sio::message::ptr offsetObj = sio::object_message::create();
-
-                offsetObj->get_map()["x"] = sio::double_message::create(dataIn.offset.x);
-                offsetObj->get_map()["y"] = sio::double_message::create(dataIn.offset.y);
-
-                data->get_map()["offset"] = offsetObj;
+                NodeMessage* node = dynamic_cast<NodeMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(AddNode);
+                data->get_map()["name"] = sio::string_message::create(node->name);
+                data->get_map()["location"] = sio::int_message::create(node->location);
             }
             catch (...) {
-                std::cerr << "Error parsing offset JSON" << std::endl;
+                std::cerr << "bad data type: not NodeMessage" << std::endl;
             }
+            break;
+        case RenameNode:
             try {
-                sio::message::ptr colorObj = sio::object_message::create();
-
-                colorObj->get_map()["r"] = sio::double_message::create(dataIn.color[0]);
-                colorObj->get_map()["g"] = sio::double_message::create(dataIn.color[1]);
-                colorObj->get_map()["b"] = sio::double_message::create(dataIn.color[2]);
-
-                data->get_map()["color"] = colorObj;
+                NodeMessage* node = dynamic_cast<NodeMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(RenameNode);
+                data->get_map()["name"] = sio::string_message::create(node->name);
+                data->get_map()["location"] = sio::int_message::create(node->location);
             }
             catch (...) {
-                std::cerr << "Error parsing color JSON" << std::endl;
+                std::cerr << "bad data type: not NodeMessage" << std::endl;
             }
             break;
         default:
