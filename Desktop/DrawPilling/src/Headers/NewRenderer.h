@@ -87,7 +87,13 @@ struct DrawMessage : public Message {
 	DrawMessage() : layer(0), brush(0), size(0.0f), positions(), offset(), color(nullptr) {}
 };
 
-struct NodeMessage : public Message {
+struct NodeAddMessage : public Message {
+	std::string name;
+	int location;
+	int nodeType;
+};
+
+struct NodeRenameMessage : public Message {
 	std::string name;
 	int location;
 };

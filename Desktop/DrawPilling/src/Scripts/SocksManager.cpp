@@ -87,20 +87,22 @@ void SManager::OnAction(sio::event& ev) {
             break;
         case AddNode:
             try {
-                Folder* node = dynamic_cast<Folder*>(renderer->nodes[data["location"]->get_int()].get());
-                //need to change so it can be folder or layer!!!!!
-                
+                int typeOfNode = data["node"]->get_int();
+                if (typeOfNode == 0) {
+                    renderer->AddLayer(data["name"]->get_string(), data["location"]->get_int());
+                }
+                else if (typeOfNode == 1) {
+                    renderer->AddFolder(data["name"]->get_string(), data["location"]->get_int());
+                }
             }
             catch (...) {
                 std::cerr << "Error recieving AddNodeMessage" << std::endl;
             }
-
             break;
         case RenameNode:
             try {
                 Node* node = dynamic_cast<Node*>(renderer->nodes[data["location"]->get_int()].get());
                 node->name = data["name"]->get_string();
-
             }
             catch (...) {
                 std::cerr << "Error recieving RenameNodeMessage" << std::endl;
@@ -172,8 +174,9 @@ void SManager::SendAction(Message& dataIn)
             break;
         case AddNode:
             try {
-                NodeMessage* node = dynamic_cast<NodeMessage*>(&dataIn);
+                NodeAddMessage* node = dynamic_cast<NodeAddMessage*>(&dataIn);
                 msg->get_map()["type"] = sio::int_message::create(AddNode);
+                data->get_map()["node"] = sio::int_message::create(node->nodeType);
                 data->get_map()["name"] = sio::string_message::create(node->name);
                 data->get_map()["location"] = sio::int_message::create(node->location);
             }
@@ -183,7 +186,7 @@ void SManager::SendAction(Message& dataIn)
             break;
         case RenameNode:
             try {
-                NodeMessage* node = dynamic_cast<NodeMessage*>(&dataIn);
+                NodeRenameMessage* node = dynamic_cast<NodeRenameMessage*>(&dataIn);
                 msg->get_map()["type"] = sio::int_message::create(RenameNode);
                 data->get_map()["name"] = sio::string_message::create(node->name);
                 data->get_map()["location"] = sio::int_message::create(node->location);

@@ -91,9 +91,11 @@ void NewRenderer::AddLayer(std::string name, int location)
 	nextFreeNodeIndex++;
 }
 
-void newRenderer::AddFolder(std::string name, int location)
+void NewRenderer::AddFolder(std::string name, int location)
 {
-
+	nodes[nextFreeNodeIndex] = std::make_unique<Folder>(name, nextFreeNodeIndex);
+	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
+	nextFreeNodeIndex++;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -199,7 +201,7 @@ void NewRenderer::SendDraw()
 }
 
 void NewRenderer::SendLayerRename(std::string nameIn, int locationIn) {
-	NodeMessage msg;
+	NodeRenameMessage msg;
 	msg.name = nameIn;
 	msg.location = locationIn;
 }
