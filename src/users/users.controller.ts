@@ -128,7 +128,7 @@ export class UsersController {
    * @param id Id of the user
    * @returns {UserInfo} Infromation about the user
    */
-  @ApiParam({name: 'id', type: 'int', description: 'Id of the user', required: true})
+  @ApiParam({name: 'id', description: 'Id of the user'})
   @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfo})
   @ApiResponse({status: 404, description: 'User not found'})
 
