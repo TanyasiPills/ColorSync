@@ -4,7 +4,7 @@ import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
+import { extname } from 'path';
 import { ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ImageAPIType } from 'src/users/dto/api.dto';
 
