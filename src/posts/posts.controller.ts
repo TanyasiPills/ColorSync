@@ -3,7 +3,7 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @Controller('posts')
 export class PostsController {
@@ -16,6 +16,7 @@ export class PostsController {
    */
   @ApiResponse({status: 201, description: 'Post sucessfully created'})
   @ApiResponse({status: 401, description: 'Invalid token'})
+  @ApiBearerAuth()
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(201)
@@ -29,6 +30,7 @@ export class PostsController {
    * @returns Array of the posts
    */
   @ApiResponse({status: 204, description: 'List of posts returned'})
+
   @Get()
   findAll() {
     return this.postService.findAll();
@@ -39,10 +41,10 @@ export class PostsController {
    * @param id the id of the post
    * @returns 
    */
-  @ApiParam({name: 'id', description: 'The id of the post'})
-
   @ApiResponse({status: 204, description: 'Returns the post'})
   @ApiResponse({status: 404, description: 'Post not found'})
+  @ApiParam({name: 'id', description: 'The id of the post'})
+
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const result = await this.postService.findOne(id);
@@ -60,6 +62,8 @@ export class PostsController {
   @ApiResponse({status: 204, description: 'The post was successfully updated'})
   @ApiResponse({status: 401, description: 'Invalid token'})
   @ApiResponse({status: 404, description: "There is not post with that id or the user can't update it"})
+  @ApiBearerAuth()
+  @ApiParam({name: "id", description: "The id of the post"})
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
@@ -77,6 +81,8 @@ export class PostsController {
   @ApiResponse({status: 204, description: 'The post was successfully deleted'})
   @ApiResponse({status: 404, description: "There is no post with that id or the user can't delete it"})
   @ApiResponse({status: 401, description: 'Invalid token'})
+  @ApiBearerAuth()
+  @ApiParam({name: "id", description: "The id of the post"})
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)

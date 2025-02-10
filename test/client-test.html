@@ -61,7 +61,7 @@
       console.log(password);
       console.log(email);
 
-      const response = await fetch("http://localhost:3000/user/login", {
+      const response = await fetch("http://localhost:3000/users/login", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -78,7 +78,7 @@
       const username = document.getElementById("usernamer").value;
       const password = document.getElementById("passwordr").value;
 
-      const response = await fetch("http://localhost:3000/user", {
+      const response = await fetch("http://localhost:3000/users", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -105,7 +105,7 @@
       const file = files[0];
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch("http://localhost:3000/user/pfp", {
+      const response = await fetch("http://localhost:3000/users/pfp", {
         method: 'POST',
         body: formData,
         headers: {
@@ -131,7 +131,7 @@
       const formData = new FormData();
       formData.append('file', file);
       formData.append('visibility', visibility);
-      const response = await fetch("http://localhost:3000/image", {
+      const response = await fetch("http://localhost:3000/images", {
         method: 'POST',
         body: formData,
         headers: {

@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsInt, IsPositive, IsString, MaxLength, MinLength } from "class-validator";
+import { Visibility } from "@prisma/client";
+import { IsEmail, IsEnum, IsInt, IsOptional, IsPositive, IsString, MaxLength, MinLength } from "class-validator";
 
-export class LoginBody  {
+export class LoginBody {
   @IsEmail()
   email: string;
 
@@ -28,6 +29,12 @@ export class LoginResponse extends UserInfo {
 }
 
 export class FileAPIType {
-  @ApiProperty({type: 'string', format: 'binary'})
+  @ApiProperty({ type: 'string', format: 'binary' })
   file: any;
+}
+
+export class ImageAPIType extends FileAPIType {
+  @IsOptional()
+  @IsEnum(Visibility)
+  visibility?: Visibility;
 }

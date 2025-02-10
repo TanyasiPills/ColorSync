@@ -161,12 +161,17 @@ export class DrawingWS
         if (
           !isPositiveInt(data.layer) ||
           !isPositiveInt(data.brush) ||
+          !data.color ||
           !Number.isFinite(data.color.r) ||
           !Number.isFinite(data.color.g) ||
           !Number.isFinite(data.color.b) ||
           !Number.isFinite(data.size) ||
+          !data.offset ||
           !Number.isFinite(data.offset.x) ||
           !Number.isFinite(data.offset.y) ||
+          !data.ratio ||
+          !Number.isFinite(data.ratio.x) ||
+          !Number.isFinite(data.ratio.y) ||
           !Array.isArray(data.positions) ||
           !data.positions.every(e => Number.isFinite(e.x) && Number.isFinite(e.y))
         ) {

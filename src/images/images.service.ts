@@ -17,7 +17,12 @@ export class ImagesService {
     }
   }
 
-  findAll(id: number, userId: number) {
+  async findAll(id: number, userId: number) {
+    try {
+      await this.db.user.findUniqueOrThrow({where: {id}});
+    } catch {
+      throw new NotFoundException(`User with id: ${id} not found`);
+    }
     if (id == userId) {
       return this.db.image.findMany({where: {userId: id}, select: {id: true, date: true, visibility: true}});
     } else {
@@ -38,7 +43,7 @@ export class ImagesService {
       if (image.posts) throw new UnauthorizedException("You can't change the visibility of an image that is part of a post");
       await this.db.image.update({where: {id, userId}, data: {visibility}});
     } catch {
-      throw new NotFoundException(`Image with id: ${id} not found`);
+      throw new NotFoundException(`Image with id: ${id} not found that user: ${userId} can update`);
     }
   }
 
@@ -48,7 +53,7 @@ export class ImagesService {
       unlinkSync(`uploads/${image.path}`);
       return true;
     } catch {
-      throw new NotFoundException(`Image with id: ${id} not found`);
+      throw new NotFoundException(`Image with id: ${id} not found that user: ${userId} can delete`);
     }
   }
 }
