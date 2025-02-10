@@ -83,6 +83,10 @@ void SManager::OnAction(sio::event& ev) {
                 std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
                 drawMessage.offset.x = offsets["x"]->get_double();
                 drawMessage.offset.y = offsets["y"]->get_double();
+
+                std::map<std::string, sio::message::ptr> ratio = data["ratio"]->get_map();
+                drawMessage.ratio.x = ratio["x"]->get_double();
+                drawMessage.ratio.y = ratio["y"]->get_double();
                 
                 rendererSocks->ExecuteMainThreadTask(drawMessage);
                 //rendererSocks->RenderDrawMessage(drawMessage);
@@ -160,6 +164,17 @@ void SManager::SendAction(Message& dataIn)
                 }
                 catch (...) {
                     std::cerr << "Error parsing offset JSON" << std::endl;
+                }
+                try {
+                    sio::message::ptr offsetObj = sio::object_message::create();
+
+                    offsetObj->get_map()["x"] = sio::double_message::create(draw->ratio.x);
+                    offsetObj->get_map()["y"] = sio::double_message::create(draw->ratio.y);
+
+                    data->get_map()["ratio"] = offsetObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing ratio JSON" << std::endl;
                 }
                 try {
                     sio::message::ptr colorObj = sio::object_message::create();

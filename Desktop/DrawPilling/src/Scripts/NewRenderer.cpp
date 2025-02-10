@@ -203,6 +203,8 @@ void NewRenderer::SendDraw()
 	msg.color[0] = color[0];
 	msg.color[1] = color[1];
 	msg.color[2] = color[2];
+	msg.ratio.x = canvasRatio[0];
+	msg.ratio.y = canvasRatio[1];
 	SManager::SendAction(msg);
 
 	drawPositions.clear();
@@ -251,12 +253,15 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
 			cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
 			Position offs = drawMessage.offset;
+			Position canvRatio = drawMessage.ratio;
 			float offse[2] = { offs.x, offs.y };
 			float radius = drawMessage.size;
 			for (size_t i = 0; i < drawMessage.positions.size(); i++)
 			{
 				Position pos = drawMessage.positions[i];
 				float tmp[2] = { pos.x, pos.y };
+				float tmp2[2] = { canvRatio.x, canvRatio.y };
+				NewDraw::MoveCanvas(layer, tmp2, offset);
 				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp,1);
 				Draw(cursor);
 			}
