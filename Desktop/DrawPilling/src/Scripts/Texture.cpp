@@ -10,7 +10,7 @@ MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0
 void MyTexture::Init(const std::string& path)
 {
 	filePath = path;
-	stbi_set_flip_vertically_on_load(1);
+	//stbi_set_flip_vertically_on_load(1);
 	localBuffer = stbi_load(path.c_str(), &width, &height, &bpp, 4);
 
 	glGenTextures(1, &TO);
@@ -29,7 +29,7 @@ void MyTexture::Init(const std::string& path)
 	}
 }
 
-void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn)
+void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn, int transparent)
 {
 	width = widthIn;
 	height = heightIn;
@@ -44,7 +44,12 @@ void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn)
 	unsigned char* data = new unsigned char[width * height * 4];
 	for (int i = 0; i < width * height * 4; ++i) {
 		if ((i+1) % 4 == 0) {
-			data[i] = 255;
+			if (transparent) {
+				data[i] = 0;
+			}
+			else {
+				data[i] = 255;
+			}
 		}
 		else {
 			data[i] = 100;

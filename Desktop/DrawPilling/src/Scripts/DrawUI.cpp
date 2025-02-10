@@ -1,4 +1,7 @@
 #include "DrawUI.h"
+#include "HighsManager.h"
+#include "SocksManager.h"
+#include <thread>
 
 ImVec2 ColorWindowSize(100, 200);
 ImVec2 ColorWindowPos;
@@ -16,33 +19,84 @@ ImVec2 ChatWindowPos(0, 450);
 int leftSize = 200;
 int rightSize = 200;
 
+int leftMinSize = 200;
+int rightMinSize = 200;
+
 int windowSizeX, windowSizeY;
 
-std::string username = "Maychii";
+std::string username;
+bool inited = false;
+bool needLogin = true;
+std::string create = "false";
+
+static std::vector<std::string> chatLog;
+
+std::string tokenHere;
+
+static NewRenderer* renderer;
+
+std::string DrawUI::GetToken() {
+	return tokenHere;
+}
+std::string DrawUI::GetUsername() {
+	return username;
+}
+
+void DrawUI::SetRenderer(NewRenderer& rendererIn) {
+	renderer = &rendererIn;
+}
+
+void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
+{
+	if (usernameIn[0] != '\0') {
+		username = usernameIn;
+	}
+	else {
+		std::cerr << "no username" << std::endl;
+	}
+
+	if (tokenIn[0] != '\0') {
+		needLogin = false;
+		tokenHere = tokenIn;
+	}
+	else {
+		//needLogin = false; //need to remove this later !!!!
+		std::cerr << "no token" << std::endl;
+	}
+}
 
 void DrawUI::ColorWindow(RenderData& cursor)
 {
+
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
-	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 	static float color[3] = { 0.0f, 0.0f, 0.0f };
-	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview);
+	ImGui::SetNextItemWidth(-1);
+	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
 	leftSize = ColorWindowSize.x;
 	ColorWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (ColorWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::SizeWindow(float& cursorRadius)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
+
 	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
 
-	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
@@ -73,6 +127,10 @@ void DrawUI::SizeWindow(float& cursorRadius)
 	leftSize = SizeWindowSize.x;
 	SizeWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (SizeWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::BrushWindow(GLFWwindow* window) 
@@ -81,7 +139,7 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y + SizeWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
-	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
 	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
@@ -110,59 +168,144 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	leftSize = BrushWindowSize.x;
 	BrushWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (BrushWindowSize.x < 200) {
+		leftSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
 void DrawUI::ServerWindow() 
 {
+	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
+
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX-rightSize, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
-	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+
+	ImVec2 windowSize = ImGui::GetWindowSize();
+	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+
+	// Set the size for input field and position
+	ImGui::SetNextItemWidth(150); // Set input width
+	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
+	ImGui::SetCursorPos(inputPos);
+
+	static char lobbyName[100] = "";
+	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
+
+	inputPos.y += 30;
+	ImGui::SetNextItemWidth(100);
+	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
+	ImGui::SetCursorPos(buttonPos);
+
+	if (ImGui::Button("Create") && lobbyName != "") {
+		std::map<std::string, std::string> room;
+		room["name"] = lobbyName;
+		room["create"] = "true";
+		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+	}
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(300);
+	if (ImGui::Button("Join") && lobbyName != "") {
+		std::map<std::string, std::string> room;
+		room["name"] = lobbyName;
+		room["create"] = "false";
+		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+	}
+
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+
+	if (ServerWindowSize.x < 200) {
+		rightSize = 200;
+		std::cout << leftSize << std::endl;
+	}
 }
 
-void DrawLayerTree(Layer& layer) {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
-	layer.open = ImGui::TreeNodeEx(("##" + layer.name).c_str(), ImGuiTreeNodeFlags_FramePadding | (layer.open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
-	ImGui::SameLine();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 10));
-	ImGui::Checkbox(("##" + layer.name + "visibility").c_str(), &layer.visible);
-	ImGui::SameLine();
-	
-	if(layer.visible && !layer.editing) ImGui::Text((layer.name).c_str());
+void DrawLayerTreeTwo(Node& node) {
+	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
-	if (layer.visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-		layer.editing = true;
+	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
+		if (folder->id == 0) {
+			for (int childId : folder->childrenIds) {
+				Node* childNode = renderer->nodes[childId].get();
+				DrawLayerTreeTwo(*childNode);
+			}
+		}
+		else {
+			bool open = ImGui::TreeNodeEx(("##" +folder->name).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | (folder->open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
+			ImGui::SameLine();
+			ImGui::Checkbox(("##" + folder->name + "visibility").c_str(), &folder->visible);
+			ImGui::SameLine();
+			if (folder->visible && !folder->editing) ImGui::Text((folder->name).c_str());
+
+			if (folder->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+				folder->editing = true;
+			}
+
+			if (open) {
+				folder->open = true;
+				for (int childId : folder->childrenIds) {
+					Node* childNode = renderer->nodes[childId].get();
+					//childNode->visible = folder->visible;
+					DrawLayerTreeTwo(*childNode);
+				}
+				ImGui::TreePop();
+			}
+			else {
+				folder->open = false;
+			}
+			if (folder->visible && folder->editing) {
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(100);
+				static char editBuffer[256] = "";
+				bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+				ImGui::SetKeyboardFocusHere(-1);
+				if (editing) {
+					if (strlen(editBuffer) > 0 && folder->name != editBuffer) {
+						folder->name = editBuffer;
+						memset(editBuffer, 0, sizeof(editBuffer));
+						folder->editing = false;
+						renderer->SendLayerRename(folder->name, folder->id);
+					}
+				}
+			}
+		}
 	}
-
-	ImGui::PopStyleVar();
-
-	if (layer.visible && layer.editing) {
+	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
+		bool clicked = ImGui::Selectable(("##SelectableLayer" + layer->name).c_str(), (renderer->currentNode == layer->id));
+		if (clicked) {
+			renderer->currentNode = layer->id;
+		}
+		ImGui::TreeNodeEx(("##" + layer->name).c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		static char editBuffer[256] = "";
-		bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-		ImGui::SetKeyboardFocusHere(-1);
-		if (editing) {
-			if (strlen(editBuffer) > 0) {
-				layer.name = editBuffer;
-				memset(editBuffer, 0, sizeof(editBuffer));
-				layer.editing = false;
+		ImGui::Checkbox(("##" + layer->name + "visibility").c_str(), &layer->visible);
+		ImGui::SameLine();
+		if (layer->visible && !layer->editing) ImGui::Text((layer->name).c_str());
+
+		if (layer->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+			layer->editing = true;
+		}
+		if (layer->visible && layer->editing) {
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(100);
+			static char editBuffer[256] = "";
+			bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+			ImGui::SetKeyboardFocusHere(-1);
+			if (editing) {
+				if (strlen(editBuffer) > 0 && layer->name != editBuffer) {
+					layer->name = editBuffer;
+					memset(editBuffer, 0, sizeof(editBuffer));
+					layer->editing = false;
+					renderer->SendLayerRename(layer->name, layer->id);
+				}
 			}
 		}
 	}
 
-	if (layer.open) {
-		for (auto& child : layer.children) {
-			DrawLayerTree(child);
-		}
-
-		ImGui::TreePop();
-	}
-	ImGui::PopStyleVar();
 }
 
 void DrawUI::LayerWindow()
@@ -170,50 +313,48 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
-	static Layer rootLayer("Root Layer");
+	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	if (rootLayer.children.empty()) {
-		rootLayer.children.push_back(Layer("Background"));
-		rootLayer.children.push_back(Layer("Foreground"));
-		rootLayer.children[1].children.push_back(Layer("Sub-layer 1"));
-		rootLayer.children[1].children.push_back(Layer("Sub-layer 2"));
-	}
-
-	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar);
-
-	DrawLayerTree(rootLayer);
+	DrawLayerTreeTwo(*renderer->nodes[0].get());
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
 	LayerWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
+	if (LayerWindowSize.x < 200) {
+		rightSize = 200;
+	}
 }
 
 void DrawUI::ChatWindow()
 {
-	static std::vector<std::string> chatLog;
 	static char inputBuffer[256] = "";
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
 
-	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	float inputBarHeight = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().FramePadding.y * 3 + ImGui::GetStyle().ItemSpacing.y;
+	float availableHeight = ImGui::GetContentRegionAvail().y;
+	float inputBarHeight = ImGui::GetTextLineHeight() * 2 - ImGui::GetStyle().FramePadding.y * 2; //+ ImGui::GetStyle().FramePadding.y * 3; //+ ImGui::GetStyle().ItemSpacing.y;
 
-	ImGui::BeginChild("ChatLog", ImVec2(0, ChatWindowSize.y - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+	ImGui::BeginChild("ChatLog", ImVec2(0, availableHeight - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
 	{
-		ImGui::TextWrapped("%s: %s", username.c_str(), message.c_str());
+		ImGui::TextWrapped("%s", message.c_str());
 	}
 	ImGui::EndChild();
 	ImGui::Separator();
-	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight), false);
+	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight - ImGui::GetStyle().ItemSpacing.y * 2), false);
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 	if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		if (strlen(inputBuffer) > 0)
 		{
-			chatLog.push_back(inputBuffer);
+			std::string msg = username+": " + inputBuffer;
+			chatLog.push_back(msg);
+			SManager::SendMsg(inputBuffer);
 			memset(inputBuffer, 0, sizeof(inputBuffer)); 
 		}
 		ImGui::SetKeyboardFocusHere(-1);
@@ -223,5 +364,72 @@ void DrawUI::ChatWindow()
 	ChatWindowSize = ImGui::GetWindowSize();
 	rightSize = ChatWindowSize.x;
 	ChatWindowPos = ImGui::GetWindowPos();
+
 	ImGui::End();
+
+	if (ChatWindowSize.x < 200) {
+		rightSize = 200;
+	}
+}
+
+void DrawUI::LoginWindow()
+{
+	if (needLogin) {
+		if (!inited) {
+			ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
+			ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
+			inited = true;
+		}
+		ImGui::Begin("Nem");
+
+		// Center the cursor in the window
+		ImVec2 windowSize = ImGui::GetWindowSize();
+		ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+
+		// Set the size for input field and position
+		ImGui::SetNextItemWidth(150); // Set input width
+		ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
+		ImGui::SetCursorPos(inputPos);
+
+		static char usernameText[100] = "";
+		ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
+		inputPos.y += 30;
+
+		ImGui::SetCursorPos(inputPos);
+		ImGui::SetNextItemWidth(150);
+		static char passwordText[24] = "";
+		ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
+
+		inputPos.y += 30;
+		ImGui::SetNextItemWidth(100);
+		ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
+		ImGui::SetCursorPos(buttonPos);
+
+		if (ImGui::Button("Login")) {
+			std::thread([]() {
+				nlohmann::json body;
+				body["email"] = usernameText;
+				body["password"] = passwordText;
+
+				std::cout << "Sending JSON: " << body.dump() << std::endl;
+				nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
+
+				if (res.contains("access_token") && res.contains("username")) {
+					std::cout << "got this JSON: " << res["access_token"] << std::endl;
+					tokenHere = res["access_token"];
+					username = res["username"];
+					needLogin = false;
+				}
+			}).detach();
+		}
+
+		ImGui::End();
+	}
+}
+
+void DrawUI::GetMsg(std::map<std::string, std::string> messageObject)
+{
+	std::string msg = messageObject["username"] + ": " + messageObject["message"];
+	std::cout << msg << std::endl;
+	chatLog.push_back(msg);
 }

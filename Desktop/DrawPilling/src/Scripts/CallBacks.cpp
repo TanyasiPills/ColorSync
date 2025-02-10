@@ -1,7 +1,9 @@
 #include "CallBacks.h"
+#include "SessionManager.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
+#include "WindowManager.h"
 
 double prevCursorPos[2];
 float GlCursorPos[2];
@@ -14,7 +16,6 @@ bool mouseDown = false, moveCanvas = false;
 static float scale = 1.0;
 float yRatio = 1.0;
 int originalSizeX = 1.0, originalSizeY = 1.0;
-
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -67,10 +68,12 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 				mouseDown = true;
 				renderer->LoadPrevCursor(GlCursorPos);
 				renderer->RenderCursorToCanvas();
+				renderer->SetDrawData();
 				break;
 
 			case GLFW_RELEASE:
 				mouseDown = false;
+				renderer->SendDraw();
 				break;
 		}
 	}
@@ -113,11 +116,19 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			else if (action == GLFW_RELEASE) 
 				moveCanvas = false;
 			break;
+		case GLFW_KEY_F9:
+			if (action == GLFW_PRESS) {
+				WindowManager::ToggleFullscreen(window);
+			}
 		default:
 			break;
 	}
 }
 
+void onCloseCallback(GLFWwindow* window) {
+	std::cout << "Window close event intercepted. Doing necessary cleanup before closing.\n";
+	Manager::DisAssembly(window);
+}
 
 void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 {
@@ -132,6 +143,7 @@ void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwGetWindowSize(window, &screenWidth, &screenHeight);
+	glfwSetWindowCloseCallback(window, onCloseCallback);
 }
 
 float* Callback::GlCursorPosition()

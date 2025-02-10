@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 struct SessionData
 {
@@ -9,6 +10,6 @@ struct SessionData
 
 class Manager {
 public:
-	static SessionData Assembly();
-	static void DisAssembly(GLFWwindow* window, unsigned int shader);
+	static SessionData Assembly(SessionData& data);
+	static void DisAssembly(GLFWwindow* window);
 };

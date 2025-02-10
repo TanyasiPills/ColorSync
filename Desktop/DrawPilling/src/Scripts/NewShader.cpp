@@ -60,11 +60,6 @@ void NewShader::SetUniform4f(const std::string& name, float f1, float f2, float 
 {
     glUniform4f(GetUniformLocation(name), f1, f2, f3, f4);
 }
-void NewShader::SetUniform4matrix(const std::string& name, const glm::mat4& value)
-{
-    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &value[0][0]);
-}
-
 
 unsigned int NewShader::CompileShader(const std::string& source, unsigned int type)
 {

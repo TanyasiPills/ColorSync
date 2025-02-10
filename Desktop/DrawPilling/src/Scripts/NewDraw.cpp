@@ -12,7 +12,7 @@ void fillPositions(float* positions, float xScale = 0.0, float yScale = 0.0, flo
 	positions[12] = (-xScale) + xPos; positions[13] = yScale + yPos; positions[14] = 0.0f; positions[15] = 1.0f;
 }
 
-void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0)
+void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0, int transparent = 0)
 {
 
 	if (!data.va) {
@@ -49,7 +49,7 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 	if (texture != nullptr)
 		data.texture->Init(texture);
 	else
-		data.texture->Init(canvasWidth, canvasHeight);
+		data.texture->Init(canvasWidth, canvasHeight, transparent);
 
 	data.texture->Bind();
 	data.shader->SetUniform1i("u_Texture", 0);
@@ -82,6 +82,15 @@ CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvas
 	}
 	fillPositions(positions, xScale, yScale);
 	initData(data.data, positions, nullptr);
+
+	glGenFramebuffers(1, &data.data.fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, data.data.fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.data.texture->GetId(), 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	data.canvasX = xScale;
 	data.canvasY = yScale;
 
@@ -93,7 +102,15 @@ void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale)
 {
 	float positions[16];
 	fillPositions(positions, xScale, yScale);
-	initData(data, positions, nullptr);
+	initData(data, positions, nullptr, 0, 1);
+
+	glGenFramebuffers(1, &data.fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, data.fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.texture->GetId(), 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer not complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void NewDraw::InitBrush(RenderData& data, float& radius) 
@@ -103,10 +120,10 @@ void NewDraw::InitBrush(RenderData& data, float& radius)
 	initData(data, positions, "Resources/Textures/circle.png", 1);
 }
 
-void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float*aspect, float* offset, float* scale, float* position) {
+void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, float* position, int debug) {
 	float positions[16];
 	float yMult = aspect[0] / aspect[1];
-	fillPositions(positions, radius/aspect[0] * scale[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
+	fillPositions(positions, radius / aspect[0] * scale[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
 	VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 	cursor.va->SetBuffer(vb);
 	cursor.va->UnBind();

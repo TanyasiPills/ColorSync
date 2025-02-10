@@ -1,42 +1,4 @@
-#define GLEW_STATIC
-#include "GLEW/glew.h"
-#include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_glfw.h"
-#include "ImGui/imgui_impl_opengl3.h"
-#include <stdio.h>
-#define GL_SILENCE_DEPRECATION
-#include <GLFW/glfw3.h> 
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#pragma comment(lib, "legacy_stdio_definitions")
-#endif
-#ifdef __EMSCRIPTEN__
-#include "../libs/emscripten/emscripten_mainloop_stub.h"
-#endif
-
-////////////////
-//actual stuff//
-////////////////
-
-//includes
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <math.h>
-#include <vector>
-
-#include "SessionManager.h"
-#include "VertexArray.h"
-#include "NewDraw.h"
-#include "NewRenderer.h"
-#include "CallBacks.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-//definitions
-#define PI 3.1415927f
-
+#include "Headers.h"
 
 //Variables
 int screenwidth, screenheight;
@@ -49,27 +11,26 @@ bool hover = false;
 
 unsigned int canvasX = 1080, canvasY = 1080;
 
+std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vdGJvYiIsInN1YiI6MSwiaWF0IjoxNzM4MDc4MTczfQ.KB15yq4a6n7D5gouRj3EW5HqE0ncO67v_gfIRoUQ9Cg";
+
+
 // Main code
 int main()
 {
-    
-    SessionData data = Manager::Assembly();
+    SessionData data;
+    Manager::Assembly(data);
 
     NewRenderer renderer;
 
     Callback::Init(data.window, renderer);
+    DrawUI::SetRenderer(renderer);
+    SManager::SetRenderer(renderer);
 
     renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
 
-    // Main loop
-#ifdef __EMSCRIPTEN__
-    io.IniFilename = nullptr;
-    EMSCRIPTEN_MAINLOOP_BEGIN
-#else
-    while (!glfwWindowShouldClose(data.window))
-#endif
+
+    while (true)
     {
-        //manage callbacks
         glfwPollEvents();
 
         if (glfwGetWindowAttrib(data.window, GLFW_ICONIFIED) != 0)
@@ -77,14 +38,7 @@ int main()
             ImGui_ImplGlfw_Sleep(10);
         }
 
-        //render stuff
+        renderer.ProcessTasks();
         renderer.Render();
-
     }
-#ifdef __EMSCRIPTEN__
-    EMSCRIPTEN_MAINLOOP_END;
-#endif
-
-    // Cleanup
-    //Manager::DisAssembly(data.window, shaderAndLocs.shader);
 }
