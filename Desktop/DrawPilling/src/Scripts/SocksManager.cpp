@@ -87,6 +87,11 @@ void SManager::OnAction(sio::event& ev) {
                 std::map<std::string, sio::message::ptr> ratio = data["ratio"]->get_map();
                 drawMessage.ratio.x = ratio["x"]->get_double();
                 drawMessage.ratio.y = ratio["y"]->get_double();
+
+                std::map<std::string, sio::message::ptr> curSca = data["CurSca"]->get_map();
+                drawMessage.cursorScale[0] = curSca["x"]->get_double();
+                drawMessage.cursorScale[1] = curSca["y"]->get_double();
+                drawMessage.cursorScale[2] = curSca["z"]->get_double();
                 
                 rendererSocks->ExecuteMainThreadTask(drawMessage);
                 //rendererSocks->RenderDrawMessage(drawMessage);
@@ -187,6 +192,18 @@ void SManager::SendAction(Message& dataIn)
                 }
                 catch (...) {
                     std::cerr << "Error parsing color JSON" << std::endl;
+                }
+                try {
+                    sio::message::ptr cursorScaleObj = sio::object_message::create();
+
+                    cursorScaleObj->get_map()["x"] = sio::double_message::create(draw->cursorScale[0]);
+                    cursorScaleObj->get_map()["y"] = sio::double_message::create(draw->cursorScale[1]);
+                    cursorScaleObj->get_map()["z"] = sio::double_message::create(draw->cursorScale[2]);
+
+                    data->get_map()["CurSca"] = cursorScaleObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing cursorscale JSON" << std::endl;
                 }
             }
             catch (...) {

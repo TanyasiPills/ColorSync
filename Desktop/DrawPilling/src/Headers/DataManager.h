@@ -6,6 +6,7 @@
 struct ApplicationData {
     char token[256];
     char name[25];
+    char ip[100];
 };
 
 class DataManager
@@ -15,5 +16,5 @@ public:
     static void SaveData(const ApplicationData& data, const std::string& filename);
     static ApplicationData LoadData(const std::string& filename);
     static void LoadAppData();
-    static void SaveAppData(std::string nameIn, std::string tokenIn);
+    static void SaveAppData(std::string nameIn, std::string tokenIn, std::string ipIn);
 };

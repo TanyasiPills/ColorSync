@@ -180,8 +180,8 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		prevPos[0] = pos[0];
 		prevPos[1] = pos[1];
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		layer.texture->Bind();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
@@ -195,7 +195,7 @@ void NewRenderer::SendDraw()
 {
 	DrawMessage msg;
 	msg.type = 0;
-	msg.layer = 1;
+	msg.layer = currentNode;
 	msg.brush = 2;
 	msg.size = sentBrushSize;
 	msg.positions = drawPositions;
@@ -205,6 +205,9 @@ void NewRenderer::SendDraw()
 	msg.color[2] = color[2];
 	msg.ratio.x = canvasRatio[0];
 	msg.ratio.y = canvasRatio[1];
+	msg.cursorScale[0] = cursorScale[0];
+	msg.cursorScale[1] = cursorScale[1];
+	msg.cursorScale[2] = cursorScale[2];
 	SManager::SendAction(msg);
 
 	drawPositions.clear();
@@ -261,12 +264,15 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 				Position pos = drawMessage.positions[i];
 				float tmp[2] = { pos.x, pos.y };
 				float tmp2[2] = { canvRatio.x, canvRatio.y };
-				NewDraw::MoveCanvas(layer, tmp2, offset);
-				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp,1);
+				float tmp3[3] = { drawMessage.cursorScale[0], drawMessage.cursorScale[1], drawMessage.cursorScale[2] };
+
+				NewDraw::MoveCanvas(layer, tmp2, offse);
+				NewDraw::BrushToPosition(window, cursor, radius, tmp2, offse, tmp3, tmp,1);
 				Draw(cursor);
 			}
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			layer.texture->Bind();
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			NewDraw::MoveCanvas(layer, canvasRatio, offset);
 			int width, height;
 			glfwGetFramebufferSize(window, &width, &height);
 			glViewport(0, 0, width, height);

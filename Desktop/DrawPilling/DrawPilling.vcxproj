@@ -78,10 +78,10 @@
     <IncludePath>$(SolutionDir)Dependencies\Includes;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\Includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\Includes;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\Includes;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\Includes;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -94,7 +94,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -113,7 +113,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -129,8 +129,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,14 +143,16 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;$(SolutionDir)DrawPilling\Dependencies\Includes\SocketIO</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);%(AdditionalDependencies);</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;gdi32.lib;libvcruntime.lib;libcmt.lib;libucrt.lib;</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>MSVCRTD.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

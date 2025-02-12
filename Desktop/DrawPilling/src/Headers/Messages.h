@@ -20,9 +20,10 @@ struct DrawMessage : public Message {
 	std::vector<Position> positions;
 	Position offset;
 	Position ratio;
+	float cursorScale[3];
 	float color[3];
 
-	DrawMessage() : layer(0), brush(0), size(0.0f), positions(), offset(), color() {}
+	DrawMessage() : layer(0), brush(0), size(0.0f), positions(), offset(), color(), cursorScale() {}
 };
 
 struct NodeAddMessage : public Message {

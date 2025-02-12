@@ -1,5 +1,6 @@
 #pragma once
 
+#define IMGUI_STATIC
 #define GLEW_STATIC
 #include "GLEW/glew.h"
 #include "ImGui/imgui.h"

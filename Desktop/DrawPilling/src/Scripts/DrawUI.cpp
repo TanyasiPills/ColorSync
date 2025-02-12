@@ -28,6 +28,7 @@ std::string username;
 bool inited = false;
 bool needLogin = true;
 std::string create = "false";
+std::string ip = "10.4.117.7";
 
 static std::vector<std::string> chatLog;
 
@@ -40,6 +41,9 @@ std::string DrawUI::GetToken() {
 }
 std::string DrawUI::GetUsername() {
 	return username;
+}
+std::string DrawUI::GetIp() {
+	return ip;
 }
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
@@ -174,11 +178,11 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	}
 }
 
-void DrawUI::ServerWindow() 
+void DrawUI::ServerWindow()
 {
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX-rightSize, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -186,10 +190,20 @@ void DrawUI::ServerWindow()
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
 
-	// Set the size for input field and position
-	ImGui::SetNextItemWidth(150); // Set input width
 	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
 	ImGui::SetCursorPos(inputPos);
+
+	ImGui::SetNextItemWidth(120);
+	static char ipInput[100] = "";
+	ImGui::InputTextWithHint("##ipinput", "Ip", ipInput, IM_ARRAYSIZE(ipInput), ImGuiInputTextFlags_CharsNoBlank);
+	ImGui::SameLine();
+	if (ImGui::Button("Set", ImVec2(30, 0))) {
+		ip = ipInput;
+	}
+	inputPos.y += 30;
+	ImGui::SetCursorPos(inputPos);
+	// Set the size for input field and position
+	ImGui::SetNextItemWidth(150); // Set input width
 
 	static char lobbyName[100] = "";
 	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
@@ -203,7 +217,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "true";
-		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+		SManager::Connect(("http://"+ip+":3000").c_str(), tokenHere.c_str(), room);
 	}
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(300);
@@ -211,7 +225,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "false";
-		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+		SManager::Connect(("http://" + ip + ":3000").c_str(), tokenHere.c_str(), room);
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
@@ -412,7 +426,7 @@ void DrawUI::LoginWindow()
 				body["password"] = passwordText;
 
 				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
+				nlohmann::json res = HManager::Request((ip+":3000/users/login").c_str(), body.dump(), POST);
 
 				if (res.contains("access_token") && res.contains("username")) {
 					std::cout << "got this JSON: " << res["access_token"] << std::endl;

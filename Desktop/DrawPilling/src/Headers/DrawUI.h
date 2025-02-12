@@ -28,6 +28,7 @@ public:
 
     static std::string GetUsername();
     static std::string GetToken();
+    static std::string GetIp();
 
     static void SetRenderer(NewRenderer& renderer);
 };
