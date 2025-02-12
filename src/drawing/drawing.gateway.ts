@@ -172,6 +172,10 @@ export class DrawingWS
           !data.ratio ||
           !Number.isFinite(data.ratio.x) ||
           !Number.isFinite(data.ratio.y) ||
+          !data.CurSca ||
+          !Number.isFinite(data.CurSca.x) ||
+          !Number.isFinite(data.CurSca.y) ||
+          !Number.isFinite(data.CurSca.z) ||
           !Array.isArray(data.positions) ||
           !data.positions.every(e => Number.isFinite(e.x) && Number.isFinite(e.y))
         ) {

@@ -139,6 +139,25 @@
         }
       });
       console.log("File upload: ", response.ok);
+      const body = await response.message();
+      //document.getElementById("imageId").value = body.id;
+    }
+    async function post() {
+      const imageId = parseInt(document.getElementById("imageId").value);
+      const text = document.getElementById("postText").value;
+      const token = document.getElementById("token").value;
+
+      const response = await fetch("http://localhost:3000/posts", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ imageId, text })
+      });
+
+      console.log("post: ", response.ok);
+      console.log(await response.json());
     }
   </script>
 </head>
@@ -206,6 +225,16 @@
     <input type="text" name="visibility" id="visibility">
     <br>
     <input type="submit" value="Upload">
+  </form>
+  <form onsubmit="post(); return false;">
+    <p>Post</p>
+    <label for="imageId">Image Id:</label>
+    <input type="number" name="imageId" id="imageId">
+    <br>
+    <label for="postText">Text:</label>
+    <input type="text" name="postText" id="postText">
+    <br>
+    <input type="submit" value="Post">
   </form>
 </body>
 </html>
