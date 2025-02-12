@@ -32,9 +32,16 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
             description = itemView.findViewById(R.id.description);
             profilePicture = itemView.findViewById(R.id.profile_picture);
             image = itemView.findViewById(R.id.image);
+        }
 
+        public void bind(Post post) {
+            username.setText(post.getUser().getUsername());
+            description.setText(post.getText());
             Glide.with(itemView)
-                    .load("https://m.media-amazon.com/images/S/pv-target-images/309f98728a1249ac33aeaeeaa618ca331175a6ee0b792dd273ff1f24badccace._SX1080_FMjpg_.jpg")
+                    .load("http://10.0.2.2:3000/users/" + post.getUserId() + "/pfp")
+                    .into(profilePicture);
+            Glide.with(itemView)
+                    .load("http://10.0.2.2:3000/images/public/" + post.getImageId())
                     .into(image);
         }
     }
@@ -48,8 +55,8 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ScrollAdapter.ViewHolder holder, int position) {
-        Post currentItem = items.get(position);
-        holder.username.setText(String.valueOf(items.indexOf(currentItem)));
+        Post post = items.get(position);
+        holder.bind(post);
     }
 
     @Override
