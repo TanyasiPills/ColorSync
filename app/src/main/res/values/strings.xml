@@ -4,4 +4,5 @@
     <string name="image_ContentDescription">uploaded image</string>
     <string name="username_default_text">username</string>
     <string name="description_default_text">description</string>
+    <string name="homeButtonDescription">Home</string>
 </resources>

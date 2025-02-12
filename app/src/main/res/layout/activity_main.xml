@@ -28,13 +28,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:orientation="horizontal"
         android:background="@color/bgPrimary"
-        android:padding="5dp"
+        android:padding="10dp"
         android:gravity="center">
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:scaleType="fitXY"
+            android:contentDescription="@string/homeButtonDescription"
             android:src="@drawable/home"
-            android:background=""/>
+            app:tint="@color/text"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 
 
