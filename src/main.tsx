@@ -18,7 +18,7 @@ const router = createBrowserRouter([
   {path: "/CMS", element: <SocialMedia />},
   {path: "/SignIn", element: <SignIn />},
   {path: "/SignUp", element: <SignUp />},
-  {path: "/Profile", element: <Profile />},
+  {path: "/Profile", element: <Profile own />},
 ]);
 
 createRoot(document.getElementById('root')!).render(

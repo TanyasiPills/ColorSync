@@ -3,12 +3,23 @@
   max-height: 100vh;
 }
 
+:root {
+  --backgroundColor: #303050;
+  --divCol: #1F1F4C;
+  --lowHighlight: #35355A;
+  --highlight: #494873;
+  --borderCol: #7A74A6;
+  --textCol: #A5A0D4;
+}
+
 #root {
   height: 100vh;
   
-  color: #A5A0D4 !important;
-  background-color: #303050;
+  color: var(--textCol);
+  background-color: var(--backgroundColor);
 }
+
+
 
 html,
 body {

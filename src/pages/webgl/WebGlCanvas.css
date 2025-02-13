@@ -11,13 +11,13 @@
 }
 
 .sideBar#left{
-    border-right: 0.15rem solid #7A74A6;
+    border-right: 0.15rem solid var(--borderCol);
     background-color: #303050 !important;
 }
 
 .sideBar#right{
-    border-left: 0.15rem solid #7A74A6;
-    background-color: #303050 !important;
+    border-left: 0.15rem solid var(--borderCol);
+    background-color: var(--backgroundColor) !important;
 }
 
 .canvasContainer {

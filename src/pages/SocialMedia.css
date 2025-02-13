@@ -1,20 +1,76 @@
-#left{
-    background-color: #1F1F4C;
-    border-right: 0.15rem solid #7A74A6;
+#left {
+    background-color: var(--divCol);
+    border-right: 0.15rem solid var(--borderCol);
 }
 
-#right{
-    background-color: #1F1F4C;
-    border-left: 0.15rem solid #7A74A6;
+#right {
+    background-color: var(--divCol);
+    border-left: 0.15rem solid var(--borderCol);
 }
 
-#middle{
-    background-color: #1F1F4C;
+#middle {
+    background-color: var(--divCol);
 }
 
-#feed{
-    background-color: #303050;
+#feed {
+    background-color: var(--backgroundColor);
     height: 100%;
     width: 70%;
     align-self: center;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.posts {
+    align-items: center;
+    border-bottom: var(--borderCol) 3px solid;
+    width: 100%;
+    background-color: transparent;
+}
+
+.posts img {
+    width: 100%;
+    display: block;
+    height: auto;
+    object-fit: cover;
+    padding: 10px;
+}
+
+.profile-img {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.card-footer {
+    text-align: right;
+    font-size: 14px;
+    color: gray;
+    border-top: none;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--lowHighlight);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--highlight);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--textCol);
 }
