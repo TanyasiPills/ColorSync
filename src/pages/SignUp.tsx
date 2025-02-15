@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import Cookies from 'universal-cookie';
+import { backendIp } from '../constants';
 
 export function SignUp() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const cookie = new Cookies();
+  if (cookie.get("AccessToken")) {
+    window.location.href = '/';
+    return
+  }
   const [validated, setValidated] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,38 +18,29 @@ export function SignUp() {
     event.preventDefault();
     setError('');
     setIsSubmitting(true);
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setIsSubmitting(false);
-      return;
-    }
+    const data:FormData =  new FormData(event.target as HTMLFormElement);
 
     try {
-      const res = await fetch('http://localhost:3000/users', {
+      const res = await fetch(backendIp + '/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({
+          username: data.get("username"),
+          password: data.get("password"),
+          email: data.get("email")
+        })
       });
 
       if (!res.ok) {
-        const errorData = await res.json(); 
+        const errorData = await res.json();
         setError(errorData.message || 'Failed to Sign Up');
         setIsSubmitting(false);
         return;
       }
 
-      const data = await res.json();
-      console.log('Registration successful', data);
-
-       window.location.href = '/'
-
-      setUsername('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+      window.location.href = '/'
       setError('');
       alert('Registration successful!');
     } catch (err: any) {
@@ -68,8 +63,8 @@ export function SignUp() {
               <Form.Control
                 type="text"
                 placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                name='username'
+                id='username'
                 required
               />
             </Form.Group>
@@ -79,8 +74,8 @@ export function SignUp() {
               <Form.Control
                 type="email"
                 placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name='email'
+                id='email'
                 required
               />
               <Form.Text>
@@ -93,8 +88,7 @@ export function SignUp() {
               <Form.Control
                 type="password"
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                name='password'
                 required
               />
             </Form.Group>
@@ -104,8 +98,7 @@ export function SignUp() {
               <Form.Control
                 type="password"
                 placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                name='confPassword'
                 required
               />
               {error && <Form.Text className="text-danger">{error}</Form.Text>}

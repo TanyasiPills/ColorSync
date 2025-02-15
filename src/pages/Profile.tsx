@@ -30,15 +30,15 @@ export function Profile({ own = false }: { own: boolean }) {
       if (own) {
         header["Authorization"] = "Bearer " + thisUser.access_token;
       }
-      const result = await fetch(backendIp + '/user' + (own ? '' : '/' + id), { method: "GET", headers: header });
+      const result = await fetch(backendIp + '/users' + (own ? '' : '/' + id), { method: "GET", headers: header });
       if (result.ok) {
         const resultJson:user = await result.json();
         setUser(resultJson);
-        const imageResult = await fetch(backendIp + '/image/user/' + resultJson.id, {method: "GET", headers: header});
+        const imageResult = await fetch(backendIp + '/image/users/' + resultJson.id, {method: "GET", headers: header});
         if (imageResult.ok) {
           const imageResultJson:image[] = await imageResult.json() 
           setImages(imageResultJson);
-          const promises = imageResultJson.map((e)=> fetch(backendIp+'/image/' + e.id, {method: "GET", headers: header}).then(res => {
+          const promises = imageResultJson.map((e)=> fetch(backendIp+'/images/' + e.id, {method: "GET", headers: header}).then(res => {
             if (res.ok) {
               return res.blob();
             }
@@ -68,8 +68,11 @@ export function Profile({ own = false }: { own: boolean }) {
         </Col>
       </Row>
       <Row id="drawings" className="w-100" style={{ flex: '3' }}>
-        {imageURL && imageURL.map((e)=> <Col xs={2}><img src={e} alt="" /></Col>)}
-        
+        {imageURL&&imageURL.map((e) => (
+          <Col xs={12} sm={6} md={4} lg={2}>
+            <img src={e} alt="" style={{ width: '100%' }} />
+          </Col>
+        ))}
       </Row>
     </Container>
   );

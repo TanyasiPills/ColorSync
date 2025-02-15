@@ -17,8 +17,7 @@ export function SignIn() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.target as HTMLFormElement);
-    console.log(data.get("email") + " + " + data.get("password"));
-    const response = await fetch(backendIp + '/user/login', {
+    const response = await fetch(backendIp + '/users/login', {
       method: "POST",
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({

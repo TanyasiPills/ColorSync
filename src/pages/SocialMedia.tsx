@@ -9,7 +9,7 @@ export function SocialMedia() {
   useEffect(() => {
     async function load() {
 
-      const result = await fetch(backendIp + '/post', { method: "GET", headers: { "Accept": "application/json" } });
+      const result = await fetch(backendIp + '/posts', { method: "GET", headers: { "Accept": "application/json" } });
       if (result.ok) { setPost(await result.json()); } else { console.log(await result.text()) }
     }
     load();

@@ -3,7 +3,7 @@ import './NavBar.css';
 
 export function NavBar() {
   return (
-    <Navbar className="navbar-custom" sticky="top" expand="lg">
+    <Navbar className="navbar-custom" variant='dark' sticky="top" expand="lg">
       <Container>
         {/* Full Brand Name for larger screens */}
         <Navbar.Brand href="/" className="d-none d-sm-block">
