@@ -23,8 +23,9 @@ async function bootstrap() {
     .build();
 
   docConfig.tags.push({name: 'socket.io', description: 'WebSocket endpoints', externalDocs: {url: "/docs/websocket", description: "Websocket documentation."}});
-    
-  SwaggerModule.setup('docs', app, () => SwaggerModule.createDocument(app, docConfig));
+  
+  const document = SwaggerModule.createDocument(app, docConfig);
+  SwaggerModule.setup('docs', app, document);
   
     
   await app.listen(3000);

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -15,20 +15,56 @@ export class PostsService {
     return this.db.post.create({ data: { userId, ...createPostDto, } });
   }
 
-  findAll() {
-    return this.db.post.findMany({
+  async findAll(lastId: string) {
+    let parsedId;
+    if (lastId) {
+      try {
+        parsedId = parseInt(lastId);
+      } catch {
+        throw new BadRequestException('LastId must be a number');
+      }
+    }
+    const data = await this.db.post.findMany({
+      take: 10,
+      skip: parsedId ? 1 : 0,
+      cursor: parsedId ? { id: parsedId } : undefined,
       orderBy: { date: 'desc' },
-      include: { 
-        user: { select: { username: true } }, 
+      include: {
+        user: { select: { username: true } },
         comments: {
-          select: {id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
-        } 
-      } 
-      });
+          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+        }
+      }
+    });
+    if (data.length === 0) return { data, newLastId: null };
+    const newLastId = data[data.length - 1].id;
+    console.log(parsedId);
+    return { data, newLastId };
+  }
+
+  findByUser(id: number) {
+    return this.db.post.findMany({
+      where: { userId: id },
+      orderBy: { date: 'desc' },
+      include: {
+        user: { select: { username: true } },
+        comments: {
+          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+        }
+      }
+    });
   }
 
   findOne(id: number) {
-    return this.db.post.findUnique({ where: { id } });
+    return this.db.post.findUnique({
+      where: { id },
+      include: {
+        user: { select: { username: true } },
+        comments: {
+          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+        }
+      }
+    });
   }
 
   async update(id: number, updatePostDto: UpdatePostDto, userId: number) {

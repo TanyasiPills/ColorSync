@@ -24,14 +24,18 @@ export class ImagesService {
       throw new NotFoundException(`User with id: ${id} not found`);
     }
     if (id == userId) {
-      return this.db.image.findMany({where: {userId: id}, select: {id: true, date: true, visibility: true}});
+      return this.db.image.findMany({where: {userId: id}, orderBy: {date: 'desc'}, select: {id: true, date: true, visibility: true, userId: true}});
     } else {
-      return this.db.image.findMany({where: {visibility: Visibility.public, userId: id}, select: {id: true, date: true}});
+      return this.db.image.findMany({
+        where: {visibility: Visibility.public, userId: id},
+        orderBy: {date: 'desc'},
+        select: {id: true, date: true, userId: true, visibility: true}
+      });
     }
   }
 
   async findOne(id: number, userId: number) {
-    const image = await this.db.image.findUnique({where: {id}});
+    const image = await this.db.image.findUnique({where: {id}, select: {path: true, visibility: true, userId: true}});
     if (!image) throw new NotFoundException(`Image with id: ${id} not found`);
     if (image.visibility == Visibility.private && image.userId != userId) throw new UnauthorizedException("You don't have access to this image");
     return resolve(`uploads/${image.path}`);;
@@ -39,7 +43,7 @@ export class ImagesService {
 
   async update(id: number, userId: number, visibility: Visibility) {
     try {
-      const image = this.db.image.findUniqueOrThrow({where: {id, userId}, include: {posts: true}});
+      const image = this.db.image.findUniqueOrThrow({where: {id, userId}, select: {id: true, date: true, visibility: true, userId: true}});
       if (image.posts) throw new UnauthorizedException("You can't change the visibility of an image that is part of a post");
       await this.db.image.update({where: {id, userId}, data: {visibility}});
     } catch {

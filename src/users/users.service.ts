@@ -16,6 +16,11 @@ export class UsersService {
     return this.db.user.update({where: {id}, data: updateUserDto, select: {username: true, email: true}});
   }
 
+  search(name: string) {
+    if (!name) return [];
+    return this.db.user.findMany({where: {username: {contains: name}}, select: {id: true, username: true}, take: 20});
+  }
+
   async remove(id: number) {
     try {
       await this.db.user.delete({where: {id}});

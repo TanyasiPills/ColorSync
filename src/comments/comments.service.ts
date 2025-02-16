@@ -5,15 +5,22 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(private readonly db: PrismaService) { }
 
   create(createCommentDto: CreateCommentDto, userId: number) {
-    return this.db.comment.create({data: {...createCommentDto, userId}});
+    return this.db.comment.create({ data: { ...createCommentDto, userId } });
   }
 
-  findAllOnPost(postId: number) {
+  async findAllOnPost(postId: number) {
     try {
-      return this.db.post.findUniqueOrThrow({where: {id: postId}, select: {comments: true}});
+      const comments = await this.db.post.findUniqueOrThrow({
+        where: { id: postId }, select: {
+          comments: {
+            select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+          }
+        }
+      });
+      return comments.comments;
     } catch {
       throw new NotFoundException(`Post with id: ${postId} not found`);
     }
@@ -21,7 +28,11 @@ export class CommentsService {
 
   findOne(id: number) {
     try {
-      return this.db.comment.findUniqueOrThrow({where: {id}});
+      return this.db.comment.findUniqueOrThrow({
+        where: { id }, select: {
+          id: true, text: true, date: true, userId: true, user: { select: { username: true } },
+        }
+      });
     } catch {
       throw new NotFoundException(`Comment with id: ${id} not found`);
     }
@@ -29,7 +40,7 @@ export class CommentsService {
 
   async update(id: number, updateCommentDto: UpdateCommentDto, userId: number) {
     try {
-      return await this.db.comment.update({where: {id, userId}, data: updateCommentDto});
+      return await this.db.comment.update({ where: { id, userId }, data: updateCommentDto, select: {id: true, text: true, date: true, userId: true, user: { select: { username: true } }} });
     } catch {
       throw new NotFoundException(`A post with id: ${id} not found for user: ${userId}`);
     }
@@ -37,7 +48,7 @@ export class CommentsService {
 
   async remove(id: number, userId: number) {
     try {
-      return await this.db.comment.delete({where: {id, userId}});
+      return await this.db.comment.delete({ where: { id, userId } });
     } catch {
       throw new NotFoundException(`A post with id: ${id} not found for user: ${userId}`);
     }

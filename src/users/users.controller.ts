@@ -1,5 +1,5 @@
-import { FileAPIType, LoginBody, LoginResponse, UserInfo } from './dto/api.dto';
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req } from '@nestjs/common';
+import { FileType, LoginBodyType, LoginResponseType, UserInfoType } from './dto/api.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,7 +10,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
@@ -22,10 +22,10 @@ export class UsersController {
 
   /**
    * Login for the user
-   * @returns {Promise<LoginResponse>} Login response
+   * @returns {Promise<LoginResponseType>} Login response
    */
-  @ApiBody({type: LoginBody})
-  @ApiResponse({status: 200, description: 'Login successful', type: LoginResponse})
+  @ApiBody({type: LoginBodyType})
+  @ApiResponse({status: 200, description: 'Login successful', type: LoginResponseType})
   @ApiResponse({status: 401, description: 'Invalid credentials'})
 
   @UseGuards(LocalAuthGuard)
@@ -41,7 +41,7 @@ export class UsersController {
    * @param createUserDto The data to create the user
    * @returns 
    */
-  @ApiResponse({status: 201, description: 'User created', type: LoginResponse})
+  @ApiResponse({status: 201, description: 'User created', type: LoginResponseType})
   @ApiResponse({status: 409, description: 'Email already in use'})
 
   @Post()
@@ -58,7 +58,7 @@ export class UsersController {
    */
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({description: 'Profile picture to upload', type: FileAPIType})
+  @ApiBody({description: 'Profile picture to upload', type: FileType})
   @ApiResponse({status: 204, description: 'Profile picture uploaded'})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
@@ -111,10 +111,10 @@ export class UsersController {
   
   /**
    * Returns data about the currently logged in user
-   * @returns {UserInfo} Information about the logged in user
+   * @returns {UserInfoType} Information about the logged in user
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: 'Returns data about the currently logged in user', type: UserInfo})
+  @ApiResponse({status: 200, description: 'Returns data about the currently logged in user', type: UserInfoType})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @UseGuards(JwtAuthGuard)
@@ -122,14 +122,28 @@ export class UsersController {
   getLoggedIn(@Request() req: any) {
     return this.userService.getLoggedIn(req.user.id);
   }
+
+  /**
+   * Searches for a user
+   * @param name The name of the user to search for
+   * @returns Array of the first 20 users that match the search
+   */
+  @ApiOperation({summary: 'Search for a user'})
+  @ApiQuery({name: 'name', description: 'Name of the user'})
+  @ApiResponse({status: 200, description: 'Returns the users that match the search', type: [UserInfoType]})
+  
+  @Get('search')
+  search(@Query('name') name: string) {
+    return this.userService.search(name);
+  }
   
   /**
    * Returns data about a specific user
    * @param id Id of the user
-   * @returns {UserInfo} Infromation about the user
+   * @returns {UserInfoType} Infromation about the user
    */
   @ApiParam({name: 'id', description: 'Id of the user'})
-  @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfo})
+  @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfoType})
   @ApiResponse({status: 404, description: 'User not found'})
 
   @Get(':id')
@@ -142,10 +156,10 @@ export class UsersController {
   /**
    * Updates the user data
    * @param updateUserDto The data to update
-   * @returns {UserInfo} User information after the update
+   * @returns {UserInfoType} User information after the update
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: 'Returns the updated user data', type: UserInfo})
+  @ApiResponse({status: 200, description: 'Returns the updated user data', type: UserInfoType})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @UseGuards(JwtAuthGuard)

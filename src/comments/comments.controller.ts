@@ -4,6 +4,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { CommentType } from 'src/users/dto/api.dto';
 
 @Controller('comments')
 export class CommentsController {
@@ -30,7 +31,7 @@ export class CommentsController {
    * @param id The id of the post
    * @returns Array of comments on the post
    */
-  @ApiResponse({status: 200, description: "Returns all the comments on the post"})
+  @ApiResponse({status: 200, description: "Returns all the comments on the post", type: [CommentType]})
   @ApiResponse({status: 404, description: "Post with the specified id doesn't exist"})
   @ApiParam({name: "id", description: "The id of the post"})
 
@@ -44,7 +45,7 @@ export class CommentsController {
    * @param id The id of the comment
    * @returns The comment
    */
-  @ApiResponse({status: 200, description: "Returns the commnet"})
+  @ApiResponse({status: 200, description: "Returns the commnet", type: CommentType})
   @ApiResponse({status: 404, description: "Comment not found"})
   @ApiParam({name: "id", description: "The id of the comment"})
 
@@ -60,7 +61,7 @@ export class CommentsController {
    * @returns The updated comment
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: "Comment succsesfully updated"})
+  @ApiResponse({status: 200, description: "Comment succsesfully updated", type: CommentType})
   @ApiResponse({status: 401, description: "Invalid token"})
   @ApiResponse({status: 404, description: "Comment not found, or the user can't edit it"})
   @ApiParam({name: "id", description: "The id of the comment"})
