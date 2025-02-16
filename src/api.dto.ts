@@ -71,7 +71,26 @@ export class PostBaseType {
   imageId?: number;
 }
 
-export class PostIncludesType extends PostBaseType {
+export class PostIncludesType {
+  @IsInt()
+  @IsPositive()
+  @ApiProperty({ description: 'The id of the post', examples: [1, 2, 3] })
+  id: number;
+
+  @ApiProperty({ description: 'The text of the post', examples: ['Hello world!', 'This is a post'] })
+  @IsString()
+  text: string;
+
+  @ApiProperty({ description: 'The date the post was created', examples: ['2021-01-01T00:00:00.000Z', '2025-01-08:01:10.252Z'] })
+  @IsDate()
+  date: Date;
+
+  @ApiProperty({ description: 'The id of the image that is attached to the post', examples: [1, 2, 3] })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  imageId?: number;
+
   @ApiProperty({ description: 'The user that created the post', examples: [{ username: 'bob' }, { username: 'alice' }] })
   @IsObject()
   user: { username: string };
@@ -95,14 +114,9 @@ export class CommentType {
   @ApiProperty({ description: 'The date the comment was created', examples: ['2021-01-01T00:00:00.000Z', '2025-01-08:01:10.252Z'] })
   date: Date;
 
-  @IsInt()
-  @IsPositive()
-  @ApiProperty({ description: 'The id of the user that created the comment', examples: [1, 2, 3] })
-  userId: number;
-
   @IsObject()
   @ApiProperty({ description: 'The user that created the comment', examples: [{ username: 'bob' }, { username: 'alice' }] })
-  user: { username: string };
+  user: UserInfoType;
 }
 
 export class ImageType {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Req, UseGuards } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -8,7 +8,7 @@ export class CommentsService {
   constructor(private readonly db: PrismaService) { }
 
   create(createCommentDto: CreateCommentDto, userId: number) {
-    return this.db.comment.create({ data: { ...createCommentDto, userId } });
+    return this.db.comment.create({ data: { ...createCommentDto, userId }, select: { id: true, text: true, date: true, user: { select: { username: true, id: true } }}});
   }
 
   async findAllOnPost(postId: number) {
@@ -16,7 +16,7 @@ export class CommentsService {
       const comments = await this.db.post.findUniqueOrThrow({
         where: { id: postId }, select: {
           comments: {
-            select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+            select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
           }
         }
       });
@@ -30,7 +30,7 @@ export class CommentsService {
     try {
       return this.db.comment.findUniqueOrThrow({
         where: { id }, select: {
-          id: true, text: true, date: true, userId: true, user: { select: { username: true } },
+          id: true, text: true, date: true, user: { select: { username: true, id: true } },
         }
       });
     } catch {
@@ -40,7 +40,7 @@ export class CommentsService {
 
   async update(id: number, updateCommentDto: UpdateCommentDto, userId: number) {
     try {
-      return await this.db.comment.update({ where: { id, userId }, data: updateCommentDto, select: {id: true, text: true, date: true, userId: true, user: { select: { username: true } }} });
+      return await this.db.comment.update({ where: { id, userId }, data: updateCommentDto, select: {id: true, text: true, date: true, user: { select: { username: true, id: true } }} });
     } catch {
       throw new NotFoundException(`A post with id: ${id} not found for user: ${userId}`);
     }

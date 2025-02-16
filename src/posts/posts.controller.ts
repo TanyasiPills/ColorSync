@@ -32,7 +32,7 @@ export class PostsController {
    * @returns {data: PostResponse[], lastId: number} The id of the last post and the data of the posts
    */
   @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
-  @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false })
+  @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, lastId: { type: 'integer' } } } })
   @Get()
   findAll(@Query('take') take: string, @Query('lastId') lastId: string) {

@@ -23,7 +23,7 @@ export class PostsService {
     }
     let parsedTake;
     if (take) {
-      parsedTake = parseInt(take);
+      parsedTake = Math.max(1, Math.min(10, parseInt(take)));
       if (isNaN(parsedTake)) throw new BadRequestException('take must be a number');
     } else parsedTake = 10;
     const data = await this.db.post.findMany({
@@ -31,13 +31,14 @@ export class PostsService {
       skip: parsedId ? 1 : 0,
       cursor: parsedId ? { id: parsedId } : undefined,
       orderBy: { date: 'desc' },
-      include: {
-        user: { select: { username: true } },
+      select: {
+        id: true, text: true, date: true, imageId: true,
+        user: { select: { username: true, id: true } },
         comments: {
-          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
         }
-      }
-    });
+      }}
+    );
     if (data.length === 0) return { data, newLastId: null };
     const newLastId = data[data.length - 1].id;
     return { data, newLastId };
@@ -47,10 +48,11 @@ export class PostsService {
     return this.db.post.findMany({
       where: { userId: id },
       orderBy: { date: 'desc' },
-      include: {
-        user: { select: { username: true } },
+      select: {
+        id: true, text: true, date: true, imageId: true,
+        user: { select: { username: true, id: true } },
         comments: {
-          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
         }
       }
     });
@@ -59,10 +61,11 @@ export class PostsService {
   findOne(id: number) {
     return this.db.post.findUnique({
       where: { id },
-      include: {
-        user: { select: { username: true } },
+      select: {
+        id: true, text: true, date: true, imageId: true,
+        user: { select: { username: true, id: true } },
         comments: {
-          select: { id: true, text: true, date: true, userId: true, user: { select: { username: true } } },
+          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
         }
       }
     });
