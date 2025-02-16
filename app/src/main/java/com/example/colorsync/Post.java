@@ -4,16 +4,14 @@ import java.util.List;
 
 public class Post {
     private int id;
-    private int imageId;
-    private int userId;
+    private Integer imageId;
     private User user;
     private String text;
     private List<Comment> comments;
 
-    public Post(int id, int imageId, int userId, User user, String text, List<Comment> comments) {
+    public Post(int id, int imageId, User user, String text, List<Comment> comments) {
         this.id = id;
         this.imageId = imageId;
-        this.userId = userId;
         this.user = user;
         this.text = text;
         this.comments = comments;
@@ -27,20 +25,12 @@ public class Post {
         this.id = id;
     }
 
-    public int getImageId() {
+    public Integer getImageId() {
         return imageId;
     }
 
-    public void setImageId(int imageId) {
+    public void setImageId(Integer imageId) {
         this.imageId = imageId;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
     }
 
     public User getUser() {

@@ -1,11 +1,12 @@
 package com.example.colorsync;
 
-import java.util.List;
+import com.example.colorsync.DataTypes.PostResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 public interface APIService {
     @GET("/posts")
-    Call<List<Post>> getAllPost();
+    Call<PostResponse> getAllPost(@Query("lastId") int lastId);
 }

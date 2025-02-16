@@ -5,4 +5,6 @@
     <string name="username_default_text">username</string>
     <string name="description_default_text">description</string>
     <string name="homeButtonDescription">Home</string>
+    <string name="showCommentsDescription">Show comments</string>
+    <string name="commentsText">comments</string>
 </resources>

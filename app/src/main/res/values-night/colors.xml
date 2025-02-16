@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bgPrimary">#303050</color>
-    <color name="bgSecondary">#333354</color>
+    <color name="bgPrimary">#1F1F4C</color>
+    <color name="bgSecondary">#303060</color>
     <color name="bgSmallHigliht">#35355A</color>
-    <color name="bgHighlight">#404069</color>
-    <color name="border">#515177</color>
-    <color name="text">#B0B0E0</color>
+    <color name="bgHighlight">#494873</color>
+    <color name="border">#7A74A6</color>
+    <color name="text">#A5A0D4</color>
 </resources>
