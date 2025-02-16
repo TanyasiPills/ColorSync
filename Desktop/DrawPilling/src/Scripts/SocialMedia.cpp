@@ -60,7 +60,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
             prevScrollY = scrollY;
             canGet = false;
             GetPosts();
-            LoadImages();
         }
 
     }
@@ -87,10 +86,17 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (!post.comments.empty())
         {
             if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::BeginChild("CommentsRegion", ImVec2(0, 100), true);
                 for (Comment& comment : post.comments)
                 {
+                    Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
+                    ImGui::SameLine();
+                    Lss::Top(2 * Lss::VH);
+                    Lss::Text(comment.username, 4 * Lss::VH);
                     Lss::Text(comment.text, 3 * Lss::VH);
                 }
+                Lss::End();
+                ImGui::EndChild();
                 ImGui::TreePop();
             }
         }
@@ -121,7 +127,6 @@ void SocialMedia::LeftSide(float position, float width, float height)
     Lss::Top(2 * Lss::VH);
     if (Lss::Button("Heooo", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)){
         GetPosts();
-        LoadImages();
     }
 
     Lss::Back();
@@ -154,7 +159,7 @@ void SocialMedia::GetPosts()
 {
     std::thread([]() {
         std::cout << "NewLastId: " << lastId << std::endl;;
-        nlohmann::json jsonData = HManager::Request(("25.16.177.252:3000/posts?lastId=" + std::to_string(lastId)+"&take=2").c_str(), "", GET);
+        nlohmann::json jsonData = HManager::Request(("25.16.177.252:3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
         std::cout << "Data: " << jsonData["data"].size() << std::endl;
         if (jsonData["newLastId"].is_null()) return;
         for (const auto& postJson : jsonData["data"]) {
@@ -184,6 +189,7 @@ void SocialMedia::GetPosts()
         lastId = jsonData["newLastId"];
 
     }).join();
+    LoadImages();
 }
 void SocialMedia::LoadImages() 
 {
