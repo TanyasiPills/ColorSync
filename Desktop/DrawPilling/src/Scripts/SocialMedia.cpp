@@ -9,13 +9,16 @@ int SocialMedia::lastId = 0;
 std::queue<std::tuple<std::vector<uint8_t>, Post*, int>> textureQueue;
 std::mutex textureQueueMutex;
 
+float startY, endY;
+bool canGet = false;
+float prevScrollY;
+
 void SocialMedia::ProcessThreads()
 {
     std::lock_guard<std::mutex> lock(textureQueueMutex);
     while (!textureQueue.empty()) {
         std::tuple<std::vector<uint8_t>, Post*, int> front = textureQueue.front();
         textureQueue.pop();
-        std::cout << "Texture queue size: " << textureQueue.size() << std::endl;
         std::vector<uint8_t> imageData = std::get<0>(front);
         Post* post = std::get<1>(front);
         int type = std::get<2>(front);
@@ -23,10 +26,14 @@ void SocialMedia::ProcessThreads()
         {
         case 1:
             post->image = HManager::ImageFromRequest(imageData, post->ratio);
+            post->picLoaded = true;
+            if (post->picLoaded && post->pPicLoaded) post->allLoaded = true;
             break;
         case 2: {
-            float ratio = 0.0f;
-            post->userImage = HManager::ImageFromRequest(imageData, ratio);
+            float ratioAF = 0.0f;
+            post->userImage = HManager::ImageFromRequest(imageData, ratioAF);
+            post->pPicLoaded = true;
+            if (post->picLoaded && post->pPicLoaded) post->allLoaded = true;
             } break;
         default:
             break;
@@ -44,25 +51,47 @@ void SocialMedia::MainFeed(float position, float width, float height)
     ImGui::GetStyle().ChildBorderSize = 0.0f;
     ImVec2 valid = ImGui::GetContentRegionAvail();
     Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
-    Lss::Top(2 * Lss::VH);
-    for (Post post : posts)
+
+    float scrollY = ImGui::GetScrollY();
+    float scrollMaxY = ImGui::GetScrollMaxY();
+
+    if ((scrollY / scrollMaxY) > 0.95f && canGet) {
+        if (prevScrollY != scrollY && scrollY > prevScrollY) {
+            prevScrollY = scrollY;
+            canGet = false;
+            GetPosts();
+            LoadImages();
+        }
+
+    }
+    if ((scrollY / scrollMaxY) < 0.90f) {
+        canGet = true;
+    }
+
+    for (Post& post : posts)
     {
-        valid = ImGui::GetContentRegionAvail();
+        if (!post.allLoaded) continue;
+        int validWidth = width * 0.9f;
         std::string id = std::to_string(post.id);
-        if (id.empty()) std::cout << "fffaaaaaakkkk\n";
-        Lss::Child(("##" + id).c_str(), ImVec2(valid.x, 0), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        Lss::Child("##"+ id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        if (post.size == 0) startY = ImGui::GetCursorPosY();
         Lss::Image(post.userImage, ImVec2(8*Lss::VH, 8*Lss::VH));
         ImGui::SameLine();
         Lss::Top(2 * Lss::VH);
         Lss::Text(post.username, 4 * Lss::VH);
         Lss::Left(Lss::VH);
         Lss::Text(post.text, 3 * Lss::VH);
-        Lss::Image(post.image, ImVec2(valid.x*0.9f, post.ratio * valid.x * 0.9f), Centered);
+        float good = validWidth * 0.9f;
+        ImVec2 faki(good, good * post.ratio);
+        Lss::Image(post.image, faki, Centered);
+        if (post.size == 0) {
+            endY = ImGui::GetCursorPosY();
+            post.size = endY - startY;
+        }
         Lss::End();
         ImGui::EndChild();
 
         ImGui::Separator();
-        
     }
     ImGui::EndChild();
 
@@ -81,8 +110,8 @@ void SocialMedia::LeftSide(float position, float width, float height)
     ImGui::Separator();
     Lss::Top(2 * Lss::VH);
     if (Lss::Button("Heooo", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)){
-        SocialMedia::GetPosts();
-        SocialMedia::LoadImages();
+        GetPosts();
+        LoadImages();
     }
 
     Lss::Back();
@@ -114,8 +143,10 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 void SocialMedia::GetPosts() 
 {
     std::thread([]() {
-        nlohmann::json jsonData = HManager::Request(("25.16.177.252:3000/posts?lastId=" + std::to_string(lastId) + "&take=10").c_str(), "", GET);
-
+        std::cout << "NewLastId: " << lastId << std::endl;;
+        nlohmann::json jsonData = HManager::Request(("25.16.177.252:3000/posts?lastId=" + std::to_string(lastId)+"&take=2").c_str(), "", GET);
+        std::cout << "Data: " << jsonData["data"].size() << std::endl;
+        if (jsonData["newLastId"].is_null()) return;
         for (const auto& postJson : jsonData["data"]) {
             Post post;
             post.id = postJson["id"];
@@ -149,8 +180,8 @@ void SocialMedia::LoadImages()
     std::mutex mtx;
 
     for (Post& post : posts) {
-        std::thread(&SocialMedia::LoadImageJa, &post, 1).detach();
         std::thread(&SocialMedia::LoadImageJa, &post, 2).detach();
+        std::thread(&SocialMedia::LoadImageJa, &post, 1).detach();
     }
 }
 
@@ -160,17 +191,15 @@ void SocialMedia::LoadImageJa(Post* post, int type)
     std::vector<uint8_t> imageData;
     switch (type) {
     case 1: {
-        if (post->imageId == -1) return;
+        if (post->imageId == -1)return;
         imageData = HManager::Request(("25.16.177.252:3000/images/public/" + std::to_string(post->imageId)).c_str(), GET);
-        std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-        textureQueue.push(std::make_tuple(std::move(imageData), post,1));
         } break;
     case 2: {
         imageData = HManager::Request(("25.16.177.252:3000/users/" + std::to_string(post->userId) + "/pfp").c_str(), GET);
-        std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-        textureQueue.push(std::make_tuple(std::move(imageData), post, 2));
         } break;
     default:
         break;
     }
+    std::lock_guard<std::mutex> queueLock(textureQueueMutex);
+    textureQueue.push(std::make_tuple(std::move(imageData), post, type));
 }

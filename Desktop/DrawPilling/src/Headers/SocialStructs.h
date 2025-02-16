@@ -17,11 +17,15 @@ struct Post
 	int id;
 	int userId;
 	int imageId;
-	GLuint image;
-	GLuint userImage;
+	GLuint image = -1;
+	GLuint userImage = -1;
 	float ratio;
 	std::string username;
 	std::string text;
 	std::chrono::system_clock::time_point time;
 	std::vector<Comment> comments;
+	bool picLoaded = false;
+	bool pPicLoaded = false;
+	bool allLoaded = false;
+	int size = 0;
 };

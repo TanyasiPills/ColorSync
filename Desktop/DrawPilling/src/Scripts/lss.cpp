@@ -92,7 +92,8 @@ void Lss::SetFontSize(float size) {
 
 void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
 	if (flags & Centered && size.x > 0) Center(size.x);
-	ImGui::BeginChild(name.c_str(), size, border, windowFlags);
+	if(size.x == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
+	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
 }
 
 bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
@@ -141,7 +142,7 @@ void Lss::Text(std::string textIn, float size, int flags) {
 
 void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 	if (texture == -1) return;
-	if (size.x == 0) size = ImGui::GetContentRegionAvail();
+	if (size.x == -1) size = ImGui::GetContentRegionAvail();
 	if (flags & Centered) Center(size.x);
 	ImGui::Image(texture, size);
 }

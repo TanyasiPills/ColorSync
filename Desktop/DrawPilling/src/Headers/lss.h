@@ -38,7 +38,7 @@ public:
 
 	static void Text(std::string textIn, float size, int flags = None);
 	static bool Button(std::string textIn, ImVec2 size, float textSizeIn, int flags = None);
-	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(0, 0), int flags = None);
+	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(-1, -1), int flags = None);
 	static void Child(std::string name, ImVec2 size = ImVec2(0,0), bool border = true, 
 		int flags = None, ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
 

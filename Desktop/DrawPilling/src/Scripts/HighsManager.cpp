@@ -151,6 +151,11 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 
 	GLuint texture;
 	glGenTextures(1, &texture);
+	if (texture == 0) {
+		std::cerr << "Error: glGenTextures failed!" << std::endl;
+		stbi_image_free(data);
+		return 0;
+	}
 	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -164,6 +169,13 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 
 	stbi_image_free(data);
 
-	ratio = (float)height / width;
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		std::cerr << "OpenGL Error: " << err << std::endl;
+	}
+
+	ratio = abs((float)height / width);
+	if (ratio < 0)
+		std::cout << height << "; " << width << std::endl;
 	return texture;
 }
