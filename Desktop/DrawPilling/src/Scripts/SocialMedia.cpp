@@ -84,6 +84,16 @@ void SocialMedia::MainFeed(float position, float width, float height)
         float good = validWidth * 0.9f;
         ImVec2 faki(good, good * post.ratio);
         Lss::Image(post.image, faki, Centered);
+        if (!post.comments.empty())
+        {
+            if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
+                for (Comment& comment : post.comments)
+                {
+                    Lss::Text(comment.text, 3 * Lss::VH);
+                }
+                ImGui::TreePop();
+            }
+        }
         if (post.size == 0) {
             endY = ImGui::GetCursorPosY();
             post.size = endY - startY;
