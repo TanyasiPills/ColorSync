@@ -43,6 +43,7 @@
 
 #include "DrawUI.h"
 #include "SocksManager.h"
+#include "SocialMedia.h"
 
 //definitions
 #define PI 3.1415927f

@@ -163,7 +163,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		dx *= canvasSize[0];
 		dy *= canvasSize[1];
 		float distance = std::sqrt(dx * dx + dy * dy);
-		int num_samples = std::min(static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0]))), 100);
+		int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
 		if (num_samples < 1) num_samples = 100;
 	
 		for (int i = 0; i < num_samples; ++i) {
@@ -367,14 +367,39 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void NewRenderer::ProcessThreads()
+{
+	std::lock_guard<std::mutex> lock(textureQueueMutex);
+	while (!textureQueue.empty()) {
+		std::tuple<std::vector<uint8_t>, Post*, int> front = textureQueue.front();
+		textureQueue.pop();
+
+		std::vector<uint8_t> imageData = std::get<0>(front);
+		Post* post = std::get<1>(front);
+		int type = std::get<2>(front);
+		switch (type)
+		{
+		case 1:
+			post->image = HManager::ImageFromRequest(imageData, post->ratio);
+		case 2: {
+			float ratio = 0.0f;
+			post->userImage = HManager::ImageFromRequest(imageData, ratio);
+		}
+		default:
+			break;
+		}
+	}
+}
+
 
 void NewRenderer::Render()
 {
+	ProcessThreads();
 	Clear();
-	RenderLayers();
-	RenderCursor();
-	RenderImGui(onUI);
-	//RenderMenu();
+	//RenderLayers();
+	//RenderCursor();
+	//RenderImGui(onUI);
+	RenderMenu();
 
 	glfwSwapBuffers(window);
 }

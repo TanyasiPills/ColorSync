@@ -19,12 +19,32 @@ float Lss::VH = 0;
 
 int prevType = -1;
 
-MyTexture texture;
+ImVec4 colorArray[] = {
+	ImVec4(0.149, 0.149, 0.345, 1.0f),
+	ImVec4(0.122, 0.122, 0.298, 1.0f),
+	ImVec4(0.208, 0.208, 0.353, 1.0f),
+	ImVec4(0.286, 0.282, 0.451, 1.0f),
+	ImVec4(0.478, 0.455, 0.651, 1.0f),
+	ImVec4(0.647, 0.627, 0.831, 1.0f)
+};
+int regionArray[] = {
+	ImGuiCol_WindowBg,
+	ImGuiCol_ChildBg,
+	ImGuiCol_Button,
+	ImGuiCol_ButtonHovered,
+	ImGuiCol_Border,
+	ImGuiCol_Text
+};
 
-void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight, std::string path)
+void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 {
-	int width, height, bpp;
-	texture.Init("Resources/Textures/fish.jpg");
+	ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = colorArray[Background];
+	ImGui::GetStyle().Colors[ImGuiCol_ChildBg] = colorArray[ContainerBackground];
+	ImGui::GetStyle().Colors[ImGuiCol_Button] = colorArray[LowHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered] = colorArray[HeavyHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_Border] = colorArray[Border];
+	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
+
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	VH = (float)screenHeight / 100;
@@ -44,7 +64,8 @@ void ResetFont() {
 	haveFont = false;
 }
 
-void Lss::Update() {
+void Lss::SetColor(int region, int colorToSet) {
+	ImGui::GetStyle().Colors[regionArray[region]] = colorArray[colorToSet];
 }
 
 void Center(float itemWidth) {
@@ -69,8 +90,12 @@ void Lss::SetFontSize(float size) {
 
 }
 
+void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
+	if (flags & Centered && size.x > 0) Center(size.x);
+	ImGui::BeginChild(name.c_str(), size, border, windowFlags);
+}
 
-void Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
+bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	SetFontSize(textSizeIn);
 
 	float originalRounding;
@@ -95,11 +120,12 @@ void Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	if (centered) Center(size.x);
 	ImGui::PopStyleVar();
 
-	ImGui::Button(textIn.c_str(), size);
+	bool pressed = ImGui::Button(textIn.c_str(), size);
 
 	if (rounded) ImGui::GetStyle().FrameRounding = originalRounding;
 	if (invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
 
+	return pressed;
 }
 
 void Lss::Text(std::string textIn, float size, int flags) {
@@ -113,9 +139,11 @@ void Lss::Text(std::string textIn, float size, int flags) {
 	ImGui::Text(textIn.c_str());
 }
 
-void Lss::Image() {
-	ImVec2 childSize = ImGui::GetContentRegionAvail();
-	ImGui::Image(texture.GetId(), ImVec2(childSize.x, childSize.x));
+void Lss::Image(GLuint texture, ImVec2 size, int flags) {
+	if (texture == -1) return;
+	if (size.x == 0) size = ImGui::GetContentRegionAvail();
+	if (flags & Centered) Center(size.x);
+	ImGui::Image(texture, size);
 }
 
 

@@ -10,6 +10,7 @@
 #include "DataManager.h"
 #include "lss.h"
 #include "WindowManager.h"
+#include "SocialMedia.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
@@ -56,17 +57,11 @@ SessionData Manager::Assembly(SessionData& data) {
 
     ImGui::StyleColorsDark();
 
-    ImVec4 window_bg_color = ImVec4(0.188, 0.188, 0.313, 1.0);
-    ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = window_bg_color;
-    ImVec4 child_bg_color = ImVec4(0.2, 0.2, 0.333, 1.0);
-    ImGui::GetStyle().Colors[ImGuiCol_ChildBg] = child_bg_color;
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 #ifdef __EMSCRIPTEN__
     ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
 #endif
     ImGui_ImplOpenGL3_Init(glsl_version);
-
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ZERO);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -74,7 +69,7 @@ SessionData Manager::Assembly(SessionData& data) {
     DataManager::LoadAppData();
 
     HManager::Init();
-    Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
+    Lss::Init(window, screenWidth, screenHeight);
 
     return data;
 }

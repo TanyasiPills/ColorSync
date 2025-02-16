@@ -90,6 +90,7 @@
       <PreprocessorDefinitions>BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -107,6 +108,7 @@
       <PreprocessorDefinitions>BOOST_DATE_TIME_NO_LIB;BOOST_REGEX_NO_LIB;ASIO_STANDALONE;_WEBSOCKETPP_CPP11_STL_;_WEBSOCKETPP_CPP11_FUNCTIONAL_;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -171,7 +173,12 @@
     <ClCompile Include="src\Scripts\DataManager.cpp" />
     <ClCompile Include="src\Scripts\lss.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
-    <ClCompile Include="src\Scripts\HighsManager.cpp" />
+    <ClCompile Include="src\Scripts\HighsManager.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="src\Scripts\IndexBuffer.cpp" />
     <ClCompile Include="src\Scripts\main.cpp" />
     <ClCompile Include="src\Scripts\NewDraw.cpp" />

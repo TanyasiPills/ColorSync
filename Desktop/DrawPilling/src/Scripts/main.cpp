@@ -25,6 +25,8 @@ int main()
     Callback::Init(data.window, renderer);
     DrawUI::SetRenderer(renderer);
     SManager::SetRenderer(renderer);
+    SocialMedia::Init(renderer);
+
 
     renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
 
