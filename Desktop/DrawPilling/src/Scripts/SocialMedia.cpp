@@ -87,13 +87,22 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (!post.comments.empty())
         {
             if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                float cornerRadius = 10.0f;
                 Lss::SetColor(ContainerBackground, Background);
-                ImGui::BeginChild("CommentsRegion", ImVec2(0, 200), true);
+                ImVec2 commentChildSize = ImVec2(0, 200);
+                ImVec2 commentPos = ImGui::GetCursorScreenPos();
+
+                // Draw rounded comment section background
+                drawList->AddRectFilled(commentPos, ImVec2(commentPos.x + commentChildSize.x, commentPos.y + commentChildSize.y),
+                IM_COL32(40, 40, 40, 255), cornerRadius);
+                ImGui::BeginChild("CommentsRegion", commentChildSize, true);
                 for (Comment& comment : post.comments)
                 {
+                    Lss::Top(Lss::VH);
                     Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
                     ImGui::SameLine();
-                    Lss::Top(2 * Lss::VH);
+                    Lss::Top(1 * Lss::VH);
                     Lss::Text(comment.username, 4 * Lss::VH);
                     Lss::Text(comment.text, 3 * Lss::VH);
                 }
