@@ -1,4 +1,4 @@
-import { FileType, LoginBodyType, LoginResponseType, UserInfoType } from './dto/api.dto';
+import { FileType, LoginBodyType, LoginResponseType, UserInfoType } from '../api.dto';
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -11,6 +11,8 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import * as sharp from 'sharp';
+import { readFileSync } from 'fs';
 
 @Controller('users')
 export class UsersController {
@@ -73,7 +75,7 @@ export class UsersController {
           callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
         }
       }),
-      fileFilter: (req, file, callback) => {
+      fileFilter: async (req, file, callback) => {
         if (!file.mimetype.startsWith('image/')) {
           return callback(new Error('Only image files are allowed!'), false);
         }
@@ -82,10 +84,22 @@ export class UsersController {
     })
   )
   @HttpCode(204)
-  uploadPfp(@UploadedFile() file: Express.Multer.File, @Request() req) {
+  async uploadPfp(@UploadedFile() file: Express.Multer.File, @Request() req) {
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
+
+    const filePath = `./uploads/${file.filename}`;
+    const fileBuffer = await readFileSync(filePath);
+    const image = sharp(fileBuffer);
+    const metadata = await image.metadata();
+  
+    const size = Math.min(metadata.width, metadata.height);
+    const left = Math.floor((metadata.width - size) / 2);
+    const top = Math.floor((metadata.height - size) / 2);
+  
+    const buffer = await image.extract({ left, top, width: size, height: size }).toBuffer();
+    await sharp(buffer).toFile(filePath);
 
     this.userService.upload(file, req.user.id);
   }

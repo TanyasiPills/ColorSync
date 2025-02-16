@@ -15,17 +15,19 @@ export class PostsService {
     return this.db.post.create({ data: { userId, ...createPostDto, } });
   }
 
-  async findAll(lastId: string) {
+  async findAll(lastId: string, take: string) {
     let parsedId;
     if (lastId) {
-      try {
-        parsedId = parseInt(lastId);
-      } catch {
-        throw new BadRequestException('LastId must be a number');
-      }
+      parsedId = parseInt(lastId);
+      if (isNaN(parsedId)) throw new BadRequestException('lastId must be a number');
     }
+    let parsedTake;
+    if (take) {
+      parsedTake = parseInt(take);
+      if (isNaN(parsedTake)) throw new BadRequestException('take must be a number');
+    } else parsedTake = 10;
     const data = await this.db.post.findMany({
-      take: 10,
+      take: parsedTake,
       skip: parsedId ? 1 : 0,
       cursor: parsedId ? { id: parsedId } : undefined,
       orderBy: { date: 'desc' },
@@ -38,7 +40,6 @@ export class PostsService {
     });
     if (data.length === 0) return { data, newLastId: null };
     const newLastId = data[data.length - 1].id;
-    console.log(parsedId);
     return { data, newLastId };
   }
 

@@ -17,7 +17,6 @@ export class UsersService {
   }
 
   search(name: string) {
-    if (!name) return [];
     return this.db.user.findMany({where: {username: {contains: name}}, select: {id: true, username: true}, take: 20});
   }
 

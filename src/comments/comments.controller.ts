@@ -4,7 +4,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
-import { CommentType } from 'src/users/dto/api.dto';
+import { CommentType } from 'src/api.dto';
 
 @Controller('comments')
 export class CommentsController {

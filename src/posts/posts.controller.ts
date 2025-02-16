@@ -4,7 +4,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiParam, ApiQuery, ApiResponse, getSchemaPath } from '@nestjs/swagger';
-import { PostBaseType, PostIncludesType, UserInfoType } from 'src/users/dto/api.dto';
+import { PostBaseType, PostIncludesType } from 'src/api.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -32,11 +32,11 @@ export class PostsController {
    * @returns {data: PostResponse[], lastId: number} The id of the last post and the data of the posts
    */
   @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
+  @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, lastId: { type: 'integer' } } } })
   @Get()
-  findAll(@Query('lastId') lastId: string) {
-    console.log(lastId);
-    return this.postService.findAll(lastId);
+  findAll(@Query('take') take: string, @Query('lastId') lastId: string) {
+    return this.postService.findAll(lastId, take);
   }
 
   /**
