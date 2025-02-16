@@ -9,8 +9,8 @@
 #include "Messages.h"
 #include "json/json.hpp"
 #include "ThreadSafeQueue.h"
+#include "SocialStructs.h"
 #include "SocialMedia.h"
-#include <queue>
 
 #include <unordered_map>
 #include <string>
@@ -83,9 +83,6 @@ public:
 	int currentFolder = 0;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
 
-	std::queue<std::tuple<std::vector<uint8_t>, Post*, int>> textureQueue;
-	std::mutex textureQueueMutex;
-
 	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);
 	void Draw(const RenderData& data);
 	void Clear();
@@ -123,6 +120,4 @@ public:
 	void SetMainThreadCallback(std::function<void(const DrawMessage&)> callback) {
 		mainThreadCallback = callback;
 	}
-
-	void ProcessThreads();
 };

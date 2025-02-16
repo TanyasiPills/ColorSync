@@ -1,4 +1,4 @@
-#define GLFW_EXPOSE_NATIVE_WIN32
+//#define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
 #include <windows.h>
@@ -8,6 +8,7 @@ bool titlebar = false;
 int windowedX, windowedY, windowedWidth, windowedHeight;
 
 void WindowManager::ToggleFullscreen(GLFWwindow* window) {
+    /*
     HWND hwnd = glfwGetWin32Window(window);
     glfwGetWindowSize(window, &windowedWidth, &windowedHeight);
     if (!titlebar) {
@@ -24,5 +25,7 @@ void WindowManager::ToggleFullscreen(GLFWwindow* window) {
     }
 
     titlebar = !titlebar;
+    */
 }
+
 

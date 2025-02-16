@@ -83,7 +83,6 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 				std::cerr << "Error parsing JSON: " << e.what() << std::endl;
 			}
 		}
-		std::cout << "heh?" << std::endl;
 		curl_easy_cleanup(curl);
 	}
 	else {
@@ -94,7 +93,6 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 
 std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 {
-	std::cout << "Ola" << std::endl;
 	CURL* curl = curl_easy_init();
 	if (!curl) {
 		std::cerr << "Curl not initialized!" << std::endl;
@@ -133,10 +131,6 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 	std::cout << "HTTP Response Code: " << http_code << std::endl;
 
 	curl_easy_cleanup(curl);  // Clean up after request
-	for (size_t i = 0; i < 10; i++)
-	{
-		std::cout << "imagedata on highs: " << imageData[i] << ";";
-	}
 	return imageData;
 }
 

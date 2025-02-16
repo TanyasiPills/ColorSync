@@ -153,7 +153,8 @@ void Lss::Left(float distance) {
 }
 
 void Lss::Top(float distance) {
-	ImGui::Dummy(ImVec2(0, distance));
+	float currentPosY = ImGui::GetCursorPosY();
+	ImGui::SetCursorPosY(currentPosY + distance);
 }
 void Lss::Bottom(float distance) {
 	if (originalCursorPosition.x == -FLT_MAX) {

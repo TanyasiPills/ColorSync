@@ -197,7 +197,6 @@
     <ClCompile Include="src\Scripts\Texture.cpp" />
     <ClCompile Include="src\Scripts\VertexArray.cpp" />
     <ClCompile Include="src\Scripts\VertexBuffer.cpp" />
-    <ClCompile Include="src\Scripts\WindowManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\Libaries\glew32s.lib" />
@@ -1010,6 +1009,7 @@
     <ClInclude Include="src\Headers\old\Renderer.h" />
     <ClInclude Include="src\Headers\old\Shader.h" />
     <ClInclude Include="src\Headers\SocialMedia.h" />
+    <ClInclude Include="src\Headers\SocialStructs.h" />
     <ClInclude Include="src\Headers\SocksManager.h" />
     <ClInclude Include="src\Headers\Texture.h" />
     <ClInclude Include="src\Headers\ThreadSafeQueue.h" />
@@ -1017,7 +1017,6 @@
     <ClInclude Include="src\Headers\VertexBuffer.h" />
     <ClInclude Include="src\Headers\SessionManager.h" />
     <ClInclude Include="src\Headers\VertexBufferLayout.h" />
-    <ClInclude Include="src\Headers\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Cursor.shader" />

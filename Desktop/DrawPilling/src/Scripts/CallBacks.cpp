@@ -118,7 +118,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			break;
 		case GLFW_KEY_F9:
 			if (action == GLFW_PRESS) {
-				WindowManager::ToggleFullscreen(window);
+				//WindowManager::ToggleFullscreen(window);
 			}
 		default:
 			break;

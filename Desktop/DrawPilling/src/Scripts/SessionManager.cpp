@@ -9,7 +9,6 @@
 #include "HighsManager.h"
 #include "DataManager.h"
 #include "lss.h"
-#include "WindowManager.h"
 #include "SocialMedia.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32

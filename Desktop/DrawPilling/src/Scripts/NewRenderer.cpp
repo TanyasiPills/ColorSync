@@ -12,7 +12,6 @@
 #include "DrawUI.h"
 #include "lss.h"
 #include "SocksManager.h"
-#include "SocialMedia.h"
 
 
 void GLClearError() {
@@ -373,34 +372,10 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void NewRenderer::ProcessThreads()
-{
-	std::lock_guard<std::mutex> lock(textureQueueMutex);
-	while (!textureQueue.empty()) {
-		std::tuple<std::vector<uint8_t>, Post*, int> front = textureQueue.front();
-		textureQueue.pop();
-
-		std::vector<uint8_t> imageData = std::get<0>(front);
-		Post* post = std::get<1>(front);
-		int type = std::get<2>(front);
-		switch (type)
-		{
-		case 1:
-			post->image = HManager::ImageFromRequest(imageData, post->ratio);
-		case 2: {
-			float ratio = 0.0f;
-			post->userImage = HManager::ImageFromRequest(imageData, ratio);
-		}
-		default:
-			break;
-		}
-	}
-}
-
 
 void NewRenderer::Render()
 {
-	ProcessThreads();
+	SocialMedia::ProcessThreads();
 	Clear();
 	//RenderLayers();
 	//RenderCursor();
