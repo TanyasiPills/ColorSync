@@ -47,6 +47,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
     Lss::SetColor(Background, ContainerBackground);
+    Lss::SetColor(ContainerBackground, ContainerBackground);
     ImGui::Begin("Main Feed", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     ImGui::GetStyle().ChildBorderSize = 0.0f;
     ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -86,7 +87,8 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (!post.comments.empty())
         {
             if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
-                ImGui::BeginChild("CommentsRegion", ImVec2(0, 100), true);
+                Lss::SetColor(ContainerBackground, Background);
+                ImGui::BeginChild("CommentsRegion", ImVec2(0, 200), true);
                 for (Comment& comment : post.comments)
                 {
                     Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
@@ -111,9 +113,9 @@ void SocialMedia::MainFeed(float position, float width, float height)
     }
     ImGui::EndChild();
 
+    Lss::SetColor(Background, Background);
 
     ImGui::End();
-    Lss::SetColor(Background, Background);
 }
 void SocialMedia::LeftSide(float position, float width, float height)
 {
