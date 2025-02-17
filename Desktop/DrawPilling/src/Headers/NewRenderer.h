@@ -120,4 +120,6 @@ public:
 	void SetMainThreadCallback(std::function<void(const DrawMessage&)> callback) {
 		mainThreadCallback = callback;
 	}
+
+	void SwapView();
 };

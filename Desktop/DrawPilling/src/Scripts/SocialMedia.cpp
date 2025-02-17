@@ -3,6 +3,7 @@
 #include <thread>
 #include <map>
 #include "lss.h"
+#include "CallBacks.h"
 
 std::vector<Post> SocialMedia::posts = {};
 int SocialMedia::lastId = 0;
@@ -129,7 +130,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         } break;
     case 1: { //settings
         ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered, ImGuiWindowFlags_NoScrollbar);
+        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
 
         Lss::Text("Network Variables", 5 * Lss::VH);
         ImGui::SameLine();
@@ -191,11 +192,12 @@ void SocialMedia::LeftSide(float position, float width, float height)
     ImGui::Begin("Left Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
     Lss::Text("ColorSync", 8 * Lss::VH, Centered);
+    if (ImGui::IsItemClicked()) mode = 0;
 
     ImGui::Separator();
     Lss::Top(2 * Lss::VH);
     if (Lss::Button("Editor", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)){
-        //GetPosts();
+        Callback::EditorSwapCallBack();
     }
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("Lobbies", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
@@ -217,7 +219,8 @@ void SocialMedia::LeftSide(float position, float width, float height)
     }
     Lss::Top(40 * Lss::VH);
     if (Lss::Button("Settings", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Rounded)) {
-        //GetPosts();
+        if (mode != 1) mode = 1;
+        else mode = 0;
     }
 
 

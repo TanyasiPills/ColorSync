@@ -45,6 +45,8 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
+bool editor = false;
+
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
@@ -355,8 +357,8 @@ void RenderMenu()
 	int width, height;
 	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
 
-	int sideWidth = width * (2.0f / 7.0f);
-	int mainWidth = width * (3.0f / 7.0f);
+	int sideWidth = width * (1.5f / 6.0f);
+	int mainWidth = width * (3.0f / 6.0f);
 	int windowHeight = (float)height;
 
 	int totalWidth = sideWidth + mainWidth + sideWidth;
@@ -372,15 +374,25 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void NewRenderer::SwapView()
+{
+	editor = !editor;
+	std::cout << "swapped to editor: " << editor << std::endl;
+}
+
 
 void NewRenderer::Render()
 {
-	SocialMedia::ProcessThreads();
 	Clear();
-	//RenderLayers();
-	//RenderCursor();
-	//RenderImGui(onUI);
-	RenderMenu();
+	if (editor) {
+		RenderLayers();
+		RenderCursor();
+		RenderImGui(onUI);
+	}
+	else {
+		SocialMedia::ProcessThreads();
+		RenderMenu();
+	}
 
 	glfwSwapBuffers(window);
 }
