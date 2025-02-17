@@ -146,8 +146,10 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 	if (flags & Centered) Center(size.x);
 	ImGui::Image(texture, size);
 }
-bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags) {
+bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	if (flags & Centered) Center(size.x);
 
 	SetFontSize(size.y);
 	ImGui::SetNextItemWidth(size.x - (size.y));
@@ -163,7 +165,7 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	}
 
 
-	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size);
+	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size, inputFlags);
 
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);
@@ -175,6 +177,8 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 
 bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	if (flags & Centered) Center(size.x);
 
 	SetFontSize(size.y);
 	ImGui::SetNextItemWidth(size.x - (size.y));
@@ -239,6 +243,3 @@ void Lss::End() {
 	prevType = -1;
 	if (haveFont) ResetFont();
 }
-
-
-

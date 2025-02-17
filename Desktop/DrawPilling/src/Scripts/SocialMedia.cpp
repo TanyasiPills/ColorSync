@@ -14,7 +14,7 @@ float startY, endY;
 bool canGet = false;
 float prevScrollY;
 
-int mode = 1; // 0 - social, 1 - settings, 2 - search, ...
+int mode = 2; // 0 - social, 1 - settings, 2 - search, ...
 
 void SocialMedia::ProcessThreads()
 {
@@ -174,8 +174,30 @@ void SocialMedia::MainFeed(float position, float width, float height)
         Lss::End();
         ImGui::EndChild();
         } break;
-    case 2: //search
-        break;
+    case 2: { //search
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+
+        static char searchText[128] = "";
+        bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
+        static bool search = false;
+        static int count = 0;
+        if (hihi || search) {
+            search = true;
+            Lss::Top(10 * Lss::VH);
+            std::string searchtext = "Searching";
+            for (size_t i = 100; i < count; i+= 100)searchtext += ".";
+            Lss::Text(searchtext, 4 * Lss::VH, Centered | ImGuiInputTextFlags_EnterReturnsTrue);
+            count++;
+            if (count >= 401) {
+                count = 0;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndChild();
+        } break;
     default:
         break;
     }
@@ -211,7 +233,8 @@ void SocialMedia::LeftSide(float position, float width, float height)
     }
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-        //GetPosts();
+        if (mode != 2) mode = 2;
+        else mode = 0;
     }
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {

@@ -41,7 +41,7 @@ public:
 	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(-1, -1), int flags = None);
 	static void Child(std::string name, ImVec2 size = ImVec2(0,0), bool border = true, 
 		int flags = None, ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
-	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH), int flags = None);
+	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH), int flags = None, int inputFlags = ImGuiInputTextFlags_None);
 	static bool InputInt(std::string label, int* value, ImVec2 size, int flags);
 	static void Separator(float thickness = 1.0f, int color = 4);
 
