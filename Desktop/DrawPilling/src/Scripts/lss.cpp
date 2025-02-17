@@ -92,7 +92,7 @@ void Lss::SetFontSize(float size) {
 
 void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
 	if (flags & Centered && size.x > 0) Center(size.x);
-	if(size.x == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
+	if(size.x == 0 && size.y == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
 	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
 }
 
@@ -110,7 +110,7 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	if (rounded) {
 		originalRounding = ImGui::GetStyle().FrameRounding;
-		ImGui::GetStyle().FrameRounding = VH;
+		ImGui::GetStyle().FrameRounding = size.y/2;
 	}
 	if (invisible) {
 		originalBtnBgColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
@@ -146,11 +146,77 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 	if (flags & Centered) Center(size.x);
 	ImGui::Image(texture, size);
 }
+bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	SetFontSize(size.y);
+	ImGui::SetNextItemWidth(size.x - (size.y));
+
+	if (flags & Rounded) {
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImU32 bg_color = ImGui::GetColorU32(ImGuiCol_FrameBg);
+		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
+	}
+
+
+	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size);
+
+	if (flags & Rounded) {
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(1);
+	}
+
+	return modified;
+}
+
+bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags) {
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	SetFontSize(size.y);
+	ImGui::SetNextItemWidth(size.x - (size.y));
+
+	if (flags & Rounded) {
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		ImU32 bg_color = ImGui::GetColorU32(ImGuiCol_FrameBg);
+		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
+	}
+
+
+	bool modified = ImGui::InputInt(("##" + label).c_str(), value, 0);
+
+	if (flags & Rounded) {
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(1);
+	}
+
+	return modified;
+}
+
+void Lss::Separator(float thickness, int color) {
+	ImVec2 p1 = ImGui::GetCursorScreenPos();
+	ImVec2 p2 = ImVec2(p1.x + ImGui::GetContentRegionAvail().x, p1.y);
+
+	ImGui::GetWindowDrawList()->AddLine(p1, ImVec2(p2.x, p1.y), ImGui::ColorConvertFloat4ToU32(colorArray[color]), thickness);
+
+	ImGui::Dummy(ImVec2(0.0f, thickness));
+}
 
 
 void Lss::Left(float distance) {
-	ImGui::SameLine();
-	ImGui::Dummy(ImVec2(distance, 0));
+	float currentPosX = ImGui::GetCursorPosX();
+	ImGui::SetCursorPosX(currentPosX + distance);
+}
+void Lss::Right(float distance) {
+	float currentPosX = ImGui::GetCursorPosX(); 
+	ImGui::SetCursorPosX(currentPosX - distance); 
 }
 
 void Lss::Top(float distance) {

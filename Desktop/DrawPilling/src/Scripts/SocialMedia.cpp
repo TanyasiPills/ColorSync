@@ -13,6 +13,8 @@ float startY, endY;
 bool canGet = false;
 float prevScrollY;
 
+int mode = 1; // 0 - social, 1 - settings, 2 - search, ...
+
 void SocialMedia::ProcessThreads()
 {
     std::lock_guard<std::mutex> lock(textureQueueMutex);
@@ -47,80 +49,136 @@ void SocialMedia::MainFeed(float position, float width, float height)
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
     Lss::SetColor(Background, ContainerBackground);
-    Lss::SetColor(ContainerBackground, ContainerBackground);
     ImGui::Begin("Main Feed", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-    ImGui::GetStyle().ChildBorderSize = 0.0f;
-    ImVec2 valid = ImGui::GetContentRegionAvail();
-    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
-
-    float scrollY = ImGui::GetScrollY();
-    float scrollMaxY = ImGui::GetScrollMaxY();
-
-    if ((scrollY / scrollMaxY) > 0.95f && canGet) {
-        if (prevScrollY != scrollY && scrollY > prevScrollY) {
-            prevScrollY = scrollY;
-            canGet = false;
-            GetPosts();
-        }
-
-    }
-    if ((scrollY / scrollMaxY) < 0.90f) {
-        canGet = true;
-    }
-
-    for (Post& post : posts)
+    switch (mode)
     {
-        if (!post.allLoaded) continue;
-        int validWidth = width * 0.9f;
-        std::string id = std::to_string(post.id);
-        Lss::Child("##"+ id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        if (post.size == 0) startY = ImGui::GetCursorPosY();
-        Lss::Image(post.userImage, ImVec2(8*Lss::VH, 8*Lss::VH));
-        ImGui::SameLine();
-        Lss::Top(2 * Lss::VH);
-        Lss::Text(post.username, 4 * Lss::VH);
-        Lss::Left(Lss::VH);
-        Lss::Text(post.text, 3 * Lss::VH);
-        float good = validWidth * 0.9f;
-        ImVec2 faki(good, good * post.ratio);
-        Lss::Image(post.image, faki, Centered);
-        if (!post.comments.empty())
-        {
-            if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-                float cornerRadius = 10.0f;
-                Lss::SetColor(ContainerBackground, Background);
-                ImVec2 commentChildSize = ImVec2(0, 200);
-                ImVec2 commentPos = ImGui::GetCursorScreenPos();
+    case 0:{ //home page, social media
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+        ImGui::GetStyle().ChildBorderSize = 0.0f;
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
 
-                // Draw rounded comment section background
-                drawList->AddRectFilled(commentPos, ImVec2(commentPos.x + commentChildSize.x, commentPos.y + commentChildSize.y),
-                IM_COL32(40, 40, 40, 255), cornerRadius);
-                ImGui::BeginChild("CommentsRegion", commentChildSize, true);
-                for (Comment& comment : post.comments)
-                {
-                    Lss::Top(Lss::VH);
-                    Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
-                    ImGui::SameLine();
-                    Lss::Top(1 * Lss::VH);
-                    Lss::Text(comment.username, 4 * Lss::VH);
-                    Lss::Text(comment.text, 3 * Lss::VH);
-                }
-                Lss::End();
-                ImGui::EndChild();
-                ImGui::TreePop();
+        float scrollY = ImGui::GetScrollY();
+        float scrollMaxY = ImGui::GetScrollMaxY();
+
+        if ((scrollY / scrollMaxY) > 0.95f && canGet) {
+            if (prevScrollY != scrollY && scrollY > prevScrollY) {
+                prevScrollY = scrollY;
+                canGet = false;
+                GetPosts();
             }
+
         }
-        if (post.size == 0) {
-            endY = ImGui::GetCursorPosY();
-            post.size = endY - startY;
+        if ((scrollY / scrollMaxY) < 0.90f) {
+            canGet = true;
         }
+
+        for (Post& post : posts)
+        {
+            if (!post.allLoaded) continue;
+            int validWidth = width * 0.9f;
+            std::string id = std::to_string(post.id);
+            Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            if (post.size == 0) startY = ImGui::GetCursorPosY();
+            Lss::Image(post.userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH));
+            ImGui::SameLine();
+            Lss::Top(2 * Lss::VH);
+            Lss::Text(post.username, 4 * Lss::VH);
+            Lss::Left(Lss::VH);
+            Lss::Text(post.text, 3 * Lss::VH);
+            float good = validWidth * 0.9f;
+            ImVec2 faki(good, good * post.ratio);
+            Lss::Image(post.image, faki, Centered);
+            if (!post.comments.empty())
+            {
+                if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    float cornerRadius = 10.0f;
+                    Lss::SetColor(ContainerBackground, Background);
+                    ImVec2 commentChildSize = ImVec2(0, 200);
+                    ImVec2 commentPos = ImGui::GetCursorScreenPos();
+
+                    ImGui::BeginChild("CommentsRegion", commentChildSize, true);
+                    drawList->AddRectFilled(commentPos, ImVec2(commentPos.x + commentChildSize.x, commentPos.y + commentChildSize.y),
+                        IM_COL32(40, 40, 40, 255), cornerRadius);
+                    for (Comment& comment : post.comments)
+                    {
+                        Lss::Top(Lss::VH);
+                        Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
+                        ImGui::SameLine();
+                        Lss::Top(1 * Lss::VH);
+                        Lss::Text(comment.username, 4 * Lss::VH);
+                        Lss::Text(comment.text, 3 * Lss::VH);
+                        ImGui::Separator();
+                    }
+                    Lss::End();
+                    ImGui::EndChild();
+                    ImGui::TreePop();
+                }
+            }
+            if (post.size == 0) {
+                endY = ImGui::GetCursorPosY();
+                post.size = endY - startY;
+            }
+            Lss::End();
+            ImGui::EndChild();
+
+            ImGui::Separator();
+        }
+        ImGui::EndChild();
+        } break;
+    case 1: { //settings
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered, ImGuiWindowFlags_NoScrollbar);
+
+        Lss::Text("Network Variables", 5 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(2.4f * Lss::VH);
+        Lss::Separator(2.0f);
+        
+
+        Lss::Left(5 * Lss::VW);
+        Lss::Child("##NetworkVariables", ImVec2(0, 4.5*Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+        Lss::Text("Server IP: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(0.25f * Lss::VH);
+        char ipText[128] = "";
+        Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded);
+
         Lss::End();
         ImGui::EndChild();
 
-        ImGui::Separator();
+
+        Lss::Text("Drawing Variables", 5 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(2.4f * Lss::VH);
+        Lss::Separator(2.0f);
+
+
+        Lss::Left(5 * Lss::VW);
+        Lss::Child("##DrawingVariables", ImVec2(0, 4.5f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+        Lss::Text("Undo count: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(0.25f * Lss::VH);
+        static int myInt = 0;
+        if (myInt >= 100) myInt = 99;
+        Lss::InputInt("faku", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded);
+
+        Lss::End();
+        ImGui::EndChild();
+
+
+        Lss::End();
+        ImGui::EndChild();
+        } break;
+    case 2: //search
+        break;
+    default:
+        break;
     }
-    ImGui::EndChild();
+    
 
     Lss::SetColor(Background, Background);
 
@@ -132,13 +190,36 @@ void SocialMedia::LeftSide(float position, float width, float height)
     ImGui::SetNextWindowSize(ImVec2(width, height));
     ImGui::Begin("Left Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-    Lss::Text("ColorSync", 5 * Lss::VH, Centered);
+    Lss::Text("ColorSync", 8 * Lss::VH, Centered);
 
     ImGui::Separator();
     Lss::Top(2 * Lss::VH);
-    if (Lss::Button("Heooo", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)){
-        GetPosts();
+    if (Lss::Button("Editor", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)){
+        //GetPosts();
     }
+    Lss::Top(1 * Lss::VH);
+    if (Lss::Button("Lobbies", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
+        //GetPosts();
+    }
+    Lss::Top(2 * Lss::VH);
+    ImGui::Separator();
+    Lss::Top(2 * Lss::VH);
+    if (Lss::Button("Message", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+        //GetPosts();
+    }
+    Lss::Top(1 * Lss::VH);
+    if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+        //GetPosts();
+    }
+    Lss::Top(1 * Lss::VH);
+    if (Lss::Button("profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+        //GetPosts();
+    }
+    Lss::Top(40 * Lss::VH);
+    if (Lss::Button("Settings", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Rounded)) {
+        //GetPosts();
+    }
+
 
     Lss::Back();
     Lss::End();
