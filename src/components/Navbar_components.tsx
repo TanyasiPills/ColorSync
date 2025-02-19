@@ -15,7 +15,7 @@ export function NavBar() {
       <Container>
         {/* Full Brand Name for larger screens */}
         <Navbar.Brand href="/" className="d-none d-sm-block">
-        <img src="/path/to/logo.png" width="30" height="30" className="d-inline-block align-top" />
+          <img src="/path/to/logo.png" width="30" height="30" className="d-inline-block align-top" />
           ColorSync
         </Navbar.Brand>
 
@@ -31,14 +31,14 @@ export function NavBar() {
             <Nav.Link href="/CMS">Colourful Media Synced</Nav.Link>
             <NavDropdown title="Account" id="basic-nav-dropdown">
               {thisUser ?
-              <>
-              <NavDropdown.Item href="/SignIn">Sign In</NavDropdown.Item>
-              <NavDropdown.Item href="/SignUp">Sign Up</NavDropdown.Item>
-              </>:<>
-              <NavDropdown.Item href="/Profile">Profile</NavDropdown.Item>
-              <NavDropdown.Item onClick={signOut}>Sign out</NavDropdown.Item>
-              </>}
-              
+                <>
+                  <NavDropdown.Item href={"/Profile/"+ thisUser.id}>Profile</NavDropdown.Item>
+                  <NavDropdown.Item onClick={signOut}>Sign out</NavDropdown.Item>
+                </> : <>
+                  <NavDropdown.Item href="/SignIn">Sign In</NavDropdown.Item>
+                  <NavDropdown.Item href="/SignUp">Sign Up</NavDropdown.Item>
+                </>}
+
             </NavDropdown>
           </Nav>
         </Navbar.Collapse>

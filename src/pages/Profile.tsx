@@ -34,7 +34,7 @@ export function Profile({ own = false }: { own: boolean }) {
       if (result.ok) {
         const resultJson:user = await result.json();
         setUser(resultJson);
-        const imageResult = await fetch(backendIp + '/image/users/' + resultJson.id, {method: "GET", headers: header});
+        const imageResult = await fetch(backendIp + '/images/user/' + resultJson.id, {method: "GET", headers: header});
         if (imageResult.ok) {
           const imageResultJson:image[] = await imageResult.json() 
           setImages(imageResultJson);

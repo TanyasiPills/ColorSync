@@ -52,6 +52,7 @@ export function SocialMedia() {
     return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
   }
 
+  console.log(post)
   return (
     <Container fluid className="vh-100 d-flex flex-column" aria-readonly>
       <Row className="flex-grow-1 w-100 h-100">
