@@ -68,9 +68,9 @@ export function SocialMedia() {
           <h3 className="costumButtons" id="postButton">Post</h3>
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-start py-4">
-          <div id="feed" className="w-100" style={{ maxWidth: "600px" }}>
+          <div id="feed">
             {post.length > 0 ? post.map((e) => (
-              <Card className="mb-4 post-card" key={e.id}>
+              <Card className="mb- post-card" key={e.id}>
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col xs="auto" className="text-center">

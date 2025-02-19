@@ -17,7 +17,7 @@
 #feed {
     background-color: var(--backgroundColor);
     height: 100%;
-    width: 70%;
+    width: 70% !important;
     align-self: center;
     overflow-y: scroll;
     scroll-behavior: smooth;
@@ -41,6 +41,11 @@
     background-color: transparent;
     align-items: center;
     border-bottom: 3px solid var(--borderCol);
+}
+
+.post-card {
+    width: 100%;
+    max-height: fit-content;
 }
 
 
@@ -137,7 +142,6 @@ details summary:hover {
     flex-wrap: wrap;
     gap: 10px;
     padding: 10px;
-    background-color: var(--divCol);
     border-bottom: 1px solid var(--borderCol);
 }
 
@@ -155,6 +159,7 @@ details summary:hover {
 }
 
 .comment-container {
+    height: fit-content;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
