@@ -31,8 +31,9 @@ public:
 	static void LeftSide(float position, float width, float height);
 	static void RightSide(float position, float width, float height);
 	static void GetPosts();
+	static void LoadDependencies(Post& post, int index);
 	static void LoadImages();
-	static void LoadImageJa(Post* post, int type);
+	static void LoadImageJa(int dataId, int type, int postId = 0);
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();
 };

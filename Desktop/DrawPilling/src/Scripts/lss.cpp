@@ -144,7 +144,15 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 	if (texture == -1) return;
 	if (size.x == -1) size = ImGui::GetContentRegionAvail();
 	if (flags & Centered) Center(size.x);
-	ImGui::Image(texture, size);
+	if (flags & Rounded) {
+		ImVec2 p_min = ImGui::GetCursorScreenPos();
+		ImVec2 p_max = ImVec2(p_min.x + size.x, p_min.y + size.y);
+		ImGui::GetWindowDrawList()->AddImageRounded(texture, p_min, p_max, ImVec2(0, 0), ImVec2(1, 1), ImGui::GetColorU32(ImVec4(1, 1, 1, 1)), size.y * 0.5f);
+		ImGui::Dummy(size);
+	}
+	else {
+		ImGui::Image(texture, size);
+	}
 }
 bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();

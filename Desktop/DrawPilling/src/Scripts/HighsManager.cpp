@@ -142,7 +142,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	}
 
 	int width, height, channels;
-	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 0);
+	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 3);
 
 	if (!data) {
 		std::cerr << "Failed to load image from memory" << std::endl;
@@ -173,6 +173,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	while ((err = glGetError()) != GL_NO_ERROR) {
 		std::cerr << "OpenGL Error: " << err << std::endl;
 	}
+
 
 	ratio = abs((float)height / width);
 	if (ratio < 0)

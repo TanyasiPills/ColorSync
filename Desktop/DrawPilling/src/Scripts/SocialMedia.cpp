@@ -2,41 +2,52 @@
 #include <iostream>
 #include <thread>
 #include <map>
+#include <unordered_map>
 #include "lss.h"
 #include "CallBacks.h"
 
 std::vector<Post> SocialMedia::posts = {};
+std::unordered_map<int, User> users;
+std::unordered_map<int, GLuint> profilePics;
 int SocialMedia::lastId = 0;
-std::queue<std::tuple<std::vector<uint8_t>, Post*, int>> textureQueue;
+std::queue<std::tuple<std::vector<uint8_t>, int, int>> textureQueue;
 std::mutex textureQueueMutex;
 
 float startY, endY;
 bool canGet = false;
+bool init = true;
 float prevScrollY;
 
-int mode = 2; // 0 - social, 1 - settings, 2 - search, ...
+int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 
 void SocialMedia::ProcessThreads()
 {
     std::lock_guard<std::mutex> lock(textureQueueMutex);
     while (!textureQueue.empty()) {
-        std::tuple<std::vector<uint8_t>, Post*, int> front = textureQueue.front();
+        std::tuple<std::vector<uint8_t>, int, int> front = textureQueue.front();
         textureQueue.pop();
         std::vector<uint8_t> imageData = std::get<0>(front);
-        Post* post = std::get<1>(front);
+        int dataId = std::get<1>(front);
         int type = std::get<2>(front);
+
         switch (type)
         {
         case 1:
-            post->image = HManager::ImageFromRequest(imageData, post->ratio);
-            post->picLoaded = true;
-            if (post->picLoaded && post->pPicLoaded) post->allLoaded = true;
+            if (dataId> posts.size()-1) std::cout << "éisgéakhrgéaiihréanaéig" << std::endl;
+            posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
+            posts[dataId].picLoaded = true;
             break;
         case 2: {
             float ratioAF = 0.0f;
-            post->userImage = HManager::ImageFromRequest(imageData, ratioAF);
-            post->pPicLoaded = true;
-            if (post->picLoaded && post->pPicLoaded) post->allLoaded = true;
+            GLuint profileImage;
+            if (!imageData.empty()) {
+                profileImage = HManager::ImageFromRequest(imageData, ratioAF);
+                profilePics[dataId] = profileImage;
+            }
+            else profileImage = profilePics[dataId];
+
+            users[dataId].userImage = profileImage;
+            users[dataId].pPicLoaded = true;
             } break;
         default:
             break;
@@ -54,7 +65,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
     switch (mode)
     {
     case 0:{ //home page, social media
-        Lss::SetColor(ContainerBackground, ContainerBackground);
         ImGui::GetStyle().ChildBorderSize = 0.0f;
         ImVec2 valid = ImGui::GetContentRegionAvail();
         Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
@@ -62,11 +72,15 @@ void SocialMedia::MainFeed(float position, float width, float height)
         float scrollY = ImGui::GetScrollY();
         float scrollMaxY = ImGui::GetScrollMaxY();
 
-        if ((scrollY / scrollMaxY) > 0.95f && canGet) {
+        if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
             if (prevScrollY != scrollY && scrollY > prevScrollY) {
                 prevScrollY = scrollY;
                 canGet = false;
                 GetPosts();
+            }
+            if (init) {
+                GetPosts();
+                init = false;
             }
 
         }
@@ -76,15 +90,18 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
         for (Post& post : posts)
         {
-            if (!post.allLoaded) continue;
+            if (!post.allLoaded) {
+                if (post.picLoaded && users[post.userId].pPicLoaded) post.allLoaded = true;
+                continue;
+            }
             int validWidth = width * 0.9f;
             std::string id = std::to_string(post.id);
             Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (post.size == 0) startY = ImGui::GetCursorPosY();
-            Lss::Image(post.userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH));
+            Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
             ImGui::SameLine();
             Lss::Top(2 * Lss::VH);
-            Lss::Text(post.username, 4 * Lss::VH);
+            Lss::Text(users[post.userId].username, 4 * Lss::VH);
             Lss::Left(Lss::VH);
             Lss::Text(post.text, 3 * Lss::VH);
             float good = validWidth * 0.9f;
@@ -92,29 +109,45 @@ void SocialMedia::MainFeed(float position, float width, float height)
             Lss::Image(post.image, faki, Centered);
             if (!post.comments.empty())
             {
-                if (ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen)) {
+                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
+                if (open) {
+                    if (post.size != 0) post.size = 0;
                     ImDrawList* drawList = ImGui::GetWindowDrawList();
                     float cornerRadius = 10.0f;
-                    Lss::SetColor(ContainerBackground, Background);
-                    ImVec2 commentChildSize = ImVec2(0, 200);
+                    ImVec2 commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x-20, 20*Lss::VH);
                     ImVec2 commentPos = ImGui::GetCursorScreenPos();
 
-                    ImGui::BeginChild("CommentsRegion", commentChildSize, true);
-                    drawList->AddRectFilled(commentPos, ImVec2(commentPos.x + commentChildSize.x, commentPos.y + commentChildSize.y),
-                        IM_COL32(40, 40, 40, 255), cornerRadius);
+                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
                     for (Comment& comment : post.comments)
                     {
+                        if (!users[comment.userId].pPicLoaded) continue;
+
+                        Lss::SetColor(ContainerBackground, Background);
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+                        std::string name = std::to_string(comment.id);
+                        Lss::Child(name, ImVec2(0, 11 * Lss::VH));
                         Lss::Top(Lss::VH);
-                        Lss::Image(post.userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH));
+                        Lss::Left(Lss::VH);
+                        Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
                         ImGui::SameLine();
-                        Lss::Top(1 * Lss::VH);
-                        Lss::Text(comment.username, 4 * Lss::VH);
+                        Lss::Top(Lss::VH);
+                        Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+                        Lss::Left(7*Lss::VH);
                         Lss::Text(comment.text, 3 * Lss::VH);
-                        ImGui::Separator();
+                        Lss::End();
+                        ImGui::EndChild();
+                        ImGui::PopStyleVar(1);
+                        Lss::SetColor(ContainerBackground, ContainerBackground);
+                        if (post.comments[post.comments.size()-1].id != comment.id) {
+                            Lss::Top(Lss::VH);
+                        }
                     }
                     Lss::End();
                     ImGui::EndChild();
                     ImGui::TreePop();
+                }
+                else {
+                    post.size = 0;
                 }
             }
             if (post.size == 0) {
@@ -277,17 +310,22 @@ void SocialMedia::GetPosts()
 {
     std::thread([]() {
         std::cout << "NewLastId: " << lastId << std::endl;;
-        nlohmann::json jsonData = HManager::Request(("25.16.177.252:3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
+        nlohmann::json jsonData = HManager::Request(("10.4.117.77:3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
         std::cout << "Data: " << jsonData["data"].size() << std::endl;
         if (jsonData["newLastId"].is_null()) return;
         for (const auto& postJson : jsonData["data"]) {
             Post post;
             post.id = postJson["id"];
             post.userId = postJson["user"]["id"];
+            if (users.find(post.userId) == users.end()) {
+                User user;
+                user.username = postJson["user"]["username"];
+                user.userImage = -1;
+                users[post.userId] = user;
+            }
             if (postJson["imageId"].is_null()) post.imageId = -1;
             else post.imageId = postJson["imageId"];
             post.text = postJson["text"];
-            post.username = postJson["user"]["username"];
             post.time = ParsePostTime(postJson["date"]);
 
             for (const auto& commentJson : postJson["comments"]) {
@@ -295,7 +333,12 @@ void SocialMedia::GetPosts()
                 comment.id = commentJson["id"];
                 comment.userId = commentJson["user"]["id"];
                 comment.text = commentJson["text"];
-                comment.username = commentJson["user"]["username"];
+                if (users.find(comment.userId) == users.end()) {
+                    User user;
+                    user.username = commentJson["user"]["username"];
+                    user.userImage = -1;
+                    users[comment.userId] = user;
+                }
                 comment.time = ParsePostTime(commentJson["date"]);
 
                 post.comments.push_back(comment);
@@ -311,29 +354,46 @@ void SocialMedia::GetPosts()
 }
 void SocialMedia::LoadImages() 
 {
-    std::mutex mtx;
-
+    for (int i = 0; i < posts.size(); i++)
+    {
+        std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
+    }
     for (Post& post : posts) {
-        std::thread(&SocialMedia::LoadImageJa, &post, 2).detach();
-        std::thread(&SocialMedia::LoadImageJa, &post, 1).detach();
+        
     }
 }
 
+void SocialMedia::LoadDependencies(Post& post, int index) 
+{
+    LoadImageJa(post.userId, 2);
 
-void SocialMedia::LoadImageJa(Post* post, int type)
+    for (Comment comment : post.comments) {
+        LoadImageJa(comment.userId, 2);
+    }
+
+    LoadImageJa(post.imageId, 1, index);
+}
+
+
+void SocialMedia::LoadImageJa(int dataId, int type, int postId)
 {
     std::vector<uint8_t> imageData;
     switch (type) {
     case 1: {
-        if (post->imageId == -1)return;
-        imageData = HManager::Request(("25.16.177.252:3000/images/public/" + std::to_string(post->imageId)).c_str(), GET);
+        if (dataId == -1)return;
+        imageData = HManager::Request(("10.4.117.77:3000/images/public/" + std::to_string(dataId)).c_str(), GET);
+        std::cout << "Post Id: " << postId << std::endl;
+        dataId = postId;
         } break;
     case 2: {
-        imageData = HManager::Request(("25.16.177.252:3000/users/" + std::to_string(post->userId) + "/pfp").c_str(), GET);
+            if (profilePics.find(dataId) != profilePics.end()) break;
+            else {
+                imageData = HManager::Request(("10.4.117.77:3000/users/" + std::to_string(dataId) + "/pfp").c_str(), GET);
+            }
         } break;
     default:
         break;
     }
     std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-    textureQueue.push(std::make_tuple(std::move(imageData), post, type));
+    textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
 }

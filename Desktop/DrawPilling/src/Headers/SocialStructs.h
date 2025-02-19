@@ -4,11 +4,11 @@
 #include <vector>
 #include "GLEW/glew.h"
 
-struct Comment {
+struct Comment 
+{
 	int id;
 	int userId;
 	std::string text;
-	std::string username;
 	std::chrono::system_clock::time_point time;
 };
 
@@ -18,14 +18,18 @@ struct Post
 	int userId;
 	int imageId;
 	GLuint image = -1;
-	GLuint userImage = -1;
 	float ratio;
-	std::string username;
 	std::string text;
 	std::chrono::system_clock::time_point time;
 	std::vector<Comment> comments;
 	bool picLoaded = false;
-	bool pPicLoaded = false;
 	bool allLoaded = false;
 	int size = 0;
+};
+
+struct User
+{
+	std::string username;
+	GLuint userImage = -1;
+	bool pPicLoaded = false;
 };

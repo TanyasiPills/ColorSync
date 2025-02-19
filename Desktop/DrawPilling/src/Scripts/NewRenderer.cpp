@@ -353,7 +353,6 @@ void RenderMenu()
 	ImGui::NewFrame();
 
 
-
 	int width, height;
 	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
 
