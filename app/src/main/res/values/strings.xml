@@ -8,4 +8,7 @@
     <string name="showCommentsDescription">Show comments</string>
     <string name="commentsText">comments</string>
     <string name="AddPostDescriptionHint">What\'s on your mind?</string>
+    <string name="profileButtonDescription">Profile</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

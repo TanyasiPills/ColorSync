@@ -1,119 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    android:id="@+id/main">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/main"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        android:layout_above="@id/navbar"
+        />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycleView"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/navbar"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            tools:listitem="@layout/post_layout"
-            android:requiresFadingEdge="vertical">
-
-        </androidx.recyclerview.widget.RecyclerView>
-
-        <LinearLayout
-            android:id="@+id/navbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:orientation="horizontal"
-            android:background="@color/bgPrimary"
-            android:padding="10dp"
-            android:gravity="center">
-            <ImageButton
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/homeButton"
-                android:scaleType="fitXY"
-                android:contentDescription="@string/homeButtonDescription"
-                android:src="@drawable/add"
-                app:tint="@color/text"
-                android:onClick="homeButtonOnClick"
-                android:background="?android:attr/selectableItemBackgroundBorderless" />
-        </LinearLayout>
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="30dp"
-        android:id="@+id/addPostLayout"
-        android:background="@color/bgAlpha"
-        android:visibility="gone">
-        <androidx.cardview.widget.CardView
-            android:id="@+id/addPost_card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:contentPadding="10dp"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="@null">
+        android:layout_height="wrap_content"
+        android:id="@+id/navbar"
+        android:layout_alignParentBottom="true"
+        app:menu="@menu/navbar_menu"/>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
-                <EditText
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/addPost_description"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="@id/addPost_postButton"
-                    android:layout_marginEnd="50dp"
-                    android:hint="@string/AddPostDescriptionHint"
-                    android:textColorHint="@color/text"
-                    android:autofillHints="text"
-                    android:inputType="text"/>
-
-                <ImageButton
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:id="@+id/addPost_postButton"
-                    app:layout_constraintTop_toTopOf="@id/addPost_description"
-                    app:layout_constraintBottom_toBottomOf="@id/addPost_description"
-                    app:layout_constraintEnd_toEndOf="parent"/>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toBottomOf="@id/addPost_description"
-                    app:layout_constraintStart_toStartOf="@id/addPost_description"
-                    android:orientation="horizontal">
-                    <ImageButton
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"/>
-                    <ImageButton
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"/>
-
-                </LinearLayout>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-        </androidx.cardview.widget.CardView>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</FrameLayout>
+</RelativeLayout>
