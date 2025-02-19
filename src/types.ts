@@ -1,19 +1,17 @@
 export interface post {
     id: number;
-    userId: number;
     imageId?: number;
     text: string;
     date: Date;
-    user: { username: string; };
+    user: { username: string; id: number};
     comments: comment[];
 }
 
 export interface comment {
     id: number;
-    userId: number;
     text: string;
     date: Date;
-    user: { username: string; };
+    user: { username: string; id: number };
 }
 
 export interface user {

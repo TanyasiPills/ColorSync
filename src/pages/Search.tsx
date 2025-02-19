@@ -43,7 +43,7 @@ export function Search() {
   return (
     <Container fluid className="vh-100 d-flex flex-column">
       <Row className="flex-grow-1 w-100 h-100">
-      <Col xs="2" id="left" className="h-100">
+        <Col xs="2" id="left" className="h-100 d-flex flex-column align-items-center py-4">
           <h3 className="costumButtons" id="homeButton">Home</h3>
           <h3 className="costumButtons" id="searchButton">Search</h3>
           <h3 className="costumButtons" id="postButton">Post</h3>
