@@ -10,15 +10,19 @@ import { SignIn } from './pages/SignIn.tsx';
 import { SignUp } from './pages/SignUp.tsx';
 import { SocialMedia } from './pages/SocialMedia.tsx';
 import { Profile } from './pages/Profile.tsx';
+import { Posting } from './pages/Posting.tsx';
+import { Search } from './pages/Search.tsx';
 
 const router = createBrowserRouter([
   {path: "/", element: <Home/>},
   {path: "/Draw", element: <WebGLCanvas/>},
   {path: "/Download", element: <App />},
   {path: "/CMS", element: <SocialMedia />},
+  {path: "/CMS/SRC", element: <Search />},
+  {path: "/CMS/Posting", element: <Posting />},
   {path: "/SignIn", element: <SignIn />},
   {path: "/SignUp", element: <SignUp />},
-  {path: "/Profile", element: <Profile own />},
+  {path: "/Profile/:id", element: <Profile own />},
 ]);
 
 createRoot(document.getElementById('root')!).render(

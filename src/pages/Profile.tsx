@@ -60,7 +60,7 @@ export function Profile({ own = false }: { own: boolean }) {
       <Row id='profilData' className="w-100" style={{ flex: '1' }}>
         <Col xs={6} id="mainData">
           <div className="d-flex align-items-center">
-            <img src={backendIp + "/user/" + user.id + "/pfp"} alt="profile picture" id="profilePic" />
+            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" />
             <h3 id="userName">{user.username}</h3>
           </div>
         </Col>

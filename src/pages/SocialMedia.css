@@ -1,11 +1,13 @@
 #left {
     background-color: var(--divCol);
-    border-right: 0.15rem solid var(--borderCol);
+    border-right: 2px solid var(--borderCol);
+    align-items: center;
+    align-content: center;
 }
 
 #right {
     background-color: var(--divCol);
-    border-left: 0.15rem solid var(--borderCol);
+    border-left: 2px solid var(--borderCol);
 }
 
 #middle {
@@ -20,7 +22,9 @@
     overflow-y: scroll;
     scroll-behavior: smooth;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     margin-top: 20px;
 }
 
@@ -54,7 +58,6 @@
 .card-footer {
     text-align: right;
     font-size: 14px;
-    color: gray;
     border-top: none;
     background-color: transparent;
 }
@@ -73,4 +76,42 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--textCol);
+}
+
+.costumButtons:hover{
+    cursor: pointer;
+}
+
+#userSearch{
+    height: fit-content;
+    width: 100%;
+    background-color: var(--backgroundColor);
+    border: 2px solid var(--borderCol);
+    margin-top: 0 !important;
+    display:block;
+    color: var(--textCol);
+}
+
+#userSearch:focus{
+    outline: none;
+}
+
+#allUsers{
+    display: block;
+    width: 100%;
+}
+
+#allUsers img {
+    height: 70px;
+    margin-right: 20px;
+}
+
+#users{
+    padding: 10px;
+    border-bottom: 2px solid var(--borderCol);
+    margin: auto;    
+}
+
+#date {
+    font-size: xx-small;
 }

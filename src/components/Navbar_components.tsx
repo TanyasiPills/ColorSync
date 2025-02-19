@@ -1,7 +1,15 @@
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import './NavBar.css';
+import Cookies from 'universal-cookie';
 
 export function NavBar() {
+  const cookies = new Cookies();
+  const thisUser = cookies.get("AccessToken");
+
+  function signOut() {
+    cookies.remove("AccessToken");
+    window.location.reload();
+  }
   return (
     <Navbar className="navbar-custom" variant='dark' sticky="top" expand="lg">
       <Container>
@@ -22,8 +30,15 @@ export function NavBar() {
             <Nav.Link href="/Draw">Draw Online</Nav.Link>
             <Nav.Link href="/CMS">Colourful Media Synced</Nav.Link>
             <NavDropdown title="Account" id="basic-nav-dropdown">
+              {thisUser ?
+              <>
               <NavDropdown.Item href="/SignIn">Sign In</NavDropdown.Item>
               <NavDropdown.Item href="/SignUp">Sign Up</NavDropdown.Item>
+              </>:<>
+              <NavDropdown.Item href="/Profile">Profile</NavDropdown.Item>
+              <NavDropdown.Item onClick={signOut}>Sign out</NavDropdown.Item>
+              </>}
+              
             </NavDropdown>
           </Nav>
         </Navbar.Collapse>
