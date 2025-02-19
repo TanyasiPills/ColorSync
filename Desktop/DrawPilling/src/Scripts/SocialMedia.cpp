@@ -114,7 +114,9 @@ void SocialMedia::MainFeed(float position, float width, float height)
                     if (post.size != 0) post.size = 0;
                     ImDrawList* drawList = ImGui::GetWindowDrawList();
                     float cornerRadius = 10.0f;
-                    ImVec2 commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x-20, 20*Lss::VH);
+                    ImVec2 commentChildSize;
+                    if (post.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x-20, 20*Lss::VH);
                     ImVec2 commentPos = ImGui::GetCursorScreenPos();
 
                     ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
