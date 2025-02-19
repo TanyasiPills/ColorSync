@@ -2,7 +2,6 @@ package com.example.colorsync;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
-import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -10,32 +9,29 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.bumptech.glide.Glide;
 
 import java.util.List;
 import java.util.Locale;
 
-public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder> {
+public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final List<Post> items;
+    private static final int ADD_POST_TYPE = 0;
+    private static final int POST_TYPE = 1;
 
     public ScrollAdapter(List<Post> items) {
         this.items = items;
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class PostViewHolder extends RecyclerView.ViewHolder {
         private final TextView username;
         private final TextView description;
         private final ImageView profilePicture;
@@ -46,7 +42,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
         private final LinearLayout showCommentsContainer;
         private Post post;
 
-        public ViewHolder(@NonNull View itemView, Context context, ViewGroup parent) {
+        public PostViewHolder(@NonNull View itemView, Context context, ViewGroup parent) {
             super(itemView);
             this.context = context;
             username = itemView.findViewById(R.id.username);
@@ -91,7 +87,6 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
                         commentsView.setAdapter(new CommentAdapter(post.getComments()));
                     }
                     if (commentsView.getVisibility() == View.GONE) {
-                        commentsView.setVisibility(View.INVISIBLE);
 
                         commentsView.measure(
                                 View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.AT_MOST),
@@ -99,8 +94,12 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
                         );
 
                         int targetHeight = commentsView.getMeasuredHeight();
+                        int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
+                        targetHeight = Math.min(targetHeight, maxHeight);
+
                         commentsView.getLayoutParams().height = 0;
                         commentsView.requestLayout();
+
                         commentsView.setVisibility(View.VISIBLE);
 
                         ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
@@ -173,17 +172,23 @@ public class ScrollAdapter extends RecyclerView.Adapter<ScrollAdapter.ViewHolder
         }
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        if (position == 0) return ADD_POST_TYPE;
+        else return POST_TYPE;
+    }
+
     @NonNull
     @Override
-    public ScrollAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.post_layout, parent, false);
-        return new ViewHolder(itemView, itemView.getContext(), parent);
+        return new PostViewHolder(itemView, itemView.getContext(), parent);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ScrollAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Post post = items.get(position);
-        holder.bind(post);
+        ((PostViewHolder)holder).bind(post);
     }
 
     @Override

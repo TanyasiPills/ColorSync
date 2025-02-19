@@ -7,4 +7,5 @@
     <string name="homeButtonDescription">Home</string>
     <string name="showCommentsDescription">Show comments</string>
     <string name="commentsText">comments</string>
+    <string name="AddPostDescriptionHint">What\'s on your mind?</string>
 </resources>

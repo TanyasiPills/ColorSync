@@ -1,9 +1,18 @@
 package com.example.colorsync;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.transition.AutoTransition;
+import android.transition.ChangeBounds;
+import android.transition.Scene;
+import android.transition.Slide;
 import android.transition.Transition;
+import android.transition.TransitionListenerAdapter;
 import android.transition.TransitionManager;
 import android.view.View;
 import android.view.WindowInsetsController;
@@ -15,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.graphics.Insets;
@@ -40,10 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private int lastId;
     private ScrollAdapter adapter;
     private APIService api;
-    private ConstraintLayout constraintLayout;
-    private View loadingBar;
-    private ConstraintSet set1;
-    private ConstraintSet set2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +62,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        constraintLayout = findViewById(R.id.main);
-        loadingBar = findViewById(R.id.loadingBar);
 
         View decorView = getWindow().getDecorView();
 
@@ -99,93 +103,16 @@ public class MainActivity extends AppCompatActivity {
                     int visibleItemCount = layoutManager.getChildCount();
                     int totalItemCount = layoutManager.getItemCount();
                     int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
-                    int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
 
                     int loadMoreThreshold = 5;
                     if ((visibleItemCount + pastVisibleItems) >= totalItemCount - loadMoreThreshold) {
                         loadMorePosts();
                     }
-
-                    if (lastVisibleItemPosition == totalItemCount - 1) {
-                        showLoadingBar();
-                    }
                 }
             }
         });
 
-        set1 = new ConstraintSet();
-        set1.clone(constraintLayout);
-        set2 = new ConstraintSet();
-        set2.clone(constraintLayout);
-
-        set2.applyTo(constraintLayout);
-
-
-        showLoadingBar();
         loadMorePosts();
-    }
-
-    private void showLoadingBar() {
-        Toast.makeText(this, "load more posts", Toast.LENGTH_SHORT).show();
-        loadingBar.setVisibility(View.VISIBLE);
-
-        Transition transition = getTransition();
-        set2.applyTo(constraintLayout);
-
-        set1.applyTo(constraintLayout);
-        TransitionManager.beginDelayedTransition(constraintLayout, transition);
-        set2.applyTo(constraintLayout);
-    }
-
-    @NonNull
-    private Transition getTransition() {
-        set1.connect(loadingBar.getId(), ConstraintSet.START, R.id.navbar, ConstraintSet.START, 0);
-        set1.connect(loadingBar.getId(), ConstraintSet.BOTTOM, R.id.navbar, ConstraintSet.TOP, 0);
-        set1.clear(loadingBar.getId(), ConstraintSet.END);
-        set1.constrainWidth(loadingBar.getId(), 300);
-        set1.constrainHeight(loadingBar.getId(), 5);
-
-        set2.connect(loadingBar.getId(), ConstraintSet.END, R.id.navbar, ConstraintSet.END, 0);
-        set2.connect(loadingBar.getId(), ConstraintSet.BOTTOM, R.id.navbar, ConstraintSet.TOP, 0);
-        set2.clear(loadingBar.getId(), ConstraintSet.START);
-        set2.constrainWidth(loadingBar.getId(), 300);
-        set2.constrainHeight(loadingBar.getId(), 5);
-
-        Transition transition = new AutoTransition();
-        transition.setDuration(1000);
-        transition.setInterpolator(new AccelerateDecelerateInterpolator());
-
-        transition.addListener(new Transition.TransitionListener() {
-            @Override
-            public void onTransitionStart(Transition transition) {
-
-            }
-
-            @Override
-            public void onTransitionEnd(Transition transition) {
-                ConstraintSet temp = set1;
-                set1 = set2;
-                set2 = temp;
-                TransitionManager.beginDelayedTransition(constraintLayout, transition);
-                set2.applyTo(constraintLayout);
-            }
-
-            @Override
-            public void onTransitionCancel(Transition transition) {
-
-            }
-
-            @Override
-            public void onTransitionPause(Transition transition) {
-
-            }
-
-            @Override
-            public void onTransitionResume(Transition transition) {
-
-            }
-        });
-        return transition;
     }
 
     private void loadMorePosts() {
@@ -227,5 +154,90 @@ public class MainActivity extends AppCompatActivity {
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
         decorView.setSystemUiVisibility(uiOptions);
+    }
+
+
+    public void homeButtonOnClick(View view) {
+        ConstraintLayout layout = findViewById(R.id.addPostLayout);
+        CardView card = findViewById(R.id.addPost_card);
+
+        Drawable background = layout.getBackground();
+
+        ConstraintSet setOff = new ConstraintSet();
+        setOff.clone(layout);
+        setOff.clear(card.getId(), ConstraintSet.BOTTOM);
+        setOff.clear(card.getId(), ConstraintSet.TOP);
+        setOff.connect(card.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+
+        ConstraintSet setOn = new ConstraintSet();
+        setOn.clone(layout);
+        setOn.connect(card.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+        setOn.connect(card.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+
+
+        if (layout.getVisibility() == View.GONE) {
+            layout.setVisibility(View.VISIBLE);
+
+            Transition transition = new ChangeBounds()
+                    .setDuration(250)
+                    .setInterpolator(new AccelerateDecelerateInterpolator());
+
+            setOff.applyTo(layout);
+
+            layout.post(() -> {
+                TransitionManager.beginDelayedTransition(layout, transition);
+                setOn.applyTo(layout);
+                ValueAnimator alphaAnimator = ValueAnimator.ofInt(0, 256);
+                alphaAnimator.setDuration(500);
+                alphaAnimator.addUpdateListener(animation -> {
+                    int alpha = (int) animation.getAnimatedValue();
+                    background.setAlpha(alpha);
+                });
+                alphaAnimator.start();
+            });
+        } else {
+            Transition transition = new ChangeBounds()
+                    .setDuration(250)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .addListener(new Transition.TransitionListener() {
+                @Override
+                public void onTransitionStart(Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionEnd(Transition transition) {
+                    layout.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onTransitionCancel(Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionPause(Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionResume(Transition transition) {
+
+                }
+            });
+
+            setOn.applyTo(layout);
+            layout.post(() -> {
+                TransitionManager.beginDelayedTransition(layout, transition);
+                setOff.applyTo(layout);
+                ValueAnimator alphaAnimator = ValueAnimator.ofInt(Math.min(256, background.getAlpha()), 0);
+                alphaAnimator.setDuration(500);
+                alphaAnimator.addUpdateListener(animation -> {
+                    int alpha = (int) animation.getAnimatedValue();
+                    background.setAlpha(alpha);
+                });
+                alphaAnimator.start();
+            });
+        }
     }
 }

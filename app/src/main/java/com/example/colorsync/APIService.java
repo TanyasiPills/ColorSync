@@ -7,6 +7,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface APIService {
-    @GET("/posts")
+    @GET("posts")
     Call<PostResponse> getAllPost(@Query("lastId") int lastId);
 }
