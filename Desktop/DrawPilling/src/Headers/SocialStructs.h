@@ -24,6 +24,7 @@ struct Post
 	std::vector<Comment> comments;
 	bool picLoaded = false;
 	bool allLoaded = false;
+	bool openComments = true;
 	int size = 0;
 };
 

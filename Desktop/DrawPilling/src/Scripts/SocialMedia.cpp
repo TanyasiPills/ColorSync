@@ -146,9 +146,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
                     ImGui::EndChild();
                     ImGui::TreePop();
                 }
-                else {
-                    post.size = 0;
-                }
             }
             if (post.size == 0) {
                 endY = ImGui::GetCursorPosY();
