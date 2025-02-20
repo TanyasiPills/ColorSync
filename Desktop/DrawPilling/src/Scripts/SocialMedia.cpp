@@ -94,10 +94,14 @@ void SocialMedia::MainFeed(float position, float width, float height)
                 if (post.picLoaded && users[post.userId].pPicLoaded) post.allLoaded = true;
                 continue;
             }
+            bool needChange = false;
             int validWidth = width * 0.9f;
             std::string id = std::to_string(post.id);
             Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            if (post.size == 0) startY = ImGui::GetCursorPosY();
+            if (post.size == 0) {
+                startY = ImGui::GetCursorPosY();
+                needChange = true;
+            }
             Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
             ImGui::SameLine();
             Lss::Top(2 * Lss::VH);
@@ -110,8 +114,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
             if (!post.comments.empty())
             {
                 bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
+
+                if (post.openComments != open) {
+                    post.size = 0;  
+                    post.openComments = open;
+                }
+
                 if (open) {
-                    if (post.size != 0) post.size = 0;
                     ImDrawList* drawList = ImGui::GetWindowDrawList();
                     float cornerRadius = 10.0f;
                     ImVec2 commentChildSize;
@@ -149,7 +158,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
                     ImGui::TreePop();
                 }
             }
-            if (post.size == 0) {
+            if (post.size == 0 && needChange) {
                 endY = ImGui::GetCursorPosY();
                 post.size = endY - startY;
             }

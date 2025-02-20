@@ -34,3 +34,10 @@ struct User
 	GLuint userImage = -1;
 	bool pPicLoaded = false;
 };
+
+struct Lobby
+{
+	std::string lobbyName;
+	int capacity;
+	int connectivity;
+};
