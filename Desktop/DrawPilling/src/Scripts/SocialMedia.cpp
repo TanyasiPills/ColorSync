@@ -298,7 +298,7 @@ void SocialMedia::LeftSide(float position, float width, float height)
         else mode = 0;
     }
     Lss::Top(1 * Lss::VH);
-    if (Lss::Button("profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+    if (Lss::Button("Profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         //GetPosts();
     }
     Lss::Top(40 * Lss::VH);
