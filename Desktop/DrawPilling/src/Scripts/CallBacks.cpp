@@ -125,7 +125,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 void onCloseCallback(GLFWwindow* window) {
-	std::cout << "Window close event intercepted. Doing necessary cleanup before closing.\n";
+	std::cout << "Window closing\n";
 	Manager::DisAssembly(window);
 }
 void Callback::EditorSwapCallBack()

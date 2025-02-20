@@ -73,8 +73,7 @@ SessionData Manager::Assembly(SessionData& data) {
     return data;
 }
 void Manager::DisAssembly(GLFWwindow* window) {
-    std::cout << "heooooo2" << std::endl;
-    DataManager::SaveAppData(DrawUI::GetUsername(), DrawUI::GetToken(), DrawUI::GetIp());
+    DataManager::SaveAppData();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

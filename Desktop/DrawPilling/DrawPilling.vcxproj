@@ -1008,6 +1008,7 @@
     <ClInclude Include="src\Headers\old\NCallBacks.h" />
     <ClInclude Include="src\Headers\old\Renderer.h" />
     <ClInclude Include="src\Headers\old\Shader.h" />
+    <ClInclude Include="src\Headers\RuntimeData.h" />
     <ClInclude Include="src\Headers\SocialMedia.h" />
     <ClInclude Include="src\Headers\SocialStructs.h" />
     <ClInclude Include="src\Headers\SocksManager.h" />

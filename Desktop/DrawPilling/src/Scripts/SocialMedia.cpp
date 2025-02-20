@@ -206,7 +206,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         Lss::Top(0.25f * Lss::VH);
         static int myInt = 0;
         if (myInt >= 100) myInt = 99;
-        Lss::InputInt("faku", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded);
+        Lss::InputInt("faku", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue);
 
         Lss::End();
         ImGui::EndChild();
@@ -229,7 +229,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
             Lss::Top(10 * Lss::VH);
             std::string searchtext = "Searching";
             for (size_t i = 100; i < count; i+= 100)searchtext += ".";
-            Lss::Text(searchtext, 4 * Lss::VH, Centered | ImGuiInputTextFlags_EnterReturnsTrue);
+            Lss::Text(searchtext, 4 * Lss::VH, Centered);
             count++;
             if (count >= 401) {
                 count = 0;

@@ -183,7 +183,7 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	return modified;
 }
 
-bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags) {
+bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
 	if (flags & Centered) Center(size.x);
@@ -202,7 +202,7 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags) {
 	}
 
 
-	bool modified = ImGui::InputInt(("##" + label).c_str(), value, 0);
+	bool modified = ImGui::InputInt(("##" + label).c_str(), value, 0, 0, inputFlags);
 
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);

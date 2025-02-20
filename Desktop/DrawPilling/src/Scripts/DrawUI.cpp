@@ -1,50 +1,40 @@
 #include "DrawUI.h"
 #include "HighsManager.h"
 #include "SocksManager.h"
+#include "RuntimeData.h"
 #include <thread>
 
+//Left side
 ImVec2 ColorWindowSize(100, 200);
 ImVec2 ColorWindowPos;
 ImVec2 SizeWindowSize(100, 200);
 ImVec2 SizeWindowPos(0, 200);
 ImVec2 BrushWindowSize(100, 200);
 ImVec2 BrushWindowPos(0, 450);
+int leftSize = 200;
+int leftMinSize = 200;
 
+//Right side
 ImVec2 ServerWindowSize(100, 200);
 ImVec2 ServerWindowPos;
 ImVec2 LayerWindowSize(100, 200);
 ImVec2 LayerWindowPos(0, 200);
 ImVec2 ChatWindowSize(100, 200);
 ImVec2 ChatWindowPos(0, 450);
-int leftSize = 200;
 int rightSize = 200;
-
-int leftMinSize = 200;
 int rightMinSize = 200;
+
 
 int windowSizeX, windowSizeY;
 
-std::string username;
 bool inited = false;
 bool needLogin = true;
-std::string create = "false";
-std::string ip = "10.4.117.7";
 
 static std::vector<std::string> chatLog;
 
-std::string tokenHere;
-
 static NewRenderer* renderer;
 
-std::string DrawUI::GetToken() {
-	return tokenHere;
-}
-std::string DrawUI::GetUsername() {
-	return username;
-}
-std::string DrawUI::GetIp() {
-	return ip;
-}
+RuntimeData& runtime;
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
@@ -52,20 +42,18 @@ void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 
 void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
 {
-	if (usernameIn[0] != '\0') {
-		username = usernameIn;
+	runtime = RuntimeData::getInstance();
+	if (runtime.ip[0] == '\0') {
+		std::cerr << "No ip in appdata" << std::endl;
 	}
-	else {
-		std::cerr << "no username" << std::endl;
+	if (runtime.username[0] == '\0') {
+		std::cerr << "No username in appdata" << std::endl;
 	}
-
-	if (tokenIn[0] != '\0') {
-		needLogin = false;
-		tokenHere = tokenIn;
+	if (runtime.token[0] == '\0') {
+		std::cerr << "No token in appdata" << std::endl;
 	}
-	else {
-		//needLogin = false; //need to remove this later !!!!
-		std::cerr << "no token" << std::endl;
+	if (runtime.password[0] == '\0') {
+		std::cerr << "No password in appdata" << std::endl;
 	}
 }
 
@@ -198,7 +186,7 @@ void DrawUI::ServerWindow()
 	ImGui::InputTextWithHint("##ipinput", "Ip", ipInput, IM_ARRAYSIZE(ipInput), ImGuiInputTextFlags_CharsNoBlank);
 	ImGui::SameLine();
 	if (ImGui::Button("Set", ImVec2(30, 0))) {
-		ip = ipInput;
+		runtime.ip = ipInput;
 	}
 	inputPos.y += 30;
 	ImGui::SetCursorPos(inputPos);
@@ -217,7 +205,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "true";
-		SManager::Connect(("http://"+ip+":3000").c_str(), tokenHere.c_str(), room);
+		SManager::Connect(("http://"+runtime.ip+":3000").c_str(), runtime.token.c_str(), room);
 	}
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(300);
@@ -225,7 +213,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "false";
-		SManager::Connect(("http://" + ip + ":3000").c_str(), tokenHere.c_str(), room);
+		SManager::Connect(("http://" + runtime.ip + ":3000").c_str(), runtime.token.c_str(), room);
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
@@ -366,7 +354,7 @@ void DrawUI::ChatWindow()
 	{
 		if (strlen(inputBuffer) > 0)
 		{
-			std::string msg = username+": " + inputBuffer;
+			std::string msg = runtime.username+": " + inputBuffer;
 			chatLog.push_back(msg);
 			SManager::SendMsg(inputBuffer);
 			memset(inputBuffer, 0, sizeof(inputBuffer)); 
@@ -426,12 +414,12 @@ void DrawUI::LoginWindow()
 				body["password"] = passwordText;
 
 				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request((ip+":3000/users/login").c_str(), body.dump(), POST);
+				nlohmann::json res = HManager::Request((runtime.ip+":3000/users/login").c_str(), body.dump(), POST);
 
 				if (res.contains("access_token") && res.contains("username")) {
 					std::cout << "got this JSON: " << res["access_token"] << std::endl;
-					tokenHere = res["access_token"];
-					username = res["username"];
+					runtime.token = res["access_token"];
+					runtime.username = res["username"];
 					needLogin = false;
 				}
 			}).detach();

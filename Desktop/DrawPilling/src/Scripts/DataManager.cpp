@@ -1,6 +1,7 @@
 #include "DrawUI.h"
 #include "DataManager.h"
 #include <filesystem>
+#include "RuntimeData.h"
 
 
 ApplicationData appdata;
@@ -37,10 +38,15 @@ ApplicationData DataManager::LoadData(const std::string& filename) {
 void DataManager::LoadAppData()
 {
     appdata = DataManager::LoadData("appdata.bin");
-    DrawUI::InitData(appdata.name, appdata.token);
+
+    auto& runtime = RuntimeData::getInstance();
+    runtime.ip = appdata.ip;
+    runtime.username = appdata.name;
+    runtime.token = appdata.token;
 }
-void DataManager::SaveAppData(std::string nameIn, std::string tokenIn, std::string ipIn)
+void DataManager::SaveAppData()
 {   
-    SetData(appdata, nameIn, tokenIn, ipIn);
+    auto& runtime = RuntimeData::getInstance();
+    SetData(appdata, runtime.username, runtime.token, runtime.ip);
     DataManager::SaveData(appdata, "appdata.bin");
 }
