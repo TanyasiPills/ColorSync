@@ -173,6 +173,7 @@
     <ClCompile Include="Dependencies\Includes\stb_image\stb_image.cpp" />
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
     <ClCompile Include="src\Scripts\DataManager.cpp" />
+    <ClCompile Include="src\Scripts\FileExplorer.cpp" />
     <ClCompile Include="src\Scripts\lss.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
     <ClCompile Include="src\Scripts\HighsManager.cpp">
@@ -995,6 +996,7 @@
     <ClInclude Include="src\Headers\CallBacks.h" />
     <ClInclude Include="src\Headers\DataManager.h" />
     <ClInclude Include="src\Headers\DrawUI.h" />
+    <ClInclude Include="src\Headers\FileExplorer.h" />
     <ClInclude Include="src\Headers\Headers.h" />
     <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />
@@ -1025,6 +1027,9 @@
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Resources\icons\file.png" />
+    <Image Include="Resources\icons\folder.png" />
+    <Image Include="Resources\icons\folderFull.png" />
     <Image Include="Resources\Textures\circle.png" />
     <Image Include="Resources\Textures\fish.jpg" />
   </ItemGroup>

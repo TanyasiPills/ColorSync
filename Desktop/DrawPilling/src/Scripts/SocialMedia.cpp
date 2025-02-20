@@ -6,6 +6,7 @@
 #include "lss.h"
 #include "CallBacks.h"
 #include "RuntimeData.h"
+#include "FIleExplorer.h"
 
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
@@ -22,6 +23,7 @@ float prevScrollY;
 static RuntimeData& runtime = RuntimeData::getInstance();
 
 int mode = 1; // 0 - social, 1 - settings, 2 - search, ...
+
 
 void SocialMedia::ProcessThreads()
 {
@@ -117,11 +119,11 @@ void SocialMedia::MainFeed(float position, float width, float height)
             if (!post.comments.empty())
             {
                 bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
-
+                /*
                 if (post.openComments != open) {
                     post.size = 0;  
                     post.openComments = open;
-                }
+                }*/
 
                 if (open) {
                     ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -170,9 +172,16 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
             ImGui::Separator();
         }
+        ImVec2 buttonPos = ImGui::GetWindowSize();
+        ImVec2 buttonSIze = ImVec2(15 * Lss::VH, 5 * Lss::VH);
+        if (Lss::Button("Search", buttonSIze, 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            if (mode != 2) mode = 2;
+            else mode = 0;
+        }
         ImGui::EndChild();
         } break;
     case 1: { //settings
+        Explorer::FileExplorerUI();
         ImVec2 valid = ImGui::GetContentRegionAvail();
         Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
 

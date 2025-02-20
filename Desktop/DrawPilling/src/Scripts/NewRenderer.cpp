@@ -12,6 +12,7 @@
 #include "DrawUI.h"
 #include "lss.h"
 #include "SocksManager.h"
+#include "FileExplorer.h"
 
 
 void GLClearError() {
@@ -84,6 +85,21 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	layers.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
+
+
+
+	MyTexture folderTexture;
+	folderTexture.Init("Resources/icons/folder.png");
+	GLuint folderId = folderTexture.GetId();
+
+	MyTexture folderFullTexture;
+	folderFullTexture.Init("Resources/icons/folderFull.png");
+	GLuint folderFull = folderFullTexture.GetId();
+	MyTexture fileTexture;
+	fileTexture.Init("Resources/icons/file.png");
+	GLuint file = fileTexture.GetId();
+
+	Explorer::Init(folderId, folderFull, file);
 }
 
 void NewRenderer::AddLayer(std::string name, int location) 

@@ -17,6 +17,7 @@
 
 #include "DrawUI.h"
 
+
 SessionData Manager::Assembly(SessionData& data) {
 
 
@@ -70,6 +71,7 @@ SessionData Manager::Assembly(SessionData& data) {
 
     HManager::Init();
     Lss::Init(window, screenWidth, screenHeight);
+
 
     return data;
 }

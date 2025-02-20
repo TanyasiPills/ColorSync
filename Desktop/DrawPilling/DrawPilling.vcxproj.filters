@@ -117,6 +117,9 @@
     <ClCompile Include="src\Scripts\SocialMedia.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scripts\FileExplorer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\Libaries\glew32s.lib" />
@@ -2566,6 +2569,9 @@
     <ClInclude Include="src\Headers\RuntimeData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Headers\FileExplorer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Style.shader" />
@@ -2577,6 +2583,15 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\Textures\fish.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\file.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\folder.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\folderFull.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
