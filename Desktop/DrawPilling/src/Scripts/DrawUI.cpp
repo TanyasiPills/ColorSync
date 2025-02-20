@@ -34,15 +34,14 @@ static std::vector<std::string> chatLog;
 
 static NewRenderer* renderer;
 
-RuntimeData& runtime;
+static RuntimeData& runtime = RuntimeData::getInstance();
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 }
 
-void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
+void DrawUI::InitData()
 {
-	runtime = RuntimeData::getInstance();
 	if (runtime.ip[0] == '\0') {
 		std::cerr << "No ip in appdata" << std::endl;
 	}

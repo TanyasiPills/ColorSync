@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "lss.h"
 #include "CallBacks.h"
+#include "RuntimeData.h"
 
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
@@ -18,7 +19,9 @@ bool canGet = false;
 bool init = true;
 float prevScrollY;
 
-int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
+static RuntimeData& runtime = RuntimeData::getInstance();
+
+int mode = 1; // 0 - social, 1 - settings, 2 - search, ...
 
 void SocialMedia::ProcessThreads()
 {
@@ -185,8 +188,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
         Lss::Text("Server IP: ", 3 * Lss::VH);
         ImGui::SameLine();
         Lss::Top(0.25f * Lss::VH);
-        char ipText[128] = "";
-        Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded);
+        static char ipText[128] = "";
+        if(ipText[0] == '\0') std::strcpy(ipText, runtime.ip.c_str());
+        if (Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            std::cout << "zsa\n";
+            runtime.ip = ipText;
+        }
 
         Lss::End();
         ImGui::EndChild();
@@ -204,9 +212,12 @@ void SocialMedia::MainFeed(float position, float width, float height)
         Lss::Text("Undo count: ", 3 * Lss::VH);
         ImGui::SameLine();
         Lss::Top(0.25f * Lss::VH);
-        static int myInt = 0;
+        static int myInt = runtime.undoCount;
         if (myInt >= 100) myInt = 99;
-        Lss::InputInt("faku", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue);
+        if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded))
+        {
+            runtime.undoCount = myInt;
+        }
 
         Lss::End();
         ImGui::EndChild();

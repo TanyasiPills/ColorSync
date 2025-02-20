@@ -22,7 +22,7 @@ public:
 
     static void LoginWindow();
 
-    static void InitData(std::string usernameIn, std::string tokenIn);
+    static void InitData();
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
 
