@@ -49,6 +49,16 @@ float sentBrushSize;
 bool editor = false;
 
 
+bool FileExists(const char* filename) {
+	FILE* file = fopen(filename, "r");
+	if (file) {
+		fclose(file);
+		return true;
+	}
+	return false;
+}
+
+
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
 	SetMainThreadCallback([this](const DrawMessage& msg) {
@@ -91,6 +101,12 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	MyTexture folderTexture;
 	folderTexture.Init("Resources/icons/folder.png");
 	GLuint folderId = folderTexture.GetId();
+
+	if (FileExists("Resources/icons/file.png"))
+	{
+		std::cout << "FAk u" << std::endl;
+	}
+
 
 	MyTexture folderFullTexture;
 	folderFullTexture.Init("Resources/icons/folderFull.png");

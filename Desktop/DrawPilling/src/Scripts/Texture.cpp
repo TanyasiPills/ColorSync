@@ -9,18 +9,25 @@ MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0
 
 void MyTexture::Init(const std::string& path)
 {
+	std::cout << path << std::endl;
 	filePath = path;
 	//stbi_set_flip_vertically_on_load(1);
 	localBuffer = stbi_load(path.c_str(), &width, &height, &bpp, 4);
 
+	if (!localBuffer) {
+		std::cerr << "Failed to load texture: " << path << std::endl;
+		return;
+	}
+
 	glGenTextures(1, &TO);
 	glBindTexture(GL_TEXTURE_2D, TO);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, localBuffer);
 	glBindTexture(GL_TEXTURE_2D, 0);
 

@@ -8,7 +8,7 @@ GLuint folder;
 GLuint folderFull;
 GLuint fileId;
 
-const ImVec2 iconSize(128, 128);
+const ImVec2 iconSize(1024, 1024);
 
 void Explorer::Init(GLuint folderIn, GLuint folderFullIn, GLuint fileIdIn)
 {
