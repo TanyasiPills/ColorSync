@@ -79,10 +79,10 @@ void SocialMedia::MainFeed(float position, float width, float height)
             if (prevScrollY != scrollY && scrollY > prevScrollY) {
                 prevScrollY = scrollY;
                 canGet = false;
-                GetPosts();
+                std::thread(&SocialMedia::GetPosts).detach();
             }
             if (init) {
-                GetPosts();
+                std::thread(&SocialMedia::GetPosts).detach();
                 init = false;
             }
 
@@ -327,48 +327,48 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 
 void SocialMedia::GetPosts() 
 {
-    std::thread([]() {
-        std::cout << "NewLastId: " << lastId << std::endl;;
-        nlohmann::json jsonData = HManager::Request(("10.4.117.77:3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
-        std::cout << "Data: " << jsonData["data"].size() << std::endl;
-        if (jsonData["newLastId"].is_null()) return;
-        for (const auto& postJson : jsonData["data"]) {
-            Post post;
-            post.id = postJson["id"];
-            post.userId = postJson["user"]["id"];
-            if (users.find(post.userId) == users.end()) {
-                User user;
-                user.username = postJson["user"]["username"];
-                user.userImage = -1;
-                users[post.userId] = user;
-            }
-            if (postJson["imageId"].is_null()) post.imageId = -1;
-            else post.imageId = postJson["imageId"];
-            post.text = postJson["text"];
-            post.time = ParsePostTime(postJson["date"]);
-
-            for (const auto& commentJson : postJson["comments"]) {
-                Comment comment;
-                comment.id = commentJson["id"];
-                comment.userId = commentJson["user"]["id"];
-                comment.text = commentJson["text"];
-                if (users.find(comment.userId) == users.end()) {
-                    User user;
-                    user.username = commentJson["user"]["username"];
-                    user.userImage = -1;
-                    users[comment.userId] = user;
-                }
-                comment.time = ParsePostTime(commentJson["date"]);
-
-                post.comments.push_back(comment);
-            }
-
-            posts.push_back(post);
+    nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
+    if (jsonData["data"] == 0) {
+        init = true;
+        return;
+    }
+    if (jsonData["newLastId"].is_null()) return;
+    for (const auto& postJson : jsonData["data"]) {
+        Post post;
+        post.id = postJson["id"];
+        post.userId = postJson["user"]["id"];
+        if (users.find(post.userId) == users.end()) {
+            User user;
+            user.username = postJson["user"]["username"];
+            user.userImage = -1;
+            users[post.userId] = user;
         }
+        if (postJson["imageId"].is_null()) post.imageId = -1;
+        else post.imageId = postJson["imageId"];
+        post.text = postJson["text"];
+        post.time = ParsePostTime(postJson["date"]);
+    
+        for (const auto& commentJson : postJson["comments"]) {
+            Comment comment;
+            comment.id = commentJson["id"];
+            comment.userId = commentJson["user"]["id"];
+            comment.text = commentJson["text"];
+            if (users.find(comment.userId) == users.end()) {
+                User user;
+                user.username = commentJson["user"]["username"];
+                user.userImage = -1;
+                users[comment.userId] = user;
+            }
+            comment.time = ParsePostTime(commentJson["date"]);
+    
+            post.comments.push_back(comment);
+        }
+    
+        posts.push_back(post);
+    }
 
-        lastId = jsonData["newLastId"];
+    lastId = jsonData["newLastId"];
 
-    }).join();
     LoadImages();
 }
 void SocialMedia::LoadImages() 
@@ -400,14 +400,14 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
     switch (type) {
     case 1: {
         if (dataId == -1)return;
-        imageData = HManager::Request(("10.4.117.77:3000/images/public/" + std::to_string(dataId)).c_str(), GET);
+        imageData = HManager::Request((runtime.ip+":3000/images/public/" + std::to_string(dataId)).c_str(), GET);
         std::cout << "Post Id: " << postId << std::endl;
         dataId = postId;
         } break;
     case 2: {
             if (profilePics.find(dataId) != profilePics.end()) break;
             else {
-                imageData = HManager::Request(("10.4.117.77:3000/users/" + std::to_string(dataId) + "/pfp").c_str(), GET);
+                imageData = HManager::Request((runtime.ip+":3000/users/" + std::to_string(dataId) + "/pfp").c_str(), GET);
             }
         } break;
     default:
