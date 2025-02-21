@@ -11,6 +11,6 @@ class Explorer
 private:
 public:
 	static void Init();
-	static void FileExplorerUI();
+	static void FileExplorerUI(bool* creatorStuff);
 	static std::vector<std::string> GetFilesInDirectory(const std::string& directory);
 };

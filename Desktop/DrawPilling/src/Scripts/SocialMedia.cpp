@@ -193,7 +193,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         Lss::End();
         ImGui::EndChild();
         if (creatingPost) {
-            Explorer::FileExplorerUI();
+            Explorer::FileExplorerUI(&creatingPost);
         }
         } break;
     case 1: { //settings

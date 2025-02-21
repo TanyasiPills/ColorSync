@@ -17,6 +17,7 @@
 
 #include "DrawUI.h"
 #include "FileExplorer.h"
+#include "WindowManager.h"
 
 
 SessionData Manager::Assembly(SessionData& data) {
@@ -74,6 +75,8 @@ SessionData Manager::Assembly(SessionData& data) {
     Lss::Init(window, screenWidth, screenHeight);
 
     Explorer::Init();
+
+    WindowManager::ToggleFullscreen(window);
 
 
     return data;
