@@ -20,12 +20,13 @@ float Lss::VH = 0;
 int prevType = -1;
 
 ImVec4 colorArray[] = {
-	ImVec4(0.149, 0.149, 0.345, 1.0f),
-	ImVec4(0.122, 0.122, 0.298, 1.0f),
-	ImVec4(0.208, 0.208, 0.353, 1.0f),
-	ImVec4(0.286, 0.282, 0.451, 1.0f),
-	ImVec4(0.478, 0.455, 0.651, 1.0f),
-	ImVec4(0.647, 0.627, 0.831, 1.0f)
+	ImVec4(0.149f, 0.149f, 0.345f, 1.0f),
+	ImVec4(0.122f, 0.122f, 0.298f, 1.0f),
+	ImVec4(0.208f, 0.208f, 0.353f, 1.0f),
+	ImVec4(0.286f, 0.282f, 0.451f, 1.0f),
+	ImVec4(0.478f, 0.455f, 0.651f, 1.0f),
+	ImVec4(0.647f, 0.627f, 0.831f, 1.0f),
+	ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
 };
 int regionArray[] = {
 	ImGuiCol_WindowBg,
@@ -176,8 +177,11 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
 		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
+	}
+	if (flags & Trans) {
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
 	}
 
 
@@ -185,6 +189,9 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(1);
+	}
+	if (flags & Trans) {
 		ImGui::PopStyleColor(1);
 	}
 
@@ -205,7 +212,7 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int in
 		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(0, 0, 0, 0));
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
 		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
 	}
 
@@ -229,13 +236,18 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 			CenterWindow();
 		}
 	}
-	return ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize);
+	return ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
 }
 
 
-void Lss::Separator(float thickness, int color) {
+void Lss::Separator(float thickness, float width, int color, int flags) {
+	if (flags & Centered) Center(width);
+
 	ImVec2 p1 = ImGui::GetCursorScreenPos();
-	ImVec2 p2 = ImVec2(p1.x + ImGui::GetContentRegionAvail().x, p1.y);
+	ImVec2 p2;
+
+	if (width > 0.0f) p2 = ImVec2(p1.x + width, p1.y);
+	else p2 = ImVec2(p1.x + ImGui::GetContentRegionAvail().x, p1.y);
 
 	ImGui::GetWindowDrawList()->AddLine(p1, ImVec2(p2.x, p1.y), ImGui::ColorConvertFloat4ToU32(colorArray[color]), thickness);
 

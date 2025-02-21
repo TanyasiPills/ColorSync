@@ -9,9 +9,10 @@
 
 enum CSS {
 	None = 0,
-	Centered = 1 << 0,
-	Invisible = 1 << 1, 
-	Rounded = 1 << 2
+	Centered = 1 << 0, 
+	Invisible = 1 << 1,
+	Rounded = 1 << 2,
+	Trans = 1 << 3
 };
 
 enum Colors {
@@ -21,6 +22,7 @@ enum Colors {
 	HeavyHighlight = 3,
 	Border = 4,
 	Font = 5,
+	Transparent = 6
 };
 
 class Lss {
@@ -45,7 +47,7 @@ public:
 	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH), int flags = None, int inputFlags = ImGuiInputFlags_None);
 	static bool InputInt(std::string label, int* value, ImVec2 size = ImVec2(10 * VH, 2 * VH), int flags = None, int inputFlags = ImGuiInputFlags_None);
 	static bool Modal(std::string label, bool* open, ImVec2 size = ImVec2(0,0), int flags = 0, int windowFlags = 0);
-	static void Separator(float thickness = 1.0f, int color = 4);
+	static void Separator(float thickness = 1.0f, float width = 0.0f, int color = 4, int flags = 0);
 
 	static void Left(float distance);
 	static void Right(float distance);

@@ -182,11 +182,9 @@ void SocialMedia::MainFeed(float position, float width, float height)
             viewport->WorkPos.y + viewport->WorkSize.y - 10*Lss::VH),
             ImGuiCond_Always, ImVec2(0.5f, 1.0f));
 
-        // Create a simple window with no decorations so it stays fixed nya
         Lss::Child("FixedButton", ImVec2(0,0), false, 0, ImGuiWindowFlags_NoDecoration |
             ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
 
-        // Add your button here nya~
         if (Lss::Button("Post", ImVec2(10*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
             creatingPost = true;
         }
@@ -278,9 +276,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
     case 3: {
         static bool openStuff = true;
 
-        if (Lss::Modal("Sup", &openStuff,ImVec2(1000,200),Centered, ImGuiWindowFlags_NoDecoration))
+        if (Lss::Modal("Sup", &openStuff,ImVec2(20*Lss::VW,50*Lss::VH),Centered, ImGuiWindowFlags_NoDecoration))
         {
-            ImGui::Text("Heo");
+            Lss::Text("What's on your ming?", 2 * Lss::VH);
+            static char inputtext[128] = "";
+            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(20 * Lss::VH, 2 * Lss::VH), Centered | Trans);
+            Lss::Top(-Lss::VH/2);
+            Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
             ImGui::Button("Sup", ImVec2(100, 50));
             if (ImGui::IsMouseClicked(0))
             {     
@@ -288,10 +290,12 @@ void SocialMedia::MainFeed(float position, float width, float height)
                 ImVec2 cursorPos = ImGui::GetMousePos();
                 ImVec2 size = ImGui::GetWindowSize();
                 if (!Lss::InBound(cursorPos, pos, size)) {
+                    Lss::End();
                     ImGui::CloseCurrentPopup();
                     openStuff = false;
                 }
             }
+            Lss::End();
             ImGui::EndPopup();
         }
         } break;
@@ -421,9 +425,6 @@ void SocialMedia::LoadImages()
     for (int i = 0; i < posts.size(); i++)
     {
         std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
-    }
-    for (Post& post : posts) {
-        
     }
 }
 
