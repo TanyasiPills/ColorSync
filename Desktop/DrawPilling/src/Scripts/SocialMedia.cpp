@@ -194,6 +194,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ImGui::EndChild();
         if (creatingPost) {
             Explorer::FileExplorerUI(&creatingPost);
+            mode = 3;
         }
         } break;
     case 1: { //settings
@@ -273,6 +274,26 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
         Lss::End();
         ImGui::EndChild();
+        } break;
+    case 3: {
+        static bool openStuff = true;
+
+        if (Lss::Modal("Sup", &openStuff,ImVec2(1000,200),Centered, ImGuiWindowFlags_NoDecoration))
+        {
+            ImGui::Text("Heo");
+            ImGui::Button("Sup", ImVec2(100, 50));
+            if (ImGui::IsMouseClicked(0))
+            {     
+                ImVec2 pos = ImGui::GetWindowPos();
+                ImVec2 cursorPos = ImGui::GetMousePos();
+                ImVec2 size = ImGui::GetWindowSize();
+                if (!Lss::InBound(cursorPos, pos, size)) {
+                    ImGui::CloseCurrentPopup();
+                    openStuff = false;
+                }
+            }
+            ImGui::EndPopup();
+        }
         } break;
     default:
         break;

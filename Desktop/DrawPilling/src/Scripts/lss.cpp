@@ -45,6 +45,9 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_Border] = colorArray[Border];
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
 
+	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
+
+
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	VH = (float)screenHeight / 100;
@@ -71,6 +74,11 @@ void Lss::SetColor(int region, int colorToSet) {
 void Center(float itemWidth) {
 	float width = ImGui::GetWindowWidth();
 	ImGui::SetCursorPosX((width - itemWidth)*0.5f);
+}
+
+void CenterWindow() {
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 }
 
 void Lss::SetFontSize(float size) {
@@ -212,6 +220,19 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int in
 	return modified;
 }
 
+bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int windowFlags)
+{
+	if (*open) {
+		ImGui::OpenPopup(label.c_str());
+		ImGui::SetNextWindowSize(size);
+		if (flags & Centered) {
+			CenterWindow();
+		}
+	}
+	return ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize);
+}
+
+
 void Lss::Separator(float thickness, int color) {
 	ImVec2 p1 = ImGui::GetCursorScreenPos();
 	ImVec2 p2 = ImVec2(p1.x + ImGui::GetContentRegionAvail().x, p1.y);
@@ -250,4 +271,10 @@ void Lss::Back() {
 void Lss::End() {
 	prevType = -1;
 	if (haveFont) ResetFont();
+}
+
+bool Lss::InBound(ImVec2 pos, ImVec2 start, ImVec2 size)
+{
+	return !(pos.x < start.x || pos.x >(start.x + size.x) ||
+			pos.y < start.y || pos.y >(start.y + size.y));
 }
