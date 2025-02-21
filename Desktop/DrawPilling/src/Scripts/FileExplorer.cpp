@@ -8,16 +8,45 @@ GLuint folder;
 GLuint folderFull;
 GLuint fileId;
 
-const ImVec2 iconSize(1024, 1024);
+MyTexture folderTexture;
+MyTexture folderFullTexture;
+MyTexture fileTexture;
 
-void Explorer::Init(GLuint folderIn, GLuint folderFullIn, GLuint fileIdIn)
+const ImVec2 iconSize(50, 50);
+
+void Explorer::Init()
 {
-    folder = folderIn;
-    folderFull = folderFullIn;
-    fileId = fileIdIn;
+    folderTexture.Init("Resources/icons/folder.png");
+    folderFullTexture.Init("Resources/icons/folderFull.png");
+    fileTexture.Init("Resources/icons/file.png");
+
+    std::cout << "Folder texture ID: " << folderTexture.GetId() << std::endl;
+    std::cout << "File texture ID: " << fileTexture.GetId() << std::endl;
+}
+
+bool IsFolderEmpty(const std::string& folderPath) {
+    std::string searchPath = folderPath + "\\*"; 
+    WIN32_FIND_DATA findData;
+    HANDLE hFind = FindFirstFile(searchPath.c_str(), &findData);
+
+    if (hFind == INVALID_HANDLE_VALUE)
+        return true; 
+
+    bool hasFiles = false;
+    do {
+        std::string fileName = findData.cFileName;
+        if (fileName != "." && fileName != "..") {
+            hasFiles = true;
+            break;
+        }
+    } while (FindNextFile(hFind, &findData));
+
+    FindClose(hFind);
+    return !hasFiles;
 }
 
 void Explorer::FileExplorerUI() {
+
     ImGui::Begin("Explorer");
     ImGui::Columns(4, nullptr, false);
     /*
@@ -36,12 +65,20 @@ void Explorer::FileExplorerUI() {
         bool isSelected = (file == selectedFile);
 
 
-        ImTextureID icon = isDirectory ? folder : fileId;
+        ImTextureID icon;
+        if (isDirectory) {
+            if (IsFolderEmpty(newPath)) {
+                icon = folderTexture.GetId();
+            }
+            else {
+                icon = folderFullTexture.GetId();
+            }
+        }
+        else {
+            icon = fileTexture.GetId();
+        }
 
-
-        ImGui::PushID(file.c_str());
-
-        ImGui::Image(folder, iconSize);
+        Lss::Image(icon, iconSize);
         if (ImGui::Selectable(file.c_str(), isSelected, 0, ImVec2(iconSize.x, 0))) {
             selectedFile = file;
             std::cout << "Selected: " << file << std::endl;
@@ -52,8 +89,7 @@ void Explorer::FileExplorerUI() {
             currentPath = newPath;
             selectedFile.clear();
         }
-
-        ImGui::PopID();
+        Lss::End();
         ImGui::NextColumn();
     }
     ImGui::End();

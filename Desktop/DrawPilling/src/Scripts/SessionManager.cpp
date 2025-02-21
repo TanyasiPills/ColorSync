@@ -16,6 +16,7 @@
 #include <windows.h>
 
 #include "DrawUI.h"
+#include "FileExplorer.h"
 
 
 SessionData Manager::Assembly(SessionData& data) {
@@ -71,6 +72,8 @@ SessionData Manager::Assembly(SessionData& data) {
 
     HManager::Init();
     Lss::Init(window, screenWidth, screenHeight);
+
+    Explorer::Init();
 
 
     return data;
