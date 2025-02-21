@@ -19,7 +19,9 @@
         android:layout_height="wrap_content"
         android:id="@+id/navbar"
         android:layout_alignParentBottom="true"
-        app:menu="@menu/navbar_menu"/>
+        app:menu="@menu/navbar_menu"
+        app:labelVisibilityMode="unlabeled"
+        app:itemIconSize="40dp" />
 
 
 </RelativeLayout>

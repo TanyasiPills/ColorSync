@@ -38,6 +38,7 @@ public class HomeFragment extends Fragment {
     private List<Post> posts;
     private RecyclerView recyclerView;
     private Context context;
+    private View view;
 
     public HomeFragment() {
         isLoading = false;
@@ -52,7 +53,7 @@ public class HomeFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        view = inflater.inflate(R.layout.fragment_home, container, false);
         context = view.getContext();
 
         RecyclerView recyclerView = view.findViewById(R.id.recycleView);
@@ -85,7 +86,7 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    public void addPost(View view) {
+    public void addPost() {
         ConstraintLayout layout = view.findViewById(R.id.addPostLayout);
         CardView card = view.findViewById(R.id.addPost_card);
 

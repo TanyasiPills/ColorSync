@@ -31,6 +31,9 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentContainer;
+import androidx.fragment.app.FragmentContainerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -48,6 +51,7 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
     private static APIService api;
+    private int currentPage;
 
     public static APIService getApi() {
         return api;
@@ -87,10 +91,34 @@ public class MainActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
         api = APIInstance.getInstance().create(APIService.class);
+        currentPage = R.id.nav_home;
 
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
 
         BottomNavigationView navbar = findViewById(R.id.navbar);
+        navbar.setSelectedItemId(R.id.nav_home);
+
+        navbar.setOnItemSelectedListener(item -> {
+            Fragment fragment = null;
+            if (item.getItemId() == R.id.nav_home) {
+                if (currentPage == R.id.nav_home) {
+                    HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                    if (homeFragment != null) homeFragment.addPost();
+                } else {
+                    fragment = new HomeFragment();
+                    currentPage = R.id.nav_home;
+                }
+            } else if (item.getItemId() == R.id.nav_profile) {
+                fragment = new ProfileFragment();
+                currentPage = R.id.nav_profile;
+            } else if (item.getItemId() == R.id.nav_draw) {
+                //TODO
+            }
+            if (fragment != null) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+            }
+            return true;
+        });
     }
 
 
