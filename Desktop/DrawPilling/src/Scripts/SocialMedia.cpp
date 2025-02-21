@@ -19,10 +19,11 @@ float startY, endY;
 bool canGet = false;
 bool init = true;
 float prevScrollY;
+bool creatingPost = false;
 
 static RuntimeData& runtime = RuntimeData::getInstance();
 
-int mode = 1; // 0 - social, 1 - settings, 2 - search, ...
+int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 
 
 void SocialMedia::ProcessThreads()
@@ -72,6 +73,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
     case 0:{ //home page, social media
         ImGui::GetStyle().ChildBorderSize = 0.0f;
         ImVec2 valid = ImGui::GetContentRegionAvail();
+        ImGui::SetCursorPosY(0);
         Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
 
         float scrollY = ImGui::GetScrollY();
@@ -92,7 +94,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if ((scrollY / scrollMaxY) < 0.90f) {
             canGet = true;
         }
-
+        
         for (Post& post : posts)
         {
             if (!post.allLoaded) {
@@ -172,16 +174,29 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
             ImGui::Separator();
         }
-        ImVec2 buttonPos = ImGui::GetWindowSize();
-        ImVec2 buttonSIze = ImVec2(15 * Lss::VH, 5 * Lss::VH);
-        if (Lss::Button("Search", buttonSIze, 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            if (mode != 2) mode = 2;
-            else mode = 0;
-        }
         ImGui::EndChild();
+
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
+            viewport->WorkPos.y + viewport->WorkSize.y - 10*Lss::VH),
+            ImGuiCond_Always, ImVec2(0.5f, 1.0f));
+
+        // Create a simple window with no decorations so it stays fixed nya
+        Lss::Child("FixedButton", ImVec2(0,0), false, 0, ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+
+        // Add your button here nya~
+        if (Lss::Button("Post", ImVec2(10*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
+            creatingPost = true;
+        }
+        Lss::End();
+        ImGui::EndChild();
+        if (creatingPost) {
+            Explorer::FileExplorerUI();
+        }
         } break;
     case 1: { //settings
-        Explorer::FileExplorerUI();
         ImVec2 valid = ImGui::GetContentRegionAvail();
         Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
 
