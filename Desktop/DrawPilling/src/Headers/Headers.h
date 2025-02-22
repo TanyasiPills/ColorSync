@@ -1,5 +1,6 @@
 #pragma once
 
+#define IMGUI_STATIC
 #define GLEW_STATIC
 #include "GLEW/glew.h"
 #include "ImGui/imgui.h"
@@ -43,6 +44,7 @@
 
 #include "DrawUI.h"
 #include "SocksManager.h"
+#include "SocialMedia.h"
 
 //definitions
 #define PI 3.1415927f

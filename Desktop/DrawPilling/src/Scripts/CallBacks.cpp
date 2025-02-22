@@ -3,7 +3,6 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
-#include "WindowManager.h"
 
 double prevCursorPos[2];
 float GlCursorPos[2];
@@ -118,7 +117,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			break;
 		case GLFW_KEY_F9:
 			if (action == GLFW_PRESS) {
-				WindowManager::ToggleFullscreen(window);
+				//WindowManager::ToggleFullscreen(window);
 			}
 		default:
 			break;
@@ -126,8 +125,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 void onCloseCallback(GLFWwindow* window) {
-	std::cout << "Window close event intercepted. Doing necessary cleanup before closing.\n";
+	std::cout << "Window closing\n";
 	Manager::DisAssembly(window);
+}
+void Callback::EditorSwapCallBack()
+{
+	renderer->SwapView();
 }
 
 void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)

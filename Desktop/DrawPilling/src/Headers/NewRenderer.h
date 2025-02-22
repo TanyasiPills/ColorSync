@@ -9,6 +9,8 @@
 #include "Messages.h"
 #include "json/json.hpp"
 #include "ThreadSafeQueue.h"
+#include "SocialStructs.h"
+#include "SocialMedia.h"
 
 #include <unordered_map>
 #include <string>
@@ -118,4 +120,6 @@ public:
 	void SetMainThreadCallback(std::function<void(const DrawMessage&)> callback) {
 		mainThreadCallback = callback;
 	}
+
+	void SwapView();
 };

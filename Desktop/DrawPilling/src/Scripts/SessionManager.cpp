@@ -9,13 +9,16 @@
 #include "HighsManager.h"
 #include "DataManager.h"
 #include "lss.h"
-#include "WindowManager.h"
+#include "SocialMedia.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 #include <windows.h>
 
 #include "DrawUI.h"
+#include "FileExplorer.h"
+#include "WindowManager.h"
+
 
 SessionData Manager::Assembly(SessionData& data) {
 
@@ -56,31 +59,30 @@ SessionData Manager::Assembly(SessionData& data) {
 
     ImGui::StyleColorsDark();
 
-    ImVec4 window_bg_color = ImVec4(0.188, 0.188, 0.313, 1.0);
-    ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = window_bg_color;
-    ImVec4 child_bg_color = ImVec4(0.2, 0.2, 0.333, 1.0);
-    ImGui::GetStyle().Colors[ImGuiCol_ChildBg] = child_bg_color;
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
 #ifdef __EMSCRIPTEN__
     ImGui_ImplGlfw_InstallEmscriptenCallbacks(window, "#canvas");
 #endif
     ImGui_ImplOpenGL3_Init(glsl_version);
-
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ZERO);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     DataManager::LoadAppData();
+    DrawUI::InitData();
 
     HManager::Init();
-    Lss::Init(window, screenWidth, screenHeight, "Resources/Textures/fish.jpg");
+    Lss::Init(window, screenWidth, screenHeight);
+
+    Explorer::Init();
+
+    WindowManager::ToggleFullscreen(window);
+
 
     return data;
 }
 void Manager::DisAssembly(GLFWwindow* window) {
-    std::cout << "heooooo2" << std::endl;
-    DataManager::SaveAppData(DrawUI::GetUsername(), DrawUI::GetToken());
+    DataManager::SaveAppData();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

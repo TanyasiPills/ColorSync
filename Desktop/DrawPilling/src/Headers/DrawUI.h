@@ -22,12 +22,13 @@ public:
 
     static void LoginWindow();
 
-    static void InitData(std::string usernameIn, std::string tokenIn);
+    static void InitData();
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
 
     static std::string GetUsername();
     static std::string GetToken();
+    static std::string GetIp();
 
     static void SetRenderer(NewRenderer& renderer);
 };

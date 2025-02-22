@@ -12,7 +12,7 @@
 #include "DrawUI.h"
 #include "lss.h"
 #include "SocksManager.h"
-#include "SocialMedia.h"
+#include "FileExplorer.h"
 
 
 void GLClearError() {
@@ -45,6 +45,18 @@ std::vector<Position> drawPositions;
 Position sentOffset;
 float color[3];
 float sentBrushSize;
+
+bool editor = false;
+
+
+bool FileExists(const char* filename) {
+	FILE* file = fopen(filename, "r");
+	if (file) {
+		fclose(file);
+		return true;
+	}
+	return false;
+}
 
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
@@ -163,7 +175,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		dx *= canvasSize[0];
 		dy *= canvasSize[1];
 		float distance = std::sqrt(dx * dx + dy * dy);
-		int num_samples = std::min(static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0]))), 100);
+		int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
 		if (num_samples < 1) num_samples = 100;
 	
 		for (int i = 0; i < num_samples; ++i) {
@@ -180,8 +192,8 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		prevPos[0] = pos[0];
 		prevPos[1] = pos[1];
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		layer.texture->Bind();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 		glViewport(0, 0, width, height);
@@ -195,7 +207,7 @@ void NewRenderer::SendDraw()
 {
 	DrawMessage msg;
 	msg.type = 0;
-	msg.layer = 1;
+	msg.layer = currentNode;
 	msg.brush = 2;
 	msg.size = sentBrushSize;
 	msg.positions = drawPositions;
@@ -205,6 +217,9 @@ void NewRenderer::SendDraw()
 	msg.color[2] = color[2];
 	msg.ratio.x = canvasRatio[0];
 	msg.ratio.y = canvasRatio[1];
+	msg.cursorScale[0] = cursorScale[0];
+	msg.cursorScale[1] = cursorScale[1];
+	msg.cursorScale[2] = cursorScale[2];
 	SManager::SendAction(msg);
 
 	drawPositions.clear();
@@ -261,12 +276,15 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 				Position pos = drawMessage.positions[i];
 				float tmp[2] = { pos.x, pos.y };
 				float tmp2[2] = { canvRatio.x, canvRatio.y };
-				NewDraw::MoveCanvas(layer, tmp2, offset);
-				NewDraw::BrushToPosition(window, cursor, radius, canvasRatio, offse, cursorScale, tmp,1);
+				float tmp3[3] = { drawMessage.cursorScale[0], drawMessage.cursorScale[1], drawMessage.cursorScale[2] };
+
+				NewDraw::MoveCanvas(layer, tmp2, offse);
+				NewDraw::BrushToPosition(window, cursor, radius, tmp2, offse, tmp3, tmp,1);
 				Draw(cursor);
 			}
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			layer.texture->Bind();
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			NewDraw::MoveCanvas(layer, canvasRatio, offset);
 			int width, height;
 			glfwGetFramebufferSize(window, &width, &height);
 			glViewport(0, 0, width, height);
@@ -346,12 +364,11 @@ void RenderMenu()
 	ImGui::NewFrame();
 
 
-
 	int width, height;
 	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
 
-	int sideWidth = width * (2.0f / 7.0f);
-	int mainWidth = width * (3.0f / 7.0f);
+	int sideWidth = width * (1.5f / 6.0f);
+	int mainWidth = width * (3.0f / 6.0f);
 	int windowHeight = (float)height;
 
 	int totalWidth = sideWidth + mainWidth + sideWidth;
@@ -367,14 +384,25 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void NewRenderer::SwapView()
+{
+	editor = !editor;
+	std::cout << "swapped to editor: " << editor << std::endl;
+}
+
 
 void NewRenderer::Render()
 {
 	Clear();
-	RenderLayers();
-	RenderCursor();
-	RenderImGui(onUI);
-	//RenderMenu();
+	if (editor) {
+		RenderLayers();
+		RenderCursor();
+		RenderImGui(onUI);
+	}
+	else {
+		SocialMedia::ProcessThreads();
+		RenderMenu();
+	}
 
 	glfwSwapBuffers(window);
 }

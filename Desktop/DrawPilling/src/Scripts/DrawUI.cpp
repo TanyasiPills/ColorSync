@@ -1,67 +1,58 @@
 #include "DrawUI.h"
 #include "HighsManager.h"
 #include "SocksManager.h"
+#include "RuntimeData.h"
 #include <thread>
 
+//Left side
 ImVec2 ColorWindowSize(100, 200);
 ImVec2 ColorWindowPos;
 ImVec2 SizeWindowSize(100, 200);
 ImVec2 SizeWindowPos(0, 200);
 ImVec2 BrushWindowSize(100, 200);
 ImVec2 BrushWindowPos(0, 450);
+int leftSize = 200;
+int leftMinSize = 200;
 
+//Right side
 ImVec2 ServerWindowSize(100, 200);
 ImVec2 ServerWindowPos;
 ImVec2 LayerWindowSize(100, 200);
 ImVec2 LayerWindowPos(0, 200);
 ImVec2 ChatWindowSize(100, 200);
 ImVec2 ChatWindowPos(0, 450);
-int leftSize = 200;
 int rightSize = 200;
-
-int leftMinSize = 200;
 int rightMinSize = 200;
+
 
 int windowSizeX, windowSizeY;
 
-std::string username;
 bool inited = false;
 bool needLogin = true;
-std::string create = "false";
 
 static std::vector<std::string> chatLog;
 
-std::string tokenHere;
-
 static NewRenderer* renderer;
 
-std::string DrawUI::GetToken() {
-	return tokenHere;
-}
-std::string DrawUI::GetUsername() {
-	return username;
-}
+static RuntimeData& runtime = RuntimeData::getInstance();
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 }
 
-void DrawUI::InitData(std::string usernameIn, std::string tokenIn)
+void DrawUI::InitData()
 {
-	if (usernameIn[0] != '\0') {
-		username = usernameIn;
+	if (runtime.ip[0] == '\0') {
+		std::cerr << "No ip in appdata" << std::endl;
 	}
-	else {
-		std::cerr << "no username" << std::endl;
+	if (runtime.username[0] == '\0') {
+		std::cerr << "No username in appdata" << std::endl;
 	}
-
-	if (tokenIn[0] != '\0') {
-		needLogin = false;
-		tokenHere = tokenIn;
+	if (runtime.token[0] == '\0') {
+		std::cerr << "No token in appdata" << std::endl;
 	}
-	else {
-		//needLogin = false; //need to remove this later !!!!
-		std::cerr << "no token" << std::endl;
+	if (runtime.password[0] == '\0') {
+		std::cerr << "No password in appdata" << std::endl;
 	}
 }
 
@@ -174,11 +165,11 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	}
 }
 
-void DrawUI::ServerWindow() 
+void DrawUI::ServerWindow()
 {
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX-rightSize, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -186,10 +177,20 @@ void DrawUI::ServerWindow()
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
 
-	// Set the size for input field and position
-	ImGui::SetNextItemWidth(150); // Set input width
 	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
 	ImGui::SetCursorPos(inputPos);
+
+	ImGui::SetNextItemWidth(120);
+	static char ipInput[100] = "";
+	ImGui::InputTextWithHint("##ipinput", "Ip", ipInput, IM_ARRAYSIZE(ipInput), ImGuiInputTextFlags_CharsNoBlank);
+	ImGui::SameLine();
+	if (ImGui::Button("Set", ImVec2(30, 0))) {
+		runtime.ip = ipInput;
+	}
+	inputPos.y += 30;
+	ImGui::SetCursorPos(inputPos);
+	// Set the size for input field and position
+	ImGui::SetNextItemWidth(150); // Set input width
 
 	static char lobbyName[100] = "";
 	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
@@ -203,7 +204,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "true";
-		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+		SManager::Connect(("http://"+runtime.ip+":3000").c_str(), runtime.token.c_str(), room);
 	}
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(300);
@@ -211,7 +212,7 @@ void DrawUI::ServerWindow()
 		std::map<std::string, std::string> room;
 		room["name"] = lobbyName;
 		room["create"] = "false";
-		SManager::Connect("http://25.16.177.252:3000", tokenHere.c_str(), room);
+		SManager::Connect(("http://" + runtime.ip + ":3000").c_str(), runtime.token.c_str(), room);
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
@@ -352,7 +353,7 @@ void DrawUI::ChatWindow()
 	{
 		if (strlen(inputBuffer) > 0)
 		{
-			std::string msg = username+": " + inputBuffer;
+			std::string msg = runtime.username+": " + inputBuffer;
 			chatLog.push_back(msg);
 			SManager::SendMsg(inputBuffer);
 			memset(inputBuffer, 0, sizeof(inputBuffer)); 
@@ -412,12 +413,12 @@ void DrawUI::LoginWindow()
 				body["password"] = passwordText;
 
 				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request("25.16.177.252:3000/user/login", body.dump(), POST);
+				nlohmann::json res = HManager::Request((runtime.ip+":3000/users/login").c_str(), body.dump(), POST);
 
 				if (res.contains("access_token") && res.contains("username")) {
 					std::cout << "got this JSON: " << res["access_token"] << std::endl;
-					tokenHere = res["access_token"];
-					username = res["username"];
+					runtime.token = res["access_token"];
+					runtime.username = res["username"];
 					needLogin = false;
 				}
 			}).detach();
