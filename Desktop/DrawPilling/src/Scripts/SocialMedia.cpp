@@ -179,13 +179,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ImGuiViewport* viewport = ImGui::GetMainViewport();
 
         ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
-            viewport->WorkPos.y + viewport->WorkSize.y - 10*Lss::VH),
+            viewport->WorkPos.y + viewport->WorkSize.y - 2*Lss::VH),
             ImGuiCond_Always, ImVec2(0.5f, 1.0f));
 
         Lss::Child("FixedButton", ImVec2(0,0), false, 0, ImGuiWindowFlags_NoDecoration |
             ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
 
-        if (Lss::Button("Post", ImVec2(10*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
+        if (Lss::Button("Post", ImVec2(12*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
             creatingPost = true;
         }
         Lss::End();
@@ -275,22 +275,34 @@ void SocialMedia::MainFeed(float position, float width, float height)
         } break;
     case 3: {
         static bool openStuff = true;
+        static bool created = false;
 
-        if (Lss::Modal("Sup", &openStuff,ImVec2(20*Lss::VW,50*Lss::VH),Centered, ImGuiWindowFlags_NoDecoration))
+        if (Lss::Modal("Sup", &openStuff,ImVec2(20*Lss::VW,50*Lss::VH),Centered | Trans, ImGuiWindowFlags_NoDecoration))
         {
+            ImVec2 valid = ImGui::GetContentRegionAvail();
             Lss::Text("What's on your ming?", 2 * Lss::VH);
             static char inputtext[128] = "";
             Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(20 * Lss::VH, 2 * Lss::VH), Centered | Trans);
             Lss::Top(-Lss::VH/2);
             Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
-            ImGui::Button("Sup", ImVec2(100, 50));
-            if (ImGui::IsMouseClicked(0))
+
+            ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+            if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
+                created = true;
+            }
+            Lss::End();
+
+            if(created) Explorer::FileExplorerUI(&created);
+
+            ImVec2 buttonSize = ImVec2(100, 20);
+            ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+            Lss::Button("Post##postButton", ImVec2(10*Lss::VH, 4*Lss::VH),3*Lss::VH, Centered);
+            if (!created && ImGui::IsMouseClicked(0))
             {     
                 ImVec2 pos = ImGui::GetWindowPos();
                 ImVec2 cursorPos = ImGui::GetMousePos();
                 ImVec2 size = ImGui::GetWindowSize();
                 if (!Lss::InBound(cursorPos, pos, size)) {
-                    Lss::End();
                     ImGui::CloseCurrentPopup();
                     openStuff = false;
                 }

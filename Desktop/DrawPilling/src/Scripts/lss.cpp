@@ -126,9 +126,9 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 		ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	}
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 500));
+	//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 500));
 	if (centered) Center(size.x);
-	ImGui::PopStyleVar();
+	//ImGui::PopStyleVar();
 
 	bool pressed = ImGui::Button(textIn.c_str(), size);
 
@@ -232,11 +232,18 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 	if (*open) {
 		ImGui::OpenPopup(label.c_str());
 		ImGui::SetNextWindowSize(size);
+		if (flags & Trans) {
+			ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, colorArray[Transparent]);
+		}
 		if (flags & Centered) {
 			CenterWindow();
 		}
 	}
-	return ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
+	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
+	if (*open && flags & Trans) {
+		ImGui::PopStyleColor();
+	}
+	return isOpen;
 }
 
 

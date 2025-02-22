@@ -16,14 +16,13 @@ const ImVec2 iconSize(50, 50);
 
 static bool showExplorer = true;
 
+int counter = 0;
+
 void Explorer::Init()
 {
     folderTexture.Init("Resources/icons/folder.png");
     folderFullTexture.Init("Resources/icons/folderFull.png");
     fileTexture.Init("Resources/icons/file.png");
-
-    std::cout << "Folder texture ID: " << folderTexture.GetId() << std::endl;
-    std::cout << "File texture ID: " << fileTexture.GetId() << std::endl;
 }
 
 bool IsFolderEmpty(const std::string& folderPath) {
@@ -49,24 +48,46 @@ bool IsFolderEmpty(const std::string& folderPath) {
 
 void Explorer::FileExplorerUI(bool* creatorStuff) {
 
-    if (showExplorer) {
-        ImGui::Begin("Explorer", &showExplorer);
-        ImGui::Columns(4, nullptr, false);
-        /*
-        ImGui::Text("Current Directory: %s", currentPath.c_str());
-        if (ImGui::Button("Up")) {
-            size_t pos = currentPath.find_last_of("\\");
-            if (pos != std::string::npos && pos > 2) {
-                currentPath = currentPath.substr(0, pos);
+    if (Lss::Modal("Explorer", &showExplorer, ImVec2(50 * Lss::VW, 40 * Lss::VH), Centered))
+    {
+        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
+        ImGui::Columns(7, nullptr, false);
+
+
+        size_t pos = currentPath.find_last_of("\\");
+        if (pos != std::string::npos && pos > 2) {
+            std::string backPath = currentPath.substr(0, pos);
+            bool isBack = (".." == selectedFile);
+
+            if (ImGui::Selectable("##..", isBack, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+                selectedFile = "..";
+                std::cout << "Selected: " << " .." << std::endl;
             }
-        }*/
+            ImVec2 pos = ImGui::GetItemRectMin();
+            ImVec2 size = ImGui::GetItemRectSize();
+            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+            ImGui::SetCursorScreenPos(cursorPos);
+
+            Lss::Image(folderFullTexture.GetId(), iconSize);
+            Lss::Text("..", 2 * Lss::VH);
+
+            if (isBack && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                std::cout << "Changed path to: " << backPath << std::endl;
+                currentPath = backPath;
+                selectedFile.clear();
+            }
+            Lss::End();
+            ImGui::NextColumn();
+        }
+
 
         for (const auto& file : GetFilesInDirectory(currentPath)) {
+
             std::string newPath = currentPath + "\\" + file;
             DWORD attributes = GetFileAttributes(newPath.c_str());
             bool isDirectory = (attributes & FILE_ATTRIBUTE_DIRECTORY);
             bool isSelected = (file == selectedFile);
-
 
             ImTextureID icon;
             if (isDirectory) {
@@ -81,21 +102,31 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 icon = fileTexture.GetId();
             }
 
-            Lss::Image(icon, iconSize);
-            if (ImGui::Selectable(file.c_str(), isSelected, 0, ImVec2(iconSize.x, 0))) {
+         
+            if (ImGui::Selectable(("##"+file).c_str(), isSelected, 0, ImVec2(0, iconSize.y+2*Lss::VH))) {
                 selectedFile = file;
                 std::cout << "Selected: " << file << std::endl;
             }
+            ImVec2 pos = ImGui::GetItemRectMin();
+            ImVec2 size = ImGui::GetItemRectSize();
+            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x/2, pos.y);
+            ImGui::SetCursorScreenPos(cursorPos);
 
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory) {
+            Lss::Image(icon, iconSize);
+            Lss::Text(file, 2 * Lss::VH);
+
+            if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
+            {
                 std::cout << "Changed path to: " << newPath << std::endl;
                 currentPath = newPath;
                 selectedFile.clear();
             }
             Lss::End();
-            ImGui::NextColumn();
+            ImGui::NextColumn();         
         }
-        ImGui::End();
+        ImGui::PopItemFlag();
+        counter = 0;
+        ImGui::EndPopup();
     }
     else {
         *creatorStuff = false;
