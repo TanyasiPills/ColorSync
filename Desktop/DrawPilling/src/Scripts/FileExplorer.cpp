@@ -119,115 +119,129 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 std::strcpy(tempPath, newPath.c_str());
             }
         }
+            Lss::Child("sideBar", ImVec2(10 * Lss::VW, 36 * Lss::VW - 2 * ImGui::GetStyle().FramePadding.y));
+            Lss::Left(0.5f * Lss::VH);
+            Lss::Text("Sup", 4 * Lss::VH);
 
-        Lss::Child("view",ImVec2(40*Lss::VW, 40*Lss::VH));
+            ImGui::EndChild();
+            ImGui::SameLine();
 
-        
-        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
-        ImGui::Columns(7, nullptr, false);
+            Lss::Child("view",ImVec2(40*Lss::VW, 45*Lss::VH));
+            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 
+            Lss::Text("Directories & Files:", 4 * Lss::VH);
 
-        size_t pos = currentPath.find_last_of("\\");
-        if (pos != std::string::npos && pos > 2) {
-            std::string backPath = currentPath.substr(0, pos);
-            bool isBack = (".." == selectedFile);
-
-            if (ImGui::Selectable("##..", isBack, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-                selectedFile = "..";
-                std::cout << "Selected: " << " .." << std::endl;
-            }
-            ImVec2 pos = ImGui::GetItemRectMin();
-            ImVec2 size = ImGui::GetItemRectSize();
-            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
-            ImGui::SetCursorScreenPos(cursorPos);
-
-            Lss::Image(folderFullTexture.GetId(), iconSize);
-            Lss::Text("..", 2 * Lss::VH);
-
-            if (isBack && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                std::cout << "Changed path to: " << backPath << std::endl;
-                currentPath = backPath;
-                selectedFile.clear();
-            }
-            Lss::End();
-            ImGui::NextColumn();
-        }
+                Lss::SetColor(ContainerBackground, Background);
+                Lss::Child("#explorerView", ImVec2(40 * Lss::VW, 36 * Lss::VH));
+                ImGui::Columns(7, nullptr, false);
 
 
-        for (const auto& file : GetFilesInDirectory(currentPath)) {
+                size_t pos = currentPath.find_last_of("\\");
+                if (pos != std::string::npos && pos > 2) {
+                    std::string backPath = currentPath.substr(0, pos);
+                    bool isBack = (".." == selectedFile);
 
-            std::string newPath = currentPath + "\\" + file;
-            DWORD attributes = GetFileAttributes(newPath.c_str());
-            bool isHidden = (attributes & FILE_ATTRIBUTE_HIDDEN);
-            if (isHidden) continue; 
-            bool isDirectory = (attributes & FILE_ATTRIBUTE_DIRECTORY);
-            bool isSelected = (file == selectedFile);
+                    if (ImGui::Selectable("##..", isBack, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+                        selectedFile = "..";
+                        std::cout << "Selected: " << " .." << std::endl;
+                    }
+                    ImVec2 pos = ImGui::GetItemRectMin();
+                    ImVec2 size = ImGui::GetItemRectSize();
+                    ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+                    ImGui::SetCursorScreenPos(cursorPos);
 
-            ImTextureID icon;
-            if (isDirectory) {
-                if (IsFolderEmpty(newPath)) {
-                    icon = folderTexture.GetId();
+                    Lss::Image(folderFullTexture.GetId(), iconSize);
+                    Lss::Text("..", 2 * Lss::VH);
+
+                    if (isBack && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                    {
+                        std::cout << "Changed path to: " << backPath << std::endl;
+                        currentPath = backPath;
+                        selectedFile.clear();
+                    }
+                    Lss::End();
+                    ImGui::NextColumn();
                 }
-                else {
-                    icon = folderFullTexture.GetId();
-                }
-            }
-            else {
-                icon = fileTexture.GetId();
-            }
+
+
+                for (const auto& file : GetFilesInDirectory(currentPath)) {
+
+                    std::string newPath = currentPath + "\\" + file;
+                    DWORD attributes = GetFileAttributes(newPath.c_str());
+                    bool isHidden = (attributes & FILE_ATTRIBUTE_HIDDEN);
+                    if (isHidden) continue; 
+                    bool isDirectory = (attributes & FILE_ATTRIBUTE_DIRECTORY);
+                    bool isSelected = (file == selectedFile);
+
+                    ImTextureID icon;
+                    if (isDirectory) {
+                        if (IsFolderEmpty(newPath)) {
+                            icon = folderTexture.GetId();
+                        }
+                        else {
+                            icon = folderFullTexture.GetId();
+                        }
+                    }
+                    else {
+                        icon = fileTexture.GetId();
+                    }
 
          
-            if (ImGui::Selectable(("##"+file).c_str(), isSelected, 0, ImVec2(0, iconSize.y+2*Lss::VH))) {
-                selectedFile = file;
-                std::cout << "Selected: " << file << std::endl;
-            }
-            ImVec2 pos = ImGui::GetItemRectMin();
-            ImVec2 size = ImGui::GetItemRectSize();
-            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x/2, pos.y);
-            ImGui::SetCursorScreenPos(cursorPos);
+                    if (ImGui::Selectable(("##"+file).c_str(), isSelected, 0, ImVec2(0, iconSize.y+2*Lss::VH))) {
+                        selectedFile = file;
+                        std::cout << "Selected: " << file << std::endl;
+                    }
+                    ImVec2 pos = ImGui::GetItemRectMin();
+                    ImVec2 size = ImGui::GetItemRectSize();
+                    ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x/2, pos.y);
+                    ImGui::SetCursorScreenPos(cursorPos);
 
-            Lss::Image(icon, iconSize);
-            Lss::Text(file, 2 * Lss::VH);
+                    Lss::Image(icon, iconSize);
+                    Lss::Text(file, 2 * Lss::VH);
 
-            if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
-            {
-                std::cout << "Changed path to: " << newPath << std::endl;
-                currentPath = newPath;
-                selectedFile.clear();
-            }
-            Lss::End();
-            ImGui::NextColumn();         
-        }
-        ImGui::PopItemFlag();
-        ImGui::Columns(1);
-        Lss::Left(Lss::VW);
-        Lss::Text("File:",4*Lss::VH);
-        ImGui::SameLine();
-        static char fileName[200];
-        Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(27 * Lss::VW, 4 * Lss::VH));
-        ImGui::SameLine();
-        Lss::SetFontSize(4 * Lss::VH);
-        ImGui::SetNextItemWidth(10 * Lss::VW);
-        bool formatChange = ImGui::BeginCombo("##format", currentFormat, ImGuiComboFlags_NoArrowButton);
-        if (formatChange)
-        {
-            for (int n = 0; n < items.size(); n++)
-            {
-                bool is_selected = (currentFormat == formats[n]);
-                if (ImGui::Selectable(formats[n], is_selected)) {
-                    currentFormat = formats[n];
-                    std::strcpy(fileName, "");
-                    currentFormat = formats[n];
+                    if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
+                    {
+                        std::cout << "Changed path to: " << newPath << std::endl;
+                        currentPath = newPath;
+                        selectedFile.clear();
+                    }
+                    Lss::End();
+                    ImGui::NextColumn();         
                 }
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
+                ImGui::PopItemFlag();
+                ImGui::Columns(1);
 
-        Lss::End();
-        ImGui::EndChild();
+                Lss::End();
+                ImGui::EndChild();
+                Lss::SetColor(ContainerBackground, ContainerBackground);
+
+            Lss::Left(Lss::VW);
+            Lss::Text("File:",4*Lss::VH);
+            ImGui::SameLine();
+            static char fileName[200];
+            Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(27 * Lss::VW, 4 * Lss::VH));
+            ImGui::SameLine();
+            Lss::SetFontSize(4 * Lss::VH);
+            ImGui::SetNextItemWidth(10 * Lss::VW);
+            bool formatChange = ImGui::BeginCombo("##format", currentFormat, ImGuiComboFlags_NoArrowButton);
+            if (formatChange)
+            {
+                for (int n = 0; n < items.size(); n++)
+                {
+                    bool is_selected = (currentFormat == formats[n]);
+                    if (ImGui::Selectable(formats[n], is_selected)) {
+                        currentFormat = formats[n];
+                        std::strcpy(fileName, "");
+                        currentFormat = formats[n];
+                    }
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            Lss::End();
+            ImGui::EndChild();
 
         Lss::End();
         ImGui::EndPopup();
