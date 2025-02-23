@@ -79,7 +79,7 @@ bool IsFolderEmpty(const std::string& folderPath) {
 }
 
 void Explorer::FileExplorerUI(bool* creatorStuff) {
-
+    Lss::SetFontSize(1 * Lss::VH);
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
     {
         const char* formats[] = { ".jpg", ".png", "all image - jpg/png", ".sync", };
@@ -122,9 +122,20 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
         ImVec2 padding = ImGui::GetStyle().FramePadding;
         float childHeight = 36 * Lss::VW - 2 * padding.y;
             Lss::Child("sideBar", ImVec2(10 * Lss::VW, childHeight));
-            Lss::Left(0.5f * Lss::VH);
-            Lss::Text("Sup", 4 * Lss::VH);
-
+                Lss::Left(0.5f * Lss::VW);
+                Lss::Text("Favorites", 3 * Lss::VH);
+                Lss::Left(0.5f * Lss::VW);
+                Lss::SetColor(ContainerBackground, Background);
+                Lss::Child("favs", ImVec2(9 * Lss::VW, childHeight/2- 4 * Lss::VH));
+                ImGui::EndChild();
+                Lss::Top(0.25 * Lss::VH);
+                Lss::Left(0.5f * Lss::VW);
+                Lss::Text("Recent folders", 3 * Lss::VH);
+                Lss::Left(0.5f * Lss::VW);
+                Lss::Child("recents", ImVec2(9 * Lss::VW, childHeight / 2 - 4 * Lss::VH));
+                ImGui::EndChild();
+                Lss::SetColor(ContainerBackground, ContainerBackground);
+                Lss::End();
             ImGui::EndChild();
             ImGui::SameLine();
 
