@@ -119,20 +119,24 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 std::strcpy(tempPath, newPath.c_str());
             }
         }
-            Lss::Child("sideBar", ImVec2(10 * Lss::VW, 36 * Lss::VW - 2 * ImGui::GetStyle().FramePadding.y));
+        ImVec2 padding = ImGui::GetStyle().FramePadding;
+        float childHeight = 36 * Lss::VW - 2 * padding.y;
+            Lss::Child("sideBar", ImVec2(10 * Lss::VW, childHeight));
             Lss::Left(0.5f * Lss::VH);
             Lss::Text("Sup", 4 * Lss::VH);
 
             ImGui::EndChild();
             ImGui::SameLine();
 
-            Lss::Child("view",ImVec2(40*Lss::VW, 45*Lss::VH));
+            Lss::Child("view",ImVec2(48.75f*Lss::VW, childHeight));
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 
             Lss::Text("Directories & Files:", 4 * Lss::VH);
 
                 Lss::SetColor(ContainerBackground, Background);
-                Lss::Child("#explorerView", ImVec2(40 * Lss::VW, 36 * Lss::VH));
+                Lss::Left(Lss::VW);
+                Lss::Child("#explorerView", ImVec2(46.75f * Lss::VW, childHeight - 10.5f * Lss::VH));
+                Lss::Top(Lss::VH);
                 ImGui::Columns(7, nullptr, false);
 
 
@@ -215,11 +219,12 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 ImGui::EndChild();
                 Lss::SetColor(ContainerBackground, ContainerBackground);
 
+            Lss::Top(Lss::VH);
             Lss::Left(Lss::VW);
             Lss::Text("File:",4*Lss::VH);
             ImGui::SameLine();
             static char fileName[200];
-            Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(27 * Lss::VW, 4 * Lss::VH));
+            Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(35 * Lss::VW, 4 * Lss::VH));
             ImGui::SameLine();
             Lss::SetFontSize(4 * Lss::VH);
             ImGui::SetNextItemWidth(10 * Lss::VW);
