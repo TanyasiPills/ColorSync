@@ -132,7 +132,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,7 +153,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;gdi32.lib;libvcruntime.lib;libcmt.lib;libucrt.lib;</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;gdi32.lib;libvcruntime.lib;libcmt.lib;libucrt.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>MSVCRTD.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>

@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <vector>
 #include <iostream>
+#include <shlwapi.h>
+#include <algorithm>
 #include "GLEW/glew.h"
 
 
