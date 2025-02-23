@@ -21,7 +21,7 @@ int counter = 0;
 std::vector<std::string> driveList;
 std::vector<const char*> items;
 
-void ListDrives() {
+void LoadDrives() {
     driveList.clear();
     items.clear();
 
@@ -43,12 +43,18 @@ void ListDrives() {
     }
 }
 
+bool HasSpecificExtension(const std::string& file, const std::string& ext) {
+    size_t pos = file.find_last_of(".");
+    if (pos == std::string::npos) return false;
+    return file.substr(pos) == ext;
+}
+
 void Explorer::Init()
 {
     folderTexture.Init("Resources/icons/folder.png");
     folderFullTexture.Init("Resources/icons/folderFull.png");
     fileTexture.Init("Resources/icons/file.png");
-    ListDrives();
+    LoadDrives();
 }
 
 bool IsFolderEmpty(const std::string& folderPath) {
@@ -76,6 +82,8 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
 
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
     {
+        const char* formats[] = { ".jpg", ".png", "all image - jpg/png", ".sync", };
+        static const char* currentFormat = formats[0];
         static char tempPath[200] = "";
         static const char* currentItem = items[0];
         Lss::Text("Path: ", 4 * Lss::VH);
@@ -192,9 +200,35 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
             ImGui::NextColumn();         
         }
         ImGui::PopItemFlag();
+        ImGui::Columns(1);
+        Lss::Left(Lss::VW);
+        Lss::Text("File:",4*Lss::VH);
+        ImGui::SameLine();
+        static char fileName[200];
+        Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(27 * Lss::VW, 4 * Lss::VH));
+        ImGui::SameLine();
+        Lss::SetFontSize(4 * Lss::VH);
+        ImGui::SetNextItemWidth(10 * Lss::VW);
+        bool formatChange = ImGui::BeginCombo("##format", currentFormat, ImGuiComboFlags_NoArrowButton);
+        if (formatChange)
+        {
+            for (int n = 0; n < items.size(); n++)
+            {
+                bool is_selected = (currentFormat == formats[n]);
+                if (ImGui::Selectable(formats[n], is_selected)) {
+                    currentFormat = formats[n];
+                    std::strcpy(fileName, "");
+                    currentFormat = formats[n];
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
         Lss::End();
         ImGui::EndChild();
-        ImGui::Columns(1);
+
         Lss::End();
         ImGui::EndPopup();
        
