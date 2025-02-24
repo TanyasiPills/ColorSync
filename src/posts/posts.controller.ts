@@ -28,15 +28,34 @@ export class PostsController {
 
   /**
    * Returns all of the posts
+   * @param take The amount of posts to return at one time
    * @param lastId the id of the last post you got
-   * @returns {data: PostResponse[], lastId: number} The id of the last post and the data of the posts
+   * @returns {data: PostResponse[], newLastId: number} The id of the last post and the data of the posts
    */
   @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
-  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, lastId: { type: 'integer' } } } })
+  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, newLastId: { type: 'integer' } } } })
   @Get()
   findAll(@Query('take') take: string, @Query('lastId') lastId: string) {
     return this.postService.findAll(lastId, take);
+  }
+
+  /**
+   * Searchs for posts with specified tags included
+   * @param tags The tags to search for
+   * @param take The amount of posts to return at one time
+   * @param lastId The lastId from the previous request
+   * @returns {data: PostResponse[], newLastId: number} The id of the last post and the data of the posts
+   */
+  @ApiQuery({ name: 'tags', description: 'The tags to search for', required: false })
+  @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
+  @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
+  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, newLastId: { type: 'integer' } } } })
+  @Get('search') 
+  search(@Query('tags') tags: string[], @Query('take') take: string, @Query('lastId') lastId: string) {
+    if (!tags) tags = [];
+    else if (!Array.isArray(tags)) tags = [tags];
+    return this.postService.search(tags, take, lastId);
   }
 
   /**

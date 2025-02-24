@@ -58,7 +58,7 @@ export class UsersService {
     if (!picture) return null;
 
     let path;
-    if (picture.profile_picture == null) path = resolve('images/defaultPfp.jpg');
+    if (picture.profile_picture == null) path = resolve('files/default_pfp.png');
     else path = resolve(`uploads/${picture.profile_picture}`);
     if (!existsSync(path)) return null;
     return path;

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { IsArray, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreatePostDto {
   @IsOptional()
@@ -13,4 +13,10 @@ export class CreatePostDto {
   @MaxLength(500)
   @ApiProperty({ type: 'string', description: 'The text of the post', example: 'Hello!' })
   text: string;
+
+  @IsArray()
+  @IsString({each: true})
+  @IsOptional()
+  @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  tags?: string[];
 }

@@ -34,8 +34,15 @@ model Post {
   imageId Int?
   text String @db.VarChar(500)
   date DateTime @default(now())
+  tags Tag[]
 
   comments Comment[]
+}
+
+model Tag {
+  name String @id @unique
+
+  posts Post[]
 }
 
 model Comment {

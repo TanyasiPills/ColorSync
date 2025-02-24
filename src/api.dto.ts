@@ -69,6 +69,11 @@ export class PostBaseType {
   @IsInt()
   @IsPositive()
   imageId?: number;
+
+  @ApiProperty({description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  @IsArray()
+  @IsString({each: true})
+  tags: string[];
 }
 
 export class PostIncludesType {
@@ -94,6 +99,11 @@ export class PostIncludesType {
   @ApiProperty({ description: 'The user that created the post', examples: [{ username: 'bob' }, { username: 'alice' }] })
   @IsObject()
   user: { username: string };
+
+  @ApiProperty({description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  @IsArray()
+  @IsString({each: true})
+  tags: string[];
 
   @ApiProperty({ description: 'The comments on the post', examples: [[{ id: 1, text: 'Hello, Bob', date: '2025-02-09T16:30:16.262Z', userId: 2, user: { username: 'William' } }], []] })
   @IsArray()
