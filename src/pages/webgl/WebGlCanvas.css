@@ -10,12 +10,12 @@
     position: relative;
 }
 
-.sideBar#left{
+.sideBar#left {
     border-right: 0.15rem solid var(--borderCol);
     background-color: #303050 !important;
 }
 
-.sideBar#right{
+.sideBar#right {
     border-left: 0.15rem solid var(--borderCol);
     background-color: var(--backgroundColor) !important;
 }
@@ -26,11 +26,45 @@
     justify-content: center;
 }
 
-canvas {
+#gl-canvas {
     width: 100%;
     height: 100%;
     margin: auto;
     background-color: white;
+}
+
+
+#colorWheel {
+    position: relative;
+    cursor: crosshair;
+    border: 2px solid #000;
+}
+
+.colorDiv {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+}
+
+#marker {
+    width: 5%;
+    height: 5%;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+#markerCol {
+    width: 100%;
+    height: 5%;
+    border-radius: 20%;
+    border: 2px solid white;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+#colorColumns{
+    border: 2px solid black;
 }
 
 button,

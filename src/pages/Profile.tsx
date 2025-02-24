@@ -26,23 +26,23 @@ export function Profile({ own = false }: { own: boolean }) {
 
   useEffect(() => {
     async function load() {
-      const header: any = {  };
+      const header: any = {};
       if (own) {
         header["Authorization"] = "Bearer " + thisUser.access_token;
       }
       const result = await fetch(backendIp + '/users' + (own ? '' : '/' + id), { method: "GET", headers: header });
       if (result.ok) {
-        const resultJson:user = await result.json();
+        const resultJson: user = await result.json();
         setUser(resultJson);
-        const imageResult = await fetch(backendIp + '/images/user/' + resultJson.id, {method: "GET", headers: header});
+        const imageResult = await fetch(backendIp + '/images/user/' + resultJson.id, { method: "GET", headers: header });
         if (imageResult.ok) {
-          const imageResultJson:image[] = await imageResult.json() 
+          const imageResultJson: image[] = await imageResult.json()
           setImages(imageResultJson);
-          const promises = imageResultJson.map((e)=> fetch(backendIp+'/images/' + e.id, {method: "GET", headers: header}).then(res => {
+          const promises = imageResultJson.map((e) => fetch(backendIp + '/images/' + e.id, { method: "GET", headers: header }).then(res => {
             if (res.ok) {
               return res.blob();
             }
-            else{
+            else {
               throw new Error("failed to fetch image");
             }
           }).then(blob => URL.createObjectURL(blob)));
@@ -67,10 +67,10 @@ export function Profile({ own = false }: { own: boolean }) {
         <Col xs={6}>
         </Col>
       </Row>
-      <Row id="drawings" className="w-100" style={{ flex: '3' }}>
-        {imageURL&&imageURL.map((e) => (
-          <Col xs={12} sm={6} md={4} lg={2}>
-            <img src={e} alt="" style={{ width: '100%' }} />
+      <Row id="drawings" className="w-100" style={{ display: 'flex', flexWrap: 'wrap' }}>
+        {imageURL && imageURL.map((e, index) => (
+          <Col id="col" key={index} xs={12} sm={6} md={4} lg={4} className="d-flex justify-content">
+            <img src={e} alt="" className="drawing-img" />
           </Col>
         ))}
       </Row>

@@ -1,5 +1,5 @@
 #profilData {
-    border-bottom: 0.15rem solid var(--borderCol);
+    border-bottom: 2px solid var(--borderCol);
     padding: auto;
     align-content: center;
 }
@@ -13,10 +13,10 @@
 }
 
 #profilePic {
-    margin: 2rem;
+    margin: 10px;
     border-radius: 50%;
-    height: 10rem;
-    width: 10rem;
+    height: 75px;
+    width: 75px;
     transition: all 1s ease;
 }
 
@@ -28,9 +28,22 @@
 #userName {
     margin: 0;
 }
+
+#drawings{
+    
+}
+
+#col{
+    border-left: 2px solid var(--borderCol);
+    border-bottom: 2px solid var(--borderCol);
+}
+
+#col:nth-child(3n){
+    border-right: 2px solid var(--borderCol);
+}
+
 #drawings img{
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    aspect-ratio: 1;
+    object-fit: contain;
+    padding: 10px;
 }
