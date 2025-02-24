@@ -127,6 +127,8 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;$(SolutionDir)DrawPilling\Dependencies\Includes\SocketIO</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
