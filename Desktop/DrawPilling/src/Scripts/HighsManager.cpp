@@ -180,3 +180,14 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 		std::cout << height << "; " << width << std::endl;
 	return texture;
 }
+
+std::vector<uint8_t> HManager::ImageFormFiles(const std::string& filePath)
+{
+	int width, height, channels;
+	unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, 3);
+	size_t dataSize = width * height * 3;
+	std::vector<uint8_t> imageData(data, data + dataSize);
+
+	stbi_image_free(data);
+	return imageData;
+}

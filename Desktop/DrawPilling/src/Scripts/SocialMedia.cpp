@@ -21,6 +21,10 @@ bool init = true;
 float prevScrollY;
 bool creatingPost = false;
 
+MyTexture imageToPostTexture;
+GLuint imageToPost = -1;
+
+
 static RuntimeData& runtime = RuntimeData::getInstance();
 
 int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
@@ -39,7 +43,6 @@ void SocialMedia::ProcessThreads()
         switch (type)
         {
         case 1:
-            if (dataId> posts.size()-1) std::cout << "éisgéakhrgéaiihréanaéig" << std::endl;
             posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
             posts[dataId].picLoaded = true;
             break;
@@ -275,6 +278,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         } break;
     case 3: {
         static bool openStuff = true;
+        static bool wasCreated = false;
         static bool created = false;
 
         if (Lss::Modal("Sup", &openStuff,ImVec2(20*Lss::VW,50*Lss::VH),Centered | Trans, ImGuiWindowFlags_NoDecoration))
@@ -289,11 +293,22 @@ void SocialMedia::MainFeed(float position, float width, float height)
             ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
             if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
                 created = true;
+                wasCreated = true;
             }
             Lss::End();
 
             if(created) Explorer::FileExplorerUI(&created);
-
+            else if (wasCreated) {
+                std::string imagePath = Explorer::GetImagePath();
+                if (imagePath.size() > 2) {
+                    imageToPostTexture.Init(imagePath);
+                    imageToPost = imageToPostTexture.GetId();
+                }
+                else {
+                    wasCreated = false;
+                }
+            }
+            if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
             ImVec2 buttonSize = ImVec2(100, 20);
             ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
             Lss::Button("Post##postButton", ImVec2(10*Lss::VH, 4*Lss::VH),3*Lss::VH, Centered);

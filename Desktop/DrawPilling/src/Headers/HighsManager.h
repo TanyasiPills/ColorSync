@@ -26,4 +26,5 @@ public:
 	static nlohmann::json Request(std::string query, std::string body, Method method);
 	static std::vector<uint8_t> Request(std::string query, Method method);
 	static GLuint ImageFromRequest(const std::vector<uint8_t>& imageData, float& ratio);
+	static std::vector<uint8_t> ImageFormFiles(const std::string& filePath);
 };
