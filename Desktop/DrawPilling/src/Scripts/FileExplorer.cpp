@@ -2,6 +2,7 @@
 #include "lss.h"
 #include "Texture.h"
 
+const char* formats[] = { "all file", ".jpg", ".png", "all image - jpg/png", ".sync", };
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
 GLuint folder;
@@ -142,7 +143,6 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
     Lss::SetFontSize(1 * Lss::VH);
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
     {
-        const char* formats[] = {"all file", ".jpg", ".png", "all image - jpg/png", ".sync", };
         static const char* currentFormat = formats[0];
         static int currentId = 0;
 
@@ -208,6 +208,12 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                         case 1:
                             if (!HasSpecificExtension(newPath, ".jpg")) continue;
                             break;
+                        case 2:
+                            if (!HasSpecificExtension(newPath, ".png")) continue;
+                        case 3:
+                            if (!HasSpecificExtension(newPath, ".jpg") && !HasSpecificExtension(newPath, ".png")) continue;
+                        case 4:
+                            if(!HasSpecificExtension(newPath, ".sync")) continue;
                         default:
                             break;
                         }
@@ -237,7 +243,17 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                     ImGui::SetCursorScreenPos(cursorPos);
 
                     Lss::Image(icon, iconSize);
-                    Lss::Text(file, 2 * Lss::VH);
+                    Lss::SetFontSize(2 * Lss::VH);
+                    std::string fileNameStuff;
+                    if (file.size() > 10) {
+                        fileNameStuff = file.substr(0, 10) + "...";
+                    }
+                    else {
+                        fileNameStuff = file;
+                    }
+                    float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+                    ImGui::SetCursorScreenPos(ImVec2(pos.x +(size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+                    Lss::Text(fileNameStuff, 2 * Lss::VH);
 
                     if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
                     {
