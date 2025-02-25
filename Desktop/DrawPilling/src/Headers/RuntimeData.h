@@ -18,5 +18,7 @@ public:
     std::string username = "";
     std::string password = "";
 
+    bool logedIn = true;
+
     int undoCount = 30;
 };

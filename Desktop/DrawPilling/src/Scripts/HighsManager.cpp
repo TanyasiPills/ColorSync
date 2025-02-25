@@ -16,6 +16,18 @@ size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) 
 void HManager::Init()
 {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+	auto& runtime = RuntimeData::getInstance();
+
+	if (runtime.token[0] != '\0') {
+		nlohmann::json result = Request(runtime.ip + ":3000/users", "", GET, runtime.token);
+		if (result["statusCode"] == 401) {
+			runtime.logedIn = false;
+		}
+	}
+	else {
+		runtime.logedIn = false;
+	}
 }
 
 void HManager::Down() 
@@ -23,7 +35,7 @@ void HManager::Down()
 	curl_global_cleanup();
 }
 
-nlohmann::json HManager::Request(std::string query, std::string body, Method method)
+nlohmann::json HManager::Request(std::string query, std::string body, Method method, std::string tokenIn)
 {
 	CURL* curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -37,6 +49,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
 		headers = nullptr;
 		headers = curl_slist_append(headers, "Content-Type: application/json");
+		if(tokenIn != "") headers = curl_slist_append(headers, ("Authorization: Bearer " + tokenIn).c_str());
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 
@@ -60,7 +73,6 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		}
 
 
-		std::cout << "Requesting URL: " << url << std::endl;
 		res = curl_easy_perform(curl);
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
@@ -113,8 +125,6 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 		return {};
 	}
 
-	std::cout << "Requesting URL: " << url << std::endl;
-
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, nullptr);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
@@ -122,15 +132,14 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
 		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-		curl_easy_cleanup(curl);  // Clean up the CURL handle for each thread
+		curl_easy_cleanup(curl);
 		return {};
 	}
 
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-	std::cout << "HTTP Response Code: " << http_code << std::endl;
 
-	curl_easy_cleanup(curl);  // Clean up after request
+	curl_easy_cleanup(curl);
 	return imageData;
 }
 

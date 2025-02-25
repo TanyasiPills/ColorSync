@@ -325,10 +325,6 @@ void RenderImGui(bool& onUIIn)
 	onUIIn = ImGui::GetIO().WantCaptureMouse;
 	Lss::SetFontSize(2 * Lss::VH);
 
-	bool yes = true;
-	ImGui::SetNextWindowViewport(10);
-	ImGui::ShowDemoWindow(&yes);
-
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
 	DrawUI::ColorWindow(cursor);

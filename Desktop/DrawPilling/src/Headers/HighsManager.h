@@ -9,6 +9,8 @@
 #include "GLEW/glew.h"
 #include "stb_image/stb_image.h"
 
+#include "RuntimeData.h"
+
 enum Method {
 	GET,
 	POST,
@@ -23,7 +25,7 @@ private:
 public:
 	static void Init();
 	static void Down();
-	static nlohmann::json Request(std::string query, std::string body, Method method);
+	static nlohmann::json Request(std::string query, std::string body, Method method, std::string tokenIn = "");
 	static std::vector<uint8_t> Request(std::string query, Method method);
 	static GLuint ImageFromRequest(const std::vector<uint8_t>& imageData, float& ratio);
 	static std::vector<uint8_t> ImageFormFiles(const std::string& filePath);

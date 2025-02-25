@@ -7,6 +7,7 @@
 #include "CallBacks.h"
 #include "RuntimeData.h"
 #include "FIleExplorer.h"
+#include "LoginRegister.h"
 
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
@@ -20,6 +21,8 @@ bool canGet = false;
 bool init = true;
 float prevScrollY;
 bool creatingPost = false;
+
+bool loginWindow = false;
 
 MyTexture imageToPostTexture;
 GLuint imageToPost = -1;
@@ -74,6 +77,10 @@ void SocialMedia::MainFeed(float position, float width, float height)
     switch (mode)
     {
     case 0:{ //home page, social media
+        static bool openStuff = false;
+        static bool wasCreated = false;
+        static bool created = false;
+
         ImGui::GetStyle().ChildBorderSize = 0.0f;
         ImVec2 valid = ImGui::GetContentRegionAvail();
         ImGui::SetCursorPosY(0);
@@ -85,7 +92,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
             if (prevScrollY != scrollY && scrollY > prevScrollY) {
                 prevScrollY = scrollY;
-                canGet = false;
                 std::thread(&SocialMedia::GetPosts).detach();
             }
             if (init) {
@@ -185,17 +191,58 @@ void SocialMedia::MainFeed(float position, float width, float height)
             viewport->WorkPos.y + viewport->WorkSize.y - 2*Lss::VH),
             ImGuiCond_Always, ImVec2(0.5f, 1.0f));
 
-        Lss::Child("FixedButton", ImVec2(0,0), false, 0, ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+        Lss::Child("FixedButton", ImVec2(12*Lss::VH, 5 * Lss::VH), false, Centered, ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
 
         if (Lss::Button("Post", ImVec2(12*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
-            creatingPost = true;
+            openStuff = true;
         }
         Lss::End();
         ImGui::EndChild();
-        if (creatingPost) {
-            Explorer::FileExplorerUI(&creatingPost);
-            mode = 3;
+
+        if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, 50 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+        {
+            ImVec2 valid = ImGui::GetContentRegionAvail();
+            Lss::Text("What's on your ming?", 2 * Lss::VH);
+            static char inputtext[128] = "";
+            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(20 * Lss::VH, 2 * Lss::VH), Centered | Trans);
+            Lss::Top(-Lss::VH / 2);
+            Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
+
+            ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+            if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
+                created = true;
+                wasCreated = true;
+            }
+            Lss::End();
+
+            if (created) Explorer::FileExplorerUI(&created);
+            else if (wasCreated) {
+                std::string imagePath = Explorer::GetImagePath();
+                if (imagePath.size() > 2) {
+                    imageToPostTexture.Init(imagePath);
+                    imageToPost = imageToPostTexture.GetId();
+                }
+                else {
+                    wasCreated = false;
+                }
+            }
+            if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
+            ImVec2 buttonSize = ImVec2(100, 20);
+            ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+            Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered);
+            if (!created && ImGui::IsMouseClicked(0))
+            {
+                ImVec2 pos = ImGui::GetWindowPos();
+                ImVec2 cursorPos = ImGui::GetMousePos();
+                ImVec2 size = ImGui::GetWindowSize();
+                if (!Lss::InBound(cursorPos, pos, size)) {
+                    ImGui::CloseCurrentPopup();
+                    openStuff = false;
+                }
+            }
+            Lss::End();
+            ImGui::EndPopup();
         }
         } break;
     case 1: { //settings
@@ -277,59 +324,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ImGui::EndChild();
         } break;
     case 3: {
-        static bool openStuff = true;
-        static bool wasCreated = false;
-        static bool created = false;
-
-        if (Lss::Modal("Sup", &openStuff,ImVec2(20*Lss::VW,50*Lss::VH),Centered | Trans, ImGuiWindowFlags_NoDecoration))
-        {
-            ImVec2 valid = ImGui::GetContentRegionAvail();
-            Lss::Text("What's on your ming?", 2 * Lss::VH);
-            static char inputtext[128] = "";
-            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(20 * Lss::VH, 2 * Lss::VH), Centered | Trans);
-            Lss::Top(-Lss::VH/2);
-            Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
-
-            ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-            if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
-                created = true;
-                wasCreated = true;
-            }
-            Lss::End();
-
-            if(created) Explorer::FileExplorerUI(&created);
-            else if (wasCreated) {
-                std::string imagePath = Explorer::GetImagePath();
-                if (imagePath.size() > 2) {
-                    imageToPostTexture.Init(imagePath);
-                    imageToPost = imageToPostTexture.GetId();
-                }
-                else {
-                    wasCreated = false;
-                }
-            }
-            if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
-            ImVec2 buttonSize = ImVec2(100, 20);
-            ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-            Lss::Button("Post##postButton", ImVec2(10*Lss::VH, 4*Lss::VH),3*Lss::VH, Centered);
-            if (!created && ImGui::IsMouseClicked(0))
-            {     
-                ImVec2 pos = ImGui::GetWindowPos();
-                ImVec2 cursorPos = ImGui::GetMousePos();
-                ImVec2 size = ImGui::GetWindowSize();
-                if (!Lss::InBound(cursorPos, pos, size)) {
-                    ImGui::CloseCurrentPopup();
-                    openStuff = false;
-                }
-            }
-            Lss::End();
-            ImGui::EndPopup();
-        }
+        
         } break;
     default:
         break;
     }
     
+    LoginRegister::Login(loginWindow);
 
     Lss::SetColor(Background, Background);
 
@@ -346,7 +347,7 @@ void SocialMedia::LeftSide(float position, float width, float height)
 
     ImGui::Separator();
     Lss::Top(2 * Lss::VH);
-    if (Lss::Button("Editor", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)){
+    if (Lss::Button("Editor", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
         Callback::EditorSwapCallBack();
     }
     Lss::Top(1 * Lss::VH);
@@ -355,23 +356,46 @@ void SocialMedia::LeftSide(float position, float width, float height)
     }
     Lss::Top(2 * Lss::VH);
     ImGui::Separator();
-    Lss::Top(2 * Lss::VH);
-    if (Lss::Button("Message", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-        //GetPosts();
+    if (runtime.logedIn) {
+        Lss::Top(2 * Lss::VH);
+        if (Lss::Button("Message", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            //GetPosts();
+        }
     }
+
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
         else mode = 0;
     }
-    Lss::Top(1 * Lss::VH);
-    if (Lss::Button("Profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-        //GetPosts();
+
+    if (runtime.logedIn) {
+        Lss::Top(1 * Lss::VH);
+        if (Lss::Button("Profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            //GetPosts();
+        }
     }
-    Lss::Top(40 * Lss::VH);
+    else {
+        if (Lss::Button("Login", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            loginWindow = true;
+        }
+    }
+
+    float windowHeight = ImGui::GetWindowHeight();
+    windowHeight -= 6 * Lss::VH;
+    ImGui::SetCursorPosY(windowHeight);
     if (Lss::Button("Settings", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Rounded)) {
         if (mode != 1) mode = 1;
         else mode = 0;
+    }
+
+    if (runtime.logedIn)
+    {
+        if (Lss::Button("Logout", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Rounded))
+        {
+            runtime.username = "";
+            runtime.password = "";
+        }
     }
 
 
@@ -444,7 +468,7 @@ void SocialMedia::GetPosts()
     }
 
     lastId = jsonData["newLastId"];
-
+    canGet = false;
     LoadImages();
 }
 void SocialMedia::LoadImages() 
@@ -474,7 +498,6 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
     case 1: {
         if (dataId == -1)return;
         imageData = HManager::Request((runtime.ip+":3000/images/public/" + std::to_string(dataId)).c_str(), GET);
-        std::cout << "Post Id: " << postId << std::endl;
         dataId = postId;
         } break;
     case 2: {

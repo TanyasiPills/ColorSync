@@ -176,6 +176,7 @@
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
     <ClCompile Include="src\Scripts\DataManager.cpp" />
     <ClCompile Include="src\Scripts\FileExplorer.cpp" />
+    <ClCompile Include="src\Scripts\LoginRegister.cpp" />
     <ClCompile Include="src\Scripts\lss.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
     <ClCompile Include="src\Scripts\HighsManager.cpp">
@@ -1003,6 +1004,7 @@
     <ClInclude Include="src\Headers\Headers.h" />
     <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />
+    <ClInclude Include="src\Headers\LoginRegister.h" />
     <ClInclude Include="src\Headers\lss.h" />
     <ClInclude Include="src\Headers\Messages.h" />
     <ClInclude Include="src\Headers\NewDraw.h" />

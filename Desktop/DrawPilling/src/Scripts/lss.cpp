@@ -113,15 +113,13 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	float textSize = ImGui::CalcTextSize(textIn.c_str()).x+ (ImGui::GetStyle().FramePadding.x)*2.0f;
 
 	bool centered = (flags & Centered) != 0;
-	bool invisible = (flags & Invisible) != 0;
 	bool rounded = (flags & Rounded) != 0;
 
-	ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	if (rounded) {
 		originalRounding = ImGui::GetStyle().FrameRounding;
 		ImGui::GetStyle().FrameRounding = size.y/2;
 	}
-	if (invisible) {
+	if (flags & Invisible) {
 		originalBtnBgColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
 		ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	}
@@ -133,7 +131,7 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	bool pressed = ImGui::Button(textIn.c_str(), size);
 
 	if (rounded) ImGui::GetStyle().FrameRounding = originalRounding;
-	if (invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
+	if (flags & Invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
 
 	return pressed;
 }
