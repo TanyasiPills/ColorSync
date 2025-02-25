@@ -25,6 +25,7 @@ private:
 public:
 	static void Init();
 	static void Down();
+	static nlohmann::json Request(std::string query, std::string path, std::string filename, std::string tokenIn);
 	static nlohmann::json Request(std::string query, std::string body, Method method, std::string tokenIn = "");
 	static std::vector<uint8_t> Request(std::string query, Method method);
 	static GLuint ImageFromRequest(const std::vector<uint8_t>& imageData, float& ratio);

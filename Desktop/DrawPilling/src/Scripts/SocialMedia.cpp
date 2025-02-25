@@ -25,9 +25,9 @@ bool creatingPost = false;
 bool loginWindow = false;
 
 MyTexture imageToPostTexture;
-GLuint imageToPost = -1;
+GLuint imageToPost = 0;
 
-GLuint userImage = -1;
+MyTexture userImageTexture;
 
 
 static RuntimeData& runtime = RuntimeData::getInstance();
@@ -224,6 +224,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
                 if (imagePath.size() > 2) {
                     imageToPostTexture.Init(imagePath);
                     imageToPost = imageToPostTexture.GetId();
+                    wasCreated = false;
                 }
                 else {
                     wasCreated = false;
@@ -326,16 +327,75 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ImGui::EndChild();
         } break;
     case 3: {
+            static bool imageEditOpen = false;
+            static bool openExplorer = false;
+            static bool wasOpenExplorer = false;
+
             ImVec2 valid = ImGui::GetContentRegionAvail();
             Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
             int validWidth = width * 0.6f;
                 Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-                    if (userImage < 0) {
-                        std::vector<uint8_t> imageData = HManager::Request((runtime.ip + ":3000/images/public/" + std::to_string(runtime.id)).c_str(), GET);
-                        float ratioStuff = 0.0f;
-                        userImage = HManager::ImageFromRequest(imageData, ratioStuff);
+                    if (Lss::Modal("Sup", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+                    {
+                        ImVec2 valid = ImGui::GetContentRegionAvail();
+                        Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
+
+                        ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                            openExplorer = true;
+                            wasOpenExplorer = true;
+                        }
+                        Lss::End();
+
+                        if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
+                        else if (wasOpenExplorer) {
+                            std::string imagePath = Explorer::GetImagePath();
+                            if (imagePath.size() > 2) {
+                                userImageTexture.Init(imagePath);
+                                runtime.pfpTexture = userImageTexture.GetId();
+                                wasOpenExplorer = false;
+                            }
+                            else {
+                                wasOpenExplorer = false;
+                            }
+                        }
+                        if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+                        ImVec2 buttonSize = ImVec2(100, 20);
+                        ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                        if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                        {
+                            std::string imagePath = Explorer::GetImagePath();
+                            if(imagePath.size() > 2) {
+                                std::string fileName = imagePath.substr(imagePath.find_last_of('\\')+1);
+                                std::cout << fileName << std::endl;
+                                nlohmann::json jsonData = HManager::Request((runtime.ip + ":3000/users/pfp").c_str(), imagePath, fileName, runtime.token);
+                                std::cout << jsonData << std::endl;
+                            }
+                        }
+
+                        
+                        if (!openExplorer && ImGui::IsMouseClicked(0))
+                        {
+                            ImVec2 pos = ImGui::GetWindowPos();
+                            ImVec2 cursorPos = ImGui::GetMousePos();
+                            ImVec2 size = ImGui::GetWindowSize();
+                            if (!Lss::InBound(cursorPos, pos, size)) {
+                                imageEditOpen = false;
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                        Lss::End();
+                        ImGui::EndPopup();
                     }
-                    Lss::Image(userImage, ImVec2(40*Lss::VH, 40*Lss::VH))
+                    Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Rounded);
+                    if (ImGui::IsItemClicked()) {
+                        imageEditOpen = true;
+                    }
+                    ImGui::SameLine();
+                    Lss::Top(7.5 * Lss::VH);
+                    Lss::Text(runtime.username, 5 * Lss::VH);
+                    Lss::Top(2 * Lss::VH);
+                    Lss::Separator(2.0f);
                     
                 Lss::End();
                 ImGui::EndChild();

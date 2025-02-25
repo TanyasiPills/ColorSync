@@ -3,6 +3,8 @@
 CURLcode res;
 struct curl_slist* headers;
 
+static auto& runtime = RuntimeData::getInstance();
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
 	return size * nmemb;
@@ -17,8 +19,6 @@ void HManager::Init()
 {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
-	auto& runtime = RuntimeData::getInstance();
-
 	if (runtime.token[0] != '\0') {
 		nlohmann::json result = Request(runtime.ip + ":3000/users", "", GET, runtime.token);
 		if (result["statusCode"] == 401) {
@@ -27,6 +27,9 @@ void HManager::Init()
 		else {
 			runtime.id = result["id"];
 			runtime.username = result["username"];
+			std::vector<uint8_t> imageData = Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
+			float ratioStuff = 0.0f;
+			runtime.pfpTexture = ImageFromRequest(imageData, ratioStuff);
 		}
 	}
 	else {
@@ -38,6 +41,70 @@ void HManager::Down()
 {
 	curl_global_cleanup();
 }
+
+nlohmann::json HManager::Request(std::string query, std::string path, std::string filename, std::string tokenIn) {
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		std::cerr << "HManager isn't initialized" << std::endl;
+		return nlohmann::json{};
+	}
+
+	std::string url = "http://" + query;
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	struct curl_slist* headers = nullptr;
+	if (!tokenIn.empty()) {
+		std::string authHeader = "Authorization: Bearer " + tokenIn;
+		headers = curl_slist_append(headers, authHeader.c_str());
+	}
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+	std::string result;
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
+
+	curl_mime* mime = curl_mime_init(curl);
+	curl_mimepart* part = curl_mime_addpart(mime);
+	curl_mime_name(part, "file");
+
+	curl_mime_filename(part, filename.c_str());
+	
+	curl_mime_filedata(part, path.c_str());
+
+	if (filename.find(".png") != std::string::npos) {
+		curl_mime_type(part, "image/png");
+	}
+	else if (filename.find(".jpg") != std::string::npos || filename.find(".jpeg") != std::string::npos) {
+		curl_mime_type(part, "image/jpeg");
+	}
+
+
+	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+
+	// Perform request
+	CURLcode res = curl_easy_perform(curl);
+	long http_code = 0;
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+	if (res != CURLE_OK) {
+		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+		return nlohmann::json{};
+	}
+	else {
+		try {
+			return nlohmann::json::parse(result);
+		}
+		catch (const nlohmann::json::exception& e) {
+			std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+		}
+	}
+
+	curl_easy_cleanup(curl);
+	if (headers) curl_slist_free_all(headers);
+
+	return nlohmann::json{};
+}
+
 
 nlohmann::json HManager::Request(std::string query, std::string body, Method method, std::string tokenIn)
 {

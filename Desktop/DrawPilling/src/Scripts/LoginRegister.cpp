@@ -32,27 +32,28 @@ void LoginRegister::Login(bool& loginWindow)
                 registerOpen = !registerOpen;
             }
             if (Lss::Button(name, ImVec2(10 * Lss::VW, 6 * Lss::VH), 4 * Lss::VH, Centered)) {
-                std::thread([]() {
-                    nlohmann::json body;
-                    if (registerOpen) body["username"] = usernameText;
-                    body["email"] = emailText;
-                    body["password"] = passText;
-                    nlohmann::json res;
-                    if(registerOpen) res = HManager::Request((runtime.ip + ":3000/users").c_str(), body.dump(), POST);
-                    else res = HManager::Request((runtime.ip + ":3000/users/login").c_str(), body.dump(), POST);
+                nlohmann::json body;
+                if (registerOpen) body["username"] = usernameText;
+                body["email"] = emailText;
+                body["password"] = passText;
+                nlohmann::json res;
+                if(registerOpen) res = HManager::Request((runtime.ip + ":3000/users").c_str(), body.dump(), POST);
+                else res = HManager::Request((runtime.ip + ":3000/users/login").c_str(), body.dump(), POST);
 
-                    if (res.contains("access_token") && res.contains("username")) {
-                        std::cout << "got this JSON: " << res["access_token"] << std::endl;
-                        runtime.token = res["access_token"];
-                        runtime.username = res["username"];
-                        runtime.password = passText;
-                        runtime.logedIn = true;
-                        nlohmann::json result = HManager::Request(runtime.ip + ":3000/users", "", GET, runtime.token);
-                        runtime.id = result["id"];
-                        loginOpen = false;
-                        ImGui::CloseCurrentPopup();
-                    }
-                    }).detach();
+                if (res.contains("access_token") && res.contains("username")) {
+                    std::cout << "got this JSON: " << res["access_token"] << std::endl;
+                    runtime.token = res["access_token"];
+                    runtime.username = res["username"];
+                    runtime.password = passText;
+                    runtime.logedIn = true;
+                    nlohmann::json result = HManager::Request(runtime.ip + ":3000/users", "", GET, runtime.token);
+                    runtime.id = result["id"];
+                    loginOpen = false;
+                    std::vector<uint8_t> imageData = HManager::Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
+                    float ratioStuff = 0.0f;
+                    runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
+                    ImGui::CloseCurrentPopup();
+                }
             }
             Lss::End();
             ImGui::EndPopup();
