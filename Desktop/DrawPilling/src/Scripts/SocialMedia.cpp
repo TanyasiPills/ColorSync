@@ -27,6 +27,8 @@ bool loginWindow = false;
 MyTexture imageToPostTexture;
 GLuint imageToPost = -1;
 
+GLuint userImage = -1;
+
 
 static RuntimeData& runtime = RuntimeData::getInstance();
 
@@ -111,7 +113,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
                 continue;
             }
             bool needChange = false;
-            int validWidth = width * 0.9f;
+            int validWidth = width * 0.6f;
             std::string id = std::to_string(post.id);
             Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (post.size == 0) {
@@ -324,7 +326,21 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ImGui::EndChild();
         } break;
     case 3: {
-        
+            ImVec2 valid = ImGui::GetContentRegionAvail();
+            Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+            int validWidth = width * 0.6f;
+                Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+                    if (userImage < 0) {
+                        std::vector<uint8_t> imageData = HManager::Request((runtime.ip + ":3000/images/public/" + std::to_string(runtime.id)).c_str(), GET);
+                        float ratioStuff = 0.0f;
+                        userImage = HManager::ImageFromRequest(imageData, ratioStuff);
+                    }
+                    Lss::Image(userImage, ImVec2(40*Lss::VH, 40*Lss::VH))
+                    
+                Lss::End();
+                ImGui::EndChild();
+            ImGui::EndChild();
+
         } break;
     default:
         break;
@@ -372,7 +388,8 @@ void SocialMedia::LeftSide(float position, float width, float height)
     if (runtime.logedIn) {
         Lss::Top(1 * Lss::VH);
         if (Lss::Button("Profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            //GetPosts();
+            if (mode != 3) mode = 3;
+            else mode = 0;
         }
     }
     else {
@@ -391,10 +408,16 @@ void SocialMedia::LeftSide(float position, float width, float height)
 
     if (runtime.logedIn)
     {
+        ImGui::SameLine();
+        float windowWidth = ImGui::GetWindowWidth();
+        windowWidth -= 16 * Lss::VH;
+        ImGui::SetCursorPosX(windowWidth);
         if (Lss::Button("Logout", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Rounded))
         {
             runtime.username = "";
             runtime.password = "";
+            runtime.token = "";
+            runtime.logedIn = false;
         }
     }
 

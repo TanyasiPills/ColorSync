@@ -24,6 +24,10 @@ void HManager::Init()
 		if (result["statusCode"] == 401) {
 			runtime.logedIn = false;
 		}
+		else {
+			runtime.id = result["id"];
+			runtime.username = result["username"];
+		}
 	}
 	else {
 		runtime.logedIn = false;

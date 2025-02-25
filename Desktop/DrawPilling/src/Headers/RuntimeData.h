@@ -19,6 +19,7 @@ public:
     std::string password = "";
 
     bool logedIn = true;
+    int id = -1;
 
     int undoCount = 30;
 };

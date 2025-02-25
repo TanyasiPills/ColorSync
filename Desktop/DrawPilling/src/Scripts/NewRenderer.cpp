@@ -363,8 +363,8 @@ void RenderMenu()
 	int width, height;
 	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
 
-	int sideWidth = width * (1.5f / 6.0f);
-	int mainWidth = width * (3.0f / 6.0f);
+	int sideWidth = width * (1.0f / 6.0f);
+	int mainWidth = width * (4.0f / 6.0f);
 	int windowHeight = (float)height;
 
 	int totalWidth = sideWidth + mainWidth + sideWidth;
