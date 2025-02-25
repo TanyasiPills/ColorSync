@@ -10,6 +10,11 @@ import { PostBaseType, PostIncludesType } from 'src/api.dto';
 export class PostsController {
   constructor(private readonly postService: PostsService) { }
 
+  @Get('testSearch')
+  testSearch() {
+    this.postService.testSearch();
+  }
+
   /**
    * Create a post from the logged in user
    * @param createPostDto Data about the post

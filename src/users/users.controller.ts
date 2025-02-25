@@ -1,5 +1,5 @@
 import { FileType, LoginBodyType, LoginResponseType, UserInfoType } from '../api.dto';
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -48,6 +48,7 @@ export class UsersController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
+    console.log(createUserDto);
     const status = await this.authService.register(createUserDto);
     if (status) return this.authService.login(status);
     else if (status == null) throw new HttpException('Email already in use.', HttpStatus.CONFLICT); 
@@ -85,21 +86,26 @@ export class UsersController {
   )
   @HttpCode(204)
   async uploadPfp(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    console.log(file);
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
 
-    const filePath = `./uploads/${file.filename}`;
-    const fileBuffer = await readFileSync(filePath);
-    const image = sharp(fileBuffer);
-    const metadata = await image.metadata();
-  
-    const size = Math.min(metadata.width, metadata.height);
-    const left = Math.floor((metadata.width - size) / 2);
-    const top = Math.floor((metadata.height - size) / 2);
-  
-    const buffer = await image.extract({ left, top, width: size, height: size }).toBuffer();
-    await sharp(buffer).toFile(filePath);
+    try {
+      const filePath = `./uploads/${file.filename}`;
+      const fileBuffer = await readFileSync(filePath);
+      const image = sharp(fileBuffer);
+      const metadata = await image.metadata();
+    
+      const size = Math.min(metadata.width, metadata.height);
+      const left = Math.floor((metadata.width - size) / 2);
+      const top = Math.floor((metadata.height - size) / 2);
+    
+      const buffer = await image.extract({ left, top, width: size, height: size }).toBuffer();
+      await sharp(buffer).toFile(filePath);
+    } catch {
+      throw new BadRequestException("Failed to process the image");
+    }
 
     this.userService.upload(file, req.user.id);
   }

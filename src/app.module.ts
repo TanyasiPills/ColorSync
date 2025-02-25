@@ -8,9 +8,10 @@ import { DrawingModule } from './drawing/drawing.module';
 import { PostsModule } from './posts/posts.module';
 import { ImagesModule } from './images/images.module';
 import { CommentsModule } from './comments/comments.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, DrawingModule, PostsModule, ImagesModule, CommentsModule],
+  imports: [AuthModule, UsersModule, DrawingModule, PostsModule, ImagesModule, CommentsModule, SearchModule],
   controllers: [AppController],
   providers: [AppService, DrawingWS],
 })

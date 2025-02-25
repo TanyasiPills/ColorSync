@@ -2,10 +2,14 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma.service';
+import { SearchService } from 'src/search/search.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly db: PrismaService) { }
+  constructor(
+    private readonly db: PrismaService,
+    private readonly elastic: SearchService
+  ) { }
 
   async create(createPostDto: CreatePostDto, userId: number) {
     if (createPostDto.imageId) {
@@ -58,6 +62,10 @@ export class PostsService {
     if (data.length === 0) return { data, newLastId: null };
     const newLastId = data[data.length - 1].id;
     return { data, newLastId };
+  }
+
+  testSearch() {
+    this.elastic.searchPosts("eat", ["cat", "funny"], {queries: [{text: "yo", weight: 1}], tags: [{name: "funny", weight: 1}]});
   }
 
   async search(tags: string[], take: string, lastId: string) {
