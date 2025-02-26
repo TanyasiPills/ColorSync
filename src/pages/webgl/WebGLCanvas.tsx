@@ -156,15 +156,15 @@ const WebGLCanvas: React.FC = () => {
       <div className="sideBar" id="left">
         <div id="Color">
           <div className="colorDiv">
-            <canvas ref={colorWheelRef} width="150px" height="150px" id="colorWheel" />
+            <canvas ref={colorWheelRef} id="colorWheel" />
             <div id="marker" ref={markerCW} />
-            <div id="currentColor" />
           </div>
           <div className="colorDiv">
-            <canvas ref={colorColumnRef} width="25px" height="150px" id="colorColumns" />
+            <canvas ref={colorColumnRef} id="colorColumns" />
             <div id="markerCol" ref={markerC} />
           </div>
         </div>
+        <div id="currentColor" />
         <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} />
         <div id="leftResize" className="rsz"></div>
       </div>

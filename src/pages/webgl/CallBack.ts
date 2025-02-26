@@ -11,6 +11,21 @@ export function useColorPicker() {
     const [markerCWPos, setMarkerCWPos] = useState<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
+        if (colorWheelRef.current) {
+            const canvas = colorWheelRef.current;
+            const initX = canvas.width;
+            const initY = canvas.height;
+            setMarkerCWPos({ x: initX, y: initY });
+            if (markerCW.current) {
+                markerCW.current.style.left = `${initX }px`;
+                markerCW.current.style.top = `${initY}px`;
+            }
+            updateRGBFromMarkerCW();
+        }
+        if (colorColumnRef.current && markerC.current) {
+            markerC.current.style.top = `0px`;
+            markerC.current.style.backgroundColor = cwColor;
+        }
         const handleMouseUp = () => setHold(false);
         window.addEventListener("mouseup", handleMouseUp);
 
@@ -35,11 +50,11 @@ export function useColorPicker() {
         setRGBColor(newRGB);
         localStorage.setItem("selectedColor", newRGB);
         if (markerCW.current) {
-          const brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
-          markerCW.current.style.borderColor = brightness < 28 ? "white" : "black";
+            const brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
+            markerCW.current.style.borderColor = brightness < 28 ? "white" : "black";
         }
-      };
-      
+    };
+
 
     useEffect(() => {
         updateRGBFromMarkerCW();
