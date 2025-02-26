@@ -1,23 +1,22 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
 import "./WebGlCanvas.css"
+import { useColorPicker } from "./CallBack";
 
 const WebGLCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
   const sizeRef = useRef<HTMLInputElement | null>(null);
-  const colorWheelRef = useRef<HTMLCanvasElement | null>(null);
-  const colorColumnRef = useRef<HTMLCanvasElement | null>(null);
-  let hold = false;
-  let cwColor = "rgb(255, 0, 0)";
+  const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC } = useColorPicker();
+  const canvas = canvasRef.current;
 
   useEffect(() => {
-    colorWheel();
-    colorCollumn();
-    const canvas = canvasRef.current;
-    if (hold) {
-      colorWheel();
+    drawColorWheel();
+    drawColorColumn();
+    const curCol = document.getElementById("currentColor");
+    if (curCol) {
+      curCol.style.backgroundColor = RGBColor;
     }
 
     if (!canvas) {
@@ -33,6 +32,10 @@ const WebGLCanvas: React.FC = () => {
       );
       return;
     }
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    clearCanvas(gl);
 
     /*var drawn: Float32Array[] = [];
     let isRunning = true;
@@ -101,113 +104,52 @@ const WebGLCanvas: React.FC = () => {
       //isRunning = false;
     };
 
-  }, []);
+  }, [cwColor, RGBColor]);
 
-  function colorWheel() {
-    var colorCanvas = colorWheelRef.current;
-    var ColorCtx = colorCanvas!.getContext("2d")!;
-    var marker = document.getElementById("marker")!;
+  function drawColorWheel() {
+    const canvas = colorWheelRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    let gradientH = ColorCtx.createLinearGradient(0, 0, ColorCtx.canvas.width, 0);
+    const gradientH = ctx.createLinearGradient(0, 0, canvas.width, 0);
     gradientH.addColorStop(0, "#fff");
-    gradientH.addColorStop(1, cwColor);
-    ColorCtx.fillStyle = gradientH;
-    ColorCtx.fillRect(0, 0, ColorCtx.canvas.width, ColorCtx.canvas.height);
+    if (!cwColor) {
+      gradientH.addColorStop(1, "rgb(255, 0, 0)");
+    }
+    else {
+      gradientH.addColorStop(1, cwColor);
+    }
+    ctx.fillStyle = gradientH;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    let gradientV = ColorCtx.createLinearGradient(0, 0, 0, colorCanvas!.height);
+    const gradientV = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradientV.addColorStop(0, "rgba(0,0,0,0)");
     gradientV.addColorStop(1, "#000");
-    ColorCtx.fillStyle = gradientV;
-    ColorCtx.fillRect(0, 0, ColorCtx.canvas.width, ColorCtx.canvas.height);
-
-    colorCanvas!.addEventListener("mousedown", function (event) {
-      hold = true;
-      let x = 0;
-      let y = 0;
-      if (hold) {
-        let rect = colorCanvas!.getBoundingClientRect();
-        x = event.clientX - rect.left;
-        y = event.clientY - rect.top;
-      }
-      if (x >= 0 && x < colorCanvas!.width && y >= 0 && y < colorCanvas!.height) {
-        let pixel = ColorCtx.getImageData(x, y, 1, 1).data;
-        let rgb = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-
-        marker.style.left = x + "px";
-        marker.style.top = y + "px";
-        marker.style.backgroundColor = rgb;
-
-        let brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
-        marker.style.borderColor = brightness < 28 ? "white" : "black";
-
-        localStorage.setItem("selectedColor", rgb);
-        localStorage.setItem("markerX", x.toString());
-        localStorage.setItem("markerY", y.toString());
-      }
-    });
-
-    window.addEventListener("load", () => {
-      let savedX = localStorage.getItem("markerX");
-      let savedY = localStorage.getItem("markerY");
-      let savedColor = localStorage.getItem("selectedColor");
-
-      if (savedX && savedY && savedColor) {
-        let x = parseFloat(savedX);
-        let y = parseFloat(savedY);
-
-        marker.style.left = x + "px";
-        marker.style.top = y + "px";
-        marker.style.backgroundColor = savedColor;
-      }
-    });
+    ctx.fillStyle = gradientV;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  function colorCollumn() {
-    var colorCanvas = colorColumnRef.current;
-    var ColorCtx = colorCanvas!.getContext("2d")!;
-    var marker = document.getElementById("markerCol")!;
+  function drawColorColumn() {
+    const canvas = colorColumnRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    var colors = [
-      "rgb(255, 0, 0)",      
-      "rgb(255, 165, 0)",    
-      "rgb(255, 255, 0)",    
-      "rgb(0, 255, 0)",      
-      "rgb(0, 255, 255)",    
-      "rgb(0, 0, 255)",      
-      "rgb(255, 0, 255)"     
-    ];
-
-    let gradientV = ColorCtx.createLinearGradient(0, 0, 0, ColorCtx.canvas.height);
-
-    let stopIncrement = 1 / (colors.length - 1);
+    const colors = ["rgb(255,0,0)", "rgb(255,165,0)", "rgb(255,255,0)", "rgb(0,255,0)", "rgb(0,255,255)", "rgb(0,0,255)", "rgb(255,0,255)"];
+    const gradientV = ctx.createLinearGradient(0, 0, 0, canvas.height);
     colors.forEach((color, index) => {
-      gradientV.addColorStop(index * stopIncrement, color);
+      gradientV.addColorStop(index / (colors.length - 1), color);
     });
 
-    ColorCtx.fillStyle = gradientV;
-    ColorCtx.fillRect(0, 0, ColorCtx.canvas.width, ColorCtx.canvas.height);
-
-    colorCanvas!.addEventListener("mousedown", function (event){
-      hold = true;
-      let x = 0;
-      let y = 0;
-      if (hold) {
-        let rect = colorCanvas!.getBoundingClientRect();
-        y = event.clientY - rect.top;
-      }
-      if (y >= 0 && y < colorCanvas!.height) {
-        let pixel = ColorCtx.getImageData(x, y, 1, 1).data;
-        let rgb = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-        marker.style.backgroundColor = rgb;
-        cwColor = rgb;
-
-        marker.style.top = y + "px";
-
-        localStorage.setItem("selectedColor", rgb);
-        localStorage.setItem("markerY", y.toString());
-      }
-    });
+    ctx.fillStyle = gradientV;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+
+  useEffect(() => {
+    drawColorWheel();
+    drawColorColumn();
+  }, [cwColor]);
 
   return (
     <div className="layout">
@@ -215,11 +157,12 @@ const WebGLCanvas: React.FC = () => {
         <div id="Color">
           <div className="colorDiv">
             <canvas ref={colorWheelRef} width="150px" height="150px" id="colorWheel" />
-            <div id="marker" />
+            <div id="marker" ref={markerCW} />
+            <div id="currentColor" />
           </div>
           <div className="colorDiv">
-            <canvas ref={colorColumnRef} width="50px" height="150px" id="colorColumns" />
-            <div id="markerCol" />
+            <canvas ref={colorColumnRef} width="25px" height="150px" id="colorColumns" />
+            <div id="markerCol" ref={markerC} />
           </div>
         </div>
         <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} />

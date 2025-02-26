@@ -35,7 +35,7 @@ export function SocialMedia() {
     postButton.addEventListener("click", () => {
       window.location.href = 'CMS/Posting';
     });
-  })
+  }, [])
 
   function takeToProfile(event: any) {
     let key: string = event.currentTarget.dataset.id;
@@ -82,6 +82,9 @@ export function SocialMedia() {
                   </Row>
                 </Card.Body>
                 {e.imageId && <Card.Img variant="top" src={`${backendIp}/images/public/${e.imageId}`} alt="Post Image" />}
+                {e.tags.length>0 && e.tags.map((tag) => (
+                  <div className="tags">#{tag}</div>
+                ))}
                 <Card.Body>
                   <Card.Text>{e.text}</Card.Text>
                 </Card.Body>
@@ -110,7 +113,7 @@ export function SocialMedia() {
                   </details>
                 )}
               </Card>
-            )) : <Spinner animation="border" size="sm" />}
+            )) : post.length == 0? <h1>There's no post at this time</h1>:<Spinner animation="border" size="sm" />}
           </div>
         </Col>
         <Col xs="2" id="right" className="h-100 d-none d-md-block"></Col>

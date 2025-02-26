@@ -53,6 +53,7 @@
     border: 2px solid white;
     position: absolute;
     transform: translate(-50%, -50%);
+    background-color: none;
 }
 
 #markerCol {
@@ -61,9 +62,16 @@
     border-radius: 20%;
     border: 2px solid white;
     position: absolute;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);    
+    pointer-events: none;
 }
-#colorColumns{
+
+#currentColor {
+    width: 20px;
+    height: 20px;
+}
+
+#colorColumns {
     border: 2px solid black;
 }
 

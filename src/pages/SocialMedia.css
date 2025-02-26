@@ -26,6 +26,7 @@
     align-items: center;
     justify-content: flex-start;
     margin-top: 20px;
+    font-size: larger;
 }
 
 
@@ -167,6 +168,18 @@ details summary:hover {
     padding: 10px;
     border-bottom: 1px solid var(--borderCol);
 }
+
+.tags{
+    border: 2px solid var(--borderCol);
+    height: fit-content;
+    width: fit-content;
+    display: inline-block;
+    margin: 4px;
+    padding: 3px;
+    border-radius: 20%;
+}
+
+
 
 /*phone overview*/
 

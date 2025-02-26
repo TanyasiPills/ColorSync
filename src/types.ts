@@ -5,6 +5,7 @@ export interface post {
     date: Date;
     user: { username: string; id: number};
     comments: comment[];
+    tags: string[];
 }
 
 export interface comment {
