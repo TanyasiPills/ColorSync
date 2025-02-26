@@ -103,11 +103,10 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
             if (prevScrollY != scrollY && scrollY > prevScrollY) {
                 prevScrollY = scrollY;
-                //std::thread(&SocialMedia::GetPosts).detach();
+                std::thread(&SocialMedia::GetPosts).detach();
             }
             if (init) {
-                //GetPosts();
-                //std::thread(&SocialMedia::GetPosts).detach();
+                std::thread(&SocialMedia::GetPosts).detach();
                 init = false;
             }
 
@@ -521,16 +520,19 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 
 void SocialMedia::GetPosts() 
 {
+    std::cout << "heoooo";
     if (runtime.ip[0] == '\0') {
+        std::cout << "runtimeIp not set";
         init = true;
         return;
     }
     nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
     if (jsonData["data"] == 0) {
+        std::cout << "no data";
         init = true;
         return;
     }
-    if (jsonData["newLastId"].is_null()) return;
+    if (jsonData["offset"].is_null()) return;
     for (const auto& postJson : jsonData["data"]) {
         Post post;
         post.id = postJson["id"];
