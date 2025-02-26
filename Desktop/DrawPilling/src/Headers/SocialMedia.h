@@ -19,9 +19,6 @@
 #include "SocialStructs.h"
 
 
-
-
-
 class SocialMedia {
 private:
 	static std::vector<Post> posts;
@@ -36,4 +33,5 @@ public:
 	static void LoadImageJa(int dataId, int type, int postId = 0);
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();
+	static std::queue<std::tuple<std::vector<uint8_t>, int, int>>* GetTextureQueue();
 };

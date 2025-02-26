@@ -35,6 +35,11 @@ static RuntimeData& runtime = RuntimeData::getInstance();
 int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 
 
+std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
+{
+	return &textureQueue;
+}
+
 void SocialMedia::ProcessThreads()
 {
     std::lock_guard<std::mutex> lock(textureQueueMutex);
@@ -62,6 +67,10 @@ void SocialMedia::ProcessThreads()
 
             users[dataId].userImage = profileImage;
             users[dataId].pPicLoaded = true;
+            } break;
+        case 3: {
+                float ratioAF = 0.0f;
+                runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioAF);
             } break;
         default:
             break;
@@ -94,10 +103,11 @@ void SocialMedia::MainFeed(float position, float width, float height)
         if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
             if (prevScrollY != scrollY && scrollY > prevScrollY) {
                 prevScrollY = scrollY;
-                std::thread(&SocialMedia::GetPosts).detach();
+                //std::thread(&SocialMedia::GetPosts).detach();
             }
             if (init) {
-                std::thread(&SocialMedia::GetPosts).detach();
+                //GetPosts();
+                //std::thread(&SocialMedia::GetPosts).detach();
                 init = false;
             }
 
@@ -270,6 +280,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         {
             std::cout << "zsa\n";
             runtime.ip = ipText;
+            std::thread(&HManager::InitUser).detach();
         }
 
         Lss::End();
@@ -510,7 +521,11 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 
 void SocialMedia::GetPosts() 
 {
-    nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?lastId=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
+    if (runtime.ip[0] == '\0') {
+        init = true;
+        return;
+    }
+    nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
     if (jsonData["data"] == 0) {
         init = true;
         return;
@@ -550,7 +565,7 @@ void SocialMedia::GetPosts()
         posts.push_back(post);
     }
 
-    lastId = jsonData["newLastId"];
+    lastId = jsonData["offset"];
     canGet = false;
     LoadImages();
 }
@@ -572,7 +587,6 @@ void SocialMedia::LoadDependencies(Post& post, int index)
 
     LoadImageJa(post.imageId, 1, index);
 }
-
 
 void SocialMedia::LoadImageJa(int dataId, int type, int postId)
 {

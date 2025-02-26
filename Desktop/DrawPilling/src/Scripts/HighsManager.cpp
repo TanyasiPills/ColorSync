@@ -1,9 +1,12 @@
 #include "HighsManager.h"
+#include "SocialMedia.h"
 
 CURLcode res;
 struct curl_slist* headers;
 
 static auto& runtime = RuntimeData::getInstance();
+
+class SocialMedia;
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -15,26 +18,47 @@ size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) 
 	buffer.insert(buffer.end(), static_cast<uint8_t*>(ptr), static_cast<uint8_t*>(ptr) + totalSize);
 	return totalSize;
 }
-void HManager::Init()
-{
-	curl_global_init(CURL_GLOBAL_DEFAULT);
 
+void HManager::InitUser()
+{
 	if (runtime.token[0] != '\0') {
-		nlohmann::json result = Request(runtime.ip + ":3000/users", "", GET, runtime.token);
-		if (result["statusCode"] == 401) {
-			runtime.logedIn = false;
+		try {
+			nlohmann::json result = Request(runtime.ip + ":3000/users", "", GET, runtime.token);
+
+			if (result.contains("statusCode") && result["statusCode"] == 401) {
+				runtime.logedIn = false;
+			}
+			else if (result.contains("id") && result.contains("username")) {
+
+				runtime.id = result["id"];
+				runtime.username = result["username"];
+
+				std::vector<uint8_t> imageData = Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
+
+				if (imageData.empty()) {
+					std::cerr << "Failed to fetch profile picture." << std::endl;
+				}
+				else {
+					float ratioStuff = 0.0f;
+					auto* textureQueue = SocialMedia::GetTextureQueue();
+					textureQueue->push(std::make_tuple(imageData, 0, 3));
+				}
+			}
 		}
-		else {
-			runtime.id = result["id"];
-			runtime.username = result["username"];
-			std::vector<uint8_t> imageData = Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
-			float ratioStuff = 0.0f;
-			runtime.pfpTexture = ImageFromRequest(imageData, ratioStuff);
+		catch (const std::exception& e) {
+			std::cerr << "Request failed: " << e.what() << std::endl;
+			runtime.logedIn = false;
 		}
 	}
 	else {
 		runtime.logedIn = false;
 	}
+}
+
+void HManager::Init()
+{
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+	std::thread(&HManager::InitUser).detach();
 }
 
 void HManager::Down() 

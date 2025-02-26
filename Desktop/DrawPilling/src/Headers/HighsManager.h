@@ -18,12 +18,15 @@ enum Method {
 	PATCH
 };
 
+class SocialMedia;
+
 class HManager
 {
 private:
 
 public:
 	static void Init();
+	static void InitUser();
 	static void Down();
 	static nlohmann::json Request(std::string query, std::string path, std::string filename, std::string tokenIn);
 	static nlohmann::json Request(std::string query, std::string body, Method method, std::string tokenIn = "");
