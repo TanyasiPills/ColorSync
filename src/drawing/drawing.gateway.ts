@@ -22,7 +22,7 @@ export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly authService: AuthService,
-    private readonly db: PrismaService
+    //private readonly db: PrismaService
   ) { }
   private readonly logger = new Logger(DrawingWS.name);
   private rooms: Room[];

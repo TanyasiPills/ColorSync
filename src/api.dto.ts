@@ -34,7 +34,7 @@ export class LoginResponseType extends UserInfoType {
 }
 
 export class FileType {
-  @ApiProperty({ type: 'string', format: 'binary' })
+  @ApiProperty({ type: 'string', format: 'binary', description: "The image file"})
   file: any;
 }
 
