@@ -19,7 +19,7 @@ export class ImagesController {
    */
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ description: 'The ', type: ImageCreateType })
+  @ApiBody({ description: 'The data of the image', type: ImageCreateType })
   @ApiResponse({ status: 204, description: 'Image uploaded' })
   @ApiResponse({ status: 401, description: 'Invalid token' })
 
@@ -43,14 +43,17 @@ export class ImagesController {
   )
   @HttpCode(204)
   @Post()
-  create(@Body() createImageDto: CreateImageDto, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async create(@Body() createImageDto: CreateImageDto, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
 
-    if (!this.imageService.create(createImageDto, file, req.user.id)) {
+    const result = await this.imageService.create(createImageDto, file, req.user.id);
+    if (!result) {
       throw new HttpException('Image upload failed!.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    return { id: result.id };
   }
 
   /**

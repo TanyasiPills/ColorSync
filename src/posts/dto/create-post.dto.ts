@@ -4,7 +4,7 @@ import { IsArray, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from 
 export class CreatePostDto {
   @IsOptional()
   @IsInt()
-  @Min(0)
+  @Min(1)
   @ApiProperty({ type: 'integer', description: 'The id of the image', example: 1 })
   imageId?: number;
 

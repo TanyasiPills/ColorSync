@@ -28,81 +28,41 @@ export class PostsService {
         }
       }
     });
+    this.elastic.indexPost(post.id, post.text, [], post.date);
   }
 
-  async findAll(lastId: string, take: string) {
-    let parsedLastid;
-    if (lastId) {
-      parsedLastid = parseInt(lastId);
-      if (isNaN(parsedLastid)) throw new BadRequestException('lastId must be a number');
-    }
-    let parsedTake;
+  async search(tags: string[], q: string, take: string, offset: string, imageOnly: boolean = false) {
+    let parsedTake = 10;
     if (take) {
-      parsedTake = Math.max(1, Math.min(10, parseInt(take)));
-      if (isNaN(parsedTake)) throw new BadRequestException('take must be a number');
-    } else parsedTake = 10;
-    const data: any = await this.db.post.findMany({
-      take: parsedTake,
-      skip: parsedLastid ? 1 : undefined,
-      cursor: parsedLastid ? { id: parsedLastid } : undefined,
-      orderBy: { date: 'desc' },
-      select: {
-        id: true, text: true, date: true, imageId: true,
-        user: { select: { username: true, id: true } },
-        comments: {
-          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
-        },
-        tags: true
-      }
+      parsedTake = parseInt(take);
+      if (!Number.isFinite(parsedTake)) parsedTake = 10;
     }
-    );
-
-    data.map(e => e.tags = e.tags.map(e => e.name));
-
-    if (data.length === 0) return { data, newLastId: null };
-    const newLastId = data[data.length - 1].id;
-    return { data, newLastId };
-  }
-
-  testSearch() {
-    this.elastic.searchPosts("eat", ["cat", "funny"], {queries: [{text: "yo", weight: 1}], tags: [{name: "funny", weight: 1}]});
-  }
-
-  async search(tags: string[], take: string, lastId: string) {
-    let parsedLastId;
-    if (lastId) {
-      parsedLastId = parseInt(lastId);
-      if (isNaN(parsedLastId)) throw new BadRequestException('lastId must be a number');
+    let parsedOffset = 0;
+    if (offset) {
+      parsedOffset = parseInt(offset);
+      if (!Number.isFinite(parsedOffset)) parsedOffset = 0;
     }
-    let parsedTake;
-    if (take) {
-      parsedTake = Math.max(1, Math.min(10, parseInt(take)));
-      if (isNaN(parsedTake)) throw new BadRequestException('take must be a number');
-    } else parsedTake = 10;
 
-    const tagsFilter = tags ? tags.map(e => ({ tags: { some: { name: { contains: e } } } })) : [];
-
-    const data: any = await this.db.post.findMany({
-      where: { AND: tagsFilter },
-      take: parsedTake,
-      skip: parsedLastId ? 1 : undefined,
-      cursor: parsedLastId ? { id: parsedLastId } : undefined,
-      orderBy: { date: 'desc' },
-      select: {
-        id: true, text: true, date: true, imageId: true,
-        user: { select: { username: true, id: true } },
-        comments: {
-          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
-        },
-        tags: true
-      }
-    });
-
-    data.map(e => e.tags = e.tags.map(e => e.name));
-
-    if (data.length === 0) return { data, newLastId: null };
-    const newLastId = data[data.length - 1].id;
-    return { data, newLastId };
+    const ids = await this.elastic.searchPosts(q, tags, null, parsedOffset, parsedTake);
+    let selectBody;
+    if (imageOnly) selectBody = {
+      id: true, imageId: true
+    };
+    else selectBody = {
+      id: true, text: true, date: true, imageId: true,
+      user: { select: { username: true, id: true } },
+      comments: {
+        select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } }
+      },
+      tags: true
+    };
+    let result = await Promise.all(ids.map(async (e) => this.db.post.findUnique({
+      where: { id: e },
+      select: selectBody
+    }))); 
+    if (!imageOnly) result.map(e => e.tags = e.tags.map(e => e.name));
+    result = result.filter(e => e.imageId);
+    return { data: result, offset: result.length == 0 ? null : parsedOffset + result.length };
   }
 
   async findByUser(id: number) {
@@ -162,6 +122,7 @@ export class PostsService {
         }, include: { tags: true }
       });
       result.map(e => e.tags = e.tags.map(e => e.name));
+      await this.elastic.updatePost(id, updatePostDto.text, updatePostDto.tags, undefined);
 
       return result;
     } catch {
@@ -172,7 +133,10 @@ export class PostsService {
   async remove(id: number, userId: number): Promise<boolean> {
     try {
       const result = await this.db.post.delete({ where: { id, userId } });
-      if (result) return true;
+      if (result) {
+        await this.elastic.deletePost(id);
+        return true;
+      }
       else return false;
     } catch {
       return false;

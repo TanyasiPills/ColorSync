@@ -10,10 +10,9 @@ export class ImagesService {
   constructor(private readonly db: PrismaService) { }
   async create(createImageDto: CreateImageDto, file: Express.Multer.File, id: number) {
     try {
-      await this.db.image.create({data: {...createImageDto, path: file.filename, user: {connect: {id}}}});
-      return true;
+      return await this.db.image.create({data: {...createImageDto, path: file.filename, user: {connect: {id}}}});
     } catch {
-      return false;
+      return null;
     }
   }
 

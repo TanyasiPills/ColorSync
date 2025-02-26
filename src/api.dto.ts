@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Visibility } from "@prisma/client";
-import { IsArray, IsDate, IsEmail, IsEnum, IsInt, IsObject, IsOptional, IsPositive, IsString, MaxLength, MinLength } from "class-validator";
+import { IsArray, IsDate, IsEmail, IsEnum, IsInt, IsObject, IsOptional, IsPositive, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class LoginBodyType {
   @IsEmail()
@@ -43,6 +43,26 @@ export class ImageCreateType extends FileType {
   @IsEnum(Visibility)
   @ApiProperty({ description: 'The visibility of the image', examples: ['public', 'private'], enum: Visibility })
   visibility?: Visibility;
+}
+
+export class PostInputBodyType extends PartialType(FileType) {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiProperty({ type: 'integer', description: 'The id of the image', example: 1 })
+  imageId?: number;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  @ApiProperty({ type: 'string', description: 'The text of the post', example: 'Hello!' })
+  text: string;
+
+  @IsArray()
+  @IsString({each: true})
+  @IsOptional()
+  @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  tags?: string[];
 }
 
 export class PostBaseType {

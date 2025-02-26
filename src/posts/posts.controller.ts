@@ -1,66 +1,91 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiParam, ApiQuery, ApiResponse, getSchemaPath } from '@nestjs/swagger';
-import { PostBaseType, PostIncludesType } from 'src/api.dto';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import { PostBaseType, PostIncludesType, PostInputBodyType } from 'src/api.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { ImagesService } from 'src/images/images.service';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postService: PostsService) { }
-
-  @Get('testSearch')
-  testSearch() {
-    this.postService.testSearch();
-  }
+  constructor(
+    private readonly postService: PostsService,
+    private readonly imageService: ImagesService
+  ) { }
 
   /**
-   * Create a post from the logged in user
+   * Create a post for the logged in user
    * @param createPostDto Data about the post
    * @returns The created post's data
    */
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({description: "The data of the image, you can send either a image id for the image or a image file to upload", type: PostInputBodyType})
   @ApiResponse({ status: 201, description: 'Post sucessfully created' })
   @ApiResponse({ status: 401, description: 'Invalid token' })
   @ApiBearerAuth()
 
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        }
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(new Error('Only image files are allowed!'), false);
+        }
+        callback(null, true);
+      }
+    })
+  )
   @HttpCode(201)
   @Post()
-  create(@Body() createPostDto: CreatePostDto, @Req() req: any) {
+  async create(@Body() createPostDto: CreatePostDto, @Req() req: any, file: Express.Multer.File,) {
+    if (file) {
+      const image = await this.imageService.create({visibility: 'public'}, file, req.user.id);
+      createPostDto.imageId = image.id;
+    }
     return this.postService.create(createPostDto, req.user.id);
   }
 
   /**
    * Returns all of the posts
    * @param take The amount of posts to return at one time
-   * @param lastId the id of the last post you got
-   * @returns {data: PostResponse[], newLastId: number} The id of the last post and the data of the posts
+   * @param offset the id of the last post you got
+   * @returns {data: PostResponse[], offset: number} The id of the last post and the data of the posts
    */
-  @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
+  @ApiQuery({ name: 'offset', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
-  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, newLastId: { type: 'integer' } } } })
+  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
   @Get()
-  findAll(@Query('take') take: string, @Query('lastId') lastId: string) {
-    return this.postService.findAll(lastId, take);
+  findAll(@Query('take') take: string, @Query('offset') offset: string) {
+    return this.postService.search(null, null, take, offset);
   }
 
   /**
    * Searchs for posts with specified tags included
    * @param tags The tags to search for
    * @param take The amount of posts to return at one time
-   * @param lastId The lastId from the previous request
-   * @returns {data: PostResponse[], newLastId: number} The id of the last post and the data of the posts
+   * @param offset The lastId from the previous request
+   * @returns {data: PostResponse[], offset: number} The id of the last post and the data of the posts
    */
   @ApiQuery({ name: 'tags', description: 'The tags to search for', required: false })
-  @ApiQuery({ name: 'lastId', description: 'The id of the last post you got', required: false })
+  @ApiQuery({ name: 'offset', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
-  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, newLastId: { type: 'integer' } } } })
+  @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
   @Get('search') 
-  search(@Query('tags') tags: string[], @Query('take') take: string, @Query('lastId') lastId: string) {
+  search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1") {
     if (!tags) tags = [];
     else if (!Array.isArray(tags)) tags = [tags];
-    return this.postService.search(tags, take, lastId);
+    return this.postService.search(tags, q, take, offset, imageOnly == '1');
   }
 
   /**

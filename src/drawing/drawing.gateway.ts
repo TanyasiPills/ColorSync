@@ -15,11 +15,15 @@ import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
 import { getUserData, isPositiveInt, socketError } from "./helper";
 import { User } from "./types";
+import { PrismaService } from "src/prisma.service";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly db: PrismaService
+  ) { }
   private readonly logger = new Logger(DrawingWS.name);
   private rooms: Room[];
   private connections: Map<string, Room>;
