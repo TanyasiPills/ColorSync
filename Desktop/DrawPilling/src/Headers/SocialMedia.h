@@ -34,6 +34,9 @@ public:
 	static void LoadImageJa(int dataId, int type, int postId = 0);
 
 	static void ProfilePage(float& width, float& height);
+	static void MainPage(float& width, float& height);
+	static void SettingsPage();
+	static void SearchPage();
 
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();

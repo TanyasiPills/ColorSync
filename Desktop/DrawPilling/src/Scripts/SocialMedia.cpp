@@ -107,6 +107,217 @@ void SocialMedia::LoadProfile()
     }
 }
 
+void SocialMedia::MainPage(float& width, float& height)
+{
+    static bool openStuff = false;
+    static bool wasCreated = false;
+    static bool created = false;
+
+    ImGui::GetStyle().ChildBorderSize = 0.0f;
+    ImVec2 valid = ImGui::GetContentRegionAvail();
+    ImGui::SetCursorPosY(0);
+    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
+
+    float scrollY = ImGui::GetScrollY();
+    float scrollMaxY = ImGui::GetScrollMaxY();
+
+    if ((scrollY / scrollMaxY) < 0.90f) {
+        canGet = true;
+    }
+    if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
+        if (prevScrollY != scrollY) {
+            prevScrollY = scrollY;
+            canGet = false;
+            std::thread(&SocialMedia::GetPosts).detach();
+        }
+        if (init) {
+            std::thread(&SocialMedia::GetPosts).detach();
+            init = false;
+        }
+
+    }
+
+    for (Post& post : posts)
+    {
+        if (!post.allLoaded) {
+            if (post.picLoaded && users[post.userId].pPicLoaded) post.allLoaded = true;
+            continue;
+        }
+        bool needChange = false;
+        int validWidth = width * 0.6f;
+        std::string id = std::to_string(post.id);
+        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            
+            if (post.size == 0) {
+                startY = ImGui::GetCursorPosY();
+                needChange = true;
+            }
+
+            Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+
+            Lss::Top(2 * Lss::VH);
+            Lss::Text(users[post.userId].username, 4 * Lss::VH, SameLine);
+
+            Lss::Left(Lss::VH);
+            Lss::Text(post.text, 3 * Lss::VH);
+
+            float good = validWidth * 0.9f;
+            ImVec2 faki(good, good * post.ratio);
+            Lss::Image(post.image, faki, Centered);
+
+            if (!post.comments.empty())
+            {
+                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
+                /*
+                if (post.openComments != open) {
+                    post.size = 0;
+                    post.openComments = open;
+                }*/
+
+                if (open) {
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    float cornerRadius = 10.0f;
+
+                    ImVec2 commentChildSize;
+                    if (post.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
+
+                    ImVec2 commentPos = ImGui::GetCursorScreenPos();
+
+                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
+                        
+                        for (Comment& comment : post.comments)
+                        {
+                            if (!users[comment.userId].pPicLoaded) continue;
+
+                            Lss::SetColor(ContainerBackground, Background);
+                            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+
+                            std::string name = std::to_string(comment.id);
+                            Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+
+                                Lss::LeftTop(Lss::VH, Lss::VH);
+                                Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
+
+                                Lss::Top(Lss::VH);
+                                Lss::Text(users[comment.userId].username, 4 * Lss::VH, SameLine);
+
+                                Lss::Left(7 * Lss::VH);
+                                Lss::Text(comment.text, 3 * Lss::VH);
+
+                                Lss::End();
+
+                            ImGui::EndChild();
+
+                            ImGui::PopStyleVar(1);
+                            Lss::SetColor(ContainerBackground, ContainerBackground);
+
+                            if (post.comments[post.comments.size() - 1].id != comment.id) {
+                                Lss::Top(Lss::VH);
+                            }
+                        }
+
+                        Lss::End();
+
+                    ImGui::EndChild();
+                    ImGui::TreePop();
+                }
+            }
+            if (post.size == 0 && needChange) {
+                endY = ImGui::GetCursorPosY();
+                post.size = endY - startY;
+            }
+            Lss::End();
+        ImGui::EndChild();
+
+        ImGui::Separator();
+    }
+    ImGui::EndChild();
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
+        viewport->WorkPos.y + viewport->WorkSize.y - 2 * Lss::VH),
+        ImGuiCond_Always, ImVec2(0.5f, 1.0f));
+
+    Lss::Child("FixedButton", ImVec2(12 * Lss::VH, 5 * Lss::VH), false, Centered, ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+
+        if (Lss::Button("Post", ImVec2(12 * Lss::VH, 5 * Lss::VH), 5 * Lss::VH, Rounded | Centered)) {
+            openStuff = true;
+        }
+
+        Lss::End();
+
+    ImGui::EndChild();
+
+
+    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, 50 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    {
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+
+        Lss::Text("What's on your ming?", 2 * Lss::VH);
+
+        static char inputtext[128] = "";
+        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
+
+        Lss::Top(-Lss::VH / 2);
+        Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
+
+        ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
+            created = true;
+            wasCreated = true;
+        }
+
+        if (created) Explorer::FileExplorerUI(&created);
+        else if (wasCreated) {
+            std::string imagePath = Explorer::GetImagePath();
+            if (imagePath.size() > 2) {
+                imageToPostTexture.Init(imagePath);
+                imageToPost = imageToPostTexture.GetId();
+                wasCreated = false;
+            }
+            else {
+                wasCreated = false;
+            }
+        }
+
+        if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
+
+        ImVec2 buttonSize = ImVec2(100, 20);
+        ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+        if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+        {
+            std::string imagePath = Explorer::GetImagePath();
+            nlohmann::json jsonData = HManager::PostRequest(inputtext, imagePath);
+            if (jsonData.is_null()) {
+                std::cout << "couldn't post post" << std::endl;
+            }
+            else {
+                posts = {};
+                openStuff = false;
+                lastId = 0;
+                init = true;
+            }
+        }
+
+        if (!created && ImGui::IsMouseClicked(0))
+        {
+            ImVec2 pos = ImGui::GetWindowPos();
+            ImVec2 cursorPos = ImGui::GetMousePos();
+            ImVec2 size = ImGui::GetWindowSize();
+            if (!Lss::InBound(cursorPos, pos, size)) {
+                ImGui::CloseCurrentPopup();
+                openStuff = false;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndPopup();
+    }
+}
+
 void SocialMedia::ProfilePage(float& width, float& height) 
 {
     static bool needImages = true;
@@ -126,142 +337,228 @@ void SocialMedia::ProfilePage(float& width, float& height)
 
     ImVec2 valid = ImGui::GetContentRegionAvail();
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
-    int validWidth = width * 0.6f;
-    Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        int validWidth = width * 0.6f;
+            Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-    //pfp change
-    if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
-    {
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
+            //pfp change
+            if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+            {
+                ImVec2 valid = ImGui::GetContentRegionAvail();
+                Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
 
-        ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-            openExplorer = true;
-            wasOpenExplorer = true;
-        }
-        Lss::End();
-
-        if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
-        else if (wasOpenExplorer) {
-            std::string imagePath = Explorer::GetImagePath();
-            if (imagePath.size() > 2) {
-                userImageTexture.Init(imagePath);
-                runtime.pfpTexture = userImageTexture.GetId();
-                wasOpenExplorer = false;
-            }
-            else {
-                wasOpenExplorer = false;
-            }
-        }
-        if (userImageTexture.GetId() <= 0)
-        {
-            std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
-            float ratioStuff = 0.0f;
-            runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
-        }
-        Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
-        ImVec2 buttonSize = ImVec2(100, 20);
-        ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-        if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-        {
-            std::string imagePath = Explorer::GetImagePath();
-            if (imagePath.size() > 2) {
-                std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
-                nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 1);
-                if (!jsonData.is_null()) imageEditOpen = false;
-            }
-        }
-
-
-        if (!openExplorer && ImGui::IsMouseClicked(0))
-        {
-            ImVec2 pos = ImGui::GetWindowPos();
-            ImVec2 cursorPos = ImGui::GetMousePos();
-            ImVec2 size = ImGui::GetWindowSize();
-            if (!Lss::InBound(cursorPos, pos, size)) {
-                imageEditOpen = false;
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        Lss::End();
-        ImGui::EndPopup();
-    }
-
-    if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
-    {
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Text("Add file to galery", 4 * Lss::VH, Centered);
-
-        ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-            openExplorer2 = true;
-            wasOpenExplorer2 = true;
-        }
-        Lss::End();
-
-        if (openExplorer2) Explorer::FileExplorerUI(&openExplorer2);
-        else if (wasOpenExplorer2) {
-            wasOpenExplorer2 = false;
-        }
-        if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
-        ImVec2 buttonSize = ImVec2(100, 20);
-        ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-        if (Lss::Button("Add##addImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-        {
-            std::string imagePath = Explorer::GetImagePath();
-            if (imagePath.size() > 2) {
-                nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
-                if (!jsonData.is_null()) {
-                    imageUploadpen = false;
-                    needImages = true;
+                ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                    openExplorer = true;
+                    wasOpenExplorer = true;
                 }
-            }
-        }
+
+                if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
+                else if (wasOpenExplorer) {
+                    std::string imagePath = Explorer::GetImagePath();
+                    if (imagePath.size() > 2) {
+                        userImageTexture.Init(imagePath);
+                        runtime.pfpTexture = userImageTexture.GetId();
+                        wasOpenExplorer = false;
+                    }
+                    else {
+                        wasOpenExplorer = false;
+                    }
+                }
+
+                if (userImageTexture.GetId() <= 0)
+                {
+                    std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
+                    float ratioStuff = 0.0f;
+                    runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
+                }
+                Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+
+                ImVec2 buttonSize = ImVec2(100, 20);
+                ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                {
+                    std::string imagePath = Explorer::GetImagePath();
+                    if (imagePath.size() > 2) {
+                        std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
+                        nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 1);
+                        if (!jsonData.is_null()) imageEditOpen = false;
+                    }
+                }
 
 
-        if (!openExplorer2 && ImGui::IsMouseClicked(0))
-        {
-            ImVec2 pos = ImGui::GetWindowPos();
-            ImVec2 cursorPos = ImGui::GetMousePos();
-            ImVec2 size = ImGui::GetWindowSize();
-            if (!Lss::InBound(cursorPos, pos, size)) {
-                imageUploadpen = false;
-                ImGui::CloseCurrentPopup();
+                if (!openExplorer && ImGui::IsMouseClicked(0))
+                {
+                    ImVec2 pos = ImGui::GetWindowPos();
+                    ImVec2 cursorPos = ImGui::GetMousePos();
+                    ImVec2 size = ImGui::GetWindowSize();
+                    if (!Lss::InBound(cursorPos, pos, size)) {
+                        imageEditOpen = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                Lss::End();
+                ImGui::EndPopup();
             }
-        }
+
+            //image add
+            if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+            {
+                ImVec2 valid = ImGui::GetContentRegionAvail();
+                Lss::Text("Add file to galery", 4 * Lss::VH, Centered);
+
+                ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                    openExplorer2 = true;
+                    wasOpenExplorer2 = true;
+                }
+
+                if (openExplorer2) Explorer::FileExplorerUI(&openExplorer2);
+                else if (wasOpenExplorer2) {
+                    wasOpenExplorer2 = false;
+                }
+                if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+                ImVec2 buttonSize = ImVec2(100, 20);
+                ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                if (Lss::Button("Add##addImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                {
+                    std::string imagePath = Explorer::GetImagePath();
+                    if (imagePath.size() > 2) {
+                        nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
+                        if (!jsonData.is_null()) {
+                            imageUploadpen = false;
+                            needImages = true;
+                        }
+                    }
+                }
+
+
+                if (!openExplorer2 && ImGui::IsMouseClicked(0))
+                {
+                    ImVec2 pos = ImGui::GetWindowPos();
+                    ImVec2 cursorPos = ImGui::GetMousePos();
+                    ImVec2 size = ImGui::GetWindowSize();
+                    if (!Lss::InBound(cursorPos, pos, size)) {
+                        imageUploadpen = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                Lss::End();
+                ImGui::EndPopup();
+            }
+
+            Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Rounded);
+            if (ImGui::IsItemClicked()) {
+                imageEditOpen = true;
+            }
+
+            Lss::Top(7.5 * Lss::VH);
+            Lss::Text(runtime.username, 5 * Lss::VH, SameLine);
+
+            Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
+            if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+            {
+                imageUploadpen = true;
+            }
+
+            Lss::Top(2 * Lss::VH);
+            Lss::Separator(2.0f);
+
+            ImVec2 avail = ImGui::GetContentRegionAvail();
+            float xWidth = avail.x / 3;
+            for (size_t i = 0; i < userImages.size(); i++)
+            {
+                ImGui::Image(userImages[i], ImVec2(xWidth, xWidth));
+
+                if ((i + 1) % 3 != 0)
+                    ImGui::SameLine();
+            }
+
+            Lss::End();
+        ImGui::EndChild();
+    ImGui::EndChild();
+}
+
+void SocialMedia::SettingsPage()
+{
+    ImVec2 valid = ImGui::GetContentRegionAvail();
+    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+        Lss::Text("Network Variables", 5 * Lss::VH);
+        Lss::Top(2.4f * Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4, SameLine);
+
+
+        Lss::Left(5 * Lss::VW);
+        Lss::Child("##NetworkVariables", ImVec2(0, 4.5 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+            Lss::Text("Server IP: ", 3 * Lss::VH);
+
+            Lss::Top(0.25f * Lss::VH);
+            static char ipText[128] = "";
+            if (ipText[0] == '\0') std::strcpy(ipText, runtime.ip.c_str());
+            if (Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded | SameLine, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                runtime.ip = ipText;
+                std::thread(&HManager::InitUser).detach();
+            }
+
+            Lss::End();
+
+        ImGui::EndChild();
+
+
+        Lss::Text("Drawing Variables", 5 * Lss::VH);
+
+        Lss::Top(2.4f * Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4, SameLine);
+
+
+        Lss::Left(5 * Lss::VW);
+        Lss::Child("##DrawingVariables", ImVec2(0, 4.5f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+            Lss::Text("Undo count: ", 3 * Lss::VH);
+
+            Lss::Top(0.25f * Lss::VH);
+            static int myInt = runtime.undoCount;
+            if (myInt >= 100) myInt = 99;
+            if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded | SameLine))
+            {
+                runtime.undoCount = myInt;
+            }
+
+            Lss::End();
+
+        ImGui::EndChild();
+
+
         Lss::End();
-        ImGui::EndPopup();
-    }
-    Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Rounded);
-    if (ImGui::IsItemClicked()) {
-        imageEditOpen = true;
-    }
-    ImGui::SameLine();
-    Lss::Top(7.5 * Lss::VH);
-    Lss::Text(runtime.username, 5 * Lss::VH);
 
-    ImGui::SameLine();
-    Lss::Top(7.5 * Lss::VH);
-    Lss::Left(10 * Lss::VH);
-    if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
-    {
-        imageUploadpen = true;
-    }
-    Lss::Top(2 * Lss::VH);
-    Lss::Separator(2.0f);
-    ImVec2 avail = ImGui::GetContentRegionAvail();
-    float xWidth = avail.x / 3;
-    for (size_t i = 0; i < userImages.size(); i++)
-    {
-        ImGui::Image(userImages[i], ImVec2(xWidth, xWidth));
+    ImGui::EndChild();
+}
 
-        if ((i + 1) % 3 != 0)
-            ImGui::SameLine();
+void SocialMedia::SearchPage()
+{
+    ImVec2 valid = ImGui::GetContentRegionAvail();
+    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+
+    static char searchText[128] = "";
+    bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
+    static bool search = false;
+    static int count = 0;
+    if (hihi || search) {
+        search = true;
+        Lss::Top(10 * Lss::VH);
+        std::string searchtext = "Searching";
+        for (size_t i = 100; i < count; i += 100)searchtext += ".";
+        Lss::Text(searchtext, 4 * Lss::VH, Centered);
+        count++;
+        if (count >= 401) {
+            count = 0;
+        }
     }
 
     Lss::End();
-    ImGui::EndChild();
     ImGui::EndChild();
 }
 
@@ -275,269 +572,15 @@ void SocialMedia::MainFeed(float position, float width, float height)
     switch (mode)
     {
     case 0:{ //home page, social media
-        static bool openStuff = false;
-        static bool wasCreated = false;
-        static bool created = false;
-
-        ImGui::GetStyle().ChildBorderSize = 0.0f;
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        ImGui::SetCursorPosY(0);
-        Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
-
-        float scrollY = ImGui::GetScrollY();
-        float scrollMaxY = ImGui::GetScrollMaxY();
-
-        if ((scrollY / scrollMaxY) < 0.90f) {
-            canGet = true;
-        }
-        if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
-            if (prevScrollY != scrollY) {
-                prevScrollY = scrollY;
-                canGet = false;
-                std::thread(&SocialMedia::GetPosts).detach();
-            }
-            if (init) {
-                std::thread(&SocialMedia::GetPosts).detach();
-                init = false;
-            }
-
-        }
-        
-        for (Post& post : posts)
-        {
-            if (!post.allLoaded) {
-                if (post.picLoaded && users[post.userId].pPicLoaded) post.allLoaded = true;
-                continue;
-            }
-            bool needChange = false;
-            int validWidth = width * 0.6f;
-            std::string id = std::to_string(post.id);
-            Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            if (post.size == 0) {
-                startY = ImGui::GetCursorPosY();
-                needChange = true;
-            }
-            Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
-            ImGui::SameLine();
-            Lss::Top(2 * Lss::VH);
-            Lss::Text(users[post.userId].username, 4 * Lss::VH);
-            Lss::Left(Lss::VH);
-            Lss::Text(post.text, 3 * Lss::VH);
-            float good = validWidth * 0.9f;
-            ImVec2 faki(good, good * post.ratio);
-            Lss::Image(post.image, faki, Centered);
-            if (!post.comments.empty())
-            {
-                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
-                /*
-                if (post.openComments != open) {
-                    post.size = 0;  
-                    post.openComments = open;
-                }*/
-
-                if (open) {
-                    ImDrawList* drawList = ImGui::GetWindowDrawList();
-                    float cornerRadius = 10.0f;
-                    ImVec2 commentChildSize;
-                    if (post.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
-                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x-20, 20*Lss::VH);
-                    ImVec2 commentPos = ImGui::GetCursorScreenPos();
-
-                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
-                    for (Comment& comment : post.comments)
-                    {
-                        if (!users[comment.userId].pPicLoaded) continue;
-
-                        Lss::SetColor(ContainerBackground, Background);
-                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-                        std::string name = std::to_string(comment.id);
-                        Lss::Child(name, ImVec2(0, 11 * Lss::VH));
-                        Lss::Top(Lss::VH);
-                        Lss::Left(Lss::VH);
-                        Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
-                        ImGui::SameLine();
-                        Lss::Top(Lss::VH);
-                        Lss::Text(users[comment.userId].username, 4 * Lss::VH);
-                        Lss::Left(7*Lss::VH);
-                        Lss::Text(comment.text, 3 * Lss::VH);
-                        Lss::End();
-                        ImGui::EndChild();
-                        ImGui::PopStyleVar(1);
-                        Lss::SetColor(ContainerBackground, ContainerBackground);
-                        if (post.comments[post.comments.size()-1].id != comment.id) {
-                            Lss::Top(Lss::VH);
-                        }
-                    }
-                    Lss::End();
-                    ImGui::EndChild();
-                    ImGui::TreePop();
-                }
-            }
-            if (post.size == 0 && needChange) {
-                endY = ImGui::GetCursorPosY();
-                post.size = endY - startY;
-            }
-            Lss::End();
-            ImGui::EndChild();
-
-            ImGui::Separator();
-        }
-        ImGui::EndChild();
-
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
-
-        ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
-            viewport->WorkPos.y + viewport->WorkSize.y - 2*Lss::VH),
-            ImGuiCond_Always, ImVec2(0.5f, 1.0f));
-
-        Lss::Child("FixedButton", ImVec2(12*Lss::VH, 5 * Lss::VH), false, Centered, ImGuiWindowFlags_NoDecoration |
-            ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
-
-        if (Lss::Button("Post", ImVec2(12*Lss::VH, 5*Lss::VH), 5*Lss::VH, Rounded | Centered)) {
-            openStuff = true;
-        }
-        Lss::End();
-        ImGui::EndChild();
-
-        if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, 50 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
-        {
-            ImVec2 valid = ImGui::GetContentRegionAvail();
-            Lss::Text("What's on your ming?", 2 * Lss::VH);
-            static char inputtext[128] = "";
-            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
-            Lss::Top(-Lss::VH / 2);
-            Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
-
-            ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-            if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
-                created = true;
-                wasCreated = true;
-            }
-            Lss::End();
-
-            if (created) Explorer::FileExplorerUI(&created);
-            else if (wasCreated) {
-                std::string imagePath = Explorer::GetImagePath();
-                if (imagePath.size() > 2) {
-                    imageToPostTexture.Init(imagePath);
-                    imageToPost = imageToPostTexture.GetId();
-                    wasCreated = false;
-                }
-                else {
-                    wasCreated = false;
-                }
-            }
-            if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
-            ImVec2 buttonSize = ImVec2(100, 20);
-            ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-            if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-            {
-                std::string imagePath = Explorer::GetImagePath();
-                nlohmann::json jsonData = HManager::PostRequest(inputtext, imagePath);
-                if (jsonData.is_null()) {
-                    std::cout << "couldn't post post" << std::endl;
-                }
-                else {
-                    posts = {};
-                    openStuff = false;
-                    lastId = 0;
-                    init = true;
-                }
-            }
-            if (!created && ImGui::IsMouseClicked(0))
-            {
-                ImVec2 pos = ImGui::GetWindowPos();
-                ImVec2 cursorPos = ImGui::GetMousePos();
-                ImVec2 size = ImGui::GetWindowSize();
-                if (!Lss::InBound(cursorPos, pos, size)) {
-                    ImGui::CloseCurrentPopup();
-                    openStuff = false;
-                }
-            }
-            Lss::End();
-            ImGui::EndPopup();
-        }
+        MainPage(width, height);
         } break;
     case 1: { //settings
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-        Lss::Text("Network Variables", 5 * Lss::VH);
-        ImGui::SameLine();
-        Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f);
-        
-
-        Lss::Left(5 * Lss::VW);
-        Lss::Child("##NetworkVariables", ImVec2(0, 4.5*Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-        Lss::Text("Server IP: ", 3 * Lss::VH);
-        ImGui::SameLine();
-        Lss::Top(0.25f * Lss::VH);
-        static char ipText[128] = "";
-        if(ipText[0] == '\0') std::strcpy(ipText, runtime.ip.c_str());
-        if (Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            std::cout << "zsa\n";
-            runtime.ip = ipText;
-            std::thread(&HManager::InitUser).detach();
-        }
-
-        Lss::End();
-        ImGui::EndChild();
-
-
-        Lss::Text("Drawing Variables", 5 * Lss::VH);
-        ImGui::SameLine();
-        Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f);
-
-
-        Lss::Left(5 * Lss::VW);
-        Lss::Child("##DrawingVariables", ImVec2(0, 4.5f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-        Lss::Text("Undo count: ", 3 * Lss::VH);
-        ImGui::SameLine();
-        Lss::Top(0.25f * Lss::VH);
-        static int myInt = runtime.undoCount;
-        if (myInt >= 100) myInt = 99;
-        if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded))
-        {
-            runtime.undoCount = myInt;
-        }
-
-        Lss::End();
-        ImGui::EndChild();
-
-
-        Lss::End();
-        ImGui::EndChild();
+        SettingsPage();
         } break;
     case 2: { //search
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-
-        static char searchText[128] = "";
-        bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
-        static bool search = false;
-        static int count = 0;
-        if (hihi || search) {
-            search = true;
-            Lss::Top(10 * Lss::VH);
-            std::string searchtext = "Searching";
-            for (size_t i = 100; i < count; i+= 100)searchtext += ".";
-            Lss::Text(searchtext, 4 * Lss::VH, Centered);
-            count++;
-            if (count >= 401) {
-                count = 0;
-            }
-        }
-
-        Lss::End();
-        ImGui::EndChild();
+        SearchPage();
         } break;
-    case 3: {
+    case 3: { //view profile, add images
         ProfilePage(width, height);
         } break;
     default:
@@ -550,6 +593,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
     ImGui::End();
 }
+
 void SocialMedia::LeftSide(float position, float width, float height)
 {
     ImGui::SetNextWindowPos(ImVec2(position, 0));
@@ -624,6 +668,7 @@ void SocialMedia::LeftSide(float position, float width, float height)
     Lss::End();
     ImGui::End();
 }
+
 void SocialMedia::RightSide(float position, float width, float height)
 {
     ImGui::SetNextWindowPos(ImVec2(position, 0));
