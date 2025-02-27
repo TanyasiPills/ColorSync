@@ -155,8 +155,9 @@ void SocialMedia::MainPage(float& width, float& height)
 
             Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
 
+            ImGui::SameLine();
             Lss::Top(2 * Lss::VH);
-            Lss::Text(users[post.userId].username, 4 * Lss::VH, SameLine);
+            Lss::Text(users[post.userId].username, 4 * Lss::VH);
 
             Lss::Left(Lss::VH);
             Lss::Text(post.text, 3 * Lss::VH);
@@ -199,8 +200,9 @@ void SocialMedia::MainPage(float& width, float& height)
                                 Lss::LeftTop(Lss::VH, Lss::VH);
                                 Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
 
+                                ImGui::SameLine();
                                 Lss::Top(Lss::VH);
-                                Lss::Text(users[comment.userId].username, 4 * Lss::VH, SameLine);
+                                Lss::Text(users[comment.userId].username, 4 * Lss::VH);
 
                                 Lss::Left(7 * Lss::VH);
                                 Lss::Text(comment.text, 3 * Lss::VH);
@@ -451,11 +453,13 @@ void SocialMedia::ProfilePage(float& width, float& height)
                 imageEditOpen = true;
             }
 
+            ImGui::SameLine();
             Lss::Top(7.5 * Lss::VH);
-            Lss::Text(runtime.username, 5 * Lss::VH, SameLine);
+            Lss::Text(runtime.username, 5 * Lss::VH);
 
+            ImGui::SameLine();
             Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
-            if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+            if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
             {
                 imageUploadpen = true;
             }
@@ -484,8 +488,10 @@ void SocialMedia::SettingsPage()
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
 
         Lss::Text("Network Variables", 5 * Lss::VH);
+
+        ImGui::SameLine();
         Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4, SameLine);
+        Lss::Separator(2.0f, 0.0f, 4);
 
 
         Lss::Left(5 * Lss::VW);
@@ -493,10 +499,11 @@ void SocialMedia::SettingsPage()
 
             Lss::Text("Server IP: ", 3 * Lss::VH);
 
+            ImGui::SameLine();
             Lss::Top(0.25f * Lss::VH);
             static char ipText[128] = "";
             if (ipText[0] == '\0') std::strcpy(ipText, runtime.ip.c_str());
-            if (Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded | SameLine, ImGuiInputTextFlags_EnterReturnsTrue))
+            if (Lss::InputText("faku", ipText, sizeof(ipText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 runtime.ip = ipText;
                 std::thread(&HManager::InitUser).detach();
@@ -509,8 +516,9 @@ void SocialMedia::SettingsPage()
 
         Lss::Text("Drawing Variables", 5 * Lss::VH);
 
+        ImGui::SameLine();
         Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4, SameLine);
+        Lss::Separator(2.0f, 0.0f, 4);
 
 
         Lss::Left(5 * Lss::VW);
@@ -518,10 +526,11 @@ void SocialMedia::SettingsPage()
 
             Lss::Text("Undo count: ", 3 * Lss::VH);
 
+            ImGui::SameLine();
             Lss::Top(0.25f * Lss::VH);
             static int myInt = runtime.undoCount;
             if (myInt >= 100) myInt = 99;
-            if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded | SameLine))
+            if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded))
             {
                 runtime.undoCount = myInt;
             }
@@ -740,6 +749,7 @@ void SocialMedia::GetPosts()
     lastId = jsonData["offset"];
     LoadImages();
 }
+
 void SocialMedia::LoadImages() 
 {
     for (int i = 0; i < posts.size(); i++)
