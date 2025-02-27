@@ -319,7 +319,7 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
         ImGui::SameLine();
         if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 4 * Lss::VH))
         {
-            std::string imagePrePath = currentPath + fileName;
+            std::string imagePrePath = currentPath +'\\' + fileName;
             int idForFormat = 3;
             if (ValidFormat(idForFormat, imagePrePath))
             {

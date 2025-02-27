@@ -23,8 +23,12 @@ void HManager::InitUser()
 {
 	if (runtime.token[0] != '\0') {
 		try {
-			nlohmann::json result = Request(runtime.ip + ":3000/users", "", GET, runtime.token);
-
+			nlohmann::json result = Request((runtime.ip + ":3000/users").c_str(), "", GET, runtime.token);
+			if (result.empty()) {
+				std::cerr << "Error: Received empty response from server." << std::endl;
+				runtime.logedIn = false;
+				return;
+			}
 			if (result.contains("statusCode") && result["statusCode"] == 401) {
 				runtime.logedIn = false;
 			}
@@ -105,14 +109,18 @@ nlohmann::json HManager::Request(std::string query, std::string path, std::strin
 
 	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
 
-	// Perform request
 	CURLcode res = curl_easy_perform(curl);
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+	if (http_code != 200 && http_code != 204 && http_code != 201)
+	{
+		std::cerr << "Get voided bitch" << std::endl;
+		return nullptr;
+	}
 
 	if (res != CURLE_OK) {
 		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-		return nlohmann::json{};
+		return nullptr;
 	}
 	else {
 		try {
@@ -172,9 +180,15 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+
+		if (http_code != 200 && http_code != 204 && http_code != 201)
+		{
+			std::cerr << "Get voided bitch" << std::endl;
+			return nullptr;
+		}
 		if (res != CURLE_OK) {
 			std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-			return nlohmann::json{};
+			return nullptr;
 		} 
 		else {
 			try {

@@ -46,7 +46,7 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
-int tool = 1;
+int tool = 0;
 
 bool FileExists(const char* filename) {
 	FILE* file = fopen(filename, "r");
