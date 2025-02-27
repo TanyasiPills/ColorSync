@@ -8,9 +8,9 @@ import { resolve } from 'path';
 @Injectable()
 export class ImagesService {
   constructor(private readonly db: PrismaService) { }
-  async create(createImageDto: CreateImageDto, file: Express.Multer.File, id: number) {
+  async create(createImageDto: CreateImageDto, file: Express.Multer.File, id: number, forPost: boolean = false) {
     try {
-      return await this.db.image.create({ data: { ...createImageDto, path: file.filename, user: { connect: { id } } } });
+      return await this.db.image.create({ data: { ...createImageDto, path: file.filename, user: { connect: { id } }, forPost } });
     } catch {
       return null;
     }
@@ -24,10 +24,10 @@ export class ImagesService {
     }
     let result;
     if (id == userId) {
-      result = await this.db.image.findMany({ where: { userId: id }, orderBy: { date: 'desc' }, select: { id: true, date: true, visibility: true, userId: true } });
+      result = await this.db.image.findMany({ where: { userId: id, forPost: false }, orderBy: { date: 'desc' }, select: { id: true, date: true, visibility: true, userId: true } });
     } else {
       result = await this.db.image.findMany({
-        where: { visibility: Visibility.public, userId: id },
+        where: { visibility: Visibility.public, userId: id, forPost: false  },
         orderBy: { date: 'desc' },
         select: { id: true, date: true, userId: true, visibility: true }
       });
@@ -40,13 +40,13 @@ export class ImagesService {
     const image = await this.db.image.findUnique({ where: { id }, select: { path: true, visibility: true, userId: true } });
     if (!image) throw new NotFoundException(`Image with id: ${id} not found`);
     if (image.visibility == Visibility.private && image.userId != userId) throw new UnauthorizedException("You don't have access to this image");
-    return resolve(`uploads/${image.path}`);;
+    return resolve(`uploads/${image.path}`);
   }
 
   async update(id: number, userId: number, visibility: Visibility) {
     try {
-      const image = this.db.image.findUniqueOrThrow({ where: { id, userId }, select: { id: true, date: true, visibility: true, userId: true } });
-      if (image.posts) throw new UnauthorizedException("You can't change the visibility of an image that is part of a post");
+      const image = this.db.image.findUniqueOrThrow({ where: { id, userId }, select: { id: true, date: true, visibility: true, userId: true, posts: true } });
+      if (image.posts && image.posts.length > 0) throw new UnauthorizedException("You can't change the visibility of an image that is part of a post");
       await this.db.image.update({ where: { id, userId }, data: { visibility } });
     } catch {
       throw new NotFoundException(`Image with id: ${id} not found that user: ${userId} can update`);
@@ -55,7 +55,9 @@ export class ImagesService {
 
   async remove(id: number, userId: number) {
     try {
-      const image = await this.db.image.delete({ where: { id, userId } });
+      const image = await this.db.image.findUniqueOrThrow({ where: { id, userId }, select: { posts: true, path: true } });
+      if (image.posts && image.posts.length > 0) throw new UnauthorizedException("You can't delete a image included in a post")
+      await this.db.image.delete({ where: { id, userId } });
       unlinkSync(`uploads/${image.path}`);
       return true;
     } catch {

@@ -34,6 +34,7 @@ model Post {
   imageId Int?
   text String @db.VarChar(500)
   date DateTime @default(now())
+  imageForPost Boolean @default(false)
   tags Tag[]
 
   comments Comment[]
@@ -62,6 +63,7 @@ model Image {
   userId Int
   visibility Visibility @default(private)
   date DateTime @default(now())
+  forPost Boolean @default(false)
 
   posts Post[]
 }

@@ -3,6 +3,8 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma.service';
 import { SearchService } from 'src/search/search.service';
+import { existsSync, unlinkSync } from 'fs';
+import { resolve } from 'path';
 
 @Injectable()
 export class PostsService {
@@ -11,7 +13,7 @@ export class PostsService {
     private readonly elastic: SearchService
   ) { }
 
-  async create(createPostDto: CreatePostDto, userId: number) {
+  async create(createPostDto: CreatePostDto, userId: number, uploaded: boolean = false) {
     if (createPostDto.imageId) {
       const image = await this.db.image.findUnique({ where: { id: createPostDto.imageId, userId } });
       if (!image) throw new NotFoundException(`Image with id: ${createPostDto.imageId} not found`);
@@ -23,12 +25,14 @@ export class PostsService {
         userId,
         text: createPostDto.text,
         imageId: createPostDto.imageId,
-        tags: {
+        tags: createPostDto.tags ? {
           connectOrCreate: createPostDto.tags.map(e => ({ where: { name: e }, create: { name: e } }))
-        }
+        } : undefined,
+        imageForPost: uploaded
       }
     });
     this.elastic.indexPost(post.id, post.text, [], post.date);
+    return post;
   }
 
   async search(tags: string[], q: string, take: string, offset: string, imageOnly: boolean = false) {
@@ -59,10 +63,12 @@ export class PostsService {
     let result = await Promise.all(ids.map(async (e) => this.db.post.findUnique({
       where: { id: e },
       select: selectBody
-    }))); 
+    })));
+    if (!result || result.length == 0) return { data: {}, offset: null };
+    console.log(result)
     if (!imageOnly) result.map(e => e.tags = e.tags.map(e => e.name));
-    result = result.filter(e => e.imageId);
-    return { data: result, offset: result.length == 0 ? null : parsedOffset + result.length };
+    else result = result.filter(e => e.imageId);
+    return { data: result, offset: parsedOffset + result.length };
   }
 
   async findByUser(id: number) {
@@ -135,6 +141,11 @@ export class PostsService {
       const result = await this.db.post.delete({ where: { id, userId } });
       if (result) {
         await this.elastic.deletePost(id);
+        if (result.imageForPost) {
+          const image = await this.db.image.delete({ where: { id: result.imageId } });
+          const path = resolve(image.path);
+          if (existsSync(path)) unlinkSync(path);
+        }
         return true;
       }
       else return false;

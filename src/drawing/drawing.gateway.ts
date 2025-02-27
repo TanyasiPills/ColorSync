@@ -15,19 +15,25 @@ import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
 import { getUserData, isPositiveInt, socketError } from "./helper";
 import { User } from "./types";
-import { PrismaService } from "src/prisma.service";
 
 @WebSocketGateway({ cors: { origin: "*" } })
 export class DrawingWS
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  constructor(
-    private readonly authService: AuthService,
-    //private readonly db: PrismaService
-  ) { }
+  constructor(private readonly authService: AuthService) { }
   private readonly logger = new Logger(DrawingWS.name);
   private rooms: Room[];
   private connections: Map<string, Room>;
   private connectedUsers: number[];
+
+  public getRooms() {
+    return this.rooms.map(e =>({
+      name: e.getName(),
+      owner: e.getOwner().data.user,
+      playerCount: e.getClients().length,
+      maxPlayers: e.getMaxClients(),
+      passwordRequired: e.getPassword() != undefined
+    }));
+  }
 
   @WebSocketServer() server: Server;
 

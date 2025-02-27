@@ -4,9 +4,11 @@ import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, resolve } from 'path';
 import { ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ImageCreateType, ImageType } from 'src/api.dto';
+import { existsSync, unlinkSync } from 'fs';
+import { OptionalAuthGuard } from 'src/auth/optional.guard';
 
 @Controller('images')
 export class ImagesController {
@@ -50,6 +52,8 @@ export class ImagesController {
 
     const result = await this.imageService.create(createImageDto, file, req.user.id);
     if (!result) {
+      const path = resolve(file.path);
+      if (existsSync(path)) unlinkSync(path);
       throw new HttpException('Image upload failed!.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -64,46 +68,14 @@ export class ImagesController {
   @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
   @ApiResponse({ status: 401, description: "Invalid token" })
   @ApiResponse({ status: 404, description: "User not foud or no images found" })
-  @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the user" })
 
-  @UseGuards(JwtAuthGuard)
-  @Get('user/private/:id')
-  findAll(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    return this.imageService.findAll(id, req.user.id);
-  }
-
-  /**
-   * Returns the images uploaded by a specific user that the requresting user has access to
-   * @param id The id of the user
-   * @returns Array of images
-   */
-  @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
-  @ApiResponse({ status: 401, description: "Invalid token" })
-  @ApiResponse({ status: 404, description: "User not foud or no images found" })
-  @ApiParam({ name: "id", description: "The id of the user" })
-
+  @UseGuards(OptionalAuthGuard)
   @Get('user/:id')
-  findAllPublic(@Param('id', ParseIntPipe) id: number) {
-    return this.imageService.findAll(id, -1);
-  }
-
-  /**
-   * Returns a public image file
-   * @param id The id of the image
-   */
-  @ApiResponse({ status: 200, description: "Returns the image file" })
-  @ApiResponse({ status: 401, description: "The image is private" })
-  @ApiResponse({ status: 404, description: "Image not found" })
-  @ApiParam({ name: "id", description: "The id of the image" })
-
-  @Get('public/:id')
-  async findPublic(@Param('id', ParseIntPipe) id: number, @Res() res: any) {
-    const path = await this.imageService.findOne(id, -1);
-    if (!path) {
-      throw new NotFoundException("Image not found");
-    }
-    res.sendFile(path);
+  findAllPublic(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    let userId = -1;
+    if (req.user) userId = req.user.id
+    return this.imageService.findAll(id, userId);
   }
 
   /**
@@ -116,14 +88,20 @@ export class ImagesController {
   @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the image" })
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any, @Res() res: any) {
-    const path = await this.imageService.findOne(id, req.user.id);
+    let userId = -1;
+    if (req.user) userId = req.user.id
+    const path = await this.imageService.findOne(id, userId);
     if (!path) {
       throw new NotFoundException('Image not found');
     }
-    res.sendFile(path);
+    if (existsSync(path)) res.sendFile(path);
+    else {
+      console.error("Image file with id: " + id + " doesn't exist");
+      throw new NotFoundException("This image file seems to be missing, put up some flyers");
+    }
   }
 
   /**

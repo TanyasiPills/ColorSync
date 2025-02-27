@@ -12,7 +12,7 @@ import { extname } from 'path';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import * as sharp from 'sharp';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, unlinkSync } from 'fs';
 
 @Controller('users')
 export class UsersController {
@@ -103,6 +103,7 @@ export class UsersController {
       const buffer = await image.extract({ left, top, width: size, height: size }).toBuffer();
       await sharp(buffer).toFile(filePath);
     } catch {
+      if (existsSync(file.path)) unlinkSync(file.path);
       throw new BadRequestException("Failed to process the image");
     }
 

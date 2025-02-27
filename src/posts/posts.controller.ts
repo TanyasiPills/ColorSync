@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -48,12 +48,15 @@ export class PostsController {
   )
   @HttpCode(201)
   @Post()
-  async create(@Body() createPostDto: CreatePostDto, @Req() req: any, file: Express.Multer.File,) {
+  async create(@Body() createPostDto: CreatePostDto, @Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    let uploaded = false;
     if (file) {
-      const image = await this.imageService.create({visibility: 'public'}, file, req.user.id);
+      const image = await this.imageService.create({visibility: 'public'}, file, req.user.id, true);
       createPostDto.imageId = image.id;
+      uploaded = true;
     }
-    return this.postService.create(createPostDto, req.user.id);
+
+    return await this.postService.create(createPostDto, req.user.id, uploaded);
   }
 
   /**

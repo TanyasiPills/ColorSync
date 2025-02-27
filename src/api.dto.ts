@@ -1,6 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Visibility } from "@prisma/client";
-import { IsArray, IsDate, IsEmail, IsEnum, IsInt, IsObject, IsOptional, IsPositive, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsDate, IsEmail, IsEnum, IsInt, IsObject, IsOptional, IsPositive, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class LoginBodyType {
   @IsEmail()
@@ -23,18 +23,18 @@ export class UserInfoType {
   @IsString()
   @MinLength(3)
   @MaxLength(24)
-  @ApiProperty({ type: 'string', description: 'The username of the user', example: 'bob'})
+  @ApiProperty({ type: 'string', description: 'The username of the user', example: 'bob' })
   username: string
 }
 
 export class LoginResponseType extends UserInfoType {
   @IsString()
-  @ApiProperty({ type: 'string', description: 'The JWT token', example: "eyJhbGciOiJIUzI1NiIsInR5cKS6IkpXVCJ9.eyJ1c2VybmFtZSI6Im12YSIsInN1YiI6MSwiaWF0IjoxNzM5MDEwNzqwfQ.Ad-wyV-wtagv5vKZIVduMS977gUqIStLMT3RGoDAqAQ"})
+  @ApiProperty({ type: 'string', description: 'The JWT token', example: "eyJhbGciOiJIUzI1NiIsInR5cKS6IkpXVCJ9.eyJ1c2VybmFtZSI6Im12YSIsInN1YiI6MSwiaWF0IjoxNzM5MDEwNzqwfQ.Ad-wyV-wtagv5vKZIVduMS977gUqIStLMT3RGoDAqAQ" })
   access_token: string;
 }
 
 export class FileType {
-  @ApiProperty({ type: 'string', format: 'binary', description: "The image file"})
+  @ApiProperty({ type: 'string', format: 'binary', description: "The image file" })
   file: any;
 }
 
@@ -59,9 +59,9 @@ export class PostInputBodyType extends PartialType(FileType) {
   text: string;
 
   @IsArray()
-  @IsString({each: true})
+  @IsString({ each: true })
   @IsOptional()
-  @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme'] })
   tags?: string[];
 }
 
@@ -90,9 +90,9 @@ export class PostBaseType {
   @IsPositive()
   imageId?: number;
 
-  @ApiProperty({description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  @ApiProperty({ description: 'The tags on the post', example: ['funny', 'cat', 'meme'] })
   @IsArray()
-  @IsString({each: true})
+  @IsString({ each: true })
   tags: string[];
 }
 
@@ -120,9 +120,9 @@ export class PostIncludesType {
   @IsObject()
   user: { username: string };
 
-  @ApiProperty({description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
+  @ApiProperty({ description: 'The tags on the post', example: ['funny', 'cat', 'meme'] })
   @IsArray()
-  @IsString({each: true})
+  @IsString({ each: true })
   tags: string[];
 
   @ApiProperty({ description: 'The comments on the post', examples: [[{ id: 1, text: 'Hello, Bob', date: '2025-02-09T16:30:16.262Z', userId: 2, user: { username: 'William' } }], []] })
@@ -145,7 +145,7 @@ export class CommentType {
   date: Date;
 
   @IsObject()
-  @ApiProperty({ description: 'The user that created the comment', examples: [{ username: 'bob' }, { username: 'alice' }] })
+  @ApiProperty({ description: 'The user that created the comment', examples: [{ id: 1, username: 'bob' }, { id: 2, username: 'alice' }] })
   user: UserInfoType;
 }
 
@@ -167,4 +167,28 @@ export class ImageType {
   @IsEnum(Visibility)
   @ApiProperty({ description: 'The visibility of the image', examples: ['public', 'private'], enum: Visibility })
   visibility: Visibility;
+}
+
+export class RoomType {
+  @IsString()
+  @ApiProperty({ description: 'The name of the room', examples: ['the best room', "bob's room"] })
+  name: string;
+
+  @IsObject()
+  @ApiProperty({ description: 'The owner of the room', examples: [{ id: 1, username: 'bob' }, { id: 2, username: 'alice' }] })
+  owner: UserInfoType;
+
+  @IsInt()
+  @Min(1)
+  @ApiProperty({ description: 'The number of players inside the room', examples: [1, 2, 3, 4] })
+  playerCount: number;
+
+  @IsInt()
+  @Min(1)
+  @ApiProperty({ description: 'The player capacity of the room', examples: [4, 3, 2] })
+  maxPlayers: number;
+
+  @IsBoolean()
+  @ApiProperty({ description: 'Does the room have a password', examples: [true, false] })
+  passwordRequired: boolean;
 }

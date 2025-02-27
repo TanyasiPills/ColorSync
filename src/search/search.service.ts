@@ -108,14 +108,14 @@ export class SearchService implements OnModuleInit {
             query: {
               dis_max: {
                 queries: [
-                  {
+                  ...(searchText ? [{
                     match: {
                       text: {
-                        query: searchText || "",
+                        query: searchText,
                         boost: 2
                       }
                     }
-                  },
+                  }] : []),
                   ...((searchTags && searchTags.length > 0) ? searchTags.map(e => ({
                     term: { tags: e }
                   })) : []),
@@ -140,7 +140,7 @@ export class SearchService implements OnModuleInit {
                     tags: e.name
                   }
                 },
-                weight: Math.min(userPrefenceMultiplier.tags * e.weight)
+                weight: Math.max(userPrefenceMultiplier.tags * e.weight, 1)
               })) : []),
               {
                 exp: {
@@ -165,7 +165,7 @@ export class SearchService implements OnModuleInit {
       size: take
     });
 
-    console.log(result.hits.hits);
+    console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
 
     return result.hits.hits.map(hit => parseInt(hit._id));
   }
