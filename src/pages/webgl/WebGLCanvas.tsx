@@ -107,12 +107,12 @@ const WebGLCanvas: React.FC = () => {
   }, [cwColor, RGBColor]);
 
   function drawColorWheel() {
-    const canvas = colorWheelRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const colorWheel = colorWheelRef.current;
+    if (!colorWheel) return;
+    const ctx = colorWheel.getContext("2d");
     if (!ctx) return;
 
-    const gradientH = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    const gradientH = ctx.createLinearGradient(0, 0, colorWheel.width, 0);
     gradientH.addColorStop(0, "#fff");
     if (!cwColor) {
       gradientH.addColorStop(1, "rgb(255, 0, 0)");
@@ -121,29 +121,29 @@ const WebGLCanvas: React.FC = () => {
       gradientH.addColorStop(1, cwColor);
     }
     ctx.fillStyle = gradientH;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, colorWheel.width, colorWheel.height);
 
-    const gradientV = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const gradientV = ctx.createLinearGradient(0, 0, 0, colorWheel.height);
     gradientV.addColorStop(0, "rgba(0,0,0,0)");
     gradientV.addColorStop(1, "#000");
     ctx.fillStyle = gradientV;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, colorWheel.width, colorWheel.height);
   }
 
   function drawColorColumn() {
-    const canvas = colorColumnRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const colorColumn = colorColumnRef.current;
+    if (!colorColumn) return;
+    const ctx = colorColumn.getContext("2d");
     if (!ctx) return;
 
     const colors = ["rgb(255,0,0)", "rgb(255,165,0)", "rgb(255,255,0)", "rgb(0,255,0)", "rgb(0,255,255)", "rgb(0,0,255)", "rgb(255,0,255)"];
-    const gradientV = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    const gradientV = ctx.createLinearGradient(0, 0, 0, colorColumn.height);
     colors.forEach((color, index) => {
       gradientV.addColorStop(index / (colors.length - 1), color);
     });
 
     ctx.fillStyle = gradientV;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, colorColumn.width, colorColumn.height);
   }
 
   useEffect(() => {
@@ -153,28 +153,33 @@ const WebGLCanvas: React.FC = () => {
 
   return (
     <div className="layout">
-      <div className="sideBar" id="left">
-        <div id="Color">
-          <div className="colorDiv">
-            <canvas ref={colorWheelRef} id="colorWheel" />
-            <div id="marker" ref={markerCW} />
+      <div className="sideBar" id="left"> {/*not resizbale */}
+        <div className="topRow"> {/*not resizbale */}
+          <div id="Color">
+            <div id="colorWheelDiv">
+              <canvas ref={colorWheelRef} id="colorWheel" width="150px" height="150px" />
+              <div id="marker" ref={markerCW} />
+            </div>
+            <div id="colorColDiv">
+              <canvas ref={colorColumnRef} id="colorColumns" width="30px" height="150px" />
+              <div id="markerCol" ref={markerC} />
+            </div>
           </div>
-          <div className="colorDiv">
-            <canvas ref={colorColumnRef} id="colorColumns" />
-            <div id="markerCol" ref={markerC} />
-          </div>
+          <div id="currentColor" />
         </div>
-        <div id="currentColor" />
-        <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} />
-        <div id="leftResize" className="rsz"></div>
+        <div className="secondRow">
+        <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} /> {/*resizable height wise*/}
+        </div>
+        <div className="thirdRow">{/*height wise resizable*/}
+          <p>itt majd még brush sizes</p>
+        </div>
       </div>
       <div className="canvasContainer">
         <canvas ref={canvasRef} id="gl-canvas" />
       </div>
-      <div className="sideBar" id="right">
-
+      <div className="sideBar" id="right"> {/*resizable width wise*/}
+        {/*inside it resizbale height wise*/}
         <p>Itt majd lesz valami</p>
-        <div id="rightResize" className="rsz"></div>
       </div>
     </div>
   );
