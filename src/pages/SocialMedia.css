@@ -169,11 +169,16 @@ details summary:hover {
     border-bottom: 1px solid var(--borderCol);
 }
 
+.tagsConatiner {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .tags{
     border: 2px solid var(--borderCol);
     height: fit-content;
     width: fit-content;
-    display: inline-block;
+    display: inline-flex;
     margin: 4px;
     padding: 3px;
     border-radius: 20%;

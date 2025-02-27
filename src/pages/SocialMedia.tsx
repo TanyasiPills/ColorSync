@@ -85,9 +85,11 @@ export function SocialMedia() {
                   </Row>
                 </Card.Body>
                 {e.imageId && <Card.Img variant="top" src={`${backendIp}/images/public/${e.imageId}`} alt="Post Image" />}
+                <div className="tagsConatiner">
                 {e.tags.length>0 && e.tags.map((tag) => (
                   <div className="tags">#{tag}</div>
                 ))}
+                </div>
                 <Card.Body>
                   <Card.Text>{e.text}</Card.Text>
                 </Card.Body>
