@@ -3,9 +3,11 @@ import "./SocialMedia.css";
 import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { backendIp } from "../constants";
 import { post } from "../types"
+import { Posting } from "./Posting";
 
 export function SocialMedia() {
   const [post, setPost] = useState<post[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   useEffect(() => {
     async function load() {
       const result = await fetch(backendIp + '/posts', {
@@ -33,7 +35,7 @@ export function SocialMedia() {
       window.location.href = '/CMS/SRC';
     });
     postButton.addEventListener("click", () => {
-      window.location.href = 'CMS/Posting';
+      setIsPopoverOpen(true);
     });
   }, [])
 
@@ -69,6 +71,7 @@ export function SocialMedia() {
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-start py-4">
           <div id="feed">
+          <Posting isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} />
             {post.length > 0 ? post.map((e) => (
               <Card className="mb- post-card" key={e.id}>
                 <Card.Body>

@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
 import "./WebGlCanvas.css"
-import { useColorPicker } from "./CallBack";
+import { useColorWheel } from "./CallBack";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const WebGLCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
   const sizeRef = useRef<HTMLInputElement | null>(null);
-  const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC } = useColorPicker();
+  const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos } = useColorWheel();
   const canvas = canvasRef.current;
 
   useEffect(() => {
@@ -153,8 +154,8 @@ const WebGLCanvas: React.FC = () => {
 
   return (
     <div className="layout">
-      <div className="sideBar" id="left"> {/*not resizbale */}
-        <div className="topRow"> {/*not resizbale */}
+      <div className="sideBar" id="left">
+        <div className="topRow">
           <div id="Color">
             <div id="colorWheelDiv">
               <canvas ref={colorWheelRef} id="colorWheel" width="150px" height="150px" />
@@ -167,20 +168,27 @@ const WebGLCanvas: React.FC = () => {
           </div>
           <div id="currentColor" />
         </div>
-        <div className="secondRow">
-        <input ref={sizeRef} type="range" min={0.01} max={1} step={0.01} defaultValue={0.1} /> {/*resizable height wise*/}
-        </div>
-        <div className="thirdRow">{/*height wise resizable*/}
-          <p>itt majd még brush sizes</p>
-        </div>
+        <PanelGroup direction="vertical">
+          <Panel defaultSize={50} minSize={5}>
+          <input type="range" min="0.01" max="1" step="0.01" defaultValue="0.1"/>
+          </Panel>
+          <PanelResizeHandle>
+            <hr/>
+          </PanelResizeHandle>
+          <Panel defaultSize={50}>
+            <p>itt majd még brush sizes</p>
+          </Panel>
+        </PanelGroup>
       </div>
-      <div className="canvasContainer">
-        <canvas ref={canvasRef} id="gl-canvas" />
-      </div>
-      <div className="sideBar" id="right"> {/*resizable width wise*/}
-        {/*inside it resizbale height wise*/}
-        <p>Itt majd lesz valami</p>
-      </div>
+      <PanelGroup direction="horizontal" style={{ flexGrow: 1 }}>
+        <Panel defaultSize={80} minSize={60} className="canvasContainer">
+          <canvas id="gl-canvas" />
+        </Panel>
+        <PanelResizeHandle/>
+        <Panel defaultSize={20} id="right" className="sideBar">
+          <p>Itt majd lesz valami</p>
+        </Panel>
+      </PanelGroup>
     </div>
   );
 };

@@ -1,51 +1,18 @@
-import { useEffect, useState } from "react";
-import "./SocialMedia.css";
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { backendIp } from "../constants";
-import { post } from "../types"
+interface PopoverProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-export function Posting() {
-  const [post, setPost] = useState<post[]>();
-  useEffect(() => {
-    async function load() {
-
-      const result = await fetch(backendIp + '/post', { method: "GET", headers: { "Accept": "application/json" } });
-      if (result.ok) { setPost(await result.json()); } else { console.log(await result.text()) }
-    }
-    load();
-
-    const homeButton = document.getElementById("homeButton")!;
-    const searchButton = document.getElementById("searchButton")!;
-    const postButton = document.getElementById("postButton")!;
-
-    homeButton.addEventListener("click", () => {
-      window.location.href = '/CMS';
-    });
-    searchButton.addEventListener("click", ()=> {
-      window.location.href = '/CMS/SRC';
-    });
-    postButton.addEventListener("click", () => {
-      window.location.href = '/CMS/Posting';
-    });
-  })
-
-  
+export function Posting({ isOpen, onClose }: PopoverProps) {
+  if (!isOpen) return null;
 
   return (
-    <Container fluid className="vh-100 d-flex flex-column">
-      <Row className="flex-grow-1 w-100 h-100">
-      <Col xs="2" id="left" className="h-100">
-          <h3 className="costumButtons" id="homeButton">Home</h3>
-          <h3 className="costumButtons" id="searchButton">Search</h3>
-          <h3 className="costumButtons" id="postButton">Post</h3>
-        </Col>
-        <Col id="middle" className="h-100 d-flex justify-content-center align-items-center">
-          <div id="feed">
-            <input type="text" required />
-          </div>
-        </Col>
-        <Col xs="2" id="right" className="h-100"></Col>
-      </Row>
-    </Container>
+    <div className="posting">
+      <h2>Popover</h2>
+      <hr />
+      <p>A popover is an element that is placed on top of everything else.</p>
+      <p>It can be used when you want to tell something important.</p>
+      <button onClick={onClose}>Close</button>
+    </div>
   );
 }

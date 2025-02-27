@@ -10,12 +10,12 @@
 }
 
 .sideBar#left {
-    border-right: 0.15rem solid var(--borderCol);
+    border-right: 2px solid var(--borderCol);
     background-color: #303050 !important;
 }
 
 .sideBar#right {
-    border-left: 0.15rem solid var(--borderCol);
+    border-left: 2px solid var(--borderCol);
     background-color: var(--backgroundColor) !important;
 }
 
@@ -30,6 +30,13 @@
     height: 100%;
     margin: auto;
     background-color: white;
+}
+
+hr{
+    height: 2px;
+    background-color: var(--borderCol);
+    width: 100%;
+    border: none;
 }
 
 /*color*/

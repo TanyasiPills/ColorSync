@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-export function useColorPicker() {
+export function useColorWheel() {
     const colorWheelRef = useRef<HTMLCanvasElement | null>(null);
     const colorColumnRef = useRef<HTMLCanvasElement | null>(null);
     const [cwColor, setCwColor] = useState("rgb(255, 0, 0)");
@@ -12,13 +12,25 @@ export function useColorPicker() {
     const [markerCWPos, setMarkerCWPos] = useState<{ x: number; y: number } | null>(null);
 
     useEffect(() => {
+        if (markerCW.current) {
+            markerCW.current.style.left = "150px";
+            markerCW.current.style.top = "150px";
+        }
+        if (markerC.current) {
+            markerC.current.style.top = "0px";
+            markerC.current.style.background = cwColor;
+        }
+    }, []);
+
+
+    useEffect(() => {
         const handleMouseUp = () => {
             setHoldC(false);
             setHoldCW(false);
         };
-    
+
         window.addEventListener("mouseup", handleMouseUp);
-    
+
         return () => {
             window.removeEventListener("mouseup", handleMouseUp);
         };
@@ -44,11 +56,11 @@ export function useColorPicker() {
         setRGBColor(newRGB);
         localStorage.setItem("selectedColor", newRGB);
         if (markerCW.current) {
-          const brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
-          markerCW.current.style.borderColor = brightness < 28 ? "white" : "black";
+            const brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
+            markerCW.current.style.borderColor = brightness < 28 ? "white" : "black";
         }
-      };
-      
+    };
+
 
     useEffect(() => {
         updateRGBFromMarkerCW();
@@ -149,5 +161,5 @@ export function useColorPicker() {
         };
     }, [holdC, holdCW]);
 
-    return { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC };
+    return { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos };
 }
