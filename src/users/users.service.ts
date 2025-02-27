@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import { existsSync, unlinkSync } from 'fs';
@@ -41,16 +41,11 @@ export class UsersService {
           unlinkSync(path);
         }
       } catch (error) {
-        console.error(error);
-        return false;
+        console.log(error);
+        throw new InternalServerErrorException(error);
       }
     }
-    try {
-      await this.db.user.update({where: {id}, data: {profile_picture: file.filename}});
-      return true;
-    } catch {
-      return false;
-    }
+    await this.db.user.update({where: {id}, data: {profile_picture: file.filename}});
   }
 
   async getPfp(id: number) {

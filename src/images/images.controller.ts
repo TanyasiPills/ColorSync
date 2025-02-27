@@ -41,7 +41,7 @@ export class ImagesController {
       }
     })
   )
-  @HttpCode(204)
+  @HttpCode(200)
   @Post()
   async create(@Body() createImageDto: CreateImageDto, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
@@ -63,7 +63,7 @@ export class ImagesController {
    */
   @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
   @ApiResponse({ status: 401, description: "Invalid token" })
-  @ApiResponse({ status: 404, description: "User not foud" })
+  @ApiResponse({ status: 404, description: "User not foud or no images found" })
   @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the user" })
 
@@ -80,7 +80,7 @@ export class ImagesController {
    */
   @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
   @ApiResponse({ status: 401, description: "Invalid token" })
-  @ApiResponse({ status: 404, description: "User not foud" })
+  @ApiResponse({ status: 404, description: "User not foud or no images found" })
   @ApiParam({ name: "id", description: "The id of the user" })
 
   @Get('user/:id')

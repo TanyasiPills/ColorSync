@@ -62,7 +62,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({description: 'Profile picture to upload', type: FileType})
-  @ApiResponse({status: 204, description: 'Profile picture uploaded'})
+  @ApiResponse({status: 200, description: 'Profile picture uploaded'})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @Post('pfp')
@@ -86,7 +86,6 @@ export class UsersController {
   )
   @HttpCode(204)
   async uploadPfp(@UploadedFile() file: Express.Multer.File, @Request() req) {
-    console.log(file);
     if (!file) {
       throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
     }
@@ -107,7 +106,7 @@ export class UsersController {
       throw new BadRequestException("Failed to process the image");
     }
 
-    this.userService.upload(file, req.user.id);
+    await this.userService.upload(file, req.user.id);
   }
 
   /**
