@@ -33,7 +33,7 @@ import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
     private boolean isLoading;
-    private int lastId;
+    private int offset;
     private ScrollAdapter adapter;
     private List<Post> posts;
     private RecyclerView recyclerView;
@@ -42,7 +42,7 @@ public class HomeFragment extends Fragment {
 
     public HomeFragment() {
         isLoading = false;
-        lastId = 0;
+        offset = 0;
         posts = new ArrayList<>();
     }
 
@@ -174,15 +174,15 @@ public class HomeFragment extends Fragment {
         if (isLoading) return;
         isLoading = true;
 
-        MainActivity.getApi().getAllPost(lastId).enqueue(new Callback<PostResponse>() {
+        MainActivity.getApi().getAllPost(offset).enqueue(new Callback<PostResponse>() {
             @Override
             public void onResponse(Call<PostResponse> call, Response<PostResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     PostResponse data = response.body();
-                    if (data.newLastId == null) return;
+                    if (data.offset == null) return;
                     int start = posts.size();
                     posts.addAll(data.data);
-                    lastId = data.newLastId;
+                    offset = data.offset;
                     adapter.notifyItemRangeInserted(start, data.data.size());
                     isLoading = false;
                 } else {

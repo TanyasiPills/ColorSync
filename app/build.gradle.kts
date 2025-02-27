@@ -32,7 +32,9 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.security.crypto)
+    implementation(libs.datastore.preferences)
+    implementation(libs.datastore.preferences.rxjava3)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

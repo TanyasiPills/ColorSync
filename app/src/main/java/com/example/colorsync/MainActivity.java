@@ -1,53 +1,23 @@
 package com.example.colorsync;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.transition.AutoTransition;
-import android.transition.ChangeBounds;
-import android.transition.Scene;
-import android.transition.Slide;
-import android.transition.Transition;
-import android.transition.TransitionListenerAdapter;
-import android.transition.TransitionManager;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowInsetsController;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.cardview.widget.CardView;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentContainer;
-import androidx.fragment.app.FragmentContainerView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.colorsync.DataTypes.PostResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
     private static APIService api;
@@ -91,8 +61,22 @@ public class MainActivity extends AppCompatActivity {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
         api = APIInstance.getInstance().create(APIService.class);
-        currentPage = R.id.nav_home;
 
+        UserManager.loadToken(this)
+                .subscribeOn(Schedulers.io())
+                        .subscribe(pref -> {
+                            Toast.makeText(this, "loaded token: " + pref, Toast.LENGTH_SHORT).show();
+                        }, throwable -> {
+                            Toast.makeText(this, "error loadig: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+        UserManager.saveToken(this, "alma")
+                .subscribe(preferences -> {
+                    Toast.makeText(this, "Token saved: " + preferences, Toast.LENGTH_SHORT).show();
+                }, throwable -> {
+                    Toast.makeText(this, "Token error: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
+        currentPage = R.id.nav_home;
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
 
         BottomNavigationView navbar = findViewById(R.id.navbar);
@@ -100,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
         navbar.setOnItemSelectedListener(item -> {
             Fragment fragment = null;
+            MenuItem nav_home = navbar.getMenu().getItem(1);
             if (item.getItemId() == R.id.nav_home) {
                 if (currentPage == R.id.nav_home) {
                     HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
@@ -107,12 +92,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     fragment = new HomeFragment();
                     currentPage = R.id.nav_home;
+                    nav_home.setIcon(R.drawable.add);
                 }
             } else if (item.getItemId() == R.id.nav_profile) {
                 fragment = new ProfileFragment();
                 currentPage = R.id.nav_profile;
+                nav_home.setIcon(R.drawable.home);
             } else if (item.getItemId() == R.id.nav_draw) {
                 //TODO
+                nav_home.setIcon(R.drawable.home);
             }
             if (fragment != null) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();

@@ -8,5 +8,5 @@ import retrofit2.http.Query;
 
 public interface APIService {
     @GET("posts")
-    Call<PostResponse> getAllPost(@Query("lastId") int lastId);
+    Call<PostResponse> getAllPost(@Query("offset") int offset);
 }
