@@ -2,8 +2,19 @@
 #include "CallBacks.h"
 #include <iostream>
 #include <algorithm>
+#include <stack>
+#include <vector>
 
 unsigned int canvasWidth = 0, canvasHeight = 0;
+GLuint floodFillShader;
+GLuint texture, activeBuffer, visitedBuffer;
+
+bool AreColorsEqual(const ImVec4& col1, const ImVec4& col2, float epsilon = 0.01f) {
+	return fabs(col1.x - col2.x) < epsilon &&
+		fabs(col1.y - col2.y) < epsilon &&
+		fabs(col1.z - col2.z) < epsilon &&
+		fabs(col1.w - col2.w) < epsilon;
+}
 
 void fillPositions(float* positions, float xScale = 0.0, float yScale = 0.0, float xPos = 0.0, float yPos = 0.0) {
 	positions[0] = (-xScale) + xPos; positions[1] = (-yScale) + yPos; positions[2] = 0.0f; positions[3] = 0.0f;
@@ -135,4 +146,89 @@ void NewDraw::MoveCanvas(RenderData& canvas, float* size, float* offset) {
 	VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 	canvas.va->SetBuffer(vb);
 	canvas.va->UnBind();
+}
+
+void FloodFill(int x, int y, ImVec4& targetColor, ImVec4& fillColor, std::vector<unsigned char>& pixels, std::vector<bool>& visited) {
+	if (AreColorsEqual(targetColor, fillColor)) return;
+
+	std::stack<std::pair<int, int>> stack;
+	stack.push({ x, y });
+
+	const int fillR = static_cast<int>(fillColor.x * 255);
+	const int fillG = static_cast<int>(fillColor.y * 255);
+	const int fillB = static_cast<int>(fillColor.z * 255);
+	const int fillA = static_cast<int>(fillColor.w * 255);
+
+	const int targetR = static_cast<int>(targetColor.x * 255);
+	const int targetG = static_cast<int>(targetColor.y * 255);
+	const int targetB = static_cast<int>(targetColor.z * 255);
+	const int targetA = static_cast<int>(targetColor.w * 255);
+
+	while (!stack.empty()) {
+		auto top = stack.top();
+		int cx = top.first;
+		int cy = top.second;
+
+		stack.pop();
+
+		int index = (cy * canvasWidth + cx) * 4;
+
+		if (visited[index]) continue;
+
+		if (pixels[index] != targetR || pixels[index + 1] != targetG ||
+			pixels[index + 2] != targetB || pixels[index + 3] != targetA) {
+			continue;
+		}
+
+		int left = cx, right = cx;
+		while (left > 0) {
+			int lIndex = (cy * canvasWidth + (left - 1)) * 4;
+			if (pixels[lIndex] != targetR || pixels[lIndex + 1] != targetG ||
+				pixels[lIndex + 2] != targetB || pixels[lIndex + 3] != targetA) {
+				break;
+			}
+			left--;
+		}
+		while (right < canvasWidth - 1) {
+			int rIndex = (cy * canvasWidth + (right + 1)) * 4;
+			if (pixels[rIndex] != targetR || pixels[rIndex + 1] != targetG ||
+				pixels[rIndex + 2] != targetB || pixels[rIndex + 3] != targetA) {
+				break;
+			}
+			right++;
+		}
+
+		for (int i = left; i <= right; ++i) {
+			int fillIndex = (cy * canvasWidth + i) * 4;
+
+			if (!visited[fillIndex]) {
+				pixels[fillIndex] = fillR;
+				pixels[fillIndex + 1] = fillG;
+				pixels[fillIndex + 2] = fillB;
+				pixels[fillIndex + 3] = fillA;
+				visited[fillIndex] = true;
+			}
+
+			if (cy > 0) stack.push({ i, cy - 1 });
+			if (cy < canvasHeight - 1) stack.push({ i, cy + 1 });
+		}
+	}
+}
+
+void NewDraw::Fill(Layer* layer, int xIn, int yIn, ImVec4 fillColor)
+{
+	std::vector<unsigned char> pixels(canvasWidth * canvasHeight * 4);
+	std::vector<bool> visited(canvasWidth * canvasHeight * 4);
+	layer->data.texture->Bind();
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+	int index = (yIn * canvasWidth + xIn) * 4;
+	ImVec4 targetColor(
+		pixels[index] / 255.0f,
+		pixels[index + 1] / 255.0f,
+		pixels[index + 2] / 255.0f,
+		pixels[index + 3] / 255.0f
+	);
+	FloodFill(xIn, yIn, targetColor, fillColor, pixels, visited);
+
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, canvasWidth, canvasHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 }

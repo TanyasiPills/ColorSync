@@ -81,6 +81,7 @@ public:
 	int currentNode;
 	int nextFreeNodeIndex = 0;
 	int currentFolder = 0;
+	bool isEditor = false;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
 
 	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);

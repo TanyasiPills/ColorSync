@@ -12,7 +12,8 @@ enum CSS {
 	Centered = 1 << 0, 
 	Invisible = 1 << 1,
 	Rounded = 1 << 2,
-	Trans = 1 << 3
+	Trans = 1 << 3,
+	SameLine = 1 << 4
 };
 
 enum Colors {
@@ -53,6 +54,12 @@ public:
 	static void Right(float distance);
 	static void Top(float disctance);
 	static void Bottom(float distance);
+
+	static void LeftTop(float leftIn, float topIn);
+	static void LeftBottom(float leftIn, float bottomIn);
+	static void RightTop(float rightIn, float topIn);
+	static void RightBottom(float rightIn, float bottomIn);
+
 	static void Back(); // reset cursor pos
 
 

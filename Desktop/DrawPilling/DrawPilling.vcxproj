@@ -127,12 +127,14 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)DrawPilling\src\Headers;$(SolutionDir)DrawPilling\Dependencies\Includes;$(SolutionDir)DrawPilling\Dependencies\Includes\SocketIO</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,7 +155,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)DrawPilling\Dependencies\Libaries;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;gdi32.lib;libvcruntime.lib;libcmt.lib;libucrt.lib;</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;advapi32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;Ws2_32.lib;glfw3.lib;opengl32.lib;glew32s.lib;libcurl_a.lib;gdi32.lib;libvcruntime.lib;libcmt.lib;libucrt.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>MSVCRTD.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -174,6 +176,7 @@
     <ClCompile Include="src\Scripts\CallBacks.cpp" />
     <ClCompile Include="src\Scripts\DataManager.cpp" />
     <ClCompile Include="src\Scripts\FileExplorer.cpp" />
+    <ClCompile Include="src\Scripts\LoginRegister.cpp" />
     <ClCompile Include="src\Scripts\lss.cpp" />
     <ClCompile Include="src\Scripts\DrawUI.cpp" />
     <ClCompile Include="src\Scripts\HighsManager.cpp">
@@ -1001,6 +1004,7 @@
     <ClInclude Include="src\Headers\Headers.h" />
     <ClInclude Include="src\Headers\HighsManager.h" />
     <ClInclude Include="src\Headers\IndexBuffer.h" />
+    <ClInclude Include="src\Headers\LoginRegister.h" />
     <ClInclude Include="src\Headers\lss.h" />
     <ClInclude Include="src\Headers\Messages.h" />
     <ClInclude Include="src\Headers\NewDraw.h" />
@@ -1025,6 +1029,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Cursor.shader" />
+    <None Include="Resources\Shaders\FloodFill.shader" />
     <None Include="Resources\Shaders\Layer.shader" />
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>

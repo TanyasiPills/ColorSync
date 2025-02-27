@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <vector>
 #include <iostream>
+#include <shlwapi.h>
+#include <algorithm>
 #include "GLEW/glew.h"
 
 
@@ -13,4 +15,5 @@ public:
 	static void Init();
 	static void FileExplorerUI(bool* creatorStuff);
 	static std::vector<std::string> GetFilesInDirectory(const std::string& directory);
+	static std::string GetImagePath();
 };

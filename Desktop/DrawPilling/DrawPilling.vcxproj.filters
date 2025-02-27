@@ -123,6 +123,9 @@
     <ClCompile Include="src\Scripts\WindowManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scripts\LoginRegister.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="Dependencies\Libaries\glew32s.lib" />
@@ -2578,11 +2581,15 @@
     <ClInclude Include="src\Headers\WindowManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Headers\LoginRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Style.shader" />
     <None Include="Resources\Shaders\Layer.shader" />
     <None Include="Resources\Shaders\Cursor.shader" />
+    <None Include="Resources\Shaders\FloodFill.shader" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Textures\circle.png">

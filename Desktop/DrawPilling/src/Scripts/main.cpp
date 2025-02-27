@@ -9,10 +9,7 @@ unsigned int CanvasVBO, CanvasVAO;
 static float size = 0.1f;
 bool hover = false;
 
-unsigned int canvasX = 1080, canvasY = 1080;
-
-std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vdGJvYiIsInN1YiI6MSwiaWF0IjoxNzM4MDc4MTczfQ.KB15yq4a6n7D5gouRj3EW5HqE0ncO67v_gfIRoUQ9Cg";
-
+unsigned int canvasX = 500, canvasY = 500;  
 
 // Main code
 int main()

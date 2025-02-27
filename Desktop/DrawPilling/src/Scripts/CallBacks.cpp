@@ -59,7 +59,9 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
 	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 	if (renderer->onUI) return;
-
+	if (!(renderer->isEditor)) {
+		return;
+	}
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		switch (action)
 		{

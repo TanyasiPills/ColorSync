@@ -20,4 +20,5 @@ public:
 	static void InitBrush(RenderData& data, float& radius);
 	static void BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, float* position, int debug = 0);
 	static void MoveCanvas(RenderData& canvas, float* size, float* offset);
+	static void Fill(Layer* layer, int xIn, int yIn, ImVec4 fillColor);
 };

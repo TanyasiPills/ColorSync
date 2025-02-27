@@ -91,6 +91,14 @@ void DrawUI::SizeWindow(float& cursorRadius)
 
 	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 
+	if (ImGui::SliderFloat("Size", &cursorRadius, 0.01f, 0.16f, "%.2f")) {
+		for (int y = 0; y < 4; ++y) {
+			for (int x = 0; x < 4; ++x) {
+				selected[y][x] = 0;
+			}
+		}
+	}
+
 	for (int y = 0; y < 4; y++) {
 		for (int x = 0; x < 4; x++)
 		{

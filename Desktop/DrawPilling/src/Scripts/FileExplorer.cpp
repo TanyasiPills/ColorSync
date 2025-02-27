@@ -1,7 +1,10 @@
 #include "FileExplorer.h"
 #include "lss.h"
 #include "Texture.h"
+#include "HighsManager.h"
+#include <vector>
 
+const char* formats[] = {"all file", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
 GLuint folder;
@@ -18,11 +21,50 @@ static bool showExplorer = true;
 
 int counter = 0;
 
+std::vector<std::string> driveList;
+std::vector<const char*> items;
+
+std::string imagePath = "";
+
+std::string Explorer::GetImagePath()
+{
+    return imagePath;
+}
+
+void LoadDrives() {
+    driveList.clear();
+    items.clear();
+
+    char driveStrings[256];
+    DWORD size = GetLogicalDriveStringsA(sizeof(driveStrings), driveStrings);
+
+    if (size == 0) {
+        std::cerr << "Failed to get drives. Error: " << GetLastError() << std::endl;
+        return;
+    }
+
+    for (char* drive = driveStrings; *drive; drive += strlen(drive) + 1) {
+        std::string driveName(drive);
+        driveName.pop_back();
+        driveList.push_back(driveName);
+    }
+    for (const auto& drive : driveList) {
+        items.push_back(drive.c_str());
+    }
+}
+
+bool HasSpecificExtension(const std::string& file, const std::string& ext) {
+    size_t pos = file.find_last_of(".");
+    if (pos == std::string::npos) return false;
+    return file.substr(pos) == ext;
+}
+
 void Explorer::Init()
 {
     folderTexture.Init("Resources/icons/folder.png");
     folderFullTexture.Init("Resources/icons/folderFull.png");
     fileTexture.Init("Resources/icons/file.png");
+    LoadDrives();
 }
 
 bool IsFolderEmpty(const std::string& folderPath) {
@@ -46,11 +88,110 @@ bool IsFolderEmpty(const std::string& folderPath) {
     return !hasFiles;
 }
 
-void Explorer::FileExplorerUI(bool* creatorStuff) {
-
-    if (Lss::Modal("Explorer", &showExplorer, ImVec2(50 * Lss::VW, 40 * Lss::VH), Centered))
+void SearchBar()
+{
+    static char tempPath[200] = "";
+    static const char* currentItem = items[0];
+    Lss::Text("Path: ", 4 * Lss::VH);
+    ImGui::SameLine();
+    Lss::SetFontSize(4 * Lss::VH);
+    ImGui::SetNextItemWidth(4 * Lss::VW);
+    bool check = ImGui::BeginCombo("##drive", currentItem, ImGuiComboFlags_NoArrowButton);
+    if (check)
     {
+        for (int n = 0; n < items.size(); n++)
+        {
+            bool is_selected = (currentItem == items[n]);
+            if (ImGui::Selectable(items[n], is_selected)) {
+                currentItem = items[n];
+                std::strcpy(tempPath, "");
+                currentPath = std::string(items[n]) + "\\";
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::SameLine();
+    if (Lss::InputText("#actualPath", tempPath, sizeof(tempPath), ImVec2(20 * Lss::VW, 4 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        std::string newPath(tempPath);
+        std::replace(newPath.begin(), newPath.end(), '/', '\\');
+        std::string finalPath = currentItem + std::string(2, '\\') + newPath;
+        if (PathFileExistsA(finalPath.c_str()))
+        {
+            currentPath = finalPath;
+            std::strcpy(tempPath, newPath.c_str());
+        }
+    }
+}
+
+bool ValidFormat(int& currentId, std::string& newPath) 
+{
+    switch (currentId)
+    {
+    case 1:
+        if (!HasSpecificExtension(newPath, ".jpg")) return false;
+        break;
+    case 2:
+        if (!HasSpecificExtension(newPath, ".png")) return false;
+        break;
+    case 3:
+        if (!(HasSpecificExtension(newPath, ".jpg") || HasSpecificExtension(newPath, ".png"))) return false;
+        break;
+    case 4:
+        if (!HasSpecificExtension(newPath, ".sync")) return false;
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+void SideBar(float& childHeight)
+{
+    Lss::Child("sideBar", ImVec2(10 * Lss::VW, childHeight));
+        Lss::Left(0.5f * Lss::VW);
+        Lss::Text("Favorites", 3 * Lss::VH);
+        Lss::Left(0.5f * Lss::VW);
+        Lss::SetColor(ContainerBackground, Background);
+        Lss::Child("favs", ImVec2(9 * Lss::VW, childHeight / 2 - 4 * Lss::VH));
+        ImGui::EndChild();
+        Lss::Top(0.25 * Lss::VH);
+        Lss::Left(0.5f * Lss::VW);
+        Lss::Text("Recent folders", 3 * Lss::VH);
+        Lss::Left(0.5f * Lss::VW);
+        Lss::Child("recents", ImVec2(9 * Lss::VW, childHeight / 2 - 4 * Lss::VH));
+        ImGui::EndChild();
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+        Lss::End();
+    ImGui::EndChild();
+}
+
+void Explorer::FileExplorerUI(bool* creatorStuff) {
+    Lss::SetFontSize(1 * Lss::VH);
+    if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
+    {
+        static const char* currentFormat = formats[0];
+        static int currentId = 0;
+        static char fileName[200];
+
+        SearchBar();
+
+        ImVec2 padding = ImGui::GetStyle().FramePadding;
+        float childHeight = 36 * Lss::VW - 2 * padding.y;
+        SideBar(childHeight);
+        ImGui::SameLine();
+
+        Lss::Child("view", ImVec2(48.75f * Lss::VW, childHeight));
         ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
+
+        Lss::Text("Directories & Files:", 4 * Lss::VH);
+
+        Lss::SetColor(ContainerBackground, Background);
+        Lss::Left(Lss::VW);
+        Lss::Child("#explorerView", ImVec2(46.75f * Lss::VW, childHeight - 10.5f * Lss::VH));
+        Lss::Top(Lss::VH);
         ImGui::Columns(7, nullptr, false);
 
 
@@ -86,8 +227,14 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
 
             std::string newPath = currentPath + "\\" + file;
             DWORD attributes = GetFileAttributes(newPath.c_str());
+            bool isHidden = (attributes & FILE_ATTRIBUTE_HIDDEN);
+            if (isHidden) continue;
             bool isDirectory = (attributes & FILE_ATTRIBUTE_DIRECTORY);
             bool isSelected = (file == selectedFile);
+            if (!isDirectory) {
+                if (!ValidFormat(currentId, newPath)) continue;
+                if (isSelected) strcpy(fileName, file.c_str());
+            }
 
             ImTextureID icon;
             if (isDirectory) {
@@ -102,18 +249,26 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 icon = fileTexture.GetId();
             }
 
-         
-            if (ImGui::Selectable(("##"+file).c_str(), isSelected, 0, ImVec2(0, iconSize.y+2*Lss::VH))) {
+
+            if (ImGui::Selectable(("##" + file).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
                 selectedFile = file;
                 std::cout << "Selected: " << file << std::endl;
             }
             ImVec2 pos = ImGui::GetItemRectMin();
             ImVec2 size = ImGui::GetItemRectSize();
-            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x/2, pos.y);
+            ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
             ImGui::SetCursorScreenPos(cursorPos);
 
             Lss::Image(icon, iconSize);
-            Lss::Text(file, 2 * Lss::VH);
+            Lss::SetFontSize(2 * Lss::VH);
+
+            std::string fileNameStuff;
+            if (file.size() > 10) fileNameStuff = file.substr(0, 10) + "...";
+            else fileNameStuff = file;
+
+            float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+            ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+            Lss::Text(fileNameStuff, 2 * Lss::VH);
 
             if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
             {
@@ -122,11 +277,63 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
                 selectedFile.clear();
             }
             Lss::End();
-            ImGui::NextColumn();         
+            ImGui::NextColumn();
         }
         ImGui::PopItemFlag();
-        counter = 0;
-        ImGui::EndPopup();
+        ImGui::Columns(1);
+
+        Lss::End();
+        ImGui::EndChild();
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+
+        Lss::Top(Lss::VH);
+        Lss::Left(Lss::VW);
+        Lss::Text("File:", 4 * Lss::VH);
+        ImGui::SameLine();
+        if (Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(30 * Lss::VW, 4 * Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            std::cout << currentPath + fileName << std::endl;
+
+        }
+        ImGui::SameLine();
+        Lss::SetFontSize(4 * Lss::VH);
+        ImGui::SetNextItemWidth(10 * Lss::VW);
+        int numFormats = sizeof(formats) / sizeof(formats[0]);
+        bool formatChange = ImGui::BeginCombo("##format", currentFormat, ImGuiComboFlags_NoArrowButton);
+        if (formatChange)
+        {
+            for (int n = 0; n < numFormats; n++)
+            {
+                bool is_selected = (currentFormat == formats[n]);
+                if (ImGui::Selectable(formats[n], is_selected)) {
+                    currentFormat = formats[n];
+                    std::strcpy(fileName, "");
+                    currentFormat = formats[n];
+                    currentId = n;
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 4 * Lss::VH))
+        {
+            std::string imagePrePath = currentPath +'\\' + fileName;
+            int idForFormat = 3;
+            if (ValidFormat(idForFormat, imagePrePath))
+            {
+                imagePath = imagePrePath;
+                *creatorStuff = false;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndChild();
+
+    Lss::End();
+    ImGui::EndPopup();
+       
     }
     else {
         *creatorStuff = false;

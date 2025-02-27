@@ -83,6 +83,7 @@ SessionData Manager::Assembly(SessionData& data) {
 }
 void Manager::DisAssembly(GLFWwindow* window) {
     DataManager::SaveAppData();
+    HManager::Down();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

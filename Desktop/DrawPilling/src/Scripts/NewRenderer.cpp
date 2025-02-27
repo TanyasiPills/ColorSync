@@ -46,8 +46,7 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
-bool editor = false;
-
+int tool = 0;
 
 bool FileExists(const char* filename) {
 	FILE* file = fopen(filename, "r");
@@ -170,27 +169,38 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
 		float* pos = Callback::GlCursorPosition();
-		float dx = pos[0] - prevPos[0];
-		float dy = pos[1] - prevPos[1];
-		dx *= canvasSize[0];
-		dy *= canvasSize[1];
-		float distance = std::sqrt(dx * dx + dy * dy);
-		int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
-		if (num_samples < 1) num_samples = 100;
-	
-		for (int i = 0; i < num_samples; ++i) {
-			float t = static_cast<float>(i) / num_samples;
-			float vx = prevPos[0] * (1 - t) + pos[0] * t;
-			float vy = prevPos[1] * (1 - t) + pos[1] * t;
-			float tmp[2] = { vx, vy };
+		switch (tool)
+		{
+		case 0: {
+			float dx = pos[0] - prevPos[0];
+			float dy = pos[1] - prevPos[1];
+			dx *= canvasSize[0];
+			dy *= canvasSize[1];
+			float distance = std::sqrt(dx * dx + dy * dy);
+			int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
+			if (num_samples < 1) num_samples = 100;
 
-			drawPositions.push_back(Position(vx, vy));
-		
-			NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
-			Draw(cursor);
+			for (int i = 0; i < num_samples; ++i) {
+				float t = static_cast<float>(i) / num_samples;
+				float vx = prevPos[0] * (1 - t) + pos[0] * t;
+				float vy = prevPos[1] * (1 - t) + pos[1] * t;
+				float tmp[2] = { vx, vy };
+
+				drawPositions.push_back(Position(vx, vy));
+
+				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
+				Draw(cursor);
+			}
+			prevPos[0] = pos[0];
+			prevPos[1] = pos[1];
+			}break;
+		case 1: {
+			ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
+			NewDraw::Fill(layerPtr, pos[0], pos[1], colorIn);
+		}break;
+		default:
+			break;
 		}
-		prevPos[0] = pos[0];
-		prevPos[1] = pos[1];
 
 		layer.texture->Bind();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -325,10 +335,6 @@ void RenderImGui(bool& onUIIn)
 	onUIIn = ImGui::GetIO().WantCaptureMouse;
 	Lss::SetFontSize(2 * Lss::VH);
 
-	bool yes = true;
-	ImGui::SetNextWindowViewport(10);
-	ImGui::ShowDemoWindow(&yes);
-
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
 	DrawUI::ColorWindow(cursor);
@@ -337,8 +343,6 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::ServerWindow();
 	DrawUI::LayerWindow();
 	DrawUI::ChatWindow();
-
-	DrawUI::LoginWindow();
 
 	if (ImGui::GetMouseCursor() == ImGuiMouseCursor_ResizeNWSE)
 		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
@@ -367,8 +371,8 @@ void RenderMenu()
 	int width, height;
 	glfwGetWindowSize(glfwGetCurrentContext(), &width, &height);
 
-	int sideWidth = width * (1.5f / 6.0f);
-	int mainWidth = width * (3.0f / 6.0f);
+	int sideWidth = width * (1.0f / 6.0f);
+	int mainWidth = width * (4.0f / 6.0f);
 	int windowHeight = (float)height;
 
 	int totalWidth = sideWidth + mainWidth + sideWidth;
@@ -386,15 +390,15 @@ void RenderMenu()
 
 void NewRenderer::SwapView()
 {
-	editor = !editor;
-	std::cout << "swapped to editor: " << editor << std::endl;
+	isEditor = !isEditor;
+	std::cout << "swapped to editor: " << isEditor << std::endl;
 }
 
 
 void NewRenderer::Render()
 {
 	Clear();
-	if (editor) {
+	if (isEditor) {
 		RenderLayers();
 		RenderCursor();
 		RenderImGui(onUI);
