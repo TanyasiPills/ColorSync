@@ -107,9 +107,14 @@ void SocialMedia::MainFeed(float position, float width, float height)
         float scrollY = ImGui::GetScrollY();
         float scrollMaxY = ImGui::GetScrollMaxY();
 
+        if ((scrollY / scrollMaxY) < 0.90f) {
+            canGet = true;
+        }
         if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
-            if (prevScrollY != scrollY && scrollY > prevScrollY) {
+            std::cout << canGet << std::endl;
+            if (prevScrollY != scrollY) {
                 prevScrollY = scrollY;
+                canGet = false;
                 std::thread(&SocialMedia::GetPosts).detach();
             }
             if (init) {
@@ -117,9 +122,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
                 init = false;
             }
 
-        }
-        if ((scrollY / scrollMaxY) < 0.90f) {
-            canGet = true;
         }
         
         for (Post& post : posts)
@@ -223,7 +225,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
             ImVec2 valid = ImGui::GetContentRegionAvail();
             Lss::Text("What's on your ming?", 2 * Lss::VH);
             static char inputtext[128] = "";
-            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(20 * Lss::VH, 2 * Lss::VH), Centered | Trans);
+            Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
             Lss::Top(-Lss::VH / 2);
             Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
 
@@ -249,7 +251,20 @@ void SocialMedia::MainFeed(float position, float width, float height)
             if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
             ImVec2 buttonSize = ImVec2(100, 20);
             ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-            Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered);
+            if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+            {
+                std::string imagePath = Explorer::GetImagePath();
+                nlohmann::json jsonData = HManager::PostRequest(inputtext, imagePath);
+                if (jsonData.is_null()) {
+                    std::cout << "couldn't post post" << std::endl;
+                }
+                else {
+                    posts = {};
+                    openStuff = false;
+                    lastId = 0;
+                    init = true;
+                }
+            }
             if (!created && ImGui::IsMouseClicked(0))
             {
                 ImVec2 pos = ImGui::GetWindowPos();
@@ -356,7 +371,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
 
             if (needImages) {
                 
-                nlohmann::json jsonData = HManager::Request((runtime.ip + ":3000/images/user/private/" + std::to_string(runtime.id)).c_str(), "", GET, runtime.token);
+                nlohmann::json jsonData = HManager::Request(("images/user/private/" + std::to_string(runtime.id)).c_str(), "", GET);
                 if (jsonData.is_null()) {
                     std::cout << "cant recieve profile image list" << std::endl;
                     needImages = false;
@@ -371,7 +386,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
                     for (int& image : imageIds)
                     {
                         std::cout << image << std::endl;
-                        std::vector<uint8_t> imageData = HManager::Request((runtime.ip + ":3000/images/" + std::to_string(image)).c_str(), GET, runtime.token);
+                        std::vector<uint8_t> imageData = HManager::ImageRequest(("images/" + std::to_string(image)).c_str());
                         textureQueue.push(std::make_tuple(std::move(imageData), 0, 4));
                     }
                     
@@ -418,7 +433,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
                             std::string imagePath = Explorer::GetImagePath();
                             if (imagePath.size() > 2) {
                                 std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
-                                nlohmann::json jsonData = HManager::Request((runtime.ip + ":3000/users/pfp").c_str(), imagePath, fileName, runtime.token);
+                                nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath,1);
                                 if (!jsonData.is_null()) imageEditOpen = false;
                             }
                         }
@@ -461,9 +476,11 @@ void SocialMedia::MainFeed(float position, float width, float height)
                         {
                             std::string imagePath = Explorer::GetImagePath();
                             if (imagePath.size() > 2) {
-                                std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
-                                nlohmann::json jsonData = HManager::Request((runtime.ip + ":3000/images").c_str(), imagePath, fileName, runtime.token);
-                                if (!jsonData.is_null()) imageUploadpen = false;
+                                nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath,0);
+                                if (!jsonData.is_null()) {
+                                    imageUploadpen = false;
+                                    needImages = true;
+                                }
                             }
                         }
 
@@ -622,17 +639,16 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 void SocialMedia::GetPosts() 
 {
     if (runtime.ip[0] == '\0') {
-        std::cout << "runtimeIp not set";
+        std::cout << "runtimeIp not set\n";
         init = true;
         return;
     }
     nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
-    if (jsonData["data"] == 0) {
-        std::cout << "no data";
-        init = true;
+    if (jsonData["offset"].is_null()) {
+        std::cout << "no data left to steal :c\n";
+        init = false;
         return;
     }
-    if (jsonData["offset"].is_null()) return;
     for (const auto& postJson : jsonData["data"]) {
         Post post;
         post.id = postJson["id"];
@@ -668,7 +684,6 @@ void SocialMedia::GetPosts()
     }
 
     lastId = jsonData["offset"];
-    canGet = false;
     LoadImages();
 }
 void SocialMedia::LoadImages() 
@@ -686,8 +701,8 @@ void SocialMedia::LoadDependencies(Post& post, int index)
     for (Comment comment : post.comments) {
         LoadImageJa(comment.userId, 2);
     }
-
-    LoadImageJa(post.imageId, 1, index);
+    if(post.imageId != -1) LoadImageJa(post.imageId, 1, index);
+    else post.picLoaded = true;
 }
 
 void SocialMedia::LoadImageJa(int dataId, int type, int postId)
@@ -696,13 +711,13 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
     switch (type) {
     case 1: {
         if (dataId == -1)return;
-        imageData = HManager::Request((runtime.ip+":3000/images/public/" + std::to_string(dataId)).c_str(), GET);
+        imageData = HManager::ImageRequest(("images/public/" + std::to_string(dataId)).c_str());
         dataId = postId;
         } break;
     case 2: {
             if (profilePics.find(dataId) != profilePics.end()) break;
             else {
-                imageData = HManager::Request((runtime.ip+":3000/users/" + std::to_string(dataId) + "/pfp").c_str(), GET);
+                imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
             }
         } break;
     default:

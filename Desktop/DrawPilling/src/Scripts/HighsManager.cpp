@@ -38,7 +38,7 @@ void HManager::InitUser()
 				runtime.id = result["id"];
 				runtime.username = result["username"];
 
-				std::vector<uint8_t> imageData = Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
+				std::vector<uint8_t> imageData = ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
 
 				if (imageData.empty()) {
 					std::cerr << "Failed to fetch profile picture." << std::endl;
@@ -71,21 +71,117 @@ void HManager::Down()
 	curl_global_cleanup();
 }
 
-nlohmann::json HManager::Request(std::string query, std::string path, std::string filename, std::string tokenIn) {
+nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags)
+{
 	CURL* curl = curl_easy_init();
 	if (!curl) {
 		std::cerr << "HManager isn't initialized" << std::endl;
 		return nlohmann::json{};
 	}
 
-	std::string url = "http://" + query;
+
+	std::string url = "http://" + runtime.ip+":3000/posts";
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	struct curl_slist* headers = nullptr;
-	if (!tokenIn.empty()) {
-		std::string authHeader = "Authorization: Bearer " + tokenIn;
+	if (!runtime.token[0] == '\0') {
+		std::string authHeader = "Authorization: Bearer " + runtime.token;
 		headers = curl_slist_append(headers, authHeader.c_str());
 	}
+	else std::cerr << "No valid token found" << std::endl;
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+	std::string result;
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
+
+
+	curl_mime* mime = curl_mime_init(curl);
+	curl_mimepart* part = nullptr;
+
+	part = curl_mime_addpart(mime);
+	curl_mime_name(part, "text");
+	curl_mime_data(part, text.c_str(), CURL_ZERO_TERMINATED);
+
+	if (path != "") {
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "file");
+		curl_mime_filedata(part, path.c_str());
+	}
+
+	if (imageId > 0) {
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "imageId");
+		curl_mime_data(part, std::to_string(imageId).c_str(), CURL_ZERO_TERMINATED);
+	}
+
+	if (!tags.empty()) {
+		nlohmann::json tagsJson = tags;
+		std::string tagsString = tagsJson.dump();
+
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "tags");
+		curl_mime_data(part, tagsString.c_str(), CURL_ZERO_TERMINATED);
+	}
+
+	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
+
+
+	CURLcode res;
+	long http_code = 0;
+
+	res = curl_easy_perform(curl);
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+
+	curl_mime_free(mime);
+	curl_easy_cleanup(curl);
+
+
+	if (http_code != 200 && http_code != 201)
+	{
+		std::cerr << "Request failed with HTTP code: " << http_code << std::endl;
+		return nullptr;
+	}
+	if (res != CURLE_OK) {
+		std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+		return nullptr;
+	}
+	else {
+		try {
+			nlohmann::json jsonResponse = nlohmann::json::parse(result);
+			if (!jsonResponse.empty()) {
+				return jsonResponse;
+			}
+			else {
+				std::cerr << "JSON response is empty" << std::endl;
+			}
+		}
+		catch (const nlohmann::json::exception& e) {
+			std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+		}
+	}
+
+	return nlohmann::json{};
+}
+
+nlohmann::json HManager::ImageUploadRequest(std::string path, int type) 
+{
+	std::string fileName = path.substr(path.find_last_of('\\') + 1);
+
+	CURL* curl = curl_easy_init();
+	if (!curl) {
+		std::cerr << "HManager isn't initialized" << std::endl;
+		return nlohmann::json{};
+	}
+	std::string url;
+	if(type == 0) url = "http://" + runtime.ip + ":3000/images";
+	else url = "http://" + runtime.ip + ":3000/users/pfp";
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+	struct curl_slist* headers = nullptr;
+	std::string authHeader = "Authorization: Bearer " + runtime.token;
+	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 	std::string result;
@@ -96,14 +192,14 @@ nlohmann::json HManager::Request(std::string query, std::string path, std::strin
 	curl_mimepart* part = curl_mime_addpart(mime);
 	curl_mime_name(part, "file");
 
-	curl_mime_filename(part, filename.c_str());
+	curl_mime_filename(part, fileName.c_str());
 	
 	curl_mime_filedata(part, path.c_str());
 
-	if (filename.find(".png") != std::string::npos) {
+	if (fileName.find(".png") != std::string::npos) {
 		curl_mime_type(part, "image/png");
 	}
-	else if (filename.find(".jpg") != std::string::npos || filename.find(".jpeg") != std::string::npos) {
+	else if (fileName.find(".jpg") != std::string::npos || fileName.find(".jpeg") != std::string::npos) {
 		curl_mime_type(part, "image/jpeg");
 	}
 
@@ -113,7 +209,7 @@ nlohmann::json HManager::Request(std::string query, std::string path, std::strin
 	CURLcode res = curl_easy_perform(curl);
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-	if (http_code != 200 && http_code != 204 && http_code != 201)
+	if (http_code != 200 && http_code != 201)
 	{
 		std::cerr << "Get voided bitch" << std::endl;
 		return nullptr;
@@ -138,22 +234,25 @@ nlohmann::json HManager::Request(std::string query, std::string path, std::strin
 	return nlohmann::json{};
 }
 
-
-nlohmann::json HManager::Request(std::string query, std::string body, Method method, std::string tokenIn)
+nlohmann::json HManager::Request(std::string query, std::string body, Method method)
 {
 	CURL* curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	if (curl) {
-		std::string url = "http://" + query;
+		std::string url = "http://" +runtime.ip+":3000/" + query;
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
 
 		std::string result;
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
-		headers = nullptr;
+		struct curl_slist* headers = nullptr;
 		headers = curl_slist_append(headers, "Content-Type: application/json");
-		if(tokenIn != "") headers = curl_slist_append(headers, ("Authorization: Bearer " + tokenIn).c_str());
+		if (runtime.token[0] != '\0') {
+			std::string authHeader = "Authorization: Bearer " + runtime.token;
+			headers = curl_slist_append(headers, authHeader.c_str());
+		}
+		else std::cerr << "No token in runtime; Request: " << query << " sent without token" << std::endl;
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 
@@ -213,7 +312,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 	}
 }
 
-std::vector<uint8_t> HManager::Request(const std::string query, Method method, std::string tokenIn)
+std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 {
 	CURL* curl = curl_easy_init();
 	if (!curl) {
@@ -222,21 +321,17 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method, s
 	}
 
 	std::vector<uint8_t> imageData;
-	std::string url = "http://" + query;
+	std::string url = "http://" + runtime.ip + ":3000/" + query;
 	if (url.find("-1") != std::string::npos) return imageData;
-	headers = nullptr;
-	if (tokenIn != "") headers = curl_slist_append(headers, ("Authorization: Bearer " + tokenIn).c_str());
+
+	struct curl_slist* headers = nullptr;
+	std::string authHeader = "Authorization: Bearer " + runtime.token;
+	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-	if (method == GET) {
-		curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-	}
-	else {
-		std::cerr << "Only GET method is supported for images." << std::endl;
-		return {};
-	}
+	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
@@ -300,15 +395,4 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	if (ratio < 0)
 		std::cout << height << "; " << width << std::endl;
 	return texture;
-}
-
-std::vector<uint8_t> HManager::ImageFormFiles(const std::string& filePath)
-{
-	int width, height, channels;
-	unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, 3);
-	size_t dataSize = width * height * 3;
-	std::vector<uint8_t> imageData(data, data + dataSize);
-
-	stbi_image_free(data);
-	return imageData;
 }

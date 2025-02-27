@@ -49,7 +49,7 @@ void LoginRegister::Login(bool& loginWindow)
                     nlohmann::json result = HManager::Request(runtime.ip + ":3000/users", "", GET, runtime.token);
                     runtime.id = result["id"];
                     loginOpen = false;
-                    std::vector<uint8_t> imageData = HManager::Request((runtime.ip + ":3000/users/" + std::to_string(runtime.id) + "/pfp").c_str(), GET);
+                    std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
                     float ratioStuff = 0.0f;
                     runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
                     ImGui::CloseCurrentPopup();
