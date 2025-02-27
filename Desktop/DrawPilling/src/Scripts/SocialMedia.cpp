@@ -87,7 +87,7 @@ void SocialMedia::ProcessThreads()
 
 void SocialMedia::LoadProfile()
 {
-    nlohmann::json jsonData = HManager::Request(("images/user/private/" + std::to_string(runtime.id)).c_str(), "", GET);
+    nlohmann::json jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
     if (jsonData.is_null()) {
         std::cout << "cant recieve profile image list" << std::endl;
         return;
@@ -775,7 +775,7 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
     switch (type) {
     case 1: {
         if (dataId == -1)return;
-        imageData = HManager::ImageRequest(("images/public/" + std::to_string(dataId)).c_str());
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
         dataId = postId;
         } break;
     case 2: {
