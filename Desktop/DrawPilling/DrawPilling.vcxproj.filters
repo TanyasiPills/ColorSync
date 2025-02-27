@@ -2589,6 +2589,7 @@
     <None Include="Resources\Shaders\Style.shader" />
     <None Include="Resources\Shaders\Layer.shader" />
     <None Include="Resources\Shaders\Cursor.shader" />
+    <None Include="Resources\Shaders\FloodFill.shader" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\Textures\circle.png">

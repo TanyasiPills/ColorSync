@@ -1029,6 +1029,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\Cursor.shader" />
+    <None Include="Resources\Shaders\FloodFill.shader" />
     <None Include="Resources\Shaders\Layer.shader" />
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>
