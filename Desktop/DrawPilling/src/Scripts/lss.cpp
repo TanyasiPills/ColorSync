@@ -127,7 +127,7 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 500));
 	if (centered) Center(size.x);
 	//ImGui::PopStyleVar();
-
+	if (flags & SameLine) ImGui::SameLine();
 	bool pressed = ImGui::Button(textIn.c_str(), size);
 
 	if (rounded) ImGui::GetStyle().FrameRounding = originalRounding;
@@ -143,7 +143,7 @@ void Lss::Text(std::string textIn, float size, int flags) {
 	if (flags & Centered) {
 		Center(textSize.x);
 	}
-
+	if (flags & SameLine) ImGui::SameLine();
 	ImGui::Text(textIn.c_str());
 }
 
@@ -151,6 +151,7 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 	if (texture == -1) return;
 	if (size.x == -1) size = ImGui::GetContentRegionAvail();
 	if (flags & Centered) Center(size.x);
+	if (flags & SameLine) ImGui::SameLine();
 	if (flags & Rounded) {
 		ImVec2 p_min = ImGui::GetCursorScreenPos();
 		ImVec2 p_max = ImVec2(p_min.x + size.x, p_min.y + size.y);
@@ -168,6 +169,8 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 
 	SetFontSize(size.y);
 	ImGui::SetNextItemWidth(size.x - (size.y));
+
+	if (flags & SameLine) ImGui::SameLine();
 
 	if (flags & Rounded) {
 		ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -203,6 +206,8 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int in
 
 	SetFontSize(size.y);
 	ImGui::SetNextItemWidth(size.x - (size.y));
+
+	if (flags & SameLine) ImGui::SameLine();
 
 	if (flags & Rounded) {
 		ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -248,6 +253,8 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 void Lss::Separator(float thickness, float width, int color, int flags) {
 	if (flags & Centered) Center(width);
 
+	if (flags & SameLine) ImGui::SameLine();
+
 	ImVec2 p1 = ImGui::GetCursorScreenPos();
 	ImVec2 p2;
 
@@ -279,6 +286,31 @@ void Lss::Bottom(float distance) {
 		ImGui::SetCursorPosY(originalCursorPosition.y - distance);
 	}
 }
+
+void Lss::LeftTop(float leftIn, float topIn)
+{
+	Lss::Left(leftIn);
+	Lss::Top(topIn);
+}
+
+void Lss::LeftBottom(float leftIn, float bottomIn)
+{
+	Lss::Left(leftIn);
+	Lss::Bottom(bottomIn);
+}
+
+void Lss::RightTop(float rightIn, float topIn)
+{
+	Lss::Right(rightIn);
+	Lss::Top(topIn);
+}
+
+void Lss::RightBottom(float rightIn, float bottomIn)
+{
+	Lss::Right(rightIn);
+	Lss::Bottom(bottomIn);
+}
+
 void Lss::Back() {
 	ImGui::SetCursorPos(originalCursorPosition);
 	originalCursorPosition.x = -FLT_MAX;
