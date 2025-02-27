@@ -23,6 +23,7 @@ void HManager::InitUser()
 {
 	if (runtime.token[0] != '\0') {
 		try {
+			std::cout << "Your token, good sir: " << runtime.token << std::endl;
 			nlohmann::json result = Request((runtime.ip + ":3000/users").c_str(), "", GET, runtime.token);
 			if (result.empty()) {
 				std::cerr << "Error: Received empty response from server." << std::endl;
@@ -181,7 +182,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
 
-		if (http_code != 200 && http_code != 204 && http_code != 201)
+		if (http_code != 200 && http_code != 201)
 		{
 			std::cerr << "Get voided bitch" << std::endl;
 			return nullptr;
@@ -212,7 +213,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 	}
 }
 
-std::vector<uint8_t> HManager::Request(const std::string query, Method method)
+std::vector<uint8_t> HManager::Request(const std::string query, Method method, std::string tokenIn)
 {
 	CURL* curl = curl_easy_init();
 	if (!curl) {
@@ -223,6 +224,9 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 	std::vector<uint8_t> imageData;
 	std::string url = "http://" + query;
 	if (url.find("-1") != std::string::npos) return imageData;
+	headers = nullptr;
+	if (tokenIn != "") headers = curl_slist_append(headers, ("Authorization: Bearer " + tokenIn).c_str());
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
@@ -234,7 +238,6 @@ std::vector<uint8_t> HManager::Request(const std::string query, Method method)
 		return {};
 	}
 
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, nullptr);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
 
