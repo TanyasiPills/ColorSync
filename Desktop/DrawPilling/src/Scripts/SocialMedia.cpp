@@ -85,6 +85,28 @@ void SocialMedia::ProcessThreads()
     }
 }
 
+void SocialMedia::LoadProfile()
+{
+    nlohmann::json jsonData = HManager::Request(("images/user/private/" + std::to_string(runtime.id)).c_str(), "", GET);
+    if (jsonData.is_null()) {
+        std::cout << "cant recieve profile image list" << std::endl;
+        return;
+    }
+
+    std::vector<int> imageIds;
+    for (const auto& imageJson : jsonData)
+    {
+        imageIds.emplace_back(imageJson["id"]);
+    }
+
+    for (int& image : imageIds)
+    {
+        std::vector<uint8_t> imageData = HManager::ImageRequest(("images/" + std::to_string(image)).c_str());
+        std::lock_guard<std::mutex> queueLock(textureQueueMutex);
+        textureQueue.push(std::make_tuple(std::move(imageData), 0, 4));
+    }
+}
+
 void SocialMedia::MainFeed(float position, float width, float height)
 {
     ImGui::GetStyle().WindowBorderSize = 0.0f;
@@ -111,7 +133,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
             canGet = true;
         }
         if (((scrollY / scrollMaxY) > 0.95f && canGet) || init) {
-            std::cout << canGet << std::endl;
             if (prevScrollY != scrollY) {
                 prevScrollY = scrollY;
                 canGet = false;
@@ -369,30 +390,9 @@ void SocialMedia::MainFeed(float position, float width, float height)
             static bool openExplorer2 = false;
             static bool wasOpenExplorer2 = false;
 
-            if (needImages) {
-                
-                nlohmann::json jsonData = HManager::Request(("images/user/private/" + std::to_string(runtime.id)).c_str(), "", GET);
-                if (jsonData.is_null()) {
-                    std::cout << "cant recieve profile image list" << std::endl;
-                    needImages = false;
-                }
-                if (needImages) {
-                    std::vector<int> imageIds;
-                    for (const auto& imageJson : jsonData)
-                    {
-                        imageIds.emplace_back(imageJson["id"]);
-                    }
-                    
-                    for (int& image : imageIds)
-                    {
-                        std::cout << image << std::endl;
-                        std::vector<uint8_t> imageData = HManager::ImageRequest(("images/" + std::to_string(image)).c_str());
-                        textureQueue.push(std::make_tuple(std::move(imageData), 0, 4));
-                    }
-                    
-                    needImages = false;
-                }  
-                
+            if (needImages) {         
+                std::thread(&SocialMedia::LoadProfile).detach();
+                needImages = false;
             }
 
             ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -425,7 +425,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
                                 wasOpenExplorer = false;
                             }
                         }
-                        if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+                        if (userImageTexture.GetId() <= 0)
+                        {
+                            std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
+                            float ratioStuff = 0.0f;
+                            runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
+                        }
+                        Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
                         ImVec2 buttonSize = ImVec2(100, 20);
                         ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
                         if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
@@ -643,7 +649,7 @@ void SocialMedia::GetPosts()
         init = true;
         return;
     }
-    nlohmann::json jsonData = HManager::Request((runtime.ip+":3000/posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
+    nlohmann::json jsonData = HManager::Request(("posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
     if (jsonData["offset"].is_null()) {
         std::cout << "no data left to steal :c\n";
         init = false;
@@ -679,7 +685,6 @@ void SocialMedia::GetPosts()
     
             post.comments.push_back(comment);
         }
-    
         posts.push_back(post);
     }
 

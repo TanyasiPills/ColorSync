@@ -37,8 +37,8 @@ void LoginRegister::Login(bool& loginWindow)
                 body["email"] = emailText;
                 body["password"] = passText;
                 nlohmann::json res;
-                if(registerOpen) res = HManager::Request((runtime.ip + ":3000/users").c_str(), body.dump(), POST);
-                else res = HManager::Request((runtime.ip + ":3000/users/login").c_str(), body.dump(), POST);
+                if(registerOpen) res = HManager::Request("users", body.dump(), POST);
+                else res = HManager::Request("users/login", body.dump(), POST);
 
                 if (res.contains("access_token") && res.contains("username")) {
                     std::cout << "got this JSON: " << res["access_token"] << std::endl;
@@ -46,7 +46,7 @@ void LoginRegister::Login(bool& loginWindow)
                     runtime.username = res["username"];
                     runtime.password = passText;
                     runtime.logedIn = true;
-                    nlohmann::json result = HManager::Request(runtime.ip + ":3000/users", "", GET, runtime.token);
+                    nlohmann::json result = HManager::Request("users", "", GET);
                     runtime.id = result["id"];
                     loginOpen = false;
                     std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());

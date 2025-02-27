@@ -24,7 +24,7 @@ void HManager::InitUser()
 	if (runtime.token[0] != '\0') {
 		try {
 			std::cout << "Your token, good sir: " << runtime.token << std::endl;
-			nlohmann::json result = Request((runtime.ip + ":3000/users").c_str(), "", GET, runtime.token);
+			nlohmann::json result = Request("users", "", GET);
 			if (result.empty()) {
 				std::cerr << "Error: Received empty response from server." << std::endl;
 				runtime.logedIn = false;
@@ -38,7 +38,7 @@ void HManager::InitUser()
 				runtime.id = result["id"];
 				runtime.username = result["username"];
 
-				std::vector<uint8_t> imageData = ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
+				std::vector<uint8_t> imageData = ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
 
 				if (imageData.empty()) {
 					std::cerr << "Failed to fetch profile picture." << std::endl;
