@@ -17,6 +17,7 @@ std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
 std::map<int, Image, std::greater<int>> postImageRelation;
 std::unordered_map<int, GLuint> images;
+std::vector<int> searchedUser;
 int SocialMedia::lastId = 0;
 int SocialMedia::searchOffset = 0;
 std::queue<std::tuple<std::vector<uint8_t>, int, int>> textureQueue;
@@ -78,10 +79,18 @@ void SocialMedia::SearchStuff(const char* searchText)
         searchTerm += "&tags=" + tag;
 	}
     nlohmann::json result = HManager::Request(searchTerm, "", GET);
-    if (result.is_null()) {
+    nlohmann::json profileResult = HManager::Request("users/search?name="+text, "", GET);
+    if (result.is_null() || profileResult.is_null()) {
         std::cerr << "search request failed" << std::endl;
     }
     else {
+		for (const auto& profile : profileResult) {
+			User user;
+			user.username = profile["username"];
+			users[profile["id"]] = user;
+			searchedUser.emplace_back(profile["id"]);
+			std::thread(&SocialMedia::LoadImageJa, profile["id"], 2, 0).detach();
+		}
         if (result["offset"].is_null()) return;
         std::cout << result.dump(4) << std::endl;
         for (const auto& imageData : result["data"])
@@ -625,14 +634,36 @@ void SocialMedia::SearchPage(float& width, float& height)
             if (count >= 401) {
                 count = 0;
             }
-            if (images.size() > 0) search = false;
+            if (images.size() > 0/*|| searchedUser.size() > 0*/) search = false;
         }
+        if (searchedUser.size() > 0)
+        {
+            int validWidth = width * 0.6f;
+			Lss::Top(Lss::VH);
+			Lss::Child("##UserSearchResults", ImVec2(validWidth, 18 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+			for (const auto& user : searchedUser)
+			{
+				Lss::Image(users[user].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+				ImGui::SameLine();
+				Lss::Top(2 * Lss::VH);
+				Lss::Text(users[user].username, 4 * Lss::VH);
+			}
+            Lss::End();
+            ImGui::EndChild();
+        }
+        Lss::Top(Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4);
+        Lss::Top(Lss::VH);
         if (images.size() > 0)
         {
             std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
+            std::array<float, 3> ySize = { 0.0f, 0.0f, 0.0f };
             ImVec2 mod = ImGui::GetStyle().FramePadding;
             int validWidth = width * 0.6f;
-            Lss::Child("##SearchResults", ImVec2(validWidth, height - 7.0f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+			static float heightOfImages = height - 7.0f * Lss::VH;
+            Lss::Child("##SearchResults", ImVec2(validWidth, heightOfImages), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            
+            
             float xWidth = validWidth / 3;
             int i = 0;
             for (const auto postImage : postImageRelation)
@@ -640,11 +671,19 @@ void SocialMedia::SearchPage(float& width, float& height)
                 ImGui::SetCursorPosY(yPos[i]);
                 ImGui::SetCursorPosX(xWidth * i + mod.x * i);
                 ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth*postImage.second.ratio));
-                yPos[i] = ImGui::GetCursorPosY() + mod.y;
+                float nextYPos = ImGui::GetCursorPosY() + mod.y;
+				ySize[i] += nextYPos - yPos[i];
+                yPos[i] = nextYPos;
 
                 if (i == 2) i = 0;
                 else i++;
             }
+
+            for (size_t i = 0; i < 3; i++)
+            {
+                if (ySize[i] > heightOfImages) heightOfImages = ySize[i];
+            }
+
             ImGui::EndChild();
         }
     }
