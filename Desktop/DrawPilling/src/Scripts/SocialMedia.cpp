@@ -2,7 +2,10 @@
 #include <iostream>
 #include <thread>
 #include <map>
+#include <sstream>
 #include <unordered_map>
+#include <array>
+#include <chrono>
 #include "lss.h"
 #include "CallBacks.h"
 #include "RuntimeData.h"
@@ -12,7 +15,10 @@
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
+std::map<int, Image, std::greater<int>> postImageRelation;
+std::unordered_map<int, GLuint> images;
 int SocialMedia::lastId = 0;
+int SocialMedia::searchOffset = 0;
 std::queue<std::tuple<std::vector<uint8_t>, int, int>> textureQueue;
 std::mutex textureQueueMutex;
 
@@ -26,11 +32,12 @@ bool creatingPost = false;
 
 bool loginWindow = false;
 
+bool searched = false;
+
 MyTexture imageToPostTexture;
 GLuint imageToPost = 0;
 
 MyTexture userImageTexture;
-
 
 static RuntimeData& runtime = RuntimeData::getInstance();
 
@@ -40,6 +47,52 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
 {
 	return &textureQueue;
+}
+
+void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
+    std::istringstream stream(searchText);
+    std::string word;
+    text.clear();
+    tags.clear();
+
+    while (stream >> word) {
+        if (word[0] == '#' && word.length() > 1) {
+            tags.push_back(word.substr(1));
+        }
+        else {
+            if (!text.empty()) text += " ";
+            text += word;
+        }
+    }
+}
+
+void SocialMedia::SearchStuff(const char* searchText)
+{
+	std::vector<std::string> tags;
+	std::string text;
+	ParseSearchText(searchText, tags, text);
+    std::string searchTerm = "posts/search?";
+    searchTerm += "q=" + text;
+    searched += "&offset=" + searchOffset;
+	for (const auto& tag : tags) {
+        searchTerm += "&tags=" + tag;
+	}
+    nlohmann::json result = HManager::Request(searchTerm, "", GET);
+    if (result.is_null()) {
+        std::cerr << "search request failed" << std::endl;
+    }
+    else {
+        if (result["offset"].is_null()) return;
+        std::cout << result.dump(4) << std::endl;
+        for (const auto& imageData : result["data"])
+        {
+            postImageRelation[imageData["id"]].imageId = imageData["imageId"];
+        }
+        for (const auto& pair : postImageRelation) {
+            std::thread(&SocialMedia::LoadImageJa, pair.second.imageId, 5, pair.first).detach();
+        }
+        searchOffset = result["offset"];
+    }
 }
 
 void SocialMedia::ProcessThreads()
@@ -78,6 +131,9 @@ void SocialMedia::ProcessThreads()
             {
                 float ratioAF = 0.0f;
                 userImages.emplace_back(HManager::ImageFromRequest(imageData, ratioAF));
+            } break;
+        case 5: {
+            images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
             } break;
         default:
             break;
@@ -545,7 +601,7 @@ void SocialMedia::SettingsPage()
     ImGui::EndChild();
 }
 
-void SocialMedia::SearchPage()
+void SocialMedia::SearchPage(float& width, float& height)
 {
     ImVec2 valid = ImGui::GetContentRegionAvail();
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
@@ -555,15 +611,41 @@ void SocialMedia::SearchPage()
     bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
     static bool search = false;
     static int count = 0;
-    if (hihi || search) {
-        search = true;
-        Lss::Top(10 * Lss::VH);
-        std::string searchtext = "Searching";
-        for (size_t i = 100; i < count; i += 100)searchtext += ".";
-        Lss::Text(searchtext, 4 * Lss::VH, Centered);
-        count++;
-        if (count >= 401) {
-            count = 0;
+    if (hihi || search || searched) {
+        if (!search && images.size() <= 0) {
+			std::thread(&SocialMedia::SearchStuff, searchText).detach();
+            search = true;
+        }
+        if (search) {
+            Lss::Top(10 * Lss::VH);
+            std::string searchtext = "Searching";
+            for (size_t i = 100; i < count; i += 100)searchtext += ".";
+            Lss::Text(searchtext, 4 * Lss::VH, Centered);
+            count++;
+            if (count >= 401) {
+                count = 0;
+            }
+            if (images.size() > 0) search = false;
+        }
+        if (images.size() > 0)
+        {
+            std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
+            ImVec2 mod = ImGui::GetStyle().FramePadding;
+            int validWidth = width * 0.6f;
+            Lss::Child("##SearchResults", ImVec2(validWidth, height - 7.0f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+            float xWidth = validWidth / 3;
+            int i = 0;
+            for (const auto postImage : postImageRelation)
+            {
+                ImGui::SetCursorPosY(yPos[i]);
+                ImGui::SetCursorPosX(xWidth * i + mod.x * i);
+                ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth*postImage.second.ratio));
+                yPos[i] = ImGui::GetCursorPosY() + mod.y;
+
+                if (i == 2) i = 0;
+                else i++;
+            }
+            ImGui::EndChild();
         }
     }
 
@@ -587,7 +669,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         SettingsPage();
         } break;
     case 2: { //search
-        SearchPage();
+        SearchPage(width, height);
         } break;
     case 3: { //view profile, add images
         ProfilePage(width, height);
@@ -783,6 +865,16 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
             else {
                 imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
             }
+        } break;
+    case 5: {
+        auto start = std::chrono::high_resolution_clock::now();
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+
+        auto end = std::chrono::high_resolution_clock::now(); // End timing
+        std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
+
+        std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
         } break;
     default:
         break;

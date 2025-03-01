@@ -23,6 +23,7 @@ class SocialMedia {
 private:
 	static std::vector<Post> posts;
 	static int lastId;
+	static int searchOffset;
 public:
 	static void MainFeed(float position, float width, float height);
 	static void LeftSide(float position, float width, float height);
@@ -36,7 +37,8 @@ public:
 	static void ProfilePage(float& width, float& height);
 	static void MainPage(float& width, float& height);
 	static void SettingsPage();
-	static void SearchPage();
+	static void SearchPage(float& width, float& height);
+	static void SearchStuff(const char* searchText);
 
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();

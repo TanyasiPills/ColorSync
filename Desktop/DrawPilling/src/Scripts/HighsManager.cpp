@@ -329,12 +329,20 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
+	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
+
+	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 0L);
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 0L);
+
+	curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 10L);
+	curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 5L);
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
@@ -358,7 +366,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	}
 
 	int width, height, channels;
-	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 3);
+	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 4);
 
 	if (!data) {
 		std::cerr << "Failed to load image from memory" << std::endl;
@@ -381,7 +389,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	stbi_image_free(data);
 

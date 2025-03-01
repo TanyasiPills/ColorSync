@@ -41,3 +41,9 @@ struct Lobby
 	int capacity;
 	int connectivity;
 };
+
+struct Image
+{
+	int imageId;
+	float ratio;
+};
