@@ -16,14 +16,19 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Objects;
+import java.util.StringTokenizer;
 
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class UserManager {
     private static final String FILE_NAME = "user_data";
     private static final Preferences.Key<String> TOKEN_KEY = PreferencesKeys.stringKey("user_token");
     private static RxDataStore<Preferences> dataStore;
+    public static String token;
+    public static User user;
 
     private static RxDataStore<Preferences> getInstance(Context context) {
         if (dataStore == null) {

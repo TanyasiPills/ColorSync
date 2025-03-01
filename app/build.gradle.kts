@@ -32,6 +32,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.rxandroid)
     implementation(libs.security.crypto)
     implementation(libs.datastore.preferences)
     implementation(libs.datastore.preferences.rxjava3)

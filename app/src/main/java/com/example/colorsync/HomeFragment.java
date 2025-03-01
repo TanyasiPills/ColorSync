@@ -199,6 +199,7 @@ public class HomeFragment extends Fragment {
                         .setTitle("Error")
                         .setMessage(throwable.getMessage())
                         .show();
+                throwable.getStackTrace();
             }
         });
     }

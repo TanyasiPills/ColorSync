@@ -163,7 +163,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     .into(profilePicture);
             if (post.getImageId() != null)
                 Glide.with(itemView)
-                    .load(String.format(Locale.getDefault(), "%simages/public/%d", APIInstance.BASE_URL, post.getImageId()))
+                    .load(String.format(Locale.getDefault(), "%simages/%d", APIInstance.BASE_URL, post.getImageId()))
                     .into(image);
             else image.setImageURI(null);
             if (post.getComments() != null && !post.getComments().isEmpty()) {
@@ -172,11 +172,6 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        if (position == 0) return ADD_POST_TYPE;
-        else return POST_TYPE;
-    }
 
     @NonNull
     @Override
