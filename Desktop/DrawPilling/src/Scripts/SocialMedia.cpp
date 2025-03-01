@@ -621,7 +621,7 @@ void SocialMedia::SearchPage(float& width, float& height)
     static bool search = false;
     static int count = 0;
     if (hihi || search || searched) {
-        if (!search && images.size() <= 0) {
+        if (!search && images.size() <= 0 && searchedUser.size() <= 0) {
 			std::thread(&SocialMedia::SearchStuff, searchText).detach();
             search = true;
         }
@@ -634,7 +634,7 @@ void SocialMedia::SearchPage(float& width, float& height)
             if (count >= 401) {
                 count = 0;
             }
-            if (images.size() > 0/*|| searchedUser.size() > 0*/) search = false;
+            if (images.size() > 0 || searchedUser.size() > 0) search = false;
         }
         if (searchedUser.size() > 0)
         {
