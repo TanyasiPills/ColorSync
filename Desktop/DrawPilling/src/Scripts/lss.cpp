@@ -162,11 +162,12 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 		ImGui::Image(texture, size);
 	}
 }
-bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags) {
+bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags, int maxWidth) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 	SetFontSize(size.y);
-	ImGui::SetNextItemWidth(size.x - (size.y));
-	ImGui::SetNextItemWidth(-FLT_MIN);
+	if(maxWidth == 0) ImGui::SetNextItemWidth(size.x - (size.y));
+	else ImGui::SetNextItemWidth(-FLT_MIN);
+
 	if (flags & Centered) Center(size.x);
 
 	if (flags & SameLine) ImGui::SameLine();
@@ -184,14 +185,7 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
 	}
 
-
 	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size, inputFlags);
-
-	if (flags & Centered) {
-		float text_width = ImGui::CalcTextSize(buffer).x;
-		float padding = (size.x - text_width) / 2;
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding);
-	}
 
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);

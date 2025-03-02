@@ -318,9 +318,12 @@ void SocialMedia::MainPage(float& width, float& height)
 
     ImGui::EndChild();
 
-
-    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, 50 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+	static float modalSize = 0.0f;
+	ImVec2 cursorAtCurrent = ImGui::GetCursorPos();
+    ImGui::SetNextWindowPos(ImVec2(cursorAtCurrent.x, cursorAtCurrent.y - modalSize / 2));
+    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, modalSize), Centered | Trans, ImGuiWindowFlags_NoDecoration))
     {
+		float startPos = ImGui::GetCursorPosY();
         ImVec2 valid = ImGui::GetContentRegionAvail();
 
         Lss::Text("What's on your ming?", 2 * Lss::VH);
@@ -341,6 +344,7 @@ void SocialMedia::MainPage(float& width, float& height)
         else if (wasCreated) {
             std::string imagePath = Explorer::GetImagePath();
             if (imagePath.size() > 2) {
+                ImGui::CloseCurrentPopup();
                 imageToPostTexture.Init(imagePath);
                 imageToPost = imageToPostTexture.GetId();
                 wasCreated = false;
@@ -350,7 +354,7 @@ void SocialMedia::MainPage(float& width, float& height)
             }
         }
         if (imageToPost > 0) {
-            float toPostRatio = imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
+            float toPostRatio = (float)imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
             Lss::Image(imageToPost, ImVec2(18 * Lss::VW, 18 * Lss::VW * toPostRatio),Centered);
         }
 
@@ -358,34 +362,40 @@ void SocialMedia::MainPage(float& width, float& height)
         static std::vector<std::string> tags;
         static std::string textToTags = "None";
         static char tagsText[128] = "";
-        //ImGui::SetCursorPosX((20*Lss::VW - itemWidth) * 0.5f);
-       // Lss::Child("tagsinputchild", ImVec2(16*Lss::VW, 2.5 * Lss::VH), false, Centered);
-            if (Lss::InputText("TagsInput", tagsText, sizeof(tagsText), ImVec2(16 * Lss::VW, 2 * Lss::VH), ImGuiInputTextFlags_EnterReturnsTrue))
-            {
-                if (ImGui::IsKeyPressed(ImGuiKey_Enter)) // Ensure Enter was pressed
-                {
-                    std::cout << "tagsText: " << tagsText << std::endl;
-                    if (tagsText[0] != '\0') {
-                        tags.emplace_back(tagsText);
-                    }
-                    if (!tags.empty())
-                    {
-                        std::string tmp;
-                        for (const auto& item : tags)
-                        {
-                            tmp += "#" + item + " ";
-                        }
-                        textToTags = tmp;
-                    }
-                    tagsText[0] = '\0';
+        static bool focusNextFrame = false;
+
+        Lss::Child("tagsinputchild", ImVec2(16*Lss::VW, 2.5 * Lss::VH), false, Centered);
+            if (Lss::InputText("TagsInput", tagsText, sizeof(tagsText), ImVec2(16 * Lss::VW, 2 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue, 1))
+            {   
+                
+                if (tagsText[0] != '\0') {
+                    tags.emplace_back(tagsText);
                 }
+                if (!tags.empty())
+                {
+                    std::string tmp;
+                    for (const auto& item : tags)
+                    {
+                        tmp += "#" + item + " ";
+                    }
+                   textToTags = tmp;
+                }
+				tagsText[0] = '\0';
+
+                focusNextFrame = true;
             }
+			if (focusNextFrame)
+			{
+				ImGui::SetKeyboardFocusHere(-1);
+				focusNextFrame = false;
+			}
 		    Lss::End();
-		//ImGui::EndChild();
+		ImGui::EndChild();
         Lss::Text("Tags:", 2 * Lss::VH);
 		ImGui::SameLine();
         Lss::Text(textToTags, 2 * Lss::VH);
-
+        float endPos = ImGui::GetCursorPosY();
+        modalSize = endPos - startPos + Lss::VH * 6;
 
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
@@ -653,12 +663,20 @@ void SocialMedia::SearchPage(float& width, float& height)
 
     static char searchText[128] = "";
     bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
-    static bool search = false;
+    static bool search = true;
     static int count = 0;
+	static bool searching = true;
     if (hihi || search || searched) {
-        if (!search && images.size() <= 0 && searchedUser.size() <= 0) {
+        if (hihi) {
+            searching = true;
+            searchedUser.clear();
+            images.clear();
+            postImageRelation.clear();
+        }
+
+        if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
 			std::thread(&SocialMedia::SearchStuff, searchText).detach();
-            search = true;
+			searching = false;
         }
         if (search) {
             Lss::Top(10 * Lss::VH);
@@ -675,7 +693,9 @@ void SocialMedia::SearchPage(float& width, float& height)
         {
             int validWidth = width * 0.6f;
 			Lss::Top(Lss::VH);
-			Lss::Child("##UserSearchResults", ImVec2(validWidth, 18 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+			height = searchedUser.size() * 8 * Lss::VH;
+			if (height > 18 * Lss::VH) height = 18 * Lss::VH;
+			Lss::Child("##UserSearchResults", ImVec2(validWidth, height), false, Centered, ImGuiWindowFlags_NoScrollbar);
 			for (const auto& user : searchedUser)
 			{
 				Lss::Image(users[user].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
