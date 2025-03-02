@@ -402,11 +402,16 @@ void SocialMedia::MainPage(float& width, float& height)
         if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
         {
             std::string imagePath = Explorer::GetImagePath();
-            nlohmann::json jsonData = HManager::PostRequest(inputtext, imagePath);
+            nlohmann::json jsonData;
+            if (textToTags != "None") {
+                jsonData = HManager::PostRequest(inputtext, imagePath, 0, tags);
+            }
+            else jsonData = HManager::PostRequest(inputtext, imagePath);
             if (jsonData.is_null()) {
                 std::cout << "couldn't post post" << std::endl;
             }
             else {
+				std::cout << jsonData.dump(4) << std::endl;
                 posts = {};
                 openStuff = false;
                 lastId = 0;

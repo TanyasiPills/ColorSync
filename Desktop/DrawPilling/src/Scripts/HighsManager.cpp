@@ -116,12 +116,16 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	}
 
 	if (!tags.empty()) {
-		nlohmann::json tagsJson = tags;
-		std::string tagsString = tagsJson.dump();
+		nlohmann::json tagsJson = nlohmann::json::array();
+		for (const auto& tag : tags) {
+			tagsJson.push_back(tag);
+		}
 
+		std::string tagsString = tagsJson.dump();
 		part = curl_mime_addpart(mime);
 		curl_mime_name(part, "tags");
-		curl_mime_data(part, tagsString.c_str(), CURL_ZERO_TERMINATED);
+		curl_mime_type(part, "application/json");
+		curl_mime_data(part, tagsString.c_str(), tagsString.size());
 	}
 
 	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
@@ -141,6 +145,7 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	if (http_code != 200 && http_code != 201)
 	{
 		std::cerr << "Request failed with HTTP code: " << http_code << std::endl;
+		//return nlohmann::json::parse(result);
 		return nullptr;
 	}
 	if (res != CURLE_OK) {
