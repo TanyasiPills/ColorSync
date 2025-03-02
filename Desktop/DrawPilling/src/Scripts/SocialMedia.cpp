@@ -218,7 +218,6 @@ void SocialMedia::LoadProfile(int id)
 {
     userImages.clear();
     nlohmann::json jsonData;
-	std::cout << "id: " << id << std::endl;
     if(id == 0) jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
 	else jsonData = HManager::Request(("images/user/" + std::to_string(id)).c_str(), "", GET);
     if (jsonData.is_null()) {
@@ -796,7 +795,6 @@ void SocialMedia::SearchPage(float& width, float& height)
                     Lss::End();
 				ImGui::EndChild();
                 if (ImGui::IsItemClicked()) {
-                    std::cout << "user get clicked!" << std::endl;
 					searchMode = 1;
                     selectedUser = user;
                 }
@@ -825,7 +823,6 @@ void SocialMedia::SearchPage(float& width, float& height)
                 ImGui::SetCursorPosX(xWidth * i + mod.x * i);
                 ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth * postImage.second.ratio));
                 if (ImGui::IsItemClicked()) {
-                    std::cout << "Image clicked!" << std::endl;
                     GetPostForSearch(postImage.first);
                 }
                 float nextYPos = ImGui::GetCursorPosY() + mod.y;
