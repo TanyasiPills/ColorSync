@@ -22,6 +22,7 @@ struct Post
 	std::string text;
 	std::chrono::system_clock::time_point time;
 	std::vector<Comment> comments;
+	std::vector<std::string> tags;
 	bool picLoaded = false;
 	bool allLoaded = false;
 	bool openComments = true;
