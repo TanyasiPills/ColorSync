@@ -17,6 +17,7 @@ struct Post
 	int id;
 	int userId;
 	int imageId;
+	int size = 0;
 	GLuint image = -1;
 	float ratio;
 	std::string text;
@@ -26,7 +27,6 @@ struct Post
 	bool picLoaded = false;
 	bool allLoaded = false;
 	bool openComments = true;
-	int size = 0;
 };
 
 struct User
@@ -47,4 +47,14 @@ struct Image
 {
 	int imageId;
 	float ratio;
+};
+
+struct Room
+{
+	std::string roomName;
+	std::string ownerName;
+	int capacity;
+	int ownerId;
+	int userCount;
+	bool password;
 };

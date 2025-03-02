@@ -12,6 +12,9 @@
 #include "FIleExplorer.h"
 #include "LoginRegister.h"
 
+
+std::vector<Room> friendRooms;
+std::vector<Room> rooms;
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
@@ -1096,11 +1099,22 @@ void SocialMedia::RightSide(float position, float width, float height)
     ImGui::SetNextWindowSize(ImVec2(width, height));
     ImGui::Begin("Right Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-    if (ImGui::Button("Button A")) {
-    }
-    if (ImGui::Button("Button B")) {
-    }
+	    ImVec2 valid = ImGui::GetContentRegionAvail();
 
+
+        Lss::Text("PopularLobbies", 5 * Lss::VH, Centered);
+		Lss::Child("Lobbies", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+	    Lss::Separator(2.0f);
+		Lss::Text("Friends online", 5 * Lss::VH, Centered);
+        Lss::Child("FriendsOnline", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+        Lss::Separator(2.0f);
+        Lss::Text("Friend lobbies", 5 * Lss::VH, Centered);
+        Lss::Child("FriendLobbies", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+
+        Lss::End();
     ImGui::End();
 }
 
