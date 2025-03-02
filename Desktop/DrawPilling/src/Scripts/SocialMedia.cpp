@@ -329,10 +329,10 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
 
         Lss::Top(-Lss::VH / 2);
-        Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
+        Lss::Separator(1.0f, 18 * Lss::VW, 4, Centered);
 
         ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
+        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
             created = true;
             wasCreated = true;
         }
@@ -349,8 +349,43 @@ void SocialMedia::MainPage(float& width, float& height)
                 wasCreated = false;
             }
         }
+        if (imageToPost > 0) {
+            float toPostRatio = imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
+            Lss::Image(imageToPost, ImVec2(18 * Lss::VW, 18 * Lss::VW * toPostRatio),Centered);
+        }
 
-        if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
+
+        static std::vector<std::string> tags;
+        static std::string textToTags = "None";
+        static char tagsText[128] = "";
+        //ImGui::SetCursorPosX((20*Lss::VW - itemWidth) * 0.5f);
+       // Lss::Child("tagsinputchild", ImVec2(16*Lss::VW, 2.5 * Lss::VH), false, Centered);
+            if (Lss::InputText("TagsInput", tagsText, sizeof(tagsText), ImVec2(16 * Lss::VW, 2 * Lss::VH), ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                if (ImGui::IsKeyPressed(ImGuiKey_Enter)) // Ensure Enter was pressed
+                {
+                    std::cout << "tagsText: " << tagsText << std::endl;
+                    if (tagsText[0] != '\0') {
+                        tags.emplace_back(tagsText);
+                    }
+                    if (!tags.empty())
+                    {
+                        std::string tmp;
+                        for (const auto& item : tags)
+                        {
+                            tmp += "#" + item + " ";
+                        }
+                        textToTags = tmp;
+                    }
+                    tagsText[0] = '\0';
+                }
+            }
+		    Lss::End();
+		//ImGui::EndChild();
+        Lss::Text("Tags:", 2 * Lss::VH);
+		ImGui::SameLine();
+        Lss::Text(textToTags, 2 * Lss::VH);
+
 
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);

@@ -164,11 +164,10 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags) {
 }
 bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-	if (flags & Centered) Center(size.x);
-
 	SetFontSize(size.y);
 	ImGui::SetNextItemWidth(size.x - (size.y));
+	ImGui::SetNextItemWidth(-FLT_MIN);
+	if (flags & Centered) Center(size.x);
 
 	if (flags & SameLine) ImGui::SameLine();
 
@@ -188,6 +187,12 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 
 	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size, inputFlags);
 
+	if (flags & Centered) {
+		float text_width = ImGui::CalcTextSize(buffer).x;
+		float padding = (size.x - text_width) / 2;
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding);
+	}
+
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);
 		ImGui::PopStyleColor(1);
@@ -195,7 +200,6 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	if (flags & Trans) {
 		ImGui::PopStyleColor(1);
 	}
-
 	return modified;
 }
 
