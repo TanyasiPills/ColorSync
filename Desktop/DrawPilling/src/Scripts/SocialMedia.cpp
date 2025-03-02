@@ -142,9 +142,11 @@ void SocialMedia::GetPostForSearch(const int& postId)
         if (!result["comments"].empty()) {
             for (const auto& comment : result["comments"]) {
                 Comment newComment;
+                
                 newComment.id = comment["id"];
-                newComment.userId = comment["userId"];
+                newComment.userId = comment["user"]["id"];
                 newComment.text = comment["text"];
+				newComment.time = ParsePostTime(comment["date"]);
                 searchedPost.comments.emplace_back(newComment);
             }
         }
@@ -746,17 +748,12 @@ void SocialMedia::SearchPage(float& width, float& height)
     static bool search = true;
     static int count = 0;
 	static bool searching = true;
-    if (hihi || search || searched) {
+    if (hihi || search) {
         if (hihi) {
             searching = true;
             searchedUser.clear();
             images.clear();
             postImageRelation.clear();
-        }
-
-        if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
-			std::thread(&SocialMedia::SearchStuff, searchText).detach();
-			searching = false;
         }
         if (search) {
             Lss::Top(10 * Lss::VH);
@@ -769,188 +766,197 @@ void SocialMedia::SearchPage(float& width, float& height)
             }
             if (images.size() > 0 || searchedUser.size() > 0) search = false;
         }
-        if (searchedUser.size() > 0)
+    }
+    if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
+        std::thread(&SocialMedia::SearchStuff, searchText).detach();
+        searching = false;
+    }
+    if (searchedUser.size() > 0)
+    {
+        int validWidth = width * 0.6f;
+        Lss::Top(Lss::VH);
+        height = searchedUser.size() * 8 * Lss::VH;
+        if (height > 18 * Lss::VH) height = 18 * Lss::VH;
+        Lss::Child("##UserSearchResults", ImVec2(validWidth, height), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        for (const auto& user : searchedUser)
         {
-            int validWidth = width * 0.6f;
-			Lss::Top(Lss::VH);
-			height = searchedUser.size() * 8 * Lss::VH;
-			if (height > 18 * Lss::VH) height = 18 * Lss::VH;
-			Lss::Child("##UserSearchResults", ImVec2(validWidth, height), false, Centered, ImGuiWindowFlags_NoScrollbar);
-			for (const auto& user : searchedUser)
-			{
-				Lss::Image(users[user].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
-				ImGui::SameLine();
-				Lss::Top(2 * Lss::VH);
-				Lss::Text(users[user].username, 4 * Lss::VH);
-			}
-            Lss::End();
-            ImGui::EndChild();
+            Lss::Image(users[user].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+            ImGui::SameLine();
+            Lss::Top(2 * Lss::VH);
+            Lss::Text(users[user].username, 4 * Lss::VH);
         }
-        Lss::Top(Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4);
-        Lss::Top(Lss::VH);
-        if (images.size() > 0)
-        {
-            std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
-            std::array<float, 3> ySize = { 0.0f, 0.0f, 0.0f };
-            ImVec2 mod = ImGui::GetStyle().FramePadding;
-            int validWidth = width * 0.6f;
-			static float heightOfImages = height - 7.0f * Lss::VH;
-            Lss::Child("##SearchResults", ImVec2(validWidth, heightOfImages), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            
-            
-            float xWidth = validWidth / 3;
-            int i = 0;
-            for (const auto postImage : postImageRelation)
-            {
-                ImGui::SetCursorPosY(yPos[i]);
-                ImGui::SetCursorPosX(xWidth * i + mod.x * i);
-                ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth*postImage.second.ratio));
-                if (ImGui::IsItemClicked()) {
-                    std::cout << "Image clicked!" << std::endl;
-					GetPostForSearch(postImage.first);
-                }
-                float nextYPos = ImGui::GetCursorPosY() + mod.y;
-				ySize[i] += nextYPos - yPos[i];
-                yPos[i] = nextYPos;
+        Lss::End();
+        ImGui::EndChild();
+    }
+    Lss::Top(Lss::VH);
+    Lss::Separator(2.0f, 0.0f, 4);
+    Lss::Top(Lss::VH);
+    if (images.size() > 0)
+    {
+        std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
+        std::array<float, 3> ySize = { 0.0f, 0.0f, 0.0f };
+        ImVec2 mod = ImGui::GetStyle().FramePadding;
+        int validWidth = width * 0.6f;
+        static float heightOfImages = height - 7.0f * Lss::VH;
+        Lss::Child("##SearchResults", ImVec2(validWidth, heightOfImages), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-                if (i == 2) i = 0;
-                else i++;
+
+        float xWidth = validWidth / 3;
+        int i = 0;
+        for (const auto postImage : postImageRelation)
+        {
+            ImGui::SetCursorPosY(yPos[i]);
+            ImGui::SetCursorPosX(xWidth * i + mod.x * i);
+            ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth * postImage.second.ratio));
+            if (ImGui::IsItemClicked()) {
+                std::cout << "Image clicked!" << std::endl;
+                GetPostForSearch(postImage.first);
+            }
+            float nextYPos = ImGui::GetCursorPosY() + mod.y;
+            ySize[i] += nextYPos - yPos[i];
+            yPos[i] = nextYPos;
+
+            if (i == 2) i = 0;
+            else i++;
+        }
+
+        for (size_t i = 0; i < 3; i++)
+        {
+            if (ySize[i] > heightOfImages) heightOfImages = ySize[i];
+        }
+
+        ImGui::EndChild();
+    }
+    if (searchPostOpen) {
+        static int postWidth = width * 0.4f;
+        static int postHeight = 40 * Lss::VH;
+
+		static bool on = false;
+
+        static ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImVec2 pos = ImVec2(center.x - postWidth * 0.5f, center.y - postHeight * 0.5f);
+        ImGui::SetNextWindowPos(pos, ImGuiCond_Appearing);
+        if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, postHeight), None, ImGuiWindowFlags_NoDecoration))
+        {
+            if (!searchedPost.allLoaded) {
+                if (searchedPost.picLoaded && users[searchedPost.userId].pPicLoaded) {
+                    searchedPost.allLoaded = true;
+                    ImGui::CloseCurrentPopup();
+                }
             }
 
-            for (size_t i = 0; i < 3; i++)
+            float startPos = ImGui::GetCursorPosY();
+
+            Lss::Image(users[searchedPost.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+
+            ImGui::SameLine();
+            Lss::Top(2 * Lss::VH);
+            Lss::Text(users[searchedPost.userId].username, 4 * Lss::VH);
+
+            Lss::Left(3.5f * Lss::VH);
+            Lss::Text(searchedPost.text, 4 * Lss::VH);
+
+            float good = postWidth * 0.9f;
+            ImVec2 faki(good, good * searchedPost.ratio);
+            Lss::Image(searchedPost.image, faki, Centered);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+            Lss::Left(3.5f * Lss::VH);
+            for (const auto& tags : searchedPost.tags)
             {
-                if (ySize[i] > heightOfImages) heightOfImages = ySize[i];
-            }
-
-            ImGui::EndChild();
-        }
-        if (searchPostOpen) {
-            static int postWidth = width * 0.5f;
-            static int postHeight = 40 * Lss::VH;
-            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, postHeight),None, ImGuiWindowFlags_NoDecoration))
-            {
-                bool on = true;
-                if (!searchedPost.allLoaded) {
-                    if (searchedPost.picLoaded && users[searchedPost.userId].pPicLoaded) {
-                        //searchedPost.allLoaded = true;
-                        //ImGui::CloseCurrentPopup();
-                        //searchPostOpen = true;
-                    }             
-                }
-
-                float startPos = ImGui::GetCursorPosY();
-
-                Lss::Image(users[searchedPost.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
-
+                Lss::SetFontSize(3 * Lss::VH);
+                Lss::SetColor(ContainerBackground, Background);
+                float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+                Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+                Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+                Lss::End();
+                ImGui::EndChild();
+                Lss::SetColor(ContainerBackground, ContainerBackground);
                 ImGui::SameLine();
-                Lss::Top(2 * Lss::VH);
-                Lss::Text(users[searchedPost.userId].username, 4 * Lss::VH);
+            }
+            ImGui::NewLine();
+            ImGui::PopStyleVar();
 
-                Lss::Left(3.5f * Lss::VH);
-                Lss::Text(searchedPost.text, 4 * Lss::VH);
+            if (!searchedPost.comments.empty())
+            {
+                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
+                /*
+                if (post.openComments != open) {
+                    post.size = 0;
+                    post.openComments = open;
+                }*/
 
-                float good = postWidth * 0.9f;
-                ImVec2 faki(good, good * searchedPost.ratio);
-                Lss::Image(searchedPost.image, faki, Centered);
+                if (open) {
+                    ImDrawList* drawList = ImGui::GetWindowDrawList();
+                    float cornerRadius = 10.0f;
 
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-                Lss::Left(3.5f * Lss::VH);
-                for (const auto& tags : searchedPost.tags)
-                {
-                    Lss::SetFontSize(3 * Lss::VH);
-                    Lss::SetColor(ContainerBackground, Background);
-                    float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
-                    Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
-                    Lss::Text("#" + tags, 3 * Lss::VH, Centered);
-                    Lss::End();
-                    ImGui::EndChild();
-                    Lss::SetColor(ContainerBackground, ContainerBackground);
-                    ImGui::SameLine();
-                }
-                ImGui::NewLine();
-                ImGui::PopStyleVar();
+                    ImVec2 commentChildSize;
+                    if (searchedPost.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
 
-                if (!searchedPost.comments.empty())
-                {
-                    bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
-                    /*
-                    if (post.openComments != open) {
-                        post.size = 0;
-                        post.openComments = open;
-                    }*/
+                    ImVec2 commentPos = ImGui::GetCursorScreenPos();
 
-                    if (open) {
-                        ImDrawList* drawList = ImGui::GetWindowDrawList();
-                        float cornerRadius = 10.0f;
+                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
 
-                        ImVec2 commentChildSize;
-                        if (searchedPost.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
-                        else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
+                    for (Comment& comment : searchedPost.comments)
+                    {
+                        if (!users[comment.userId].pPicLoaded) continue;
 
-                        ImVec2 commentPos = ImGui::GetCursorScreenPos();
+                        Lss::SetColor(ContainerBackground, Background);
+                        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 
-                        ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
+                        std::string name = std::to_string(comment.id);
+                        Lss::Child(name, ImVec2(0, 11 * Lss::VH));
 
-                        for (Comment& comment : searchedPost.comments)
-                        {
-                            if (!users[comment.userId].pPicLoaded) continue;
+                        Lss::LeftTop(Lss::VH, Lss::VH);
+                        Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
 
-                            Lss::SetColor(ContainerBackground, Background);
-                            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+                        ImGui::SameLine();
+                        Lss::Top(Lss::VH);
+                        Lss::Text(users[comment.userId].username, 4 * Lss::VH);
 
-                            std::string name = std::to_string(comment.id);
-                            Lss::Child(name, ImVec2(0, 11 * Lss::VH));
-
-                            Lss::LeftTop(Lss::VH, Lss::VH);
-                            Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
-
-                            ImGui::SameLine();
-                            Lss::Top(Lss::VH);
-                            Lss::Text(users[comment.userId].username, 4 * Lss::VH);
-
-                            Lss::Left(7 * Lss::VH);
-                            Lss::Text(comment.text, 3 * Lss::VH);
-
-                            Lss::End();
-
-                            ImGui::EndChild();
-
-                            ImGui::PopStyleVar(1);
-                            Lss::SetColor(ContainerBackground, ContainerBackground);
-
-                            if (searchedPost.comments[searchedPost.comments.size() - 1].id != comment.id) {
-                                Lss::Top(Lss::VH);
-                            }
-                        }
+                        Lss::Left(7 * Lss::VH);
+                        Lss::Text(comment.text, 3 * Lss::VH);
 
                         Lss::End();
 
                         ImGui::EndChild();
-                        ImGui::TreePop();
+
+                        ImGui::PopStyleVar(1);
+                        Lss::SetColor(ContainerBackground, ContainerBackground);
+
+                        if (searchedPost.comments[searchedPost.comments.size() - 1].id != comment.id) {
+                            Lss::Top(Lss::VH);
+                        }
                     }
+
+                    Lss::End();
+
+                    ImGui::EndChild();
+                    ImGui::TreePop();
                 }
-
-				float endPos = ImGui::GetCursorPosY();
-                postHeight = endPos - startPos + 4 * Lss::VH;
-
-                if (on && ImGui::IsMouseClicked(0))
-                {
-                    ImVec2 pos = ImGui::GetWindowPos();
-                    ImVec2 cursorPos = ImGui::GetMousePos();
-                    ImVec2 size = ImGui::GetWindowSize();
-                    if (!Lss::InBound(cursorPos, pos, size)) {
-                        ImGui::CloseCurrentPopup();
-                        searchPostOpen = false;
-                    }
-                }
-
-                Lss::End();
-                ImGui::EndPopup();
             }
+
+            float endPos = ImGui::GetCursorPosY();
+            postHeight = endPos - startPos + 4 * Lss::VH;
+
+            if (on && ImGui::IsMouseClicked(0))
+            {
+                ImVec2 pos = ImGui::GetWindowPos();
+                ImVec2 cursorPos = ImGui::GetMousePos();
+                ImVec2 size = ImGui::GetWindowSize();
+                if (!Lss::InBound(cursorPos, pos, size)) {
+                    ImGui::CloseCurrentPopup();
+                    searchPostOpen = false;
+                    on = false;
+                }
+            }
+
+            on = true;
+            Lss::End();
+            ImGui::EndPopup();
         }
     }
-
     Lss::End();
     ImGui::EndChild();
 }
