@@ -38,6 +38,7 @@ bool searchPostOpen = false;
 
 int searchMode = 0;
 int selectedUser = -1;
+bool needImages = true;
 
 MyTexture imageToPostTexture;
 GLuint imageToPost = 0;
@@ -521,8 +522,6 @@ void SocialMedia::MainPage(float& width, float& height)
 
 void SocialMedia::ProfilePage(float& width, float& height, int user) 
 {
-    static bool needImages = true;
-
     static bool imageEditOpen = false;
     static bool openExplorer = false;
     static bool wasOpenExplorer = false;
@@ -540,7 +539,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
         int validWidth = width * 0.6f;
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            if (user == 0) {
+            if (user == runtime.id) {
                 //pfp change
                 if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
                 {
@@ -657,7 +656,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
             Lss::Top(7.5 * Lss::VH);
             Lss::Text(users[user].username, 5 * Lss::VH);
 
-            if (user == 0) {
+            if (user == runtime.id) {
                 ImGui::SameLine();
                 Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
                 if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
@@ -977,6 +976,8 @@ void SocialMedia::SearchPage(float& width, float& height)
         Lss::End();
         ImGui::EndChild();
     } else {
+		userImages.clear();
+        needImages = true;
         ProfilePage(width, height, selectedUser);
     }
 }
@@ -1000,7 +1001,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
         SearchPage(width, height);
         } break;
     case 3: { //view profile, add images
-        ProfilePage(width, height);
+        ProfilePage(width, height, runtime.id);
         } break;
     default:
         break;
@@ -1043,7 +1044,11 @@ void SocialMedia::LeftSide(float position, float width, float height)
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
-        else mode = 0;
+        else {
+            if (searchMode != 0) searchMode = 0;
+			else mode = 0;
+            needImages = true;
+        }
     }
 
     if (runtime.logedIn) {
