@@ -6,11 +6,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { NavBar } from './components/Navbar_components.tsx';
 import WebGLCanvas from './pages/webgl/WebGLCanvas.tsx';
 import Home from './pages/Home.tsx';
-import { SignIn } from './pages/SignIn.tsx';
-import { SignUp } from './pages/SignUp.tsx';
 import { SocialMedia } from './pages/SocialMedia.tsx';
 import { Profile } from './pages/Profile.tsx';
-import { Posting } from './pages/Posting.tsx';
 import { Search } from './pages/Search.tsx';
 
 const router = createBrowserRouter([
@@ -19,9 +16,6 @@ const router = createBrowserRouter([
   {path: "/Download", element: <App />},
   {path: "/CMS", element: <SocialMedia />},
   {path: "/CMS/SRC", element: <Search />},
-  {path: "/CMS/Posting", element: <Posting />},
-  {path: "/SignIn", element: <SignIn />},
-  {path: "/SignUp", element: <SignUp />},
   {path: "/Profile/:id", element: <Profile own />},
 ]);
 

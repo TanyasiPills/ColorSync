@@ -1,18 +1,85 @@
-interface PopoverProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'react-bootstrap';
+import { modalProp } from "../types";
+import { useState } from 'react';
+import Cookies from 'universal-cookie';
 
-export function Posting({ isOpen, onClose }: PopoverProps) {
-  if (!isOpen) return null;
+export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
+
+  const cookie = new Cookies();
+    if (!cookie.get("AccessToken")) {
+      onHide();
+      return
+    }
+
+  const [validated, setValidated] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    throw new Error('Function not implemented.');
+  }
 
   return (
-    <div className="posting">
-      <h2>Popover</h2>
-      <hr />
-      <p>A popover is an element that is placed on top of everything else.</p>
-      <p>It can be used when you want to tell something important.</p>
-      <button onClick={onClose}>Close</button>
-    </div>
+    <Modal show={show} onHide={onHide} centered>
+      <ModalHeader closeButton>
+        <h2>Sign Up</h2>
+        <p>Create a new account</p>
+      </ModalHeader>
+      <ModalBody>
+        <Form noValidate validated={validated} onSubmit={handleSubmit}>
+          <Form.Group controlId="formUsername">
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter username"
+              name='username'
+              id='username'
+              required
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formBasicEmail">
+            <Form.Label>Email address</Form.Label>
+            <Form.Control
+              type="email"
+              placeholder="Enter email"
+              name='email'
+              id='email'
+              required
+            />
+            <Form.Text>
+              We'll never share your email with anyone else.
+            </Form.Text>
+          </Form.Group>
+
+          <Form.Group controlId="formBasicPassword">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              name='password'
+              required
+            />
+          </Form.Group>
+
+          <Form.Group controlId="formConfirmPassword">
+            <Form.Label>Confirm Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Confirm Password"
+              name='confPassword'
+              required
+            />
+            {error && <Form.Text className="text-danger">{error}</Form.Text>}
+          </Form.Group>
+
+          <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
+            {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Submit'}
+          </Button>
+        </Form>
+
+        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+      </ModalBody>
+    </Modal>
   );
 }

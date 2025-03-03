@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'react-bootstrap';
 import Cookies from 'universal-cookie';
 import { backendIp } from '../constants';
+import { modalProp } from '../types';
 
-export function SignUp() {
+export const SignUp: React.FC<modalProp> = ({ show, onHide }) => {
 
   const cookie = new Cookies();
   if (cookie.get("AccessToken")) {
+    onHide();
     window.location.href = '/';
     return
   }
@@ -18,7 +20,7 @@ export function SignUp() {
     event.preventDefault();
     setError('');
     setIsSubmitting(true);
-    const data:FormData =  new FormData(event.target as HTMLFormElement);
+    const data: FormData = new FormData(event.target as HTMLFormElement);
 
     try {
       const res = await fetch(backendIp + '/users', {
@@ -40,6 +42,7 @@ export function SignUp() {
         return;
       }
 
+      onHide();
       window.location.href = '/'
       setError('');
       alert('Registration successful!');
@@ -50,68 +53,67 @@ export function SignUp() {
   };
 
   return (
-    <Container fluid="md" className="d-flex justify-content-center align-items-center min-vh-1000">
-      <Row className="w-100">
-        <Col md={6} lg={4} className="mx-auto">
-          <div className="text-center mb-4">
-            <h2>Sign Up</h2>
-            <p>Create a new account</p>
-          </div>
-          <Form noValidate validated={validated} onSubmit={handleSubmit}>
-            <Form.Group controlId="formUsername">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter username"
-                name='username'
-                id='username'
-                required
-              />
-            </Form.Group>
 
-            <Form.Group controlId="formBasicEmail">
-              <Form.Label>Email address</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter email"
-                name='email'
-                id='email'
-                required
-              />
-              <Form.Text>
-                We'll never share your email with anyone else.
-              </Form.Text>
-            </Form.Group>
+    <Modal show={show} onHide={onHide} centered>
+      <ModalHeader closeButton>
+        <h2>Sign Up</h2>
+        <p>Create a new account</p>
+      </ModalHeader>
+      <ModalBody>
+        <Form noValidate validated={validated} onSubmit={handleSubmit}>
+          <Form.Group controlId="formUsername">
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter username"
+              name='username'
+              id='username'
+              required
+            />
+          </Form.Group>
 
-            <Form.Group controlId="formBasicPassword">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                name='password'
-                required
-              />
-            </Form.Group>
+          <Form.Group controlId="formBasicEmail">
+            <Form.Label>Email address</Form.Label>
+            <Form.Control
+              type="email"
+              placeholder="Enter email"
+              name='email'
+              id='email'
+              required
+            />
+            <Form.Text>
+              We'll never share your email with anyone else.
+            </Form.Text>
+          </Form.Group>
 
-            <Form.Group controlId="formConfirmPassword">
-              <Form.Label>Confirm Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Confirm Password"
-                name='confPassword'
-                required
-              />
-              {error && <Form.Text className="text-danger">{error}</Form.Text>}
-            </Form.Group>
+          <Form.Group controlId="formBasicPassword">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              name='password'
+              required
+            />
+          </Form.Group>
 
-            <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
-              {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Submit'}
-            </Button>
-          </Form>
+          <Form.Group controlId="formConfirmPassword">
+            <Form.Label>Confirm Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Confirm Password"
+              name='confPassword'
+              required
+            />
+            {error && <Form.Text className="text-danger">{error}</Form.Text>}
+          </Form.Group>
 
-          {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-        </Col>
-      </Row>
-    </Container>
+          <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
+            {isSubmitting ? <Spinner animation="border" size="sm" /> : 'Submit'}
+          </Button>
+        </Form>
+
+        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+      </ModalBody>
+    </Modal>
   );
 };

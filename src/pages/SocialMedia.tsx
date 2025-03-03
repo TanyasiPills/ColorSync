@@ -7,7 +7,7 @@ import { Posting } from "./Posting";
 
 export function SocialMedia() {
   const [post, setPost] = useState<post[]>([]);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [show, setShow] = useState(false);
   useEffect(() => {
     async function load() {
       const result = await fetch(backendIp + '/posts', {
@@ -35,7 +35,7 @@ export function SocialMedia() {
       window.location.href = '/CMS/SRC';
     });
     postButton.addEventListener("click", () => {
-      setIsPopoverOpen(true);
+      setShow(true);
     });
   }, [])
 
@@ -71,7 +71,7 @@ export function SocialMedia() {
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-start py-4">
           <div id="feed">
-          <Posting isOpen={isPopoverOpen} onClose={() => setIsPopoverOpen(false)} />
+          <Posting show={show} onHide={() => setShow(false)} />
             {post.length > 0 ? post.map((e) => (
               <Card className="mb- post-card" key={e.id}>
                 <Card.Body>

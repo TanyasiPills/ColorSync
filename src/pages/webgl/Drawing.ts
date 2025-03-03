@@ -41,7 +41,7 @@ export class Drawing{
 
         var shader: string;
         if (shaderType == 0) {
-            shader = "Resources/Shaders/CursorShader.ts";
+            shader = "Resources/Shaders/LayerShader.ts";
         }
         else {
             shader = "Resources/Shaders/CursorShader.ts";

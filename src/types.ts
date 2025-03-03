@@ -30,3 +30,8 @@ export interface image {
 export enum visibility{
     public, private
 }
+
+export interface modalProp {
+    show: boolean;
+    onHide: () => void;
+  }
