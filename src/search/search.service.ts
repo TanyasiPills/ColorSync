@@ -16,6 +16,7 @@ export class SearchService implements OnModuleInit {
   }
 
   async indexPost(id: number, text: string, tags: string[], date: Date) {
+    if (tags) tags = tags.map(e => e.toLowerCase());
     await this.elastic.index({
       index: 'post',
       id: id.toString(),
@@ -25,9 +26,11 @@ export class SearchService implements OnModuleInit {
         date
       }
     });
+    this.logger.log(`Indexed post with id: ${id}`);
   }
 
   async updatePost(id: number, text?: string, tags?: string[], date?: Date) {
+    if (tags) tags = tags.map(e => e.toLowerCase());
     const result = await this.elastic.update({
       index: 'post',
       id: id.toString(),
@@ -89,6 +92,8 @@ export class SearchService implements OnModuleInit {
   }
 
   async searchPosts(searchText: string, searchTags: string[], userPreferences: { queries: { text: string, weight: number }[], tags: { name: string, weight: number }[] } = undefined, offset: number = 0, take: number = 10): Promise<number[]> {
+    if (searchTags) searchTags = searchTags.map(e => e.toLowerCase());
+    
     if (searchText == "") searchText == undefined;
     const userPrefenceMultiplier = { text: 0, tags: 0 };
     if (userPreferences) {
@@ -165,7 +170,7 @@ export class SearchService implements OnModuleInit {
       size: take
     });
 
-    console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
+    //console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
 
     return result.hits.hits.map(hit => parseInt(hit._id));
   }

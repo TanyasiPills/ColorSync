@@ -64,8 +64,7 @@ export class PostsService {
       where: { id: e },
       select: selectBody
     })));
-    if (!result || result.length == 0) return { data: {}, offset: null };
-    console.log(result)
+    if (!result || result.length == 0) return { data: [], offset: null };
     if (!imageOnly) result.map(e => e.tags = e.tags.map(e => e.name));
     else result = result.filter(e => e.imageId);
     return { data: result, offset: parsedOffset + result.length };
@@ -90,7 +89,7 @@ export class PostsService {
   }
 
   async findOne(id: number) {
-    const data: any = this.db.post.findUnique({
+    const data: any = await this.db.post.findUnique({
       where: { id },
       select: {
         id: true, text: true, date: true, imageId: true,
@@ -101,7 +100,8 @@ export class PostsService {
         tags: true
       }
     });
-    data.map(e => e.tags = e.tags.map(e => e.name));
+    if (!data) throw new NotFoundException(`Post with id: ${id} not found`);
+    data.tags = data.tags.map(e => e.name);
 
     return data;
   }

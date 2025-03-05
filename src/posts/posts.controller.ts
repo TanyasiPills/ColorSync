@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, ParseIntPipe, HttpCode, NotFoundException, Query, UseInterceptors, UploadedFile, Request } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -55,9 +55,10 @@ export class PostsController {
       createPostDto.imageId = image.id;
       uploaded = true;
     }
-
+  
     return await this.postService.create(createPostDto, req.user.id, uploaded);
   }
+
 
   /**
    * Returns all of the posts
@@ -80,14 +81,17 @@ export class PostsController {
    * @param offset The lastId from the previous request
    * @returns {data: PostResponse[], offset: number} The id of the last post and the data of the posts
    */
+  @ApiQuery({ name: 'q', description: 'The text to search for', required: false })
   @ApiQuery({ name: 'tags', description: 'The tags to search for', required: false })
   @ApiQuery({ name: 'offset', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
+  @ApiQuery({ name: 'imageOnly', description: 'Only imageid and id is returned, default is 1', required: false })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
   @Get('search') 
   search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1") {
     if (!tags) tags = [];
     else if (!Array.isArray(tags)) tags = [tags];
+    console.log(tags);
     return this.postService.search(tags, q, take, offset, imageOnly == '1');
   }
 
@@ -113,10 +117,8 @@ export class PostsController {
   @ApiResponse({ status: 200, description: 'Returns the post', type: PostIncludesType })
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    const result = await this.postService.findOne(id);
-    if (result) return result;
-    else throw new NotFoundException(`Post with id: ${id} not found`)
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.postService.findOne(id);
   }
 
 

@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { Transform } from "class-transformer";
+import { IsArray, IsInt, IsOptional, isString, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreatePostDto {
   @IsOptional()
@@ -14,6 +15,16 @@ export class CreatePostDto {
   @ApiProperty({ type: 'string', description: 'The text of the post', example: 'Hello!' })
   text: string;
 
+  @Transform(({ value }) => {
+    try {
+      console.log(isString(value));
+      console.log(value);
+      console.log(JSON.parse(value));
+      return isString(value) ? JSON.parse(value) : value;
+    } catch {
+      return value;
+    }
+  })
   @IsArray()
   @IsString({each: true})
   @IsOptional()
