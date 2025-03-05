@@ -10,9 +10,9 @@ export class Texture {
     }
 
     public init(path: string): void;
-    public init(width: number, height: number): void;
+    public init(width: number, height: number, transparent: number): void;
 
-    public init(arg1: string | number, arg2?: number): void {
+    public init(arg1: string | number, arg2?: number, arg3?: number): void {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -46,7 +46,7 @@ export class Texture {
     
             const data = new Uint8Array(this.width * this.height * 4);
             for (let i = 0; i < data.length; i++) {
-                data[i] = (i + 1) % 4 === 0 ? 255 : 100;
+                data[i] = (i + 1) % 4 === 0 ? ((arg3)? 0 : 255): 100;
             }
     
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);

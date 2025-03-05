@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Render } from "./Render";
 
 export function useColorWheel() {
     const colorWheelRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,10 +31,6 @@ export function useColorWheel() {
         };
 
         window.addEventListener("mouseup", handleMouseUp);
-
-        return () => {
-            window.removeEventListener("mouseup", handleMouseUp);
-        };
     }, []);
 
     const handleMouseDownC = () => {
@@ -164,7 +161,53 @@ export function useColorWheel() {
     return { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos };
 }
 
-export function Render() {
-    
-}
+export class useRender {
+    private prevCursorPos: [number, number] = [0, 0];
+    private GlCursorPos: [number, number] = [0, 0];
+    private render!: Render;
+    private screenW!: number;
+    private screenH!: number;
+    private offset: [number, number] = [0, 0];
+    private windowOffset: [number, number] = [0, 0];
 
+    private canvasRef = useRef<HTMLCanvasElement | null>(null);
+    private mouseIn!: boolean;
+
+    private mousedown: boolean = false;
+    private moveCanvas: boolean = false;
+    private scale: number = 1.0;
+    private yRatio: number = 1.0;
+    private originalSizeX: number = 1.0;
+    private originalSizeY: number = 1.0;
+
+    constructor() {
+        let canvas: HTMLCanvasElement;
+        if (this.canvasRef.current) {
+            canvas = this.canvasRef.current;
+        }
+        
+        if (this.canvasRef.current) {
+            this.canvasRef.current.addEventListener("mouseenter", () => {
+                this.mouseIn = true;
+            });
+            this.canvasRef.current.addEventListener("mouseleave", () => {
+                this.mouseIn = false;
+            });
+            if (!this.mouseIn) return;
+            this.canvasRef.current.addEventListener("wheel", (event) =>{
+                if (event.deltaY > 0) {
+                    this.offset[0] -= (this.GlCursorPos[0] - this.offset[0]) * 0.25;
+                    this.offset[1] -= (this.GlCursorPos[1] - this.offset[1]) * 0.25;
+                    this.render.zoom(1.25, this.offset);
+                }
+                else if(event.deltaY < 0){
+                    this.offset[0] += (this.GlCursorPos[0] - this.offset[0]) * 0.2;
+                    this.offset[1] += (this.GlCursorPos[1] - this.offset[1]) * 0.2;
+                    this.render.zoom(0.8, this.offset);
+                }
+            })
+
+        }
+
+    }
+}

@@ -1,20 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
 import "./WebGlCanvas.css"
 import { useColorWheel } from "./CallBack";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Render } from "./Render";
 
 const WebGLCanvas: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
-  const sizeRef = useRef<HTMLInputElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos } = useColorWheel();
-  const canvas = canvasRef.current;
+  const {  } = useReducer;
+  
 
   useEffect(() => {
     drawColorWheel();
     drawColorColumn();
+    const canvas = canvasRef.current;
     const curCol = document.getElementById("currentColor");
     if (curCol) {
       curCol.style.backgroundColor = RGBColor;
@@ -65,10 +67,10 @@ const WebGLCanvas: React.FC = () => {
 
     gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aVertexPosition);
-
-      canvas.addEventListener("mouseenter", () => {
+*/
+    canvas.addEventListener("mouseenter", () => {
       canvas.style.cursor = "none";
-    })*/
+    })
     canvas.addEventListener("mouseleave", () => {
       canvas.style.cursor = "default";
     });
