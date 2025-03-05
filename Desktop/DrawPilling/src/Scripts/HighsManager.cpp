@@ -48,6 +48,8 @@ void HManager::InitUser()
 					auto* textureQueue = SocialMedia::GetTextureQueue();
 					textureQueue->push(std::make_tuple(imageData, 0, 3));
 				}
+				result = HManager::Request("users/likes", "", GET);
+				if(!result.is_null() && !result.empty())for (auto& item : result) runtime.liked.insert((int)item);
 			}
 		}
 		catch (const std::exception& e) {
@@ -242,9 +244,9 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 nlohmann::json HManager::Request(std::string query, std::string body, Method method)
 {
 	CURL* curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	if (curl) {
 		std::string url = "http://" +runtime.ip+":3000/" + query;
+		std::cout << "URL: " << url << std::endl;
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
@@ -262,7 +264,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 
 
 		if (method == GET) {
-			curl_easy_setopt(curl, CURLOPT_HTTPGET, 10L);
+			curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 		}
 		else if (method == DEL) {
 			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -275,9 +277,11 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 			{
 				curl_easy_setopt(curl, CURLOPT_POST, 1L);
 			}
-			if (body.empty()) std::cerr << "Post/Patch sent with no body" << std::endl;
-
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+			if (body.empty()) {
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{}");
+				std::cerr << "Post/Patch sent with no body" << std::endl;
+			}
+			else curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
 		}
 
 
@@ -285,8 +289,10 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+		curl_slist_free_all(headers);
+		curl_easy_cleanup(curl);
 
-		if (http_code != 200 && http_code != 201)
+		if (http_code != 200 && http_code != 201 && http_code != 204)
 		{
 			std::cerr << "Get voided bitch" << std::endl;
 			return nullptr;
@@ -297,19 +303,25 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		} 
 		else {
 			try {
-				nlohmann::json jsonResponse = nlohmann::json::parse(result);
-				if (!jsonResponse.empty()) {
-					return jsonResponse;
+				if (result.empty()) {
+					std::cerr << "Response body is empty" << std::endl;
+					return nlohmann::json{};
 				}
 				else {
-					std::cerr << "JSON array is empty" << std::endl;
+					nlohmann::json jsonResponse = nlohmann::json::parse(result);
+					if (!jsonResponse.empty()) {
+						return jsonResponse;
+					}
+					else {
+						std::cerr << "JSON array is empty" << std::endl;
+						return nullptr;
+					}
 				}
 			}
 			catch (const nlohmann::json::exception& e) {
 				std::cerr << "Error parsing JSON: " << e.what() << std::endl;
 			}
 		}
-		curl_easy_cleanup(curl);
 	}
 	else {
 		std::cerr << "HManager isn't initialized" << std::endl;

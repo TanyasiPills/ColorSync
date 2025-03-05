@@ -18,6 +18,7 @@ struct Post
 	int userId;
 	int imageId;
 	int size = 0;
+	int likes = 0;
 	GLuint image = -1;
 	float ratio;
 	std::string text;
@@ -27,6 +28,8 @@ struct Post
 	bool picLoaded = false;
 	bool allLoaded = false;
 	bool openComments = true;
+	bool needChange = true;
+	bool liked = false;
 };
 
 struct User

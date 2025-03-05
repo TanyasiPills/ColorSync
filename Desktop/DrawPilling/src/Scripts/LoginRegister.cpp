@@ -53,6 +53,9 @@ void LoginRegister::Login(bool& loginWindow)
                     float ratioStuff = 0.0f;
                     runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
                     ImGui::CloseCurrentPopup();
+
+                    res = HManager::Request("users/likes","", GET);
+                    if (!res.is_null() && !result.empty())for (auto& item : result) runtime.liked.insert((int)item);
                 }
             }
             Lss::End();

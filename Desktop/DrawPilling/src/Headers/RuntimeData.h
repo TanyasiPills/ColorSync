@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <unordered_set>
 #include "GLEW/glew.h"
 
 class RuntimeData
@@ -25,4 +26,6 @@ public:
     GLuint pfpTexture = 0;
 
     int undoCount = 30;
+
+    std::unordered_set<int> liked;
 };
