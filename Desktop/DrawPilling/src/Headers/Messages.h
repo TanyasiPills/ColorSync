@@ -36,3 +36,9 @@ struct NodeRenameMessage : public Message {
 	std::string name;
 	int location;
 };
+
+struct NodeUserMoveMessage : public Message {
+	std::string name;
+	int profileId;
+	Position position;
+};

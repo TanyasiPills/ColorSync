@@ -233,6 +233,27 @@ void SManager::SendAction(Message& dataIn)
                 std::cerr << "bad data type: not NodeMessage" << std::endl;
             }
             break;
+        case Move:
+            try {
+                NodeUserMoveMessage* node = dynamic_cast<NodeUserMoveMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(Move);
+                data->get_map()["profileId"] = sio::int_message::create(node->profileId);
+                try {
+                    sio::message::ptr positionObj = sio::object_message::create();
+
+                    positionObj->get_map()["x"] = sio::double_message::create(node->position.x);
+                    positionObj->get_map()["y"] = sio::double_message::create(node->position.y);
+
+                    data->get_map()["position"] = positionObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing user position JSON" << std::endl;
+                }
+            }
+            catch (...) {
+                std::cerr << "bad data type: not NodeMessage" << std::endl;
+            }
+            break;
         default:
             break;
     }

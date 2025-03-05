@@ -14,7 +14,7 @@ static float windowOffset[2] = {0,0};
 bool mouseDown = false, moveCanvas = false;
 static float scale = 1.0;
 float yRatio = 1.0;
-int originalSizeX = 1.0, originalSizeY = 1.0;
+float originalSizeX = 1.0, originalSizeY = 1.0;
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
