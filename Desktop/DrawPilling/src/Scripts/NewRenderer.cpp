@@ -39,6 +39,7 @@ float offset[2] = {0,0};
 float cursorScale[3] = {1.0,1.0, 1};
 float identityOffset[2] = {0,0};
 float prevPos[2] = { 0,0 };
+float prevPrevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
 
 std::vector<Position> drawPositions;
@@ -177,20 +178,24 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 			dx *= canvasSize[0];
 			dy *= canvasSize[1];
 			float distance = std::sqrt(dx * dx + dy * dy);
-			int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
-			if (num_samples < 1) num_samples = 100;
+
+			int num_samples = (distance * 10 < 10) ? 10 : (distance * 10 > 100) ? 100 : static_cast<int>(distance * 10);
 
 			for (int i = 0; i < num_samples; ++i) {
 				float t = static_cast<float>(i) / num_samples;
-				float vx = prevPos[0] * (1 - t) + pos[0] * t;
-				float vy = prevPos[1] * (1 - t) + pos[1] * t;
+
+				float vx = (1 - t) * prevPos[0] + t * pos[0];
+				float vy = (1 - t) * prevPos[1] + t * pos[1];
+
+
+				//drawPositions.push_back(Position(vx, vy));
+
 				float tmp[2] = { vx, vy };
-
-				drawPositions.push_back(Position(vx, vy));
-
 				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
 				Draw(cursor);
 			}
+			prevPrevPos[0] = prevPos[0];
+			prevPrevPos[1] = prevPos[1];
 			prevPos[0] = pos[0];
 			prevPos[1] = pos[1];
 			}break;

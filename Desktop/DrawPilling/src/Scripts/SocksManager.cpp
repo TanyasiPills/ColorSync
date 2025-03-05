@@ -123,6 +123,20 @@ void SManager::OnAction(sio::event& ev) {
                 std::cerr << "Error recieving RenameNodeMessage" << std::endl;
             }
             break;
+        case Move:
+            try {
+                UserMoveMessage message;
+                message.name = data["name"]->get_string();
+                message.profileId = data["profileId"]->get_int();
+                std::map<std::string, sio::message::ptr> position = data["position"]->get_map();
+                message.position.x = position["x"]->get_double();
+                message.position.y = position["y"]->get_double();
+                rendererSocks->usersToMove[message.profileId] = message;
+            }
+            catch (...) {
+                std::cerr << "Error recieving MoveUserMessage" << std::endl;
+            }
+            break;
         default:
             break;
     }
@@ -235,7 +249,7 @@ void SManager::SendAction(Message& dataIn)
             break;
         case Move:
             try {
-                NodeUserMoveMessage* node = dynamic_cast<NodeUserMoveMessage*>(&dataIn);
+                UserMoveMessage* node = dynamic_cast<UserMoveMessage*>(&dataIn);
                 msg->get_map()["type"] = sio::int_message::create(Move);
                 data->get_map()["profileId"] = sio::int_message::create(node->profileId);
                 try {
