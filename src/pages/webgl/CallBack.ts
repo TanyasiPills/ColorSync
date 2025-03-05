@@ -164,3 +164,7 @@ export function useColorWheel() {
     return { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos };
 }
 
+export function Render() {
+    
+}
+
