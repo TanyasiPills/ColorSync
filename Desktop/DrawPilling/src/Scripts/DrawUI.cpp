@@ -56,6 +56,15 @@ void DrawUI::InitData()
 	}
 }
 
+static float color[3] = { 0.0f, 0.0f, 0.0f };
+
+void DrawUI::SetColor(float* colorIn)
+{
+	color[0] = colorIn[0];
+	color[1] = colorIn[1];
+	color[2] = colorIn[2];
+}
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
 
@@ -63,7 +72,6 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-	static float color[3] = { 0.0f, 0.0f, 0.0f };
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
 	ImGui::SetNextItemWidth(-1);
@@ -159,6 +167,7 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 					}
 				}
 				selectedBrush[y][x] ^= 1;
+				renderer->tool = 4 * y + x;
 			}
 			ImGui::PopID();
 		}

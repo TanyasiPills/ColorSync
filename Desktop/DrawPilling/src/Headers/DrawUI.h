@@ -30,5 +30,7 @@ public:
     static std::string GetToken();
     static std::string GetIp();
 
+    static void SetColor(float* colorIn);
+
     static void SetRenderer(NewRenderer& renderer);
 };

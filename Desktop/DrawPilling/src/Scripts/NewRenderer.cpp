@@ -47,8 +47,6 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
-int tool = 0;
-
 bool FileExists(const char* filename) {
 	FILE* file = fopen(filename, "r");
 	if (file) {
@@ -57,7 +55,6 @@ bool FileExists(const char* filename) {
 	}
 	return false;
 }
-
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
 {
@@ -157,6 +154,9 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 
 void NewRenderer::LoadPrevCursor(float* prevIn)
 {
+	prevPrevPos[0] = prevIn[0];
+	prevPrevPos[1] = prevIn[1];
+
 	prevPos[0] = prevIn[0];
 	prevPos[1] = prevIn[1];
 }
@@ -172,7 +172,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		float* pos = Callback::GlCursorPosition();
 		switch (tool)
 		{
-		case 0: {
+		case 0: { // draw
 			float dx = pos[0] - prevPos[0];
 			float dy = pos[1] - prevPos[1];
 			dx *= canvasSize[0];
@@ -181,12 +181,14 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 
 			int num_samples = (distance * 10 < 10) ? 10 : (distance * 10 > 100) ? 100 : static_cast<int>(distance * 10);
 
+			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
+			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
+
 			for (int i = 0; i < num_samples; ++i) {
 				float t = static_cast<float>(i) / num_samples;
 
-				float vx = (1 - t) * prevPos[0] + t * pos[0];
-				float vy = (1 - t) * prevPos[1] + t * pos[1];
-
+				float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
+				float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
 
 				//drawPositions.push_back(Position(vx, vy));
 
@@ -198,11 +200,38 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 			prevPrevPos[1] = prevPos[1];
 			prevPos[0] = pos[0];
 			prevPos[1] = pos[1];
-			}break;
-		case 1: {
+		} break;
+		case 1: { // fill
 			ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
 			NewDraw::Fill(layerPtr, pos[0], pos[1], colorIn);
-		}break;
+		} break;
+		case 2: { // colorpicker[0]
+			int pixelX = static_cast<int>((pos[0]) / canvasRatio[0] * canvasSize[0]);
+			int pixelY = static_cast<int>((pos[1]) / canvasRatio[1] * canvasSize[0]);
+
+			unsigned char pixelColor[4];
+			glReadPixels(pixelX, pixelY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
+
+			ImVec4 pickedColor(pixelColor[0] / 255.0f,
+				pixelColor[1] / 255.0f,
+				pixelColor[2] / 255.0f,
+				pixelColor[3] / 255.0f);
+
+			color[0] = pickedColor.x;
+			color[1] = pickedColor.y;
+			color[2] = pickedColor.z;
+
+			unsigned char whiteColor[4] = { 255, 255, 255, 255 };
+
+			glRasterPos2i(pixelX, pixelY);
+			glDrawPixels(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteColor);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			DrawUI::SetColor(color);
+		} break;
+		case 3: { // erase
+
+		} break;
 		default:
 			break;
 		}

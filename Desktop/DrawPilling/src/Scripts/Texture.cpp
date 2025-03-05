@@ -60,7 +60,7 @@ void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn, int transpar
 			data[i] = 100;
 		}
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	delete[] data;
 
 	glBindTexture(GL_TEXTURE_2D, 0);

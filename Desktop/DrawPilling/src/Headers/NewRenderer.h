@@ -82,6 +82,7 @@ public:
 	int nextFreeNodeIndex = 0;
 	int currentFolder = 0;
 	bool isEditor = false;
+	int tool = 0;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
 
