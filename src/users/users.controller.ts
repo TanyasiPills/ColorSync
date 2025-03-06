@@ -111,6 +111,20 @@ export class UsersController {
   }
 
   /**
+   * Get the likes of the user
+   * @returns {number[]} Array of the ids of the posts that the user liked
+   */
+  @ApiBearerAuth()
+  @ApiResponse({status: 200, description: 'Returns the ids of the posts that the user liked', type: [Number], example: [1, 2, 3]})
+  @ApiResponse({status: 401, description: 'Invalid token'})
+
+  @UseGuards(JwtAuthGuard)
+  @Get('likes')
+  getLikes(@Request() req: any) {
+    return this.userService.getLikes(req.user.id);
+  }
+
+  /**
    * Gets the profile picture of a specific user
    * @param id Id of the user
    * @returns Image file
@@ -142,6 +156,7 @@ export class UsersController {
   getLoggedIn(@Request() req: any) {
     return this.userService.getLoggedIn(req.user.id);
   }
+
 
   /**
    * Searches for a user

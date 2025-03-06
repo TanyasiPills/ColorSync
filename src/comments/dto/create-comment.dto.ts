@@ -2,7 +2,7 @@ import { IsInt, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreateCommentDto {
     @IsInt()
-    @Min(0)
+    @Min(1)
     postId: number;
 
     @IsString()

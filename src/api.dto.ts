@@ -94,6 +94,11 @@ export class PostBaseType {
   @IsArray()
   @IsString({ each: true })
   tags: string[];
+
+  @ApiProperty({ description: 'The number of likes on the post', example: 10 })
+  @IsInt()
+  @IsPositive()
+  likes: number;
 }
 
 export class PostIncludesType {
@@ -128,6 +133,11 @@ export class PostIncludesType {
   @ApiProperty({ description: 'The comments on the post', examples: [[{ id: 1, text: 'Hello, Bob', date: '2025-02-09T16:30:16.262Z', userId: 2, user: { username: 'William' } }], []] })
   @IsArray()
   comments: CommentType[];
+
+  @ApiProperty({ description: 'The number of likes on the post', example: 10 })
+  @IsInt()
+  @IsPositive()
+  likes: number;
 }
 
 export class CommentType {

@@ -24,6 +24,8 @@ model User {
   images Image[]
   comments Comment[]
   tokens Token[]
+
+  likes Post[] @relation("LikedPosts")
 }
 
 model Post {
@@ -35,6 +37,9 @@ model Post {
   text String @db.VarChar(500)
   date DateTime @default(now())
   imageForPost Boolean @default(false)
+  likes Int @default(0)
+
+  likedBy User[] @relation("LikedPosts")
   tags Tag[]
 
   comments Comment[]

@@ -16,7 +16,7 @@ export class CommentsController {
    * @param createCommentDto The data required to create the comment
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: "Successfully created", type: CommentType})
+  @ApiResponse({status: 200, description: "Successfully created", schema: {type: 'object', properties: {id: {type: 'number'}}, example: {id: 1}}})
   @ApiResponse({status: 401, description: "Invalid token"})
 
   @UseGuards(JwtAuthGuard)

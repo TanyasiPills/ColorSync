@@ -29,6 +29,13 @@ export class UsersService {
     }
   }
 
+  async getLikes(id: number) {
+    const res = await this.db.user.findUnique({where: {id}, select: {likes: true}});
+    if (!res) return [];
+    const likes = res.likes.map(e => e.id);
+    return likes;
+  }
+
   async upload(file: Express.Multer.File, id: number) {
     const user = await this.db.user.findUnique({where: {id}});
     if (!user) {

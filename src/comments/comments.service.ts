@@ -8,7 +8,7 @@ export class CommentsService {
   constructor(private readonly db: PrismaService) { }
 
   create(createCommentDto: CreateCommentDto, userId: number) {
-    return this.db.comment.create({ data: { ...createCommentDto, userId }, select: { id: true, text: true, date: true, user: { select: { username: true, id: true } }}});
+    return this.db.comment.create({ data: { ...createCommentDto, userId }, select: { id: true } });
   }
 
   async findAllOnPost(postId: number) {
@@ -40,7 +40,7 @@ export class CommentsService {
 
   async update(id: number, updateCommentDto: UpdateCommentDto, userId: number) {
     try {
-      return await this.db.comment.update({ where: { id, userId }, data: updateCommentDto, select: {id: true, text: true, date: true, user: { select: { username: true, id: true } }} });
+      return await this.db.comment.update({ where: { id, userId }, data: updateCommentDto, select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } } });
     } catch {
       throw new NotFoundException(`A post with id: ${id} not found for user: ${userId}`);
     }

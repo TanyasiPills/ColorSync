@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -53,7 +53,7 @@ export class PostsService {
       id: true, imageId: true
     };
     else selectBody = {
-      id: true, text: true, date: true, imageId: true,
+      id: true, text: true, date: true, imageId: true, likes: true,
       user: { select: { username: true, id: true } },
       comments: {
         select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } }
@@ -65,7 +65,9 @@ export class PostsService {
       select: selectBody
     })));
     if (!result || result.length == 0) return { data: [], offset: null };
-    if (!imageOnly) result.map(e => e.tags = e.tags.map(e => e.name));
+    if (!imageOnly) {
+      result.map(e => e.tags = e.tags.map(e => e.name));
+    }
     else result = result.filter(e => e.imageId);
     return { data: result, offset: parsedOffset + result.length };
   }
@@ -75,7 +77,7 @@ export class PostsService {
       where: { userId: id },
       orderBy: { date: 'desc' },
       select: {
-        id: true, text: true, date: true, imageId: true,
+        id: true, text: true, date: true, imageId: true, likes: true,
         user: { select: { username: true, id: true } },
         comments: {
           select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
@@ -92,7 +94,7 @@ export class PostsService {
     const data: any = await this.db.post.findUnique({
       where: { id },
       select: {
-        id: true, text: true, date: true, imageId: true,
+        id: true, text: true, date: true, imageId: true, likes: true,
         user: { select: { username: true, id: true } },
         comments: {
           select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } },
@@ -153,4 +155,21 @@ export class PostsService {
       return false;
     }
   }
+
+  async like(id: number, userId: number) {
+    const post = await this.db.post.findUnique({ where: { id }, select: { id: true, likedBy: { select: { id: true } } } });
+    if (!post) throw new NotFoundException(`Post with id: ${id} not found`);
+    if (post.likedBy.find(e => e.id == userId)) {
+      await this.db.post.update({
+        where: { id },
+        data: { likedBy: { disconnect: { id: userId } }, likes: { decrement: 1 } }
+      });
+    } else {
+      await this.db.post.update({
+        where: { id },
+        data: { likedBy: { connect: { id: userId } }, likes: { increment: 1 } }
+      });
+    }
+  }
+
 }

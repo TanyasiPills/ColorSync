@@ -9,6 +9,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ImagesService } from 'src/images/images.service';
+import { OptionalAuthGuard } from 'src/auth/optional.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -69,9 +70,10 @@ export class PostsController {
   @ApiQuery({ name: 'offset', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
+  
   @Get()
   findAll(@Query('take') take: string, @Query('offset') offset: string) {
-    return this.postService.search(null, null, take, offset);
+    return this.postService.search(null, null, take, offset, false);
   }
 
   /**
@@ -87,11 +89,11 @@ export class PostsController {
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
   @ApiQuery({ name: 'imageOnly', description: 'Only imageid and id is returned, default is 1', required: false })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
+
   @Get('search') 
-  search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1") {
+  search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1", @Req() req: any) {
     if (!tags) tags = [];
     else if (!Array.isArray(tags)) tags = [tags];
-    console.log(tags);
     return this.postService.search(tags, q, take, offset, imageOnly == '1');
   }
 
@@ -102,6 +104,7 @@ export class PostsController {
    */
   @ApiParam({ name: 'id', description: 'The id of the user' })
   @ApiResponse({ status: 200, description: 'Returns the posts', type: PostIncludesType, isArray: true })
+
   @Get('user/:id')
   findByUser(@Param('id', ParseIntPipe) id: number) {
     return this.postService.findByUser(id);
@@ -117,7 +120,7 @@ export class PostsController {
   @ApiResponse({ status: 200, description: 'Returns the post', type: PostIncludesType })
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.postService.findOne(id);
   }
 
@@ -159,5 +162,24 @@ export class PostsController {
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     const result = await this.postService.remove(id, req.user.id);
     if (!result) throw new NotFoundException(`A post doesn't exist with id: ${id} that the user can delete`)
+  }
+
+
+  /**
+   * Like a post
+   * @param id the id of the post
+   * @returns
+   */
+  @ApiResponse({ status: 204, description: 'The post was successfully liked' })
+  @ApiResponse({ status: 401, description: 'Invalid token' })
+  @ApiResponse({ status: 404, description: 'There is no post with that id' })
+  @ApiParam({ name: 'id', description: 'The id of the post' })
+  @ApiBearerAuth()
+  
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  @Post('like/:id')
+  async like(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    await this.postService.like(id, req.user.id);
   }
 }
