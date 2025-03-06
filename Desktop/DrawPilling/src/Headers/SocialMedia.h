@@ -40,6 +40,7 @@ public:
 	static void SearchPage(float& width, float& height);
 	static void SearchStuff(const char* searchText);
 	static void GetPostForSearch(const int& postId);
+	static void RoomPage(float& width, float& height);
 
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();

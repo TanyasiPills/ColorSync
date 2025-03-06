@@ -27,7 +27,7 @@ struct Post
 	std::vector<std::string> tags;
 	bool picLoaded = false;
 	bool allLoaded = false;
-	bool openComments = true;
+	bool openComments = false;
 	bool needChange = true;
 	bool liked = false;
 };

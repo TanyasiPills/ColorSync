@@ -281,71 +281,144 @@ void SocialMedia::MainPage(float& width, float& height)
         bool needChange = false;
         int validWidth = width * 0.6f;
         std::string id = std::to_string(post.id);
-        Lss::Child("##" + id, ImVec2(validWidth, 200*Lss::VH), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            /*
-            if (post.needChange) {
-                startY = ImGui::GetCursorPosY();
-                needChange = true;
-            }*/
+        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        
+        if (post.needChange) {
+            startY = ImGui::GetCursorPosY();
+            needChange = true;
+        }
 
-            Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
 
+        ImGui::SameLine();
+        Lss::Top(2 * Lss::VH);
+        Lss::Text(users[post.userId].username, 4 * Lss::VH);
+
+        Lss::Left(3.5f * Lss::VH);
+        Lss::Text(post.text, 4 * Lss::VH);
+
+        float good = validWidth * 0.9f;
+        ImVec2 faki(good, good * post.ratio);
+        Lss::Image(post.image, faki, Centered);
+
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        Lss::Left(3.5f * Lss::VH);
+        for (const auto& tags : post.tags)
+        {
+            Lss::SetFontSize(3 * Lss::VH);
+            Lss::SetColor(ContainerBackground, Background);
+            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+            Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+            Lss::End();
+            ImGui::EndChild();
+            Lss::SetColor(ContainerBackground, ContainerBackground);
             ImGui::SameLine();
-            Lss::Top(2 * Lss::VH);
-            Lss::Text(users[post.userId].username, 4 * Lss::VH);
+        }
+        ImGui::NewLine();
+        ImGui::PopStyleVar();
 
-            Lss::Left(3.5f * Lss::VH);
-            Lss::Text(post.text, 4 * Lss::VH);
+        bool contains = (runtime.liked.find(post.id) != runtime.liked.end());
+        if (contains) Lss::SetColor(LowHighlight, Border);
+        if (Lss::Button("Like", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH)) {
+            if (contains) {
+                runtime.liked.erase(post.id);
+                post.likes--;
+            }
+            else {
+                runtime.liked.insert(post.id);
+                post.likes++;
+            }
+            nlohmann::json jsonData;
+            jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
+            if (jsonData.is_null()) {
+                std::cout << "couldn't post like" << std::endl;
+            }
+        }
+        if (contains) Lss::SetColor(LowHighlight, LowHighlight);
 
-            float good = validWidth * 0.9f;
-            ImVec2 faki(good, good * post.ratio);
-            Lss::Image(post.image, faki, Centered);
+        Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
 
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-            Lss::Left(3.5f * Lss::VH);
-			for (const auto& tags : post.tags)
-			{
-				Lss::SetFontSize(3 * Lss::VH);
-				Lss::SetColor(ContainerBackground, Background);
-				float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
-				Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
-				Lss::Text("#" + tags, 3 * Lss::VH, Centered);
-                Lss::End();
-                ImGui::EndChild();
-                Lss::SetColor(ContainerBackground, ContainerBackground);
-                ImGui::SameLine();
-			}
-            ImGui::NewLine();
-            ImGui::PopStyleVar();
-
-            bool contains = (runtime.liked.find(post.id) != runtime.liked.end());
-            if (contains) Lss::SetColor(LowHighlight, Font);
-            if (Lss::Button("Like", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH)) {
-                if (contains) {
-                    runtime.liked.erase(post.id);
-                    post.likes--;
-                }
-                else {
-                    runtime.liked.insert(post.id);
-                    post.likes++;
-                }
+        if (post.openComments) Lss::SetColor(LowHighlight, Border);
+        if (Lss::Button("Comment", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH, SameLine))
+        {
+            post.openComments = !post.openComments;
+            post.needChange = true;
+        }
+        if (post.openComments) {
+            static char text[256];
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(validWidth, 4 * Lss::VH), Centered, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
                 nlohmann::json jsonData;
-                jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
-                if (jsonData.is_null()) {
-                    std::cout << "couldn't post like" << std::endl;
+                jsonData["postId"] = post.id;
+                jsonData["text"] = text;
+                nlohmann::json result = HManager::Request("comments", jsonData.dump(), POST);
+                if (result.is_null()) std::cout << "couldn't send comment\n";
+                else {
+                    Comment myComment;
+                    myComment.time = std::chrono::system_clock::now();
+                    myComment.text = text;
+                    myComment.id = result["id"];
+                    myComment.userId = runtime.id;
+                    post.comments.emplace_back(myComment);
                 }
+            }
+        }
+        if (post.openComments) {
+            if (!post.comments.empty()) {
+                ImVec2 commentChildSize;
+                if (post.comments.size() == 1) {
+                    commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                }
+                else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
+                ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
+
+                for (Comment& comment : post.comments)
+                {
+                    if (!users[comment.userId].pPicLoaded) continue;
+
+                    Lss::SetColor(ContainerBackground, Background);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+
+                    std::string name = std::to_string(comment.id);
+                    Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+
+                    Lss::LeftTop(Lss::VH, Lss::VH);
+                    Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
+
+                    ImGui::SameLine();
+                    Lss::Top(Lss::VH);
+                    Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+
+                    Lss::Left(7 * Lss::VH);
+                    Lss::Text(comment.text, 3 * Lss::VH);
+
+                    Lss::End();
+
+                    ImGui::EndChild();
+
+                    ImGui::PopStyleVar(1);
+                    Lss::SetColor(ContainerBackground, ContainerBackground);
+
+                    if (post.comments[post.comments.size() - 1].id != comment.id) {
+                        Lss::Top(Lss::VH);
+                    }
+                }
+
+                Lss::End();
+
+                ImGui::EndChild();
             }
             Lss::SetColor(LowHighlight, LowHighlight);
-
-            Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
-
-            if (Lss::Button("Comment", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH, SameLine))
-            {
-                post.openComments = !post.openComments;
-            }
-
-            Lss::End();
+        }
+        if (post.needChange && needChange) {
+            endY = ImGui::GetCursorPosY();
+            post.size = endY - startY;
+            post.needChange = false;
+        }
+        Lss::End();
         ImGui::EndChild();
 
         ImGui::Separator();
@@ -946,6 +1019,26 @@ void SocialMedia::SearchPage(float& width, float& height)
     }
 }
 
+void SocialMedia::RoomPage(float& width, float& height)
+{
+    
+}
+
+void RoomsRequest()
+{
+    nlohmann::json result = HManager::Request("rooms", "", GET);
+    if (result.is_null()) std::cerr << "Can't get rooms\n";
+    for (auto& item : result) {
+        Room roome;
+        roome.roomName = item["name"];
+        roome.ownerName = item["owner"]["username"];
+        roome.userCount = item["playerCount"];
+        roome.capacity = item["maxPlayers"];
+        roome.password = item["passwordRequired"];
+        rooms.emplace_back(roome);
+    }
+}
+
 void SocialMedia::MainFeed(float position, float width, float height)
 {
     ImGui::GetStyle().WindowBorderSize = 0.0f;
@@ -966,6 +1059,10 @@ void SocialMedia::MainFeed(float position, float width, float height)
         } break;
     case 3: { //view profile, add images
         ProfilePage(width, height, runtime.id);
+        } break;
+    case 4: {
+        RoomsRequest();
+        RoomPage(width, height);
         } break;
     default:
         break;
@@ -993,8 +1090,9 @@ void SocialMedia::LeftSide(float position, float width, float height)
         Callback::EditorSwapCallBack();
     }
     Lss::Top(1 * Lss::VH);
-    if (Lss::Button("Lobbies", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
-        //GetPosts();
+    if (Lss::Button("Rooms", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
+        if (mode != 4) mode = 4;
+        else mode = 0;
     }
     Lss::Top(2 * Lss::VH);
     ImGui::Separator();
@@ -1195,70 +1293,3 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
     std::lock_guard<std::mutex> queueLock(textureQueueMutex);
     textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
 }
-
-/*
-            if (!post.comments.empty())
-            {
-                Lss::SetFontSize(4 * Lss::VH);
-                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
-                if (open != post.openComments && ImGui::IsItemVisible()) {
-                    post.needChange = true;
-                }
-
-                if (open) {
-                    ImDrawList* drawList = ImGui::GetWindowDrawList();
-                    float cornerRadius = 10.0f;
-
-                    ImVec2 commentChildSize;
-                    if (post.comments.size() == 1) {
-                        commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
-                    }
-                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
-
-                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
-
-                        for (Comment& comment : post.comments)
-                        {
-                            if (!users[comment.userId].pPicLoaded) continue;
-
-                            Lss::SetColor(ContainerBackground, Background);
-                            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-
-                            std::string name = std::to_string(comment.id);
-                            Lss::Child(name, ImVec2(0, 11 * Lss::VH));
-
-                                Lss::LeftTop(Lss::VH, Lss::VH);
-                                Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
-
-                                ImGui::SameLine();
-                                Lss::Top(Lss::VH);
-                                Lss::Text(users[comment.userId].username, 4 * Lss::VH);
-
-                                Lss::Left(7 * Lss::VH);
-                                Lss::Text(comment.text, 3 * Lss::VH);
-
-                                Lss::End();
-
-                            ImGui::EndChild();
-
-                            ImGui::PopStyleVar(1);
-                            Lss::SetColor(ContainerBackground, ContainerBackground);
-
-                            if (post.comments[post.comments.size() - 1].id != comment.id) {
-                                Lss::Top(Lss::VH);
-                            }
-                        }
-
-                        Lss::End();
-
-                    ImGui::EndChild();
-                    ImGui::TreePop();
-                }
-            }
-            if (post.needChange && needChange) {
-                endY = ImGui::GetCursorPosY();
-                post.size = endY - startY;
-                post.openComments = !post.openComments;
-                post.needChange = false;
-            }
-            */
