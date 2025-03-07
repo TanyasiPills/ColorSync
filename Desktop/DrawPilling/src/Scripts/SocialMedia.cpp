@@ -1047,8 +1047,79 @@ void SocialMedia::RoomPage(float& width, float& height)
         std::thread(&RoomsRequest).detach();
         needRooms = false;
     }
+    static bool openCreate = false;
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
     ImVec2 valid = ImGui::GetContentRegionAvail();
+    static char searchRoomText[256];
+    Lss::Left(0.05f * valid.x);
+    Lss::InputText("searchRoom", searchRoomText, sizeof(searchRoomText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Rounded);
+    ImGui::SameLine();
+    Lss::Left(0.05f * valid.x);
+    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH))
+    {
+        openCreate = true;
+    }
+
+    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40*Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    {
+        Lss::Text("Create a lobby", 2 * Lss::VH);
+
+        static char nameText[128] = "";
+        static char passwordText[128] = "";
+
+        Lss::Text("Room name: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::InputText("roomName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH), Trans);
+        Lss::LeftTop(7.8f * Lss::VW, -Lss::VH / 2);
+        Lss::Separator(1.0f, 10.2f * Lss::VW, 4);
+
+        Lss::Text("Password: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::InputText("roomPassword", passwordText, sizeof(passwordText), ImVec2(13.4 * Lss::VW, 3 * Lss::VH), Trans);
+        Lss::LeftTop(6.6f * Lss::VW, -Lss::VH / 2);
+        Lss::Separator(1.0f, 11.4 * Lss::VW, 4);
+
+        ImGui::NewLine();
+
+        static int width = 0;
+        static int height = 0;
+
+        Lss::Text("Canvas", 2 * Lss::VH);
+        Lss::Separator();
+        Lss::Text("Width (px): ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Left(8.2f * Lss::VW);
+        Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+        Lss::Text("Height (px): ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Left(7.85f * Lss::VW);
+        Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+     
+
+
+
+        ImVec2 buttonSize = ImVec2(100, 20);
+        ImGui::SetCursorPosY(38*Lss::VH - buttonSize.y - 2 * Lss::VH);
+        if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+        {
+            
+        }
+
+        if (ImGui::IsMouseClicked(0))
+        {
+            ImVec2 pos = ImGui::GetWindowPos();
+            ImVec2 cursorPos = ImGui::GetMousePos();
+            ImVec2 size = ImGui::GetWindowSize();
+            if (!Lss::InBound(cursorPos, pos, size)) {
+                ImGui::CloseCurrentPopup();
+                openCreate = false;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndPopup();
+    }
+
     Lss::SetColor(ContainerBackground, Background);
     for (auto& room : rooms) {
         Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 12.5f * Lss::VH), false, Centered);
