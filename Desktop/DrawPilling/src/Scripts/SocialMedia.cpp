@@ -14,7 +14,11 @@
 
 
 std::vector<Room> friendRooms;
-std::vector<Room> rooms;
+std::vector<Room> rooms = {
+    {"Room A", "Alice", 10, 1, 0, false},
+    {"Room B", "Bob", 8, 2, 0, true},
+    {"Room C", "Charlie", 5, 3, 0, false}
+};
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
@@ -38,6 +42,8 @@ bool loginWindow = false;
 
 bool searched = false;
 bool searchPostOpen = false;
+
+bool needRooms = true;
 
 int searchMode = 0;
 int selectedUser = -1;
@@ -1019,11 +1025,6 @@ void SocialMedia::SearchPage(float& width, float& height)
     }
 }
 
-void SocialMedia::RoomPage(float& width, float& height)
-{
-    
-}
-
 void RoomsRequest()
 {
     nlohmann::json result = HManager::Request("rooms", "", GET);
@@ -1037,6 +1038,27 @@ void RoomsRequest()
         roome.password = item["passwordRequired"];
         rooms.emplace_back(roome);
     }
+}
+
+
+void SocialMedia::RoomPage(float& width, float& height)
+{
+    if (needRooms) {
+        std::thread(&RoomsRequest).detach();
+        needRooms = false;
+    }
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+    ImVec2 valid = ImGui::GetContentRegionAvail();
+    Lss::SetColor(ContainerBackground, Background);
+    for (auto& room : rooms) {
+        Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 10 * Lss::VH), false, Centered);
+        Lss::Text(room.roomName, 4 * Lss::VH);
+        Lss::End();
+        ImGui::EndChild();
+        Lss::Top(Lss::VH);
+    }
+    Lss::SetColor(ContainerBackground, ContainerBackground);
+    ImGui::PopStyleVar();
 }
 
 void SocialMedia::MainFeed(float position, float width, float height)
@@ -1061,7 +1083,6 @@ void SocialMedia::MainFeed(float position, float width, float height)
         ProfilePage(width, height, runtime.id);
         } break;
     case 4: {
-        RoomsRequest();
         RoomPage(width, height);
         } break;
     default:
