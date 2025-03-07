@@ -1051,8 +1051,24 @@ void SocialMedia::RoomPage(float& width, float& height)
     ImVec2 valid = ImGui::GetContentRegionAvail();
     Lss::SetColor(ContainerBackground, Background);
     for (auto& room : rooms) {
-        Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 10 * Lss::VH), false, Centered);
+        Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 12.5f * Lss::VH), false, Centered);
+        Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
         Lss::Text(room.roomName, 4 * Lss::VH);
+        Lss::Top(Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Text(" - " + room.ownerName, 3 * Lss::VH);
+        ImGui::SameLine();
+        float buttonPos = valid.x - 6 * Lss::VW;
+        ImGui::SetCursorPosX(buttonPos);
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Button("Join", ImVec2(5 * Lss::VW, 5 * Lss::VH), 4 * Lss::VH, Rounded);
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Text(std::to_string(room.userCount) + "/" + std::to_string(room.capacity), 4 * Lss::VH);
+        ImGui::SameLine();
+        float lockPos = valid.x - 6 * Lss::VW;
+        ImGui::SetCursorPosX(lockPos);
+        Lss::Text((room.password) ? "Locked" : "", 4 * Lss::VH);
         Lss::End();
         ImGui::EndChild();
         Lss::Top(Lss::VH);
