@@ -47,6 +47,8 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
+bool online = false;
+
 bool FileExists(const char* filename) {
 	FILE* file = fopen(filename, "r");
 	if (file) {
@@ -54,6 +56,14 @@ bool FileExists(const char* filename) {
 		return true;
 	}
 	return false;
+}
+
+void NewRenderer::SetOnline(bool value)
+{
+	online = value;
+}
+bool NewRenderer::GetOnline() {
+	return online;
 }
 
 void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)

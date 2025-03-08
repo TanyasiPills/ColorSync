@@ -106,6 +106,9 @@ public:
 	void AddLayer(std::string name, int location);
 	void AddFolder(std::string name, int location);
 
+	void SetOnline(bool value);
+	bool GetOnline();
+
 	ThreadSafeQueue taskQueue;
 
 

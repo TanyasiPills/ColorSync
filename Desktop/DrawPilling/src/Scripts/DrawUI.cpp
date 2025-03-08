@@ -2,6 +2,7 @@
 #include "HighsManager.h"
 #include "SocksManager.h"
 #include "RuntimeData.h"
+#include "lss.h"
 #include <thread>
 
 //Left side
@@ -29,6 +30,7 @@ int windowSizeX, windowSizeY;
 
 bool inited = false;
 bool needLogin = true;
+bool isOnline = false;
 
 static std::vector<std::string> chatLog;
 
@@ -38,6 +40,8 @@ static RuntimeData& runtime = RuntimeData::getInstance();
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
+	isOnline = renderer->GetOnline();
+	std::cout << "Is online: " << isOnline << std::endl;
 }
 
 void DrawUI::InitData()
@@ -190,46 +194,20 @@ void DrawUI::ServerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
 	ImVec2 windowSize = ImGui::GetWindowSize();
-	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
 
-	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
-	ImGui::SetCursorPos(inputPos);
 
-	ImGui::SetNextItemWidth(120);
-	static char ipInput[100] = "";
-	ImGui::InputTextWithHint("##ipinput", "Ip", ipInput, IM_ARRAYSIZE(ipInput), ImGuiInputTextFlags_CharsNoBlank);
-	ImGui::SameLine();
-	if (ImGui::Button("Set", ImVec2(30, 0))) {
-		runtime.ip = ipInput;
+
+	if (isOnline) {
+		
 	}
-	inputPos.y += 30;
-	ImGui::SetCursorPos(inputPos);
-	// Set the size for input field and position
-	ImGui::SetNextItemWidth(150); // Set input width
-
-	static char lobbyName[100] = "";
-	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
-
-	inputPos.y += 30;
-	ImGui::SetNextItemWidth(100);
-	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
-	ImGui::SetCursorPos(buttonPos);
-
-	if (ImGui::Button("Create") && lobbyName != "") {
-		std::map<std::string, std::string> room;
-		room["name"] = lobbyName;
-		room["create"] = "true";
-		SManager::Connect(("http://"+runtime.ip+":3000").c_str(), runtime.token.c_str(), room);
-	}
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(300);
-	if (ImGui::Button("Join") && lobbyName != "") {
-		std::map<std::string, std::string> room;
-		room["name"] = lobbyName;
-		room["create"] = "false";
-		SManager::Connect(("http://" + runtime.ip + ":3000").c_str(), runtime.token.c_str(), room);
+	else {
+		Lss::SetFontSize(2 * Lss::VH);
+		std::string text = "Wumpus is very sad :c";
+		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
+		ImGui::SetCursorPos(ImVec2(windowSize.x / 2 - textWidth / 2, windowSize.y / 2 - 2 * Lss::VH));
+		Lss::Text(text, 2 * Lss::VH);
+		Lss::End();
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
