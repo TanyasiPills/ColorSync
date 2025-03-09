@@ -29,6 +29,7 @@ int rightMinSize = 200;
 
 
 int windowSizeX, windowSizeY;
+int selectedLayer = -1;
 
 bool inited = false;
 bool canvasInitWindow = true;
@@ -40,6 +41,11 @@ static std::vector<std::string> chatLog;
 static NewRenderer* renderer;
 
 static RuntimeData& runtime = RuntimeData::getInstance();
+
+MyTexture visible;
+MyTexture notVisible;
+MyTexture folderLayer;
+MyTexture layerLayer;
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
@@ -61,6 +67,10 @@ void DrawUI::InitData()
 	if (runtime.password[0] == '\0') {
 		std::cerr << "No password in appdata" << std::endl;
 	}
+	visible.Init("Resources/icons/eyesOpen.png");
+	notVisible.Init("Resources/icons/eyeClosed.png");
+	folderLayer.Init("Resources/icons/folderLayer.png");
+	layerLayer.Init("Resources/icons/layer.png");
 }
 
 static float color[3] = { 0.0f, 0.0f, 0.0f };
@@ -235,10 +245,32 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 			}
 		}
 		else {
-			Lss::Child(std::to_string(folder->id), ImVec2(x, 3 * Lss::VH));
+			Lss::Child(std::to_string(folder->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
+				Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
+				if (folder->visible) Lss::Image(visible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+				else Lss::Image(notVisible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+			Lss::End();
+			ImGui::EndChild();
 
-			ImGui::Checkbox(("##" + std::to_string(folder->id) + "visibility").c_str(), &folder->visible);
-			Lss::Text(folder->name, 2 * Lss::VH, SameLine);
+			if (ImGui::IsItemClicked()) {
+				folder->visible = !folder->visible;
+				std::cout << "heo" << std::endl;
+			}
+
+			ImGui::SameLine();
+			Lss::Left(-0.2 * Lss::VW);
+
+			Lss::Child(std::to_string(folder->id), ImVec2(x - 3 * Lss::VH, 3 * Lss::VH));
+				Lss::SetFontSize(2 * Lss::VH);
+				float validWidth = ImGui::GetContentRegionAvail().x;
+				std::string percent = std::to_string(folder->opacity) + "%%";
+				float textSize = ImGui::CalcTextSize((percent).c_str()).x;
+				Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
+				Lss::Image(folderLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+				ImGui::SameLine();
+				Lss::Text(folder->name, 2 * Lss::VH);
+				ImGui::SetCursorPos(ImVec2(validWidth - textSize - Lss::VW, 0.5f * Lss::VH));
+				Lss::Text(percent, 2 * Lss::VH);
 
 			Lss::End();
 			ImGui::EndChild();
@@ -251,13 +283,43 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 		}
 	}
 	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
-		Lss::Child(std::to_string(layer->id), ImVec2(x, 3 * Lss::VH));
+		if (layer->selected && selectedLayer != layer->id) layer->selected = false;
 
-			ImGui::Checkbox(("##" + std::to_string(layer->id) + "visibility").c_str(), &layer->visible);
-			Lss::Text(layer->name, 2 * Lss::VH, SameLine);
+		if (layer->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
+		Lss::Child(std::to_string(layer->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
+			Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
+			if(layer->visible) Lss::Image(visible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+			else Lss::Image(notVisible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+		Lss::End();
+		ImGui::EndChild();
+		if (ImGui::IsItemClicked()) {
+			layer->visible = !layer->visible;
+			std::cout << "heo" << std::endl;
+		}
+
+		ImGui::SameLine();
+		Lss::Left(-0.2 * Lss::VW);
+
+		Lss::Child(std::to_string(layer->id), ImVec2(x - 3 * Lss::VH, 3 * Lss::VH));
+			Lss::SetFontSize(2 * Lss::VH);
+			float validWidth = ImGui::GetContentRegionAvail().x;
+			std::string percent = std::to_string(layer->opacity) + "%%";
+			float textSize = ImGui::CalcTextSize((percent).c_str()).x;
+			Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
+			Lss::Image(layerLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+			ImGui::SameLine();
+			Lss::Text(layer->name, 2 * Lss::VH);
+			ImGui::SetCursorPos(ImVec2(validWidth-textSize-Lss::VW, 0.5f*Lss::VH));
+			Lss::Text(percent, 2 * Lss::VH);
 
 		Lss::End();
 		ImGui::EndChild();
+
+		if(ImGui::IsItemClicked()) {
+			layer->selected = true;
+			selectedLayer = layer->id;
+		}
+		if (layer->selected) Lss::SetColor(ContainerBackground, ContainerBackground);
 	}
 	return ImGui::GetCursorPos();
 }

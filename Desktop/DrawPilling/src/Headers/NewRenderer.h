@@ -40,7 +40,9 @@ struct Node {
 	std::string name;
 	bool visible = true;
 	bool editing = false;
+	bool selected = false;
 	int id;
+	int opacity = 100;
 
 	Node(const std::string& nodeName, int idIn) : name(nodeName), id(idIn) {}
 	virtual ~Node() = default;

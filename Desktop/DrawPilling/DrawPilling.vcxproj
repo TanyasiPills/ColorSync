@@ -1034,9 +1034,13 @@
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Resources\icons\eyeClosed.png" />
+    <Image Include="Resources\icons\eyesOpen.png" />
     <Image Include="Resources\icons\file.png" />
     <Image Include="Resources\icons\folder.png" />
     <Image Include="Resources\icons\folderFull.png" />
+    <Image Include="Resources\icons\folderLayer.png" />
+    <Image Include="Resources\icons\layer.png" />
     <Image Include="Resources\Textures\circle.png" />
     <Image Include="Resources\Textures\fish.jpg" />
   </ItemGroup>

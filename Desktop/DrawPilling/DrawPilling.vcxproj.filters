@@ -2607,6 +2607,18 @@
     <Image Include="Resources\icons\folderFull.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\icons\eyeClosed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\eyesOpen.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\folderLayer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\layer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />
