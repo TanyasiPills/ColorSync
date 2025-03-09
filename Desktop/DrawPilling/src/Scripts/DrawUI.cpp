@@ -224,6 +224,44 @@ void DrawUI::ServerWindow()
 	}
 }
 
+ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
+	ImGui::SetCursorPos(cursorPos);
+	float x = ImGui::GetContentRegionAvail().x;
+	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
+		if (folder->id == 0) {
+			for (int childId : folder->childrenIds) {
+				Node* childNode = renderer->nodes[childId].get();
+				cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
+			}
+		}
+		else {
+			Lss::Child(std::to_string(folder->id), ImVec2(x, 3 * Lss::VH));
+
+			ImGui::Checkbox(("##" + std::to_string(folder->id) + "visibility").c_str(), &folder->visible);
+			Lss::Text(folder->name, 2 * Lss::VH, SameLine);
+
+			Lss::End();
+			ImGui::EndChild();
+			cursorPos = ImGui::GetCursorPos();
+			cursorPos.x += 2 * Lss::VW;
+			for (int childId : folder->childrenIds) {
+				Node* childNode = renderer->nodes[childId].get();
+				DrawLayerTreeThree(*childNode, cursorPos);
+			}
+		}
+	}
+	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
+		Lss::Child(std::to_string(layer->id), ImVec2(x, 3 * Lss::VH));
+
+			ImGui::Checkbox(("##" + std::to_string(layer->id) + "visibility").c_str(), &layer->visible);
+			Lss::Text(layer->name, 2 * Lss::VH, SameLine);
+
+		Lss::End();
+		ImGui::EndChild();
+	}
+	return ImGui::GetCursorPos();
+}
+
 void DrawLayerTreeTwo(Node& node) {
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 
@@ -322,10 +360,14 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-	Lss::Button("+", ImVec2(Lss::VW, Lss::VH), Lss::VH);
-	Lss::Button("+2", ImVec2(Lss::VW, Lss::VH), Lss::VH, SameLine);
+	Lss::SetFontSize(Lss::VH);
+	Lss::Button("+", ImVec2(Lss::VW, 1.8f*Lss::VH), Lss::VH);
+	Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine);
 	Lss::Top(Lss::VH);
-	DrawLayerTreeTwo(*renderer->nodes[0].get());
+	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+	ImVec2 cursy = ImGui::GetCursorPos();
+	DrawLayerTreeThree(*renderer->nodes[0].get(), cursy);
+	ImGui::PopStyleVar();
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
