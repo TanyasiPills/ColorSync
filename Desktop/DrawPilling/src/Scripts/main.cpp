@@ -24,7 +24,7 @@ int main()
     SManager::SetRenderer(renderer);
 
 
-    renderer.Init(data.window, canvasX, canvasY, data.screenWidth, data.screenHeight);
+    renderer.Init(data.window);
 
 
     while (true)

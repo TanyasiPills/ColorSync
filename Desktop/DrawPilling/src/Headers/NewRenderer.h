@@ -86,7 +86,10 @@ public:
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
 
-	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);
+	bool inited = false;
+
+	void Init(GLFWwindow* windowIn);
+	void SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn);
 	void Draw(const RenderData& data);
 	void Clear();
 	void Render();

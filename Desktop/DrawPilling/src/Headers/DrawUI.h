@@ -21,6 +21,7 @@ public:
     static void ChatWindow();
 
     static void LoginWindow();
+    static void InitWindow();
 
     static void InitData();
 

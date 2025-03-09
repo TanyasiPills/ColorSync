@@ -2,6 +2,8 @@
 #include "HighsManager.h"
 #include "SocksManager.h"
 #include "RuntimeData.h"
+#include "FileExplorer.h"
+#include "CallBacks.h"
 #include "lss.h"
 #include <thread>
 
@@ -29,6 +31,7 @@ int rightMinSize = 200;
 int windowSizeX, windowSizeY;
 
 bool inited = false;
+bool canvasInitWindow = true;
 bool needLogin = true;
 bool isOnline = false;
 
@@ -80,7 +83,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
-	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	if(renderer->inited)cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
 	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
@@ -368,58 +371,70 @@ void DrawUI::ChatWindow()
 	}
 }
 
-void DrawUI::LoginWindow()
+void DrawUI::InitWindow()
 {
-	if (needLogin) {
-		if (!inited) {
-			ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
-			ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
-			inited = true;
-		}
-		ImGui::Begin("Nem");
+	if (!inited && !isOnline) {
+		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+		{
+			Lss::Text("Create a Sync", 2 * Lss::VH);
+			Lss::Separator();
 
-		// Center the cursor in the window
-		ImVec2 windowSize = ImGui::GetWindowSize();
-		ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+			static char nameText[128] = "";
 
-		// Set the size for input field and position
-		ImGui::SetNextItemWidth(150); // Set input width
-		ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
-		ImGui::SetCursorPos(inputPos);
+			Lss::Text("Name: ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(4.4f * Lss::VW);
+			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH));
 
-		static char usernameText[100] = "";
-		ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
-		inputPos.y += 30;
 
-		ImGui::SetCursorPos(inputPos);
-		ImGui::SetNextItemWidth(150);
-		static char passwordText[24] = "";
-		ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
+			ImGui::NewLine();
 
-		inputPos.y += 30;
-		ImGui::SetNextItemWidth(100);
-		ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
-		ImGui::SetCursorPos(buttonPos);
+			static int width = 0;
+			static int height = 0;
 
-		if (ImGui::Button("Login")) {
-			std::thread([]() {
-				nlohmann::json body;
-				body["email"] = usernameText;
-				body["password"] = passwordText;
+			Lss::Text("Canvas", 2 * Lss::VH);
+			Lss::Separator();
+			Lss::Text("Width (px): ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(8.2f * Lss::VW);
+			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+			Lss::Text("Height (px): ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(7.85f * Lss::VW);
+			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
 
-				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request((runtime.ip+":3000/users/login").c_str(), body.dump(), POST);
+			static char locationText[256] = "";
+			static bool openExplorer = false;
 
-				if (res.contains("access_token") && res.contains("username")) {
-					std::cout << "got this JSON: " << res["access_token"] << std::endl;
-					runtime.token = res["access_token"];
-					runtime.username = res["username"];
-					needLogin = false;
+			Lss::Text("Save Location", 2 * Lss::VH);
+			Lss::Separator();
+			Lss::SetFontSize(3 * Lss::VH);
+			float buttonTextSize = ImGui::CalcTextSize("...").x;
+			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH));
+			ImGui::SameLine();
+			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) openExplorer = true;
+
+			
+
+
+			ImVec2 buttonSize = ImVec2(100, 20);
+			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
+			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+			{
+				if (width > 0 && height > 0) {
+					unsigned int widthOut = width;
+					unsigned int heightOut = height;
+
+					renderer->SetDrawData(widthOut, heightOut);
+
+					canvasInitWindow = false;
+					inited = true;
 				}
-			}).detach();
-		}
+			}
 
-		ImGui::End();
+			Lss::End();
+			ImGui::EndPopup();
+		}
 	}
 }
 

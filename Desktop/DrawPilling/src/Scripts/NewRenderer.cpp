@@ -66,13 +66,20 @@ bool NewRenderer::GetOnline() {
 	return online;
 }
 
-void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
+void NewRenderer::Init(GLFWwindow* windowIn)
 {
 	SetMainThreadCallback([this](const DrawMessage& msg) {
 		taskQueue.push(msg);
 	});
 
 	window = windowIn;
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
+}
+
+void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
+{
 	canvasSize[0] = canvasWidthIn;
 	canvasSize[1] = canvasHeightIn;
 	NewDraw::InitBrush(cursor, cursorRadius);
@@ -102,6 +109,7 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	layers.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
+	inited = true;
 }
 
 void NewRenderer::AddLayer(std::string name, int location) 
@@ -381,6 +389,7 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
+	DrawUI::InitWindow();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius);
 	DrawUI::BrushWindow(window);
@@ -435,6 +444,7 @@ void RenderMenu()
 void NewRenderer::SwapView()
 {
 	isEditor = !isEditor;
+	if(isEditor) DrawUI::InitData();
 	std::cout << "swapped to editor: " << isEditor << std::endl;
 }
 
@@ -443,8 +453,10 @@ void NewRenderer::Render()
 {
 	Clear();
 	if (isEditor) {
-		RenderLayers();
-		RenderCursor();
+		if (inited) {
+			RenderLayers();
+			RenderCursor();
+		}
 		RenderImGui(onUI);
 	}
 	else {

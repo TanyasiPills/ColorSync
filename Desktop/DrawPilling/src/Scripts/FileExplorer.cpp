@@ -4,7 +4,7 @@
 #include "HighsManager.h"
 #include <vector>
 
-const char* formats[] = {"all file", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
+const char* formats[] = {"all", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
 GLuint folder;

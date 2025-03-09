@@ -69,7 +69,6 @@ SessionData Manager::Assembly(SessionData& data) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     DataManager::LoadAppData();
-    DrawUI::InitData();
 
     HManager::Init();
     Lss::Init(window, screenWidth, screenHeight);
