@@ -285,6 +285,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
 		if (layer->selected && selectedLayer != layer->id) layer->selected = false;
 
+
 		if (layer->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
 		Lss::Child(std::to_string(layer->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
 			Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
