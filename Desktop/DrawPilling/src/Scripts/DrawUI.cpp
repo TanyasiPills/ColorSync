@@ -275,17 +275,25 @@ void DrawLayerTreeTwo(Node& node) {
 		}
 	}
 	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
-		bool clicked = ImGui::Selectable(("##SelectableLayer" + layer->name).c_str(), (renderer->currentNode == layer->id));
+		ImVec2 cursorPos = ImGui::GetCursorPos();
+		ImGui::PushID(layer->id);
+		ImVec2 selectableSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing());
+		ImGui::Button("##SelectableLayer", selectableSize);
+
+		bool clicked = ImGui::IsItemClicked();
+		bool doubleClicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
+
 		if (clicked) {
 			renderer->currentNode = layer->id;
 		}
+		ImGui::SetCursorPos(cursorPos);
 		ImGui::TreeNodeEx(("##" + layer->name).c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
 		ImGui::SameLine();
 		ImGui::Checkbox(("##" + layer->name + "visibility").c_str(), &layer->visible);
 		ImGui::SameLine();
 		if (layer->visible && !layer->editing) ImGui::Text((layer->name).c_str());
 
-		if (layer->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+		if (layer->visible && doubleClicked) {
 			layer->editing = true;
 		}
 		if (layer->visible && layer->editing) {
@@ -303,6 +311,7 @@ void DrawLayerTreeTwo(Node& node) {
 				}
 			}
 		}
+		ImGui::PopID();
 	}
 
 }
@@ -313,12 +322,16 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
+	Lss::Button("+", ImVec2(Lss::VW, Lss::VH), Lss::VH);
+	Lss::Button("+2", ImVec2(Lss::VW, Lss::VH), Lss::VH, SameLine);
+	Lss::Top(Lss::VH);
 	DrawLayerTreeTwo(*renderer->nodes[0].get());
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
 	LayerWindowPos = ImGui::GetWindowPos();
+
+	Lss::End();
 	ImGui::End();
 	if (LayerWindowSize.x < 200) {
 		rightSize = 200;
