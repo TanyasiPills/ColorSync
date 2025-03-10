@@ -87,6 +87,7 @@ public:
 	int tool = 0;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
+	std::vector<int> folders;
 
 	bool inited = false;
 
@@ -108,6 +109,9 @@ public:
 	void SendDraw();
 	void SendLayerRename(std::string nameIn, int locationIn);
 
+	int GetParent(int& id);
+	int CreateLayer(int& parent);
+	int CreateFolder(int& parent);
 	void AddLayer(std::string name, int location);
 	void AddFolder(std::string name, int location);
 

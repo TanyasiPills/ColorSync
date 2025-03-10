@@ -58,12 +58,43 @@ bool FileExists(const char* filename) {
 	return false;
 }
 
-void NewRenderer::SetOnline(bool value)
-{
+void NewRenderer::SetOnline(bool value){
 	online = value;
 }
 bool NewRenderer::GetOnline() {
 	return online;
+}
+
+int NewRenderer::GetParent(int& id)
+{
+	for (int folderIndex : folders)
+	{
+		Folder* folder = dynamic_cast<Folder*>(nodes[folderIndex].get());
+
+		if (folder && std::find(folder->childrenIds.begin(), folder->childrenIds.end(), id) != folder->childrenIds.end()) {
+			return folderIndex;
+		}
+	}
+	return 0;
+}
+int NewRenderer::CreateLayer(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	layers.push_back(index);
+	RenderData createdLayer;
+	NewDraw::initLayer(createdLayer, canvasRatio[0], canvasRatio[1]);
+	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	return index;
+}
+int NewRenderer::CreateFolder(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	nodes[index] = std::make_unique<Folder>("Folder", index);
+	folders.push_back(index);
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	return index;
 }
 
 void NewRenderer::Init(GLFWwindow* windowIn)
@@ -91,6 +122,7 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	canvasRatio[1] = canvasData.canvasY;
 
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
 	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData.data);
 	layers.push_back(nextFreeNodeIndex);
@@ -99,6 +131,7 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
 
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Folder", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(nextFreeNodeIndex);
 	int folder = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
