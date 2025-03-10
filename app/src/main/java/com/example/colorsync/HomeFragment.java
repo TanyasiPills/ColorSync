@@ -1,8 +1,12 @@
 package com.example.colorsync;
 
 import android.animation.ValueAnimator;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -10,17 +14,25 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.example.colorsync.DataTypes.PostResponse;
 
@@ -39,6 +51,12 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
     private Context context;
     private View view;
+
+    private RecyclerView post_images;
+    private ImageButton post_send;
+    private ImageButton post_upload;
+    private ImageButton post_add;
+    private EditText post_description;
 
     public HomeFragment() {
         isLoading = false;
@@ -81,10 +99,47 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        post_send = view.findViewById(R.id.post_send);
+        post_description = view.findViewById(R.id.post_description);
+        post_upload = view.findViewById(R.id.post_upload);
+        post_add = view.findViewById(R.id.post_add);
+        post_images = view.findViewById(R.id.post_images);
+
+        post_upload.setOnClickListener(v -> {
+            List<Uri> uris = getDeviceImages();
+            Toast.makeText(getContext(), "uris: " + uris.size(), Toast.LENGTH_SHORT).show();
+        });
+
         loadMorePosts();
 
         return view;
     }
+
+    private List<Uri> getDeviceImages() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission)) //TODO nem mukszik
+        List<Uri> uris = new ArrayList<>();
+
+        Uri imageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        String[] projection = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME};
+
+        try (Cursor cursor = MainActivity.getInstance().getContentResolver().query(
+                imageUri,
+                projection,
+                null, null, null)) {
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    Toast.makeText(context, "uri", Toast.LENGTH_SHORT).show();
+                    int colIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+                    if (colIndex < 0) continue;
+                    long id = cursor.getLong(colIndex);
+                    Uri uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                    uris.add(uri);
+                }
+            }
+        }
+        return uris;
+    }
+
 
     public void addPost() {
         ConstraintLayout layout = view.findViewById(R.id.addPostLayout);

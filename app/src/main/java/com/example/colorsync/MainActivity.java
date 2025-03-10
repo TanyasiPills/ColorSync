@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
         constraintLayout = findViewById(R.id.main);
 
-
         View decorView = getWindow().getDecorView();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -105,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         if (response.isSuccessful() && response.body() != null) {
                                             UserManager.user = response.body();
+                                            goToHome();
                                         } else login();
                                     }
 
@@ -118,11 +118,17 @@ public class MainActivity extends AppCompatActivity {
                                         login();
                                     }
                                 });
+                            } else {
+                                Toast.makeText(this, "Goind home", Toast.LENGTH_SHORT).show();
+                                goToHome();
                             }
                         }, throwable -> {
+                            login();
                             Toast.makeText(this, "error loadig: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                         });
+
         navbar = findViewById(R.id.navbar);
+        navbar.setSelectedItemId(R.id.nav_home);
 
         navbar.setOnItemSelectedListener(item -> {
             Fragment fragment = null;
@@ -137,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                     nav_home.setIcon(R.drawable.add);
                 }
             } else if (item.getItemId() == R.id.nav_profile) {
-                fragment = new ProfileFragment(true, 0);
+                fragment = new ProfileFragment(0);
                 currentPage = R.id.nav_profile;
                 nav_home.setIcon(R.drawable.home);
             } else if (item.getItemId() == R.id.nav_draw) {
@@ -150,8 +156,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-
-        goToHome();
     }
 
 

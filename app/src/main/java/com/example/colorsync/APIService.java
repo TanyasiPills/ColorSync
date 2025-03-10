@@ -32,4 +32,7 @@ public interface APIService {
     @GET("images/user/{id}")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token, @Path("id") int id);
 
+    @GET("users/{id}")
+    Call<User> getUserById(@Path("id") int id);
+
 }

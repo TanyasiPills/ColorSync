@@ -35,10 +35,36 @@ public class ProfileFragment extends Fragment {
     private RecyclerView imagesContainer;
     private List<ImageData> items;
     private ImageGridAdapter adapter;
+    private boolean loaded = false;
 
-    public ProfileFragment(boolean own, int id) {
-        if (own) user = UserManager.user;
-        //TODO else
+    public ProfileFragment(int id) {
+        if (id < 1) {
+            user = UserManager.user;
+            load();
+        }
+        else MainActivity.getApi().getUserById(id).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    user = response.body();
+                    load();
+                } else {
+                    new AlertDialog.Builder(MainActivity.getInstance())
+                            .setTitle("Failed to load user")
+                            .setPositiveButton("Ok", (dialog, which) -> MainActivity.getInstance().goToHome())
+                            .show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable throwable) {
+                new AlertDialog.Builder(MainActivity.getInstance())
+                        .setTitle("Failed to load user")
+                        .setMessage(throwable.getMessage())
+                        .setPositiveButton("Ok", (dialog, which) -> MainActivity.getInstance().goToHome())
+                        .show();
+            }
+        });
     }
     @Override
     public void onCreate(Bundle savedInstanceState) {super.onCreate(savedInstanceState); }
@@ -55,14 +81,23 @@ public class ProfileFragment extends Fragment {
         imagesContainer.setAdapter(adapter);
         imagesContainer.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
+        if (loaded) load();
+        else loaded = true;
+
+        return view;
+    }
+
+    private void load() {
+        if (!loaded) {
+            loaded = true;
+            return;
+        };
         username.setText(user.getUsername());
         Glide.with(view)
                 .load(APIInstance.BASE_URL + "users/" + user.getId() + "/pfp")
                 .into(profilePicture);
 
         loadImages();
-
-        return view;
     }
 
     private void loadImages() {

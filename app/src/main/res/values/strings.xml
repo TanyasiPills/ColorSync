@@ -16,4 +16,5 @@
     <string name="loginText">login</string>
     <string name="usernameHint">username</string>
     <string name="profile_pictureDescription">profile picture</string>
+    <string name="send_buttonDescription">Send button</string>
 </resources>
