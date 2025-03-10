@@ -24,8 +24,8 @@ ImVec2 LayerWindowSize(100, 200);
 ImVec2 LayerWindowPos(0, 200);
 ImVec2 ChatWindowSize(100, 200);
 ImVec2 ChatWindowPos(0, 450);
-int rightSize = 200;
-int rightMinSize = 200;
+int rightSize = 400;
+int rightMinSize = 400;
 
 
 int windowSizeX, windowSizeY;
@@ -238,6 +238,10 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	ImGui::SetCursorPos(cursorPos);
 	float x = ImGui::GetContentRegionAvail().x;
 	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
+		if (folder->selected && selectedLayer != folder->id) folder->selected = false;
+
+
+		if (folder->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
 		if (folder->id == 0) {
 			for (int childId : folder->childrenIds) {
 				Node* childNode = renderer->nodes[childId].get();
@@ -267,18 +271,51 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 				float textSize = ImGui::CalcTextSize((percent).c_str()).x;
 				Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
 				Lss::Image(folderLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
-				ImGui::SameLine();
-				Lss::Text(folder->name, 2 * Lss::VH);
+				if (!folder->editing) {
+					ImGui::SameLine();
+					Lss::Text(folder->name, 2 * Lss::VH);
+				}
+				else {
+					ImGui::SameLine();
+					ImGui::SetNextItemWidth(100);
+					static char editBuffer[256] = "";
+					bool editing = ImGui::InputText("##editinput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+					ImGui::SetKeyboardFocusHere(-1);
+					if (editing) {
+						if (strlen(editBuffer) > 0 && folder->name != editBuffer) {
+							folder->name = editBuffer;
+							memset(editBuffer, 0, sizeof(editBuffer));
+							folder->editing = false;
+							renderer->SendLayerRename(folder->name, folder->id);
+						}
+					}
+				}
 				ImGui::SetCursorPos(ImVec2(validWidth - textSize - Lss::VW, 0.5f * Lss::VH));
 				Lss::Text(percent, 2 * Lss::VH);
 
 			Lss::End();
 			ImGui::EndChild();
-			cursorPos = ImGui::GetCursorPos();
-			cursorPos.x += 2 * Lss::VW;
-			for (int childId : folder->childrenIds) {
-				Node* childNode = renderer->nodes[childId].get();
-				DrawLayerTreeThree(*childNode, cursorPos);
+
+			if (ImGui::IsItemClicked()) {
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+					folder->editing = true;
+				}
+				else {
+					folder->open = !folder->open;
+				}
+
+				folder->selected = true;
+				selectedLayer = folder->id;
+			}
+			if (folder->selected) Lss::SetColor(ContainerBackground, ContainerBackground);
+
+			if (folder->open) {
+				cursorPos = ImGui::GetCursorPos();
+				cursorPos.x += 2 * Lss::VW;
+				for (int childId : folder->childrenIds) {
+					Node* childNode = renderer->nodes[childId].get();
+					DrawLayerTreeThree(*childNode, cursorPos);
+				}
 			}
 		}
 	}
