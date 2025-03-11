@@ -49,6 +49,16 @@ MyTexture notVisible;
 MyTexture folderLayer;
 MyTexture layerLayer;
 
+MyTexture cursor;
+MyTexture pen;
+MyTexture water;
+MyTexture air;
+MyTexture chalk;
+
+MyTexture icons[5];
+
+std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
+
 static int selected = -1;
 static const ImVec2 iconSize(50, 50);
 
@@ -56,6 +66,27 @@ void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 	isOnline = renderer->GetOnline();
 	std::cout << "Is online: " << isOnline << std::endl;
+}
+
+void InitBrushIcons()
+{
+	
+	cursor.Init("Resources/icons/cursorBrush.png");
+	icons[0] = cursor;
+
+	
+	pen.Init("Resources/icons/penBrush.png");
+	icons[1] = pen;
+	
+	air.Init("Resources/icons/airBrush.png");
+	icons[2] = air;
+
+	water.Init("Resources/icons/waterBrush.png");
+	icons[3] = water;
+
+	
+	chalk.Init("Resources/icons/chalkBrush.png");
+	icons[4] = chalk;
 }
 
 void DrawUI::InitData()
@@ -76,6 +107,8 @@ void DrawUI::InitData()
 	notVisible.Init("Resources/icons/eyeClosed.png");
 	folderLayer.Init("Resources/icons/folderLayer.png");
 	layerLayer.Init("Resources/icons/layer.png");
+
+	InitBrushIcons();
 }
 
 static float color[3] = { 0.0f, 0.0f, 0.0f };
@@ -170,7 +203,7 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	ImGui::Columns(3, nullptr, false);
+	ImGui::Columns(2, nullptr, false);
 	int index = 0;
 
 
@@ -178,42 +211,30 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	{
 		bool isSelected = (index == selected);
 		if (ImGui::Selectable(("##"+std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+			if(!isSelected) renderer->ChangeBrush(index);
 			selected = index;
 		}
+		ImVec2 pos = ImGui::GetItemRectMin();
+		ImVec2 size = ImGui::GetItemRectSize();
+		ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+		ImGui::SetCursorScreenPos(cursorPos);
+
+		Lss::Image(icons[index].GetId(), iconSize);
+		Lss::SetFontSize(2 * Lss::VH);
+
+		std::string fileNameStuff = names[index];
+		//if (file.size() > 10) fileNameStuff = file.substr(0, 10) + "...";
+		//else fileNameStuff = file;
+
+		float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+		Lss::Text(fileNameStuff, 2 * Lss::VH);
+
+		index++;
+		ImGui::NextColumn();
+		Lss::End();
 	}
-
-	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
-
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
-		{
-			int index = y * 4 + x + 1;
-			std::string label = "Bruh " + std::to_string(index);
-
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selectedBrush[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selectedBrush[i][j] = 0;
-					}
-				}
-				selectedBrush[y][x] ^= 1;
-				renderer->tool = 4 * y + x;
-			}
-			ImGui::PopID();
-		}
-	}
-	BrushWindowSize = ImGui::GetWindowSize();
-	leftSize = BrushWindowSize.x;
-	BrushWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
-	if (BrushWindowSize.x < 200) {
-		leftSize = 200;
-		std::cout << leftSize << std::endl;
-	}
 }
 
 void DrawUI::ServerWindow()
@@ -254,12 +275,13 @@ void DrawUI::ServerWindow()
 ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	ImGui::SetCursorPos(cursorPos);
 	float x = ImGui::GetContentRegionAvail().x;
+	float cursorX = ImGui::GetCursorPosX();
 	Node* nody = &node;
 	Folder* foldy = nullptr;
 
 	bool isFolder = dynamic_cast<Folder*>(&node) != nullptr;
 	if (isFolder) foldy = dynamic_cast<Folder*>(&node);
-
+	if (!nody) return cursorPos;
 	if (nody->selected && selectedLayer != nody->id) nody->selected = false;
 	if (nody->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
 	if (isFolder) {
@@ -337,14 +359,37 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 
 	if (isFolder && foldy->open) {
 		cursorPos = ImGui::GetCursorPos();
-		cursorPos.x += 2 * Lss::VW;
 		for (int childId : foldy->childrenIds) {
+			cursorPos.x = cursorX;
+			cursorPos.x += 2 * Lss::VW;
 			Node* childNode = renderer->nodes[childId].get();
 			cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
-			cursorPos.x += 2 * Lss::VW;
 		}
+		cursorPos.x += 2 * Lss::VW;
 	}
 	return ImGui::GetCursorPos();
+}
+
+void DeleteChilds(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			DeleteChilds(child);
+			renderer->RemoveFolder(child);
+		}
+		else {
+			renderer->RemoveLayer(child);
+		}
+	}
+	foldy->childrenIds.clear();
 }
 
 void DrawUI::LayerWindow()
@@ -355,9 +400,9 @@ void DrawUI::LayerWindow()
 	itemHovered = false;
 
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
 	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
-		std::cout << "selected layer: " << selectedLayer << std::endl;
 		if (selectedLayer == -1) {
 			int parent = 0;
 			renderer->CreateLayer(parent);
@@ -374,7 +419,36 @@ void DrawUI::LayerWindow()
 		renderer->nextFreeNodeIndex++;
 	}
 	if(ImGui::IsItemHovered()) itemHovered = true;
-	Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine);
+	if (Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	{
+		if (selectedLayer == -1) {
+			int parent = 0;
+			renderer->CreateFolder(parent);
+		}
+		else {
+			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				renderer->CreateFolder(selectedLayer);
+			}
+			else {
+				int parent = renderer->GetParent(selectedLayer);
+				renderer->CreateFolder(parent);
+			}
+		}
+		renderer->nextFreeNodeIndex++;
+	}
+	if (ImGui::IsItemHovered()) itemHovered = true;
+	if (Lss::Button("-", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	{
+		if (selectedLayer != -1) {
+			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				DeleteChilds(selectedLayer);
+				renderer->RemoveFolder(selectedLayer);
+			}
+			else {
+				renderer->RemoveLayer(selectedLayer);
+			}
+		}
+	}
 	if (ImGui::IsItemHovered()) itemHovered = true;
 	Lss::Top(Lss::VH);
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);

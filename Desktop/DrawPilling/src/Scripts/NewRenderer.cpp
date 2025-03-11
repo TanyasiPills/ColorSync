@@ -12,6 +12,7 @@
 #include "lss.h"
 #include "SocksManager.h"
 #include "FileExplorer.h"
+#include "NewDraw.h"
 
 
 void GLClearError() {
@@ -97,6 +98,25 @@ int NewRenderer::CreateFolder(int& parent)
 	return index;
 }
 
+void NewRenderer::RemoveLayer(int& index)
+{
+	auto it = std::find(layers.begin(), layers.end(), index);
+	if (it != layers.end())
+	{
+		layers.erase(it);
+		nodes.erase(index);
+	}
+}
+void NewRenderer::RemoveFolder(int& index)
+{
+	auto it = std::find(folders.begin(), folders.end(), index);
+	if (it != folders.end())
+	{
+		folders.erase(it);
+		nodes.erase(index);
+	}
+}
+
 void NewRenderer::Init(GLFWwindow* windowIn)
 {
 	SetMainThreadCallback([this](const DrawMessage& msg) {
@@ -159,6 +179,11 @@ void NewRenderer::InitLayers(CanvasData* canvasData)
 	nextFreeNodeIndex++;
 }
 
+void NewRenderer::ChangeBrush(int index)
+{
+	cursor = brushes[index];
+}
+
 void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
 {
 	canvasSize[0] = canvasWidthIn;
@@ -176,23 +201,6 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	InitLayers(&canvasData);
 
 	inited = true;
-}
-
-void NewRenderer::AddLayer(std::string name, int location) 
-{
-	RenderData layer;
-	NewDraw::initLayer(layer, canvasRatio[0], canvasRatio[1]);
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>(name, nextFreeNodeIndex, layer);
-	layers.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
-}
-
-void NewRenderer::AddFolder(std::string name, int location)
-{
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>(name, nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -263,7 +271,7 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 			dy *= canvasSize[1];
 			float distance = std::sqrt(dx * dx + dy * dy);
 
-			int num_samples = (distance * 10 < 10) ? 10 : (distance * 10 > 100) ? 100 : static_cast<int>(distance * 10);
+			int num_samples = 1+distance/(cursorRadius*1000);
 
 			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
 			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);

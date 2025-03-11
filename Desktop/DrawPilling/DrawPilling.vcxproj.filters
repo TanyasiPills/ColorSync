@@ -2628,6 +2628,21 @@
     <Image Include="Resources\Textures\cursor.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\icons\airBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\chalkBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\cursorBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\waterBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\penBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />

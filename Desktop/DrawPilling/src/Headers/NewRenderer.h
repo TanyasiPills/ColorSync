@@ -26,13 +26,6 @@
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 #endif
 
-struct CanvasData
-{
-	RenderData data;
-	float canvasX;
-	float canvasY;
-};
-
 struct RenderData
 {
 	std::shared_ptr<VertexArray> va;
@@ -40,6 +33,13 @@ struct RenderData
 	std::shared_ptr<NewShader> shader;
 	std::shared_ptr<MyTexture> texture;
 	unsigned int fbo = 0;
+};
+
+struct CanvasData
+{
+	RenderData data;
+	float canvasX;
+	float canvasY;
 };
 
 struct Node {
@@ -123,8 +123,10 @@ public:
 	int GetParent(int& id);
 	int CreateLayer(int& parent);
 	int CreateFolder(int& parent);
-	void AddLayer(std::string name, int location);
-	void AddFolder(std::string name, int location);
+	void RemoveLayer(int& index);
+	void RemoveFolder(int& index);
+
+	void ChangeBrush(int index);
 
 	void SetOnline(bool value);
 	bool GetOnline();

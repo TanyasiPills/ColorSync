@@ -103,11 +103,12 @@ void SManager::OnAction(sio::event& ev) {
         case AddNode:
             try {
                 int typeOfNode = data["node"]->get_int();
+                int location = data["location"]->get_int();
                 if (typeOfNode == 0) {
-                    rendererSocks->AddLayer(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->CreateLayer(location);
                 }
                 else if (typeOfNode == 1) {
-                    rendererSocks->AddFolder(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->CreateFolder(location);
                 }
             }
             catch (...) {
