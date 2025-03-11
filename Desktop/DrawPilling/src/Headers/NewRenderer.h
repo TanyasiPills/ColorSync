@@ -26,6 +26,12 @@
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 #endif
 
+struct CanvasData
+{
+	RenderData data;
+	float canvasX;
+	float canvasY;
+};
 
 struct RenderData
 {
@@ -85,6 +91,8 @@ public:
 	int currentFolder = 0;
 	bool isEditor = false;
 	int tool = 0;
+
+	std::vector<RenderData> brushes;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
 	std::vector<int> folders;
@@ -92,6 +100,9 @@ public:
 	bool inited = false;
 
 	void Init(GLFWwindow* windowIn);
+	void InitBrushes();
+	void InitLayers(CanvasData* canvasData);
+
 	void SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn);
 	void Draw(const RenderData& data);
 	void Clear();

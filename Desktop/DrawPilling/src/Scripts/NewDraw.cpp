@@ -124,11 +124,16 @@ void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void NewDraw::InitBrush(RenderData& data, float& radius) 
+void NewDraw::InitBrush(RenderData& data, float& radius, std::string texture) 
 {
 	float positions[16];
 	fillPositions(positions, radius, radius);
-	initData(data, positions, "Resources/Textures/circle.png", 1);
+	if (texture.empty()) {
+		initData(data, positions, "Resources/Textures/penBrush.png", 1);
+	}
+	else {
+		initData(data, positions, texture.c_str(), 1);
+	}
 }
 
 void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, float* position, int debug) {

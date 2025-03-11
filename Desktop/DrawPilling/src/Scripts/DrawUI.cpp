@@ -49,6 +49,9 @@ MyTexture notVisible;
 MyTexture folderLayer;
 MyTexture layerLayer;
 
+static int selected = -1;
+static const ImVec2 iconSize(50, 50);
+
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 	isOnline = renderer->GetOnline();
@@ -166,6 +169,18 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
 	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+
+	ImGui::Columns(3, nullptr, false);
+	int index = 0;
+
+
+	for (RenderData brush : renderer->brushes)
+	{
+		bool isSelected = (index == selected);
+		if (ImGui::Selectable(("##"+std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+			selected = index;
+		}
+	}
 
 	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
 

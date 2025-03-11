@@ -7,7 +7,6 @@
 
 #include "NewRenderer.h"
 #include "Texture.h"
-#include "NewDraw.h"
 #include "CallBacks.h"
 #include "DrawUI.h"
 #include "lss.h"
@@ -30,6 +29,7 @@ bool GLLogCall(const char* function, const char* file, int line) {
 GLFWwindow* window;
 std::vector<int> layers;
 RenderData cursor;
+
 
 float cursorRadius = 0.01;
 float initialCanvasRatio[2] = { 1.0f,1.0f };
@@ -109,22 +109,37 @@ void NewRenderer::Init(GLFWwindow* windowIn)
 	glViewport(0, 0, width, height);
 }
 
-void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
+void NewRenderer::InitBrushes()
 {
-	canvasSize[0] = canvasWidthIn;
-	canvasSize[1] = canvasHeightIn;
-	NewDraw::InitBrush(cursor, cursorRadius);
-	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+	RenderData cursorBrush;
+	NewDraw::InitBrush(cursorBrush, cursorRadius, "Resources/Textures/cursor.png");
+	brushes.push_back(cursorBrush);
 
-	initialCanvasRatio[0] = canvasData.canvasX;
-	initialCanvasRatio[1] = canvasData.canvasY;
-	canvasRatio[0] = canvasData.canvasX;
-	canvasRatio[1] = canvasData.canvasY;
+	RenderData penBrush;
+	NewDraw::InitBrush(penBrush, cursorRadius);
+	brushes.push_back(penBrush);
 
+	RenderData airBrush;
+	NewDraw::InitBrush(airBrush, cursorRadius, "Resources/Textures/airBrush.png");
+	brushes.push_back(airBrush);
+
+	RenderData waterBrush;
+	NewDraw::InitBrush(waterBrush, cursorRadius, "Resources/Textures/waterBrush.png");
+	brushes.push_back(waterBrush);
+
+	RenderData charCoalBrush;
+	NewDraw::InitBrush(charCoalBrush, cursorRadius, "Resources/Textures/charCoalBrush.png");
+	brushes.push_back(charCoalBrush);
+
+	cursor = brushes[0];
+}
+
+void NewRenderer::InitLayers(CanvasData* canvasData)
+{
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
 	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData.data);
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData->data);
 	layers.push_back(nextFreeNodeIndex);
 	currentNode = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
@@ -142,6 +157,24 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	layers.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
+}
+
+void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
+{
+	canvasSize[0] = canvasWidthIn;
+	canvasSize[1] = canvasHeightIn;
+
+	InitBrushes();
+
+	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+
+	initialCanvasRatio[0] = canvasData.canvasX;
+	initialCanvasRatio[1] = canvasData.canvasY;
+	canvasRatio[0] = canvasData.canvasX;
+	canvasRatio[1] = canvasData.canvasY;
+
+	InitLayers(&canvasData);
+
 	inited = true;
 }
 

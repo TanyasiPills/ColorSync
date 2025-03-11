@@ -1041,8 +1041,11 @@
     <Image Include="Resources\icons\folderFull.png" />
     <Image Include="Resources\icons\folderLayer.png" />
     <Image Include="Resources\icons\layer.png" />
-    <Image Include="Resources\Textures\circle.png" />
-    <Image Include="Resources\Textures\fish.jpg" />
+    <Image Include="Resources\Textures\airBrush.png" />
+    <Image Include="Resources\Textures\charCoalBrush.png" />
+    <Image Include="Resources\Textures\penBrush.png" />
+    <Image Include="Resources\Textures\cursor.png" />
+    <Image Include="Resources\Textures\waterBrush.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />
