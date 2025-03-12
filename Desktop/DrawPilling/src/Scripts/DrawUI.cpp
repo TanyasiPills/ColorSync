@@ -14,8 +14,8 @@ ImVec2 SizeWindowSize(100, 200);
 ImVec2 SizeWindowPos(0, 200);
 ImVec2 BrushWindowSize(100, 200);
 ImVec2 BrushWindowPos(0, 450);
-int leftSize = 200;
-int leftMinSize = 200;
+int leftSize = 250;
+int leftMinSize = 250;
 
 //Right side
 ImVec2 ServerWindowSize(100, 200);
@@ -55,11 +55,14 @@ MyTexture water;
 MyTexture air;
 MyTexture chalk;
 
+MyTexture sizecursor;
+
 MyTexture icons[5];
 
 std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
 
 static int selected = -1;
+static int selectedSize = -1;
 static const ImVec2 iconSize(50, 50);
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
@@ -87,6 +90,8 @@ void InitBrushIcons()
 	
 	chalk.Init("Resources/icons/chalkBrush.png");
 	icons[4] = chalk;
+
+	sizecursor.Init("Resources/Textures/penBrush.png");
 }
 
 void DrawUI::InitData()
@@ -152,42 +157,51 @@ void DrawUI::SizeWindow(float& cursorRadius)
 
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+		int sliderVal = cursorRadius * 100;
+		sliderVal -= 1;
+		sliderVal *= 2;
+		if (sliderVal == 0) sliderVal = 1;
+		ImGui::SliderInt("##Scale", &sliderVal, 1, 16);
+		if (sliderVal == 1) sliderVal = 0;
+		sliderVal /= 2;
+		sliderVal += 1;
+		
+		cursorRadius = float(sliderVal) / 100.0f;
 
-	if (ImGui::SliderFloat("Size", &cursorRadius, 0.01f, 0.16f, "%.2f")) {
-		for (int y = 0; y < 4; ++y) {
-			for (int x = 0; x < 4; ++x) {
-				selected[y][x] = 0;
-			}
-		}
-	}
+		ImGui::Columns(3, nullptr, false);
 
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
+		for (int i = 1; i < 10; i++)
 		{
-			int index = y * 4 + x + 1;
-			//int indexText = std::pow(2, (float)index);
-			std::string label = std::to_string(index);
+			int index = i - 1;
+			if ((index * 0.01f + 0.01f) <= cursorRadius && cursorRadius < ((index + 1) * 0.01f + 0.01f)) selectedSize = index;
 
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selected[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selected[i][j] = 0;
-					}
-				}
-				cursorRadius = 0.01 * index;
-				selected[y][x] ^= 1;
+			bool isSelected = (index == selectedSize);
+			if (ImGui::Selectable(("##" + std::to_string(index) + "sizes").c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+				cursorRadius = index * 0.01f + 0.01f;
+				selectedSize = index;
 			}
-			ImGui::PopID();
+
+			ImVec2 pos = ImGui::GetItemRectMin();
+			ImVec2 size = ImGui::GetItemRectSize();
+			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+			ImGui::SetCursorScreenPos(cursorPos);
+
+			float zoom = 0.025f * index;
+			Lss::Image(sizecursor.GetId(), iconSize, 0, ImVec2(zoom, zoom), ImVec2(1 - zoom, 1 - zoom));
+			Lss::SetFontSize(2 * Lss::VH);
+
+			std::string nameStuff = (index == 0) ? std::to_string(i) : std::to_string(index*2);
+			float nameSize = ImGui::CalcTextSize(nameStuff.c_str()).x;
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+			Lss::Text(nameStuff, 2 * Lss::VH);
+
+			ImGui::NextColumn();
+			Lss::End();
 		}
-	}
-	SizeWindowSize = ImGui::GetWindowSize();
-	leftSize = SizeWindowSize.x;
-	SizeWindowPos = ImGui::GetWindowPos();
+
+		SizeWindowSize = ImGui::GetWindowSize();
+		leftSize = SizeWindowSize.x;
+		SizeWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
 	if (SizeWindowSize.x < 200) {
 		leftSize = 200;
@@ -272,6 +286,24 @@ void DrawUI::ServerWindow()
 	}
 }
 
+void ChangeVisibilityChild(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			ChangeVisibilityChild(child);
+		}
+		renderer->nodes[child]->visible = foldy->visible;
+	}
+}
+
 ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	ImGui::SetCursorPos(cursorPos);
 	float x = ImGui::GetContentRegionAvail().x;
@@ -303,6 +335,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 
 	if (ImGui::IsItemClicked()) {
 		nody->visible = !nody->visible;
+		ChangeVisibilityChild(nody->id);
 		itemHovered = true;
 	}
 

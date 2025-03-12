@@ -42,7 +42,7 @@ public:
 
 	static void Text(std::string textIn, float size, int flags = None);
 	static bool Button(std::string textIn, ImVec2 size, float textSizeIn, int flags = None);
-	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(-1, -1), int flags = None);
+	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(-1, -1), int flags = None, ImVec2 min = ImVec2(0,0), ImVec2 max = ImVec2(1,1));
 	static void Child(std::string name, ImVec2 size = ImVec2(0,0), bool border = true, 
 		int flags = None, ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
 	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH), int flags = None, int inputFlags = ImGuiInputFlags_None, int maxWidth = 0);
