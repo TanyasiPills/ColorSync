@@ -7,7 +7,10 @@
         <item name="cardViewStyle">@style/CardViewColorStyle</item>
 
         <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+
         <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
     <style name="Theme.ColorSync" parent="Base.Theme.ColorSync" />

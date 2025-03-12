@@ -3,29 +3,29 @@ package com.example.colorsync;
 import android.animation.ValueAnimator;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +38,7 @@ import com.example.colorsync.DataTypes.PostResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -52,21 +53,60 @@ public class HomeFragment extends Fragment {
     private Context context;
     private View view;
 
+    private ImageSelectionGrid post_adapter;
+    private List<Uri> post_uris;
     private RecyclerView post_images;
     private ImageButton post_send;
     private ImageButton post_upload;
     private ImageButton post_add;
     private EditText post_description;
+    private Cursor cursor;
+    private boolean isLoadingUris;
 
     public HomeFragment() {
         isLoading = false;
+        isLoadingUris = false;
         offset = 0;
         posts = new ArrayList<>();
+        post_uris = new ArrayList<>();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ActivityResultLauncher<String[]> requestPermissions = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                new ActivityResultCallback<Map<String, Boolean>>() {
+                    @Override
+                    public void onActivityResult(Map<String, Boolean> o) {
+
+                    }
+                }
+        );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            requestPermissions.launch(new String[]{
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+            });
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions.launch(new String[]{
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO
+            });
+        } else {
+            requestPermissions.launch(new String[]{
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+            });
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (!cursor.isClosed()) cursor.close();
     }
 
     @Override
@@ -78,6 +118,11 @@ public class HomeFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ScrollAdapter(posts);
         recyclerView.setAdapter(adapter);
+
+        post_images = view.findViewById(R.id.post_images);
+        post_adapter = new ImageSelectionGrid(post_uris);
+        post_images.setAdapter(post_adapter);
+        post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -99,15 +144,30 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        post_images.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+
+                if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 10) {
+                    loadMoreUris();
+                }
+            }
+        });
+
         post_send = view.findViewById(R.id.post_send);
         post_description = view.findViewById(R.id.post_description);
         post_upload = view.findViewById(R.id.post_upload);
         post_add = view.findViewById(R.id.post_add);
-        post_images = view.findViewById(R.id.post_images);
 
         post_upload.setOnClickListener(v -> {
-            List<Uri> uris = getDeviceImages();
-            Toast.makeText(getContext(), "uris: " + uris.size(), Toast.LENGTH_SHORT).show();
+            loadMoreUris();
         });
 
         loadMorePosts();
@@ -115,29 +175,45 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    private List<Uri> getDeviceImages() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission)) //TODO nem mukszik
-        List<Uri> uris = new ArrayList<>();
 
-        Uri imageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        String[] projection = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME};
+    public void loadMoreUris() {
+        if (isLoadingUris) return;
+        isLoadingUris = true;
 
-        try (Cursor cursor = MainActivity.getInstance().getContentResolver().query(
-                imageUri,
-                projection,
-                null, null, null)) {
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    Toast.makeText(context, "uri", Toast.LENGTH_SHORT).show();
-                    int colIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
-                    if (colIndex < 0) continue;
-                    long id = cursor.getLong(colIndex);
-                    Uri uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-                    uris.add(uri);
-                }
-            }
+        Uri collection;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        } else {
+            collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         }
-        return uris;
+        String[] projection = {
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME
+        };
+
+        if (cursor == null) {
+            cursor = MainActivity.getInstance().getContentResolver().query(
+                    collection,
+                    projection,
+                    null, null,
+                    MediaStore.Images.Media.DATE_ADDED + " DESC"
+            );
+        }
+        if (cursor == null) return;
+
+        int start = post_uris.size();
+        int i = 0;
+        for (; i < 10; i++) {
+            if (!cursor.moveToNext()) break;
+            int colIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+            if (colIndex < 0) continue;
+            long id = cursor.getLong(colIndex);
+            Uri uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+            post_uris.add(uri);
+        }
+
+        post_adapter.notifyItemRangeInserted(start, i);
+        isLoadingUris = false;
     }
 
 

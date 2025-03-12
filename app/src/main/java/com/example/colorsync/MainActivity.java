@@ -15,6 +15,7 @@ import android.view.WindowInsetsController;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Toast;
 
+import androidx.activity.ComponentActivity;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -26,6 +27,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.internal.EdgeToEdgeUtils;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -54,38 +56,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+
+        api = APIInstance.getInstance().create(APIService.class);
 
         instance = this;
 
         constraintLayout = findViewById(R.id.main);
-
-        View decorView = getWindow().getDecorView();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsController insetsController = getWindow().getInsetsController();
-            if (insetsController != null) {
-                insetsController.hide(WindowInsetsController.BEHAVIOR_SHOW_BARS_BY_SWIPE);
-                insetsController.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        } else {
-            decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-                @Override
-                public void onSystemUiVisibilityChange(int visibility) {
-                    if ((visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
-                        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-                    }
-                }
-            });
-        }
-
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-
-        api = APIInstance.getInstance().create(APIService.class);
 
         UserManager.loadToken(this)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -119,12 +100,10 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 });
                             } else {
-                                Toast.makeText(this, "Goind home", Toast.LENGTH_SHORT).show();
                                 goToHome();
                             }
                         }, throwable -> {
                             login();
-                            Toast.makeText(this, "error loadig: " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
                         });
 
         navbar = findViewById(R.id.navbar);
@@ -156,15 +135,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
-    }
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        View decorView = getWindow().getDecorView();
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-        decorView.setSystemUiVisibility(uiOptions);
     }
 
     private void login() {

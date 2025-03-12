@@ -1,16 +1,11 @@
 package com.example.colorsync;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.DisplayMetrics;
-import android.util.Log;
+import android.net.Uri;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -29,15 +24,15 @@ import com.example.colorsync.DataTypes.ImageData;
 
 import java.util.List;
 
-public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.ImageViewHolder> {
-    private List<ImageData> items;
-    public ImageGridAdapter(List<ImageData> items) {
+public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid.ImageViewHolder> {
+    private List<Uri> items;
+    public ImageSelectionGrid(List<Uri> items) {
         this.items = items;
     }
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
-        public ImageData item;
+        public Uri item;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
@@ -51,30 +46,12 @@ public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.Ima
             imageView.setLayoutParams(layoutParams);
         }
 
-        public void bind(ImageData imageData) {
+        public void bind(Uri imageData) {
             this.item = imageData;
 
-            GlideUrl url = new GlideUrl(
-                    APIInstance.BASE_URL + "images/" + item.id,
-                    new LazyHeaders.Builder()
-                            .addHeader("Authorization", "Bearer " + UserManager.token)
-                            .build());
-
             Glide.with(imageView.getContext())
-                    .load(url)
-                    .listener(new RequestListener<Drawable>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                            if (e != null) Toast.makeText(imageView.getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                            return false;
-                        }
-
-                        @Override
-                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                            imageView.requestLayout();
-                            return false;
-                        }
-                    })
+                    .load(item)
+                    .centerCrop()
                     .into(imageView);
         }
 
@@ -91,7 +68,7 @@ public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.Ima
 
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-        ImageData item = items.get(position);
+        Uri item = items.get(position);
         holder.bind(item);
     }
 

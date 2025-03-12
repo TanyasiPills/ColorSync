@@ -105,11 +105,11 @@ public class ProfileFragment extends Fragment {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
-                if (response.isSuccessful() && response.body() != null) {
+                if (response.isSuccessful()) {
                     items.clear();
                     items.addAll(response.body());
                     adapter.notifyDataSetChanged();
-                } else {
+                } else if (response.code() != 404) {
                     new AlertDialog.Builder(requireContext())
                             .setTitle("Error")
                             .setMessage("Error loading images")
