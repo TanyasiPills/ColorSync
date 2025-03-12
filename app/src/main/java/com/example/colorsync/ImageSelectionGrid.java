@@ -26,8 +26,18 @@ import java.util.List;
 
 public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid.ImageViewHolder> {
     private List<Uri> items;
-    public ImageSelectionGrid(List<Uri> items) {
+    private HomeFragment parent;
+    public long selected;
+
+    public ImageSelectionGrid(List<Uri> items, HomeFragment parent) {
         this.items = items;
+        selected = -1;
+    }
+
+    public void SelectionHandler(int position) {
+        selected = position;
+        parent.UriClickHandler(items.get(position));
+        notifyDataSetChanged();
     }
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
@@ -39,23 +49,29 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
             imageView = itemView.findViewById(R.id.image);
             ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
             int size = (int) ((imageView.getContext().getResources().getDisplayMetrics().widthPixels / 2.0) -
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, imageView.getContext().getResources().getDisplayMetrics()));
+                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, imageView.getContext().getResources().getDisplayMetrics()));
 
+            Toast.makeText(imageView.getContext(), "size: " + size, Toast.LENGTH_SHORT).show();
             layoutParams.width = size;
             layoutParams.height = size;
             imageView.setLayoutParams(layoutParams);
         }
 
-        public void bind(Uri imageData) {
+        public void bind(Uri imageData, int position, ImageSelectionGrid grid) {
             this.item = imageData;
 
             Glide.with(imageView.getContext())
                     .load(item)
                     .centerCrop()
                     .into(imageView);
+
+            if (grid.selected == position) {
+                //TODO highlight
+            }
+            imageView.setOnClickListener(view -> {
+                grid.SelectionHandler(position);
+            });
         }
-
-
     }
 
 
@@ -69,7 +85,7 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         Uri item = items.get(position);
-        holder.bind(item);
+        holder.bind(item, position, this);
     }
 
     @Override

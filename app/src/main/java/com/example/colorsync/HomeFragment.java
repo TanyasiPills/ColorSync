@@ -27,6 +27,7 @@ import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -120,7 +121,7 @@ public class HomeFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         post_images = view.findViewById(R.id.post_images);
-        post_adapter = new ImageSelectionGrid(post_uris);
+        post_adapter = new ImageSelectionGrid(post_uris, this);
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
@@ -161,6 +162,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
+
         post_send = view.findViewById(R.id.post_send);
         post_description = view.findViewById(R.id.post_description);
         post_upload = view.findViewById(R.id.post_upload);
@@ -173,6 +175,10 @@ public class HomeFragment extends Fragment {
         loadMorePosts();
 
         return view;
+    }
+
+    public void UriClickHandler(Uri uri) {
+        Toast.makeText(context, "Uri click: " + uri, Toast.LENGTH_SHORT).show();
     }
 
 
