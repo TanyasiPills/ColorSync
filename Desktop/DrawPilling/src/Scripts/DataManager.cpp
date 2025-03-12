@@ -7,17 +7,15 @@
 ApplicationData appdata;
 
 
-
-
-void SetValue(char* dest, const char* value, size_t size) {
+void SetStringValue(char* dest, const char* value, size_t size) {
     std::strncpy(dest, value, size - 1);
     dest[size - 1] = '\0';
 }
 
-void SetData(ApplicationData& data, std::string nameIn, std::string tokenIn, std::string ipIn) {
-    SetValue(data.name, nameIn.c_str(), sizeof(data.name));
-    SetValue(data.token, tokenIn.c_str(), sizeof(data.token));
-    SetValue(data.ip, ipIn.c_str(), sizeof(data.ip));
+void SetAppDataData(ApplicationData& data, std::string nameIn, std::string tokenIn, std::string ipIn) {
+    SetStringValue(data.name, nameIn.c_str(), sizeof(data.name));
+    SetStringValue(data.token, tokenIn.c_str(), sizeof(data.token));
+    SetStringValue(data.ip, ipIn.c_str(), sizeof(data.ip));
 }
 
 void DataManager::SaveData(const ApplicationData& data, const std::string& filename) {
@@ -49,7 +47,7 @@ void DataManager::LoadAppData()
 void DataManager::SaveAppData()
 {   
     auto& runtime = RuntimeData::getInstance();
-    SetData(appdata, runtime.username, runtime.token, runtime.ip);
+    SetAppDataData(appdata, runtime.username, runtime.token, runtime.ip);
     DataManager::SaveData(appdata, "appdata.bin");
 }
 
