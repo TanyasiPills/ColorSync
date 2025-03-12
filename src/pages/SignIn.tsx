@@ -3,6 +3,7 @@ import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'rea
 import Cookies from 'universal-cookie';
 import { backendIp } from '../constants';
 import { modalProp } from '../types';
+import "../css/Modal.css";
 
 export const SignIn: React.FC<modalProp> = ({ show, onHide }) => {
 
@@ -10,7 +11,6 @@ export const SignIn: React.FC<modalProp> = ({ show, onHide }) => {
 
   if (cookie.get("AccessToken")) {
     onHide();
-    window.location.href = '/';
     return
   }
   const [error, setError] = useState('');

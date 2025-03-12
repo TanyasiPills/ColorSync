@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import { image, user } from "../types"
 
 
-export function Profile({ own = false }: { own: boolean }) {
+export function Profile({ own = false }: { own?: boolean }) {
   //username, id, profile kép, email, 
   const cookie = new Cookies();
   const thisUser = cookie.get("AccessToken");
@@ -43,15 +43,16 @@ export function Profile({ own = false }: { own: boolean }) {
               return res.blob();
             }
             else {
-              throw new Error("failed to fetch image");
+              return new Blob();
             }
           }).then(blob => URL.createObjectURL(blob)));
+          console.log(await Promise.all(promises));
           setImageURL(await Promise.all(promises));
         }
       } else { console.log(await result.text()) }
     }
     load();
-  })
+  }, [])
   if (!user) {
     return <Spinner animation="border" size="sm" />
   }
@@ -70,7 +71,7 @@ export function Profile({ own = false }: { own: boolean }) {
       <Row id="drawings" className="w-100" style={{ display: 'flex', flexWrap: 'wrap' }}>
         {imageURL && imageURL.map((e, index) => (
           <Col id="col" key={index} xs={12} sm={6} md={4} lg={4} className="d-flex justify-content">
-            <img src={e} alt="" className="drawing-img" />
+            <img src={e} className="drawing-img" />
           </Col>
         ))}
       </Row>

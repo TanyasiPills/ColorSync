@@ -1,15 +1,10 @@
-import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'react-bootstrap';
+import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col } from 'react-bootstrap';
 import { modalProp } from "../types";
 import { useState } from 'react';
+import "../css/Modal.css";
 import Cookies from 'universal-cookie';
 
 export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
-
-  const cookie = new Cookies();
-    if (!cookie.get("AccessToken")) {
-      onHide();
-      return
-    }
 
   const [validated, setValidated] = useState(false);
   const [error, setError] = useState('');
@@ -22,21 +17,31 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
   return (
     <Modal show={show} onHide={onHide} centered>
       <ModalHeader closeButton>
-        <h2>Sign Up</h2>
-        <p>Create a new account</p>
+        <h2>Make a post</h2>
       </ModalHeader>
       <ModalBody>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
-          <Form.Group controlId="formUsername">
-            <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter username"
-              name='username'
-              id='username'
-              required
-            />
-          </Form.Group>
+          <Row>
+            <Col>
+              <Form.Group controlId="formNewImage">
+                <Form.Label>New Image</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  name="newImage"
+                  id="newImage"
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group controlId="formExistingImage">
+                <Form.Label>Choose Existing Image</Form.Label>
+                <Button variant="primary" className="mt-2">
+                  Select Image
+                </Button>
+              </Form.Group>
+            </Col>
+          </Row>
 
           <Form.Group controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>

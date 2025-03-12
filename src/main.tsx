@@ -16,7 +16,8 @@ const router = createBrowserRouter([
   {path: "/Download", element: <App />},
   {path: "/CMS", element: <SocialMedia />},
   {path: "/CMS/SRC", element: <Search />},
-  {path: "/Profile/:id", element: <Profile own />},
+  {path: "/Profile", element: <Profile own/>},
+  {path: "/Profile/:id", element: <Profile />},
 ]);
 
 createRoot(document.getElementById('root')!).render(

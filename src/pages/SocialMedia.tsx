@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
-import "./SocialMedia.css";
+import "../css/SocialMedia.css";
 import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { backendIp } from "../constants";
 import { post } from "../types"
 import { Posting } from "./Posting";
+import Cookies from "universal-cookie";
+import { useHref } from "react-router-dom";
 
 export function SocialMedia() {
   const [post, setPost] = useState<post[]>([]);
   const [show, setShow] = useState(false);
+
+  const cookie = new Cookies();
+  const thisUser = cookie.get("AccessToken");
   useEffect(() => {
     async function load() {
       const result = await fetch(backendIp + '/posts', {
@@ -26,16 +31,12 @@ export function SocialMedia() {
 
     const homeButton = document.getElementById("homeButton")!;
     const searchButton = document.getElementById("searchButton")!;
-    const postButton = document.getElementById("postButton")!;
 
     homeButton.addEventListener("click", () => {
       window.location.href = '/CMS';
     });
     searchButton.addEventListener("click", () => {
       window.location.href = '/CMS/SRC';
-    });
-    postButton.addEventListener("click", () => {
-      setShow(true);
     });
   }, [])
 
@@ -67,28 +68,28 @@ export function SocialMedia() {
         <Col xs="2" id="left" className="h-100 d-flex flex-column align-items-center py-4">
           <h3 className="costumButtons" id="homeButton">Home</h3>
           <h3 className="costumButtons" id="searchButton">Search</h3>
-          <h3 className="costumButtons" id="postButton">Post</h3>
+          <h3 className="costumButtons" id="postButton"  tabIndex={0} onClick={thisUser ? () => setShow(true) : undefined} >Post</h3>
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-start py-4">
           <div id="feed">
-          <Posting show={show} onHide={() => setShow(false)} />
+            <Posting show={show} onHide={() => setShow(false)} />
             {post.length > 0 ? post.map((e) => (
               <Card className="mb- post-card" key={e.id}>
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col xs="auto" className="text-center">
-                      <img src={`${backendIp}/users/${e.user.id}/pfp`} alt="Profile" className="profile-img" />
+                      <img src={`${backendIp}/users/${e.user.id}/pfp`} alt="Profile" className="profile-img" key={e.id} onClick={takeToProfile}/>
                     </Col>
                     <Col>
-                      <h5 className="profile-name">{e.user.username}</h5>
+                      <h5 className="profile-name" key={e.id} onClick={takeToProfile}>{e.user.username}</h5>
                     </Col>
                   </Row>
                 </Card.Body>
-                {e.imageId && <Card.Img variant="top" src={`${backendIp}/images/public/${e.imageId}`} alt="Post Image" />}
+                {e.imageId && <Card.Img variant="top" src={`${backendIp}/images/${e.imageId}`} alt="Post Image" />}
                 <div className="tagsConatiner">
-                {e.tags.length>0 && e.tags.map((tag) => (
-                  <div className="tags">#{tag}</div>
-                ))}
+                  {e.tags.length > 0 && e.tags.map((tag) => (
+                    <div className="tags">#{tag}</div>
+                  ))}
                 </div>
                 <Card.Body>
                   <Card.Text>{e.text}</Card.Text>
@@ -118,7 +119,7 @@ export function SocialMedia() {
                   </details>
                 )}
               </Card>
-            )) : post.length == 0? <h1>There's no post at this time</h1>:<Spinner animation="border" size="sm" />}
+            )) : post.length == 0 ? <h1>There's no post at this time</h1> : <Spinner animation="border" size="sm" />}
           </div>
         </Col>
         <Col xs="2" id="right" className="h-100 d-none d-md-block"></Col>

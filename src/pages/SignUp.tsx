@@ -3,13 +3,13 @@ import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'rea
 import Cookies from 'universal-cookie';
 import { backendIp } from '../constants';
 import { modalProp } from '../types';
+import "../css/Modal.css";
 
 export const SignUp: React.FC<modalProp> = ({ show, onHide }) => {
 
   const cookie = new Cookies();
   if (cookie.get("AccessToken")) {
     onHide();
-    window.location.href = '/';
     return
   }
   const [validated, setValidated] = useState(false);

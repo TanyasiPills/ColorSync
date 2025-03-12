@@ -1,0 +1,23 @@
+.modal-content {
+    background-color: var(--divCol);
+    border: 2px solid var(--borderCol);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: var(--textCol);
+}
+
+.modal-header {
+    background-color: var(--backgroundColor);
+    border-bottom: 2px solid var(--borderCol);
+    color: var(--textCol);
+}
+
+.modal-body {
+    background-color: var(--divCol);
+    color: var(--textCol);
+}
+
+.modal-footer {
+    background-color: var(--backgroundColor);
+    border-top: 2px solid var(--borderCol);
+}

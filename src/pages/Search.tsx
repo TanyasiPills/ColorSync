@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./SocialMedia.css";
+import "../css/SocialMedia.css";
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { backendIp } from "../constants";
 import { user } from "../types"
