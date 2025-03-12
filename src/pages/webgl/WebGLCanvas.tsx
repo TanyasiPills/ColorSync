@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { clearCanvas, compileShader, createShaderProgram } from "./WebGLUtilites";
 import { fragmentShaderSource, vertexShaderSource } from "./Shaders/CursorShader";
-import "./WebGlCanvas.css"
+import "../../css/WebGlCanvas.css"
 import { useColorWheel } from "./CallBack";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Render } from "./Render";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { backendIp } from "../constants";
-import "./Profile.css";
+import "../css/Profile.css";
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import { useParams } from "react-router-dom";
