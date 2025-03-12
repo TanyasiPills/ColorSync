@@ -91,6 +91,7 @@ public:
 	int currentFolder = 0;
 	bool isEditor = false;
 	int tool = 0;
+	int currentLayerToDrawOn = 0;
 
 	std::vector<RenderData> brushes;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
@@ -109,7 +110,7 @@ public:
 	void Render();
 	void RenderLayers();
 	void RenderCursor();
-	void RenderCursorToCanvas(int currentLayer = 0);
+	void RenderCursorToCanvas();
 	void MoveLayers(static float* offset);
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);

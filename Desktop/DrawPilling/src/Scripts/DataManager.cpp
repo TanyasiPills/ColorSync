@@ -7,6 +7,8 @@
 ApplicationData appdata;
 
 
+
+
 void SetValue(char* dest, const char* value, size_t size) {
     std::strncpy(dest, value, size - 1);
     dest[size - 1] = '\0';
@@ -49,4 +51,9 @@ void DataManager::SaveAppData()
     auto& runtime = RuntimeData::getInstance();
     SetData(appdata, runtime.username, runtime.token, runtime.ip);
     DataManager::SaveData(appdata, "appdata.bin");
+}
+
+void DataManager::SaveSync(std::string path)
+{
+    DataManager::SaveData()
 }

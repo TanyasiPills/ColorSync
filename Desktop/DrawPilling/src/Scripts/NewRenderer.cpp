@@ -253,7 +253,7 @@ void NewRenderer::LoadPrevCursor(float* prevIn)
 	prevPos[1] = prevIn[1];
 }
 
-void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
+void NewRenderer::RenderCursorToCanvas()
 {
 	if (recieving) return;
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {

@@ -8,12 +8,12 @@
 #include <thread>
 
 //Left side
-ImVec2 ColorWindowSize(100, 200);
+ImVec2 ColorWindowSize(100, 300);
 ImVec2 ColorWindowPos;
-ImVec2 SizeWindowSize(100, 200);
-ImVec2 SizeWindowPos(0, 200);
+ImVec2 SizeWindowSize(100, 300);
+ImVec2 SizeWindowPos(0, 300);
 ImVec2 BrushWindowSize(100, 200);
-ImVec2 BrushWindowPos(0, 450);
+ImVec2 BrushWindowPos(0, 600);
 int leftSize = 250;
 int leftMinSize = 250;
 
@@ -64,6 +64,8 @@ std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Cha
 static int selected = -1;
 static int selectedSize = -1;
 static const ImVec2 iconSize(50, 50);
+
+std::string savePath = "";
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
@@ -335,7 +337,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 
 	if (ImGui::IsItemClicked()) {
 		nody->visible = !nody->visible;
-		ChangeVisibilityChild(nody->id);
+		if(isFolder) ChangeVisibilityChild(nody->id);
 		itemHovered = true;
 	}
 
@@ -381,6 +383,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 		}
 		else {
 			if (isFolder) foldy->open = !foldy->open;
+			else renderer->currentNode = nody->id;
 		}
 	
 		nody->selected = true;
@@ -507,27 +510,27 @@ void DrawUI::LayerWindow()
 
 void DrawUI::ChatWindow()
 {
-	static char inputBuffer[256] = "";
+	ImVec2 avail = ImGui::GetContentRegionAvail();
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
-
+	float heightOfChat = windowSizeY - (LayerWindowPos.y + LayerWindowSize.y);
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	float availableHeight = ImGui::GetContentRegionAvail().y;
-	float inputBarHeight = ImGui::GetTextLineHeight() * 2 - ImGui::GetStyle().FramePadding.y * 2; //+ ImGui::GetStyle().FramePadding.y * 3; //+ ImGui::GetStyle().ItemSpacing.y;
-
-
-	ImGui::BeginChild("ChatLog", ImVec2(0, availableHeight - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("ChatLog", ImVec2(0, heightOfChat-4.8f*Lss::VH), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
 	{
+		Lss::SetFontSize(2 * Lss::VH);
 		ImGui::TextWrapped("%s", message.c_str());
 	}
+	Lss::End();
 	ImGui::EndChild();
 	ImGui::Separator();
-	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight - ImGui::GetStyle().ItemSpacing.y * 2), false);
-	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+	ImGui::BeginChild("ChatInput", ImVec2(0, 2.5f * Lss::VH), false);
+
+	static char inputBuffer[256] = "";
+
+	if (Lss::InputText("chatInput", inputBuffer, sizeof(inputBuffer), ImVec2(avail.x, 2*Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		if (strlen(inputBuffer) > 0)
 		{
@@ -538,6 +541,7 @@ void DrawUI::ChatWindow()
 		}
 		ImGui::SetKeyboardFocusHere(-1);
 	}
+	Lss::End();
 	ImGui::EndChild();
 
 	ChatWindowSize = ImGui::GetWindowSize();
@@ -585,15 +589,23 @@ void DrawUI::InitWindow()
 
 			static char locationText[256] = "";
 			static bool openExplorer = false;
+			static bool wasOpen = false;
 
 			Lss::Text("Save Location", 2 * Lss::VH);
 			Lss::Separator();
 			Lss::SetFontSize(3 * Lss::VH);
 			float buttonTextSize = ImGui::CalcTextSize("...").x;
-			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH));
+			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH),0, ImGuiInputTextFlags_ReadOnly);
 			ImGui::SameLine();
-			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) openExplorer = true;
-
+			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) {
+				openExplorer = true;
+				wasOpen = true;
+			}
+			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 4);
+			else if (wasOpen)
+			{
+				strcpy(locationText, Explorer::GetImagePath().c_str());
+			}
 			
 
 

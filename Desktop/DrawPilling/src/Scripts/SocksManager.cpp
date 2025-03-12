@@ -5,7 +5,6 @@
 
 
 sio::client h;
-const char* ip;
 bool onserver = false;
 NewRenderer* rendererSocks;
 
