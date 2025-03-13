@@ -40,7 +40,7 @@ export function NavBar() {
               <NavDropdown title="Account" id="basic-nav-dropdown">
                 {thisUser ?
                   <>
-                    <NavDropdown.Item href={"/Profile/" + thisUser.id}>Profile</NavDropdown.Item>
+                    <NavDropdown.Item href={"/Profile"}>Profile</NavDropdown.Item>
                     <NavDropdown.Item onClick={signOut}>Sign out</NavDropdown.Item>
                   </> : <>
                     <NavDropdown.Item onClick={() => setShowLogin(true)}>Sign In</NavDropdown.Item>

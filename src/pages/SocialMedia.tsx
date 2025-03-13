@@ -68,7 +68,9 @@ export function SocialMedia() {
         <Col xs="2" id="left" className="h-100 d-flex flex-column align-items-center py-4">
           <h3 className="costumButtons" id="homeButton">Home</h3>
           <h3 className="costumButtons" id="searchButton">Search</h3>
-          <h3 className="costumButtons" id="postButton"  tabIndex={0} onClick={thisUser ? () => setShow(true) : undefined} >Post</h3>
+          {thisUser ?
+            <h3 className="costumButtons" id="postButton" tabIndex={0} onClick={() => setShow(true)} >Post</h3> :
+            null}
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-start py-4">
           <div id="feed">
@@ -78,7 +80,7 @@ export function SocialMedia() {
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col xs="auto" className="text-center">
-                      <img src={`${backendIp}/users/${e.user.id}/pfp`} alt="Profile" className="profile-img" key={e.id} onClick={takeToProfile}/>
+                      <img src={`${backendIp}/users/${e.user.id}/pfp`} alt="Profile" className="profile-img" key={e.id} onClick={takeToProfile} />
                     </Col>
                     <Col>
                       <h5 className="profile-name" key={e.id} onClick={takeToProfile}>{e.user.username}</h5>

@@ -21,3 +21,28 @@
     background-color: var(--backgroundColor);
     border-top: 2px solid var(--borderCol);
 }
+
+input[type="file"]::file-selector-button {
+    background-color: var(--backgroundColor);
+    color: var(--textCol);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.custom-input {
+    background-color: var(--backgroundColor); 
+    color: var(--textCol);             
+    border: 1px solid var(--borderCol);  
+    border-radius: 4px;
+    padding: 8px;
+  }
+
+#tagsList .tagsList {
+    background-color: var(--backgroundColor);
+    color: var(--textCol);
+}
+
+.tagsList:hover {
+    background-color: var(--highlight);
+  }

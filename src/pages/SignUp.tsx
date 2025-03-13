@@ -103,8 +103,7 @@ export const SignUp: React.FC<modalProp> = ({ show, onHide }) => {
               placeholder="Confirm Password"
               name='confPassword'
               required
-            />
-            {error && <Form.Text className="text-danger">{error}</Form.Text>}
+            />            
           </Form.Group>
 
           <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>
