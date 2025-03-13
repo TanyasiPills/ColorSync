@@ -6,8 +6,6 @@ layout(location = 1) in vec2 texCoord;
 
 out vec2 v_TexCoord;
 
-//uniform mat4 ProjMat;
-
 void main()
 {
 	gl_Position = position;
@@ -25,5 +23,6 @@ uniform sampler2D u_Texture;
 
 void main() {
 	vec4 texColor = texture(u_Texture, v_TexCoord);
+	texColor.rgb *= texColor.a; 
 	color = texColor;
 }

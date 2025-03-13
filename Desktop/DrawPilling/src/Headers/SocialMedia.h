@@ -23,20 +23,24 @@ class SocialMedia {
 private:
 	static std::vector<Post> posts;
 	static int lastId;
+	static int searchOffset;
 public:
 	static void MainFeed(float position, float width, float height);
 	static void LeftSide(float position, float width, float height);
 	static void RightSide(float position, float width, float height);
 	static void GetPosts();
-	static void LoadProfile();
+	static void LoadProfile(int id = 0);
 	static void LoadDependencies(Post& post, int index);
 	static void LoadImages();
 	static void LoadImageJa(int dataId, int type, int postId = 0);
 
-	static void ProfilePage(float& width, float& height);
+	static void ProfilePage(float& width, float& height, int user = 0);
 	static void MainPage(float& width, float& height);
 	static void SettingsPage();
-	static void SearchPage();
+	static void SearchPage(float& width, float& height);
+	static void SearchStuff(const char* searchText);
+	static void GetPostForSearch(const int& postId);
+	static void RoomPage(float& width, float& height);
 
 	static std::chrono::system_clock::time_point ParsePostTime(const std::string& timeData);
 	static void ProcessThreads();

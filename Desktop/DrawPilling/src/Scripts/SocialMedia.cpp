@@ -2,17 +2,31 @@
 #include <iostream>
 #include <thread>
 #include <map>
+#include <sstream>
 #include <unordered_map>
+#include <array>
+#include <chrono>
 #include "lss.h"
 #include "CallBacks.h"
 #include "RuntimeData.h"
 #include "FIleExplorer.h"
 #include "LoginRegister.h"
 
+
+std::vector<Room> friendRooms;
+std::vector<Room> rooms = {
+    {"Room A", "Alice", 10, 1, 0, false},
+    {"Room B", "Bob", 8, 2, 0, true},
+    {"Room C", "Charlie", 5, 3, 0, false}
+};
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
+std::map<int, Image, std::greater<int>> postImageRelation;
+std::unordered_map<int, GLuint> images;
+std::vector<int> searchedUser;
 int SocialMedia::lastId = 0;
+int SocialMedia::searchOffset = 0;
 std::queue<std::tuple<std::vector<uint8_t>, int, int>> textureQueue;
 std::mutex textureQueueMutex;
 
@@ -26,11 +40,21 @@ bool creatingPost = false;
 
 bool loginWindow = false;
 
+bool searched = false;
+bool searchPostOpen = false;
+
+bool needRooms = true;
+
+int searchMode = 0;
+int selectedUser = -1;
+bool needImages = true;
+
 MyTexture imageToPostTexture;
 GLuint imageToPost = 0;
 
-MyTexture userImageTexture;
+Post searchedPost;
 
+MyTexture userImageTexture;
 
 static RuntimeData& runtime = RuntimeData::getInstance();
 
@@ -40,6 +64,110 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
 {
 	return &textureQueue;
+}
+
+void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
+    std::istringstream stream(searchText);
+    std::string word;
+    text.clear();
+    tags.clear();
+
+    while (stream >> word) {
+        if (word[0] == '#' && word.length() > 1) {
+            tags.push_back(word.substr(1));
+        }
+        else {
+            if (!text.empty()) text += " ";
+            text += word;
+        }
+    }
+}
+
+void SocialMedia::SearchStuff(const char* searchText)
+{
+	std::vector<std::string> tags;
+	std::string text;
+	ParseSearchText(searchText, tags, text);
+    std::string searchTerm = "posts/search?";
+    searchTerm += "q=" + text;
+    searched += "&offset=" + searchOffset;
+	for (const auto& tag : tags) {
+        searchTerm += "&tags=" + tag;
+	}
+    nlohmann::json result = HManager::Request(searchTerm, "", GET);
+    nlohmann::json profileResult = HManager::Request("users/search?name="+text, "", GET);
+    if (result.is_null() || profileResult.is_null()) {
+        std::cerr << "search request failed" << std::endl;
+    }
+    else {
+		for (const auto& profile : profileResult) {
+			User user;
+			user.username = profile["username"];
+			users[profile["id"]] = user;
+			searchedUser.emplace_back(profile["id"]);
+			std::thread(&SocialMedia::LoadImageJa, profile["id"], 2, 0).detach();
+		}
+        if (result["offset"].is_null()) return;
+        for (const auto& imageData : result["data"])
+        {
+            postImageRelation[imageData["id"]].imageId = imageData["imageId"];
+        }
+        for (const auto& pair : postImageRelation) {
+            std::thread(&SocialMedia::LoadImageJa, pair.second.imageId, 5, pair.first).detach();
+        }
+        searchOffset = result["offset"];
+    }
+}
+
+void SocialMedia::GetPostForSearch(const int& postId)
+{
+    nlohmann::json result = HManager::Request("posts/" + std::to_string(postId), "", GET);
+    if (result.is_null()) {
+        std::cerr << "search request failed" << std::endl;
+    }
+    else {
+        searchedPost = Post();
+		std::cout << "1" << std::endl;
+        searchedPost.id = result["id"];
+        std::cout << "id: " << searchedPost.id << std::endl;
+        searchedPost.userId = result["user"]["id"];
+        std::cout << "2" << std::endl;
+        searchedPost.text = result["text"];
+        searchedPost.time = ParsePostTime(result["date"]);
+        std::cout << "3" << std::endl;
+        if (result["imageId"].is_null()) searchedPost.imageId = -1;
+        else searchedPost.imageId = result["imageId"];
+        
+        if (users.find(searchedPost.userId) == users.end()) {
+            User user;
+            user.username = result["user"]["username"];
+            user.userImage = -1;
+            users[searchedPost.userId] = user;
+        }
+        std::cout << "4" << std::endl;
+        if (!result["tags"].empty())
+        {
+            for (const auto& tag : result["tags"]) {
+                searchedPost.tags.emplace_back(tag);
+            }
+        }
+        std::cout << "5" << std::endl;
+        if (!result["comments"].empty()) {
+            for (const auto& comment : result["comments"]) {
+                Comment newComment;
+                
+                newComment.id = comment["id"];
+                newComment.userId = comment["user"]["id"];
+                newComment.text = comment["text"];
+				newComment.time = ParsePostTime(comment["date"]);
+                searchedPost.comments.emplace_back(newComment);
+            }
+        }
+        std::cout << "6" << std::endl;
+        searchedPost.allLoaded = false;
+		std::thread(&SocialMedia::LoadDependencies, std::ref(searchedPost), -2).detach();
+		searchPostOpen = true;
+	}
 }
 
 void SocialMedia::ProcessThreads()
@@ -55,8 +183,14 @@ void SocialMedia::ProcessThreads()
         switch (type)
         {
         case 1:
-            posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
-            posts[dataId].picLoaded = true;
+            if (dataId == -2) {
+				searchedPost.image = HManager::ImageFromRequest(imageData, searchedPost.ratio);
+				searchedPost.picLoaded = true;
+            }
+            else {
+				posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
+				posts[dataId].picLoaded = true;
+            }
             break;
         case 2: {
             float ratioAF = 0.0f;
@@ -67,8 +201,9 @@ void SocialMedia::ProcessThreads()
             }
             else profileImage = profilePics[dataId];
 
-            users[dataId].userImage = profileImage;
-            users[dataId].pPicLoaded = true;
+		    users[dataId].userImage = profileImage;
+			users[dataId].pPicLoaded = true;
+
             } break;
         case 3: {
                 float ratioAF = 0.0f;
@@ -79,15 +214,21 @@ void SocialMedia::ProcessThreads()
                 float ratioAF = 0.0f;
                 userImages.emplace_back(HManager::ImageFromRequest(imageData, ratioAF));
             } break;
+        case 5: {
+                images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
+            } break;
         default:
             break;
         }
     }
 }
 
-void SocialMedia::LoadProfile()
+void SocialMedia::LoadProfile(int id)
 {
-    nlohmann::json jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
+    userImages.clear();
+    nlohmann::json jsonData;
+    if(id == 0) jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
+	else jsonData = HManager::Request(("images/user/" + std::to_string(id)).c_str(), "", GET);
     if (jsonData.is_null()) {
         std::cout << "cant recieve profile image list" << std::endl;
         return;
@@ -147,89 +288,143 @@ void SocialMedia::MainPage(float& width, float& height)
         int validWidth = width * 0.6f;
         std::string id = std::to_string(post.id);
         Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            
-            if (post.size == 0) {
-                startY = ImGui::GetCursorPosY();
-                needChange = true;
-            }
+        
+        if (post.needChange) {
+            startY = ImGui::GetCursorPosY();
+            needChange = true;
+        }
 
-            Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
 
+        ImGui::SameLine();
+        Lss::Top(2 * Lss::VH);
+        Lss::Text(users[post.userId].username, 4 * Lss::VH);
+
+        Lss::Left(3.5f * Lss::VH);
+        Lss::Text(post.text, 4 * Lss::VH);
+
+        float good = validWidth * 0.9f;
+        ImVec2 faki(good, good * post.ratio);
+        Lss::Image(post.image, faki, Centered);
+
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        Lss::Left(3.5f * Lss::VH);
+        for (const auto& tags : post.tags)
+        {
+            Lss::SetFontSize(3 * Lss::VH);
+            Lss::SetColor(ContainerBackground, Background);
+            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+            Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+            Lss::End();
+            ImGui::EndChild();
+            Lss::SetColor(ContainerBackground, ContainerBackground);
             ImGui::SameLine();
-            Lss::Top(2 * Lss::VH);
-            Lss::Text(users[post.userId].username, 4 * Lss::VH);
+        }
+        ImGui::NewLine();
+        ImGui::PopStyleVar();
 
-            Lss::Left(Lss::VH);
-            Lss::Text(post.text, 3 * Lss::VH);
+        bool contains = (runtime.liked.find(post.id) != runtime.liked.end());
+        if (contains) Lss::SetColor(LowHighlight, Border);
+        if (Lss::Button("Like", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH)) {
+            if (contains) {
+                runtime.liked.erase(post.id);
+                post.likes--;
+            }
+            else {
+                runtime.liked.insert(post.id);
+                post.likes++;
+            }
+            nlohmann::json jsonData;
+            jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
+            if (jsonData.is_null()) {
+                std::cout << "couldn't post like" << std::endl;
+            }
+        }
+        if (contains) Lss::SetColor(LowHighlight, LowHighlight);
 
-            float good = validWidth * 0.9f;
-            ImVec2 faki(good, good * post.ratio);
-            Lss::Image(post.image, faki, Centered);
+        Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
 
-            if (!post.comments.empty())
+
+        if (post.openComments) Lss::SetColor(LowHighlight, Border);
+        if (Lss::Button("Comment", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH, SameLine))
+        {
+            post.openComments = !post.openComments;
+            post.needChange = true;
+        }
+        if (post.openComments) {
+            static char text[256];
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(validWidth, 4 * Lss::VH), Centered, ImGuiInputTextFlags_EnterReturnsTrue))
             {
-                bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
-                /*
-                if (post.openComments != open) {
-                    post.size = 0;
-                    post.openComments = open;
-                }*/
-
-                if (open) {
-                    ImDrawList* drawList = ImGui::GetWindowDrawList();
-                    float cornerRadius = 10.0f;
-
-                    ImVec2 commentChildSize;
-                    if (post.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
-                    else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
-
-                    ImVec2 commentPos = ImGui::GetCursorScreenPos();
-
-                    ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
-                        
-                        for (Comment& comment : post.comments)
-                        {
-                            if (!users[comment.userId].pPicLoaded) continue;
-
-                            Lss::SetColor(ContainerBackground, Background);
-                            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-
-                            std::string name = std::to_string(comment.id);
-                            Lss::Child(name, ImVec2(0, 11 * Lss::VH));
-
-                                Lss::LeftTop(Lss::VH, Lss::VH);
-                                Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
-
-                                ImGui::SameLine();
-                                Lss::Top(Lss::VH);
-                                Lss::Text(users[comment.userId].username, 4 * Lss::VH);
-
-                                Lss::Left(7 * Lss::VH);
-                                Lss::Text(comment.text, 3 * Lss::VH);
-
-                                Lss::End();
-
-                            ImGui::EndChild();
-
-                            ImGui::PopStyleVar(1);
-                            Lss::SetColor(ContainerBackground, ContainerBackground);
-
-                            if (post.comments[post.comments.size() - 1].id != comment.id) {
-                                Lss::Top(Lss::VH);
-                            }
-                        }
-
-                        Lss::End();
-
-                    ImGui::EndChild();
-                    ImGui::TreePop();
+                nlohmann::json jsonData;
+                jsonData["postId"] = post.id;
+                jsonData["text"] = text;
+                nlohmann::json result = HManager::Request("comments", jsonData.dump(), POST);
+                if (result.is_null()) std::cout << "couldn't send comment\n";
+                else {
+                    Comment myComment;
+                    myComment.time = std::chrono::system_clock::now();
+                    myComment.text = text;
+                    myComment.id = result["id"];
+                    myComment.userId = runtime.id;
+                    post.comments.emplace_back(myComment);
                 }
             }
-            if (post.size == 0 && needChange) {
-                endY = ImGui::GetCursorPosY();
-                post.size = endY - startY;
+        }
+        if (post.openComments) {
+            if (!post.comments.empty()) {
+                ImVec2 commentChildSize;
+                if (post.comments.size() == 1) {
+                    commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                }
+                else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
+                ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
+
+                for (Comment& comment : post.comments)
+                {
+                    if (!users[comment.userId].pPicLoaded) continue;
+
+                    Lss::SetColor(ContainerBackground, Background);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+
+                    std::string name = std::to_string(comment.id);
+                    Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+
+                    Lss::LeftTop(Lss::VH, Lss::VH);
+                    Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
+
+                    ImGui::SameLine();
+                    Lss::Top(Lss::VH);
+                    Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+
+                    Lss::Left(7 * Lss::VH);
+                    Lss::Text(comment.text, 3 * Lss::VH);
+
+                    Lss::End();
+
+                    ImGui::EndChild();
+
+                    ImGui::PopStyleVar(1);
+                    Lss::SetColor(ContainerBackground, ContainerBackground);
+
+                    if (post.comments[post.comments.size() - 1].id != comment.id) {
+                        Lss::Top(Lss::VH);
+                    }
+                }
+
+                Lss::End();
+
+                ImGui::EndChild();
             }
-            Lss::End();
+            Lss::SetColor(LowHighlight, LowHighlight);
+        }
+        if (post.needChange && needChange) {
+            endY = ImGui::GetCursorPosY();
+            post.size = endY - startY;
+            post.needChange = false;
+        }
+        Lss::End();
         ImGui::EndChild();
 
         ImGui::Separator();
@@ -253,9 +448,12 @@ void SocialMedia::MainPage(float& width, float& height)
 
     ImGui::EndChild();
 
-
-    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, 50 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+	static float modalSize = 0.0f;
+	ImVec2 cursorAtCurrent = ImGui::GetCursorPos();
+    ImGui::SetNextWindowPos(ImVec2(cursorAtCurrent.x, cursorAtCurrent.y - modalSize / 2));
+    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, modalSize), Centered | Trans, ImGuiWindowFlags_NoDecoration))
     {
+		float startPos = ImGui::GetCursorPosY();
         ImVec2 valid = ImGui::GetContentRegionAvail();
 
         Lss::Text("What's on your ming?", 2 * Lss::VH);
@@ -264,10 +462,10 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
 
         Lss::Top(-Lss::VH / 2);
-        Lss::Separator(1.0f, 20 * Lss::VH, 4, Centered);
+        Lss::Separator(1.0f, 18 * Lss::VW, 4, Centered);
 
         ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH)) {
+        if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
             created = true;
             wasCreated = true;
         }
@@ -276,6 +474,7 @@ void SocialMedia::MainPage(float& width, float& height)
         else if (wasCreated) {
             std::string imagePath = Explorer::GetImagePath();
             if (imagePath.size() > 2) {
+                ImGui::CloseCurrentPopup();
                 imageToPostTexture.Init(imagePath);
                 imageToPost = imageToPostTexture.GetId();
                 wasCreated = false;
@@ -284,19 +483,65 @@ void SocialMedia::MainPage(float& width, float& height)
                 wasCreated = false;
             }
         }
+        if (imageToPost > 0) {
+            float toPostRatio = (float)imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
+            Lss::Image(imageToPost, ImVec2(18 * Lss::VW, 18 * Lss::VW * toPostRatio),Centered);
+        }
 
-        if (imageToPost > 0) Lss::Image(imageToPost, ImVec2(20 * Lss::VW, 20 * Lss::VH));
+
+        static std::vector<std::string> tags;
+        static std::string textToTags = "None";
+        static char tagsText[128] = "";
+        static bool focusNextFrame = false;
+
+        Lss::Child("tagsinputchild", ImVec2(16*Lss::VW, 2.5 * Lss::VH), false, Centered);
+            if (Lss::InputText("TagsInput", tagsText, sizeof(tagsText), ImVec2(16 * Lss::VW, 2 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue, 1))
+            {   
+                
+                if (tagsText[0] != '\0') {
+                    tags.emplace_back(tagsText);
+                }
+                if (!tags.empty())
+                {
+                    std::string tmp;
+                    for (const auto& item : tags)
+                    {
+                        tmp += "#" + item + " ";
+                    }
+                   textToTags = tmp;
+                }
+				tagsText[0] = '\0';
+
+                focusNextFrame = true;
+            }
+			if (focusNextFrame)
+			{
+				ImGui::SetKeyboardFocusHere(-1);
+				focusNextFrame = false;
+			}
+		    Lss::End();
+		ImGui::EndChild();
+        Lss::Text("Tags:", 2 * Lss::VH);
+		ImGui::SameLine();
+        Lss::Text(textToTags, 2 * Lss::VH);
+        float endPos = ImGui::GetCursorPosY();
+        modalSize = endPos - startPos + Lss::VH * 6;
 
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
         if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
         {
             std::string imagePath = Explorer::GetImagePath();
-            nlohmann::json jsonData = HManager::PostRequest(inputtext, imagePath);
+            nlohmann::json jsonData;
+            if (textToTags != "None") {
+                jsonData = HManager::PostRequest(inputtext, imagePath, 0, tags);
+            }
+            else jsonData = HManager::PostRequest(inputtext, imagePath);
             if (jsonData.is_null()) {
                 std::cout << "couldn't post post" << std::endl;
             }
             else {
+				std::cout << jsonData.dump(4) << std::endl;
                 posts = {};
                 openStuff = false;
                 lastId = 0;
@@ -320,10 +565,8 @@ void SocialMedia::MainPage(float& width, float& height)
     }
 }
 
-void SocialMedia::ProfilePage(float& width, float& height) 
+void SocialMedia::ProfilePage(float& width, float& height, int user) 
 {
-    static bool needImages = true;
-
     static bool imageEditOpen = false;
     static bool openExplorer = false;
     static bool wasOpenExplorer = false;
@@ -333,7 +576,7 @@ void SocialMedia::ProfilePage(float& width, float& height)
     static bool wasOpenExplorer2 = false;
 
     if (needImages) {
-        std::thread(&SocialMedia::LoadProfile).detach();
+        std::thread(&SocialMedia::LoadProfile, user).detach();
         needImages = false;
     }
 
@@ -341,127 +584,130 @@ void SocialMedia::ProfilePage(float& width, float& height)
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
         int validWidth = width * 0.6f;
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-
-            //pfp change
-            if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
-            {
-                ImVec2 valid = ImGui::GetContentRegionAvail();
-                Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
-
-                ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-                if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-                    openExplorer = true;
-                    wasOpenExplorer = true;
-                }
-
-                if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
-                else if (wasOpenExplorer) {
-                    std::string imagePath = Explorer::GetImagePath();
-                    if (imagePath.size() > 2) {
-                        userImageTexture.Init(imagePath);
-                        runtime.pfpTexture = userImageTexture.GetId();
-                        wasOpenExplorer = false;
-                    }
-                    else {
-                        wasOpenExplorer = false;
-                    }
-                }
-
-                if (userImageTexture.GetId() <= 0)
+            if (user == runtime.id) {
+                //pfp change
+                if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
                 {
-                    std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
-                    float ratioStuff = 0.0f;
-                    runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
-                }
-                Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+                    ImVec2 valid = ImGui::GetContentRegionAvail();
+                    Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
 
-                ImVec2 buttonSize = ImVec2(100, 20);
-                ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-                if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-                {
-                    std::string imagePath = Explorer::GetImagePath();
-                    if (imagePath.size() > 2) {
-                        std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
-                        nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 1);
-                        if (!jsonData.is_null()) imageEditOpen = false;
+                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                        openExplorer = true;
+                        wasOpenExplorer = true;
                     }
-                }
 
-
-                if (!openExplorer && ImGui::IsMouseClicked(0))
-                {
-                    ImVec2 pos = ImGui::GetWindowPos();
-                    ImVec2 cursorPos = ImGui::GetMousePos();
-                    ImVec2 size = ImGui::GetWindowSize();
-                    if (!Lss::InBound(cursorPos, pos, size)) {
-                        imageEditOpen = false;
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
-                Lss::End();
-                ImGui::EndPopup();
-            }
-
-            //image add
-            if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
-            {
-                ImVec2 valid = ImGui::GetContentRegionAvail();
-                Lss::Text("Add file to galery", 4 * Lss::VH, Centered);
-
-                ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-                if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-                    openExplorer2 = true;
-                    wasOpenExplorer2 = true;
-                }
-
-                if (openExplorer2) Explorer::FileExplorerUI(&openExplorer2);
-                else if (wasOpenExplorer2) {
-                    wasOpenExplorer2 = false;
-                }
-                if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
-                ImVec2 buttonSize = ImVec2(100, 20);
-                ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-                if (Lss::Button("Add##addImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-                {
-                    std::string imagePath = Explorer::GetImagePath();
-                    if (imagePath.size() > 2) {
-                        nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
-                        if (!jsonData.is_null()) {
-                            imageUploadpen = false;
-                            needImages = true;
+                    if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
+                    else if (wasOpenExplorer) {
+                        std::string imagePath = Explorer::GetImagePath();
+                        if (imagePath.size() > 2) {
+                            userImageTexture.Init(imagePath);
+                            runtime.pfpTexture = userImageTexture.GetId();
+                            wasOpenExplorer = false;
+                        }
+                        else {
+                            wasOpenExplorer = false;
                         }
                     }
-                }
 
-
-                if (!openExplorer2 && ImGui::IsMouseClicked(0))
-                {
-                    ImVec2 pos = ImGui::GetWindowPos();
-                    ImVec2 cursorPos = ImGui::GetMousePos();
-                    ImVec2 size = ImGui::GetWindowSize();
-                    if (!Lss::InBound(cursorPos, pos, size)) {
-                        imageUploadpen = false;
-                        ImGui::CloseCurrentPopup();
+                    if (userImageTexture.GetId() <= 0)
+                    {
+                        std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
+                        float ratioStuff = 0.0f;
+                        runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
                     }
+                    Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+
+                    ImVec2 buttonSize = ImVec2(100, 20);
+                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                    if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                    {
+                        std::string imagePath = Explorer::GetImagePath();
+                        if (imagePath.size() > 2) {
+                            std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
+                            nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 1);
+                            if (!jsonData.is_null()) imageEditOpen = false;
+                        }
+                    }
+
+
+                    if (!openExplorer && ImGui::IsMouseClicked(0))
+                    {
+                        ImVec2 pos = ImGui::GetWindowPos();
+                        ImVec2 cursorPos = ImGui::GetMousePos();
+                        ImVec2 size = ImGui::GetWindowSize();
+                        if (!Lss::InBound(cursorPos, pos, size)) {
+                            imageEditOpen = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                    Lss::End();
+                    ImGui::EndPopup();
                 }
-                Lss::End();
-                ImGui::EndPopup();
+
+                //image add
+                if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+                {
+                    ImVec2 valid = ImGui::GetContentRegionAvail();
+                    Lss::Text("Add file to galery", 4 * Lss::VH, Centered);
+
+                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                        openExplorer2 = true;
+                        wasOpenExplorer2 = true;
+                    }
+
+                    if (openExplorer2) Explorer::FileExplorerUI(&openExplorer2);
+                    else if (wasOpenExplorer2) {
+                        wasOpenExplorer2 = false;
+                    }
+                    if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
+                    ImVec2 buttonSize = ImVec2(100, 20);
+                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                    if (Lss::Button("Add##addImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                    {
+                        std::string imagePath = Explorer::GetImagePath();
+                        if (imagePath.size() > 2) {
+                            nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
+                            if (!jsonData.is_null()) {
+                                imageUploadpen = false;
+                                needImages = true;
+                            }
+                        }
+                    }
+
+
+                    if (!openExplorer2 && ImGui::IsMouseClicked(0))
+                    {
+                        ImVec2 pos = ImGui::GetWindowPos();
+                        ImVec2 cursorPos = ImGui::GetMousePos();
+                        ImVec2 size = ImGui::GetWindowSize();
+                        if (!Lss::InBound(cursorPos, pos, size)) {
+                            imageUploadpen = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                    Lss::End();
+                    ImGui::EndPopup();
+                }
             }
 
-            Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Rounded);
+            Lss::Image(users[user].userImage, ImVec2(20 * Lss::VH, 20 * Lss::VH), Rounded);
             if (ImGui::IsItemClicked()) {
                 imageEditOpen = true;
             }
 
             ImGui::SameLine();
             Lss::Top(7.5 * Lss::VH);
-            Lss::Text(runtime.username, 5 * Lss::VH);
+            Lss::Text(users[user].username, 5 * Lss::VH);
 
-            ImGui::SameLine();
-            Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
-            if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
-            {
-                imageUploadpen = true;
+            if (user == runtime.id) {
+                ImGui::SameLine();
+                Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
+                if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
+                {
+                    imageUploadpen = true;
+                }
             }
 
             Lss::Top(2 * Lss::VH);
@@ -545,30 +791,361 @@ void SocialMedia::SettingsPage()
     ImGui::EndChild();
 }
 
-void SocialMedia::SearchPage()
+void SocialMedia::SearchPage(float& width, float& height)
 {
-    ImVec2 valid = ImGui::GetContentRegionAvail();
-    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-
-    static char searchText[128] = "";
-    bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
-    static bool search = false;
-    static int count = 0;
-    if (hihi || search) {
-        search = true;
-        Lss::Top(10 * Lss::VH);
-        std::string searchtext = "Searching";
-        for (size_t i = 100; i < count; i += 100)searchtext += ".";
-        Lss::Text(searchtext, 4 * Lss::VH, Centered);
-        count++;
-        if (count >= 401) {
-            count = 0;
+    if (searchMode == 0) {
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        static char searchText[128] = "";
+        bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
+        static bool search = true;
+        static int count = 0;
+        static bool searching = true;
+        if (hihi || search) {
+            if (hihi) {
+                searching = true;
+                searchedUser.clear();
+                images.clear();
+                postImageRelation.clear();
+            }
+            if (search) {
+                Lss::Top(10 * Lss::VH);
+                std::string searchtext = "Searching";
+                for (size_t i = 100; i < count; i += 100)searchtext += ".";
+                Lss::Text(searchtext, 4 * Lss::VH, Centered);
+                count++;
+                if (count >= 401) {
+                    count = 0;
+                }
+                if (images.size() > 0 || searchedUser.size() > 0) search = false;
+            }
         }
+        if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
+            std::thread(&SocialMedia::SearchStuff, searchText).detach();
+            searching = false;
+        }
+        if (searchedUser.size() > 0)
+        {
+            int validWidth = width * 0.6f;
+            Lss::Top(Lss::VH);
+            height = searchedUser.size() * 8 * Lss::VH;
+            if (height > 18 * Lss::VH) height = 18 * Lss::VH;
+            Lss::Child("##UserSearchResults", ImVec2(validWidth, height), false, Centered, ImGuiWindowFlags_NoScrollbar);
+            for (const auto& user : searchedUser)
+            {
+				Lss::Child("##" + users[user].username, ImVec2(validWidth, 8 * Lss::VH), false, Centered);
+                    Lss::Image(users[user].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+                    ImGui::SameLine();
+                    Lss::Top(2 * Lss::VH);
+                    Lss::Text(users[user].username, 4 * Lss::VH);
+                    Lss::End();
+				ImGui::EndChild();
+                if (ImGui::IsItemClicked()) {
+					searchMode = 1;
+                    selectedUser = user;
+                }
+            }
+            Lss::End();
+            ImGui::EndChild();
+        }
+        Lss::Top(Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4);
+        Lss::Top(Lss::VH);
+        if (images.size() > 0)
+        {
+            std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
+            std::array<float, 3> ySize = { 0.0f, 0.0f, 0.0f };
+            ImVec2 mod = ImGui::GetStyle().FramePadding;
+            int validWidth = width * 0.6f;
+            static float heightOfImages = height - 7.0f * Lss::VH;
+            Lss::Child("##SearchResults", ImVec2(validWidth, heightOfImages), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+
+            float xWidth = validWidth / 3;
+            int i = 0;
+            for (const auto postImage : postImageRelation)
+            {
+                ImGui::SetCursorPosY(yPos[i]);
+                ImGui::SetCursorPosX(xWidth * i + mod.x * i);
+                ImGui::Image(images[postImage.first], ImVec2(xWidth - mod.x, xWidth * postImage.second.ratio));
+                if (ImGui::IsItemClicked()) {
+                    GetPostForSearch(postImage.first);
+                }
+                float nextYPos = ImGui::GetCursorPosY() + mod.y;
+                ySize[i] += nextYPos - yPos[i];
+                yPos[i] = nextYPos;
+
+                if (i == 2) i = 0;
+                else i++;
+            }
+
+            for (size_t i = 0; i < 3; i++)
+            {
+                if (ySize[i] > heightOfImages) heightOfImages = ySize[i];
+            }
+
+            ImGui::EndChild();
+        }
+        if (searchPostOpen) {
+            static int postWidth = width * 0.4f;
+            static int postHeight = 40 * Lss::VH;
+
+            static bool on = false;
+
+            static ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImVec2 pos = ImVec2(center.x - postWidth * 0.5f, center.y - postHeight * 0.5f);
+            ImGui::SetNextWindowPos(pos, ImGuiCond_Appearing);
+            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, postHeight), None, ImGuiWindowFlags_NoDecoration))
+            {
+                if (!searchedPost.allLoaded) {
+                    if (searchedPost.picLoaded && users[searchedPost.userId].pPicLoaded) {
+                        searchedPost.allLoaded = true;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                float startPos = ImGui::GetCursorPosY();
+
+                Lss::Image(users[searchedPost.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+
+                ImGui::SameLine();
+                Lss::Top(2 * Lss::VH);
+                Lss::Text(users[searchedPost.userId].username, 4 * Lss::VH);
+
+                Lss::Left(3.5f * Lss::VH);
+                Lss::Text(searchedPost.text, 4 * Lss::VH);
+
+                float good = postWidth * 0.9f;
+                ImVec2 faki(good, good * searchedPost.ratio);
+                Lss::Image(searchedPost.image, faki, Centered);
+
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+                Lss::Left(3.5f * Lss::VH);
+                for (const auto& tags : searchedPost.tags)
+                {
+                    Lss::SetFontSize(3 * Lss::VH);
+                    Lss::SetColor(ContainerBackground, Background);
+                    float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+                    Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+                    Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+                    Lss::End();
+                    ImGui::EndChild();
+                    Lss::SetColor(ContainerBackground, ContainerBackground);
+                    ImGui::SameLine();
+                }
+                ImGui::NewLine();
+                ImGui::PopStyleVar();
+
+                if (!searchedPost.comments.empty())
+                {
+                    bool open = ImGui::TreeNodeEx("Comments", ImGuiTreeNodeFlags_DefaultOpen);
+                    /*
+                    if (post.openComments != open) {
+                        post.size = 0;
+                        post.openComments = open;
+                    }*/
+
+                    if (open) {
+                        ImDrawList* drawList = ImGui::GetWindowDrawList();
+                        float cornerRadius = 10.0f;
+
+                        ImVec2 commentChildSize;
+                        if (searchedPost.comments.size() == 1) commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
+                        else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
+
+                        ImVec2 commentPos = ImGui::GetCursorScreenPos();
+
+                        ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
+
+                        for (Comment& comment : searchedPost.comments)
+                        {
+                            if (!users[comment.userId].pPicLoaded) continue;
+
+                            Lss::SetColor(ContainerBackground, Background);
+                            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+
+                            std::string name = std::to_string(comment.id);
+                            Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+
+                            Lss::LeftTop(Lss::VH, Lss::VH);
+                            Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
+
+                            ImGui::SameLine();
+                            Lss::Top(Lss::VH);
+                            Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+
+                            Lss::Left(7 * Lss::VH);
+                            Lss::Text(comment.text, 3 * Lss::VH);
+
+                            Lss::End();
+
+                            ImGui::EndChild();
+
+                            ImGui::PopStyleVar(1);
+                            Lss::SetColor(ContainerBackground, ContainerBackground);
+
+                            if (searchedPost.comments[searchedPost.comments.size() - 1].id != comment.id) {
+                                Lss::Top(Lss::VH);
+                            }
+                        }
+
+                        Lss::End();
+
+                        ImGui::EndChild();
+                        ImGui::TreePop();
+                    }
+                }
+
+                float endPos = ImGui::GetCursorPosY();
+                postHeight = endPos - startPos + 4 * Lss::VH;
+
+                if (on && ImGui::IsMouseClicked(0))
+                {
+                    ImVec2 pos = ImGui::GetWindowPos();
+                    ImVec2 cursorPos = ImGui::GetMousePos();
+                    ImVec2 size = ImGui::GetWindowSize();
+                    if (!Lss::InBound(cursorPos, pos, size)) {
+                        ImGui::CloseCurrentPopup();
+                        searchPostOpen = false;
+                        on = false;
+                    }
+                }
+
+                on = true;
+                Lss::End();
+                ImGui::EndPopup();
+            }
+        }
+        Lss::End();
+        ImGui::EndChild();
+    } else {
+		userImages.clear();
+        needImages = true;
+        ProfilePage(width, height, selectedUser);
+    }
+}
+
+void RoomsRequest()
+{
+    nlohmann::json result = HManager::Request("rooms", "", GET);
+    if (result.is_null()) std::cerr << "Can't get rooms\n";
+    for (auto& item : result) {
+        Room roome;
+        roome.roomName = item["name"];
+        roome.ownerName = item["owner"]["username"];
+        roome.userCount = item["playerCount"];
+        roome.capacity = item["maxPlayers"];
+        roome.password = item["passwordRequired"];
+        rooms.emplace_back(roome);
+    }
+}
+
+
+void SocialMedia::RoomPage(float& width, float& height)
+{
+    if (needRooms) {
+        std::thread(&RoomsRequest).detach();
+        needRooms = false;
+    }
+    static bool openCreate = false;
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+    ImVec2 valid = ImGui::GetContentRegionAvail();
+    static char searchRoomText[256];
+    Lss::Left(0.05f * valid.x);
+    Lss::InputText("searchRoom", searchRoomText, sizeof(searchRoomText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Rounded);
+    ImGui::SameLine();
+    Lss::Left(0.05f * valid.x);
+    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH))
+    {
+        openCreate = true;
     }
 
-    Lss::End();
-    ImGui::EndChild();
+    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40*Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    {
+        Lss::Text("Create a lobby", 2 * Lss::VH);
+
+        static char nameText[128] = "";
+        static char passwordText[128] = "";
+
+        Lss::Text("Room name: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::InputText("roomName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH), Trans);
+        Lss::LeftTop(7.8f * Lss::VW, -Lss::VH / 2);
+        Lss::Separator(1.0f, 10.2f * Lss::VW, 4);
+
+        Lss::Text("Password: ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::InputText("roomPassword", passwordText, sizeof(passwordText), ImVec2(13.4 * Lss::VW, 3 * Lss::VH), Trans);
+        Lss::LeftTop(6.6f * Lss::VW, -Lss::VH / 2);
+        Lss::Separator(1.0f, 11.4 * Lss::VW, 4);
+
+        ImGui::NewLine();
+
+        static int width = 0;
+        static int height = 0;
+
+        Lss::Text("Canvas", 2 * Lss::VH);
+        Lss::Separator();
+        Lss::Text("Width (px): ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Left(8.2f * Lss::VW);
+        Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+        Lss::Text("Height (px): ", 3 * Lss::VH);
+        ImGui::SameLine();
+        Lss::Left(7.85f * Lss::VW);
+        Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+     
+
+
+
+        ImVec2 buttonSize = ImVec2(100, 20);
+        ImGui::SetCursorPosY(38*Lss::VH - buttonSize.y - 2 * Lss::VH);
+        if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+        {
+            
+        }
+
+        if (ImGui::IsMouseClicked(0))
+        {
+            ImVec2 pos = ImGui::GetWindowPos();
+            ImVec2 cursorPos = ImGui::GetMousePos();
+            ImVec2 size = ImGui::GetWindowSize();
+            if (!Lss::InBound(cursorPos, pos, size)) {
+                ImGui::CloseCurrentPopup();
+                openCreate = false;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndPopup();
+    }
+
+    Lss::SetColor(ContainerBackground, Background);
+    for (auto& room : rooms) {
+        Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 12.5f * Lss::VH), false, Centered);
+        Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
+        Lss::Text(room.roomName, 4 * Lss::VH);
+        Lss::Top(Lss::VH);
+        ImGui::SameLine();
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Text(" - " + room.ownerName, 3 * Lss::VH);
+        ImGui::SameLine();
+        float buttonPos = valid.x - 6 * Lss::VW;
+        ImGui::SetCursorPosX(buttonPos);
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Button("Join", ImVec2(5 * Lss::VW, 5 * Lss::VH), 4 * Lss::VH, Rounded);
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Text(std::to_string(room.userCount) + "/" + std::to_string(room.capacity), 4 * Lss::VH);
+        ImGui::SameLine();
+        float lockPos = valid.x - 6 * Lss::VW;
+        ImGui::SetCursorPosX(lockPos);
+        Lss::Text((room.password) ? "Locked" : "", 4 * Lss::VH);
+        Lss::End();
+        ImGui::EndChild();
+        Lss::Top(Lss::VH);
+    }
+    Lss::SetColor(ContainerBackground, ContainerBackground);
+    ImGui::PopStyleVar();
 }
 
 void SocialMedia::MainFeed(float position, float width, float height)
@@ -587,10 +1164,13 @@ void SocialMedia::MainFeed(float position, float width, float height)
         SettingsPage();
         } break;
     case 2: { //search
-        SearchPage();
+        SearchPage(width, height);
         } break;
     case 3: { //view profile, add images
-        ProfilePage(width, height);
+        ProfilePage(width, height, runtime.id);
+        } break;
+    case 4: {
+        RoomPage(width, height);
         } break;
     default:
         break;
@@ -618,8 +1198,9 @@ void SocialMedia::LeftSide(float position, float width, float height)
         Callback::EditorSwapCallBack();
     }
     Lss::Top(1 * Lss::VH);
-    if (Lss::Button("Lobbies", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
-        //GetPosts();
+    if (Lss::Button("Rooms", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
+        if (mode != 4) mode = 4;
+        else mode = 0;
     }
     Lss::Top(2 * Lss::VH);
     ImGui::Separator();
@@ -633,7 +1214,11 @@ void SocialMedia::LeftSide(float position, float width, float height)
     Lss::Top(1 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
-        else mode = 0;
+        else {
+            if (searchMode != 0) searchMode = 0;
+			else mode = 0;
+            needImages = true;
+        }
     }
 
     if (runtime.logedIn) {
@@ -684,11 +1269,22 @@ void SocialMedia::RightSide(float position, float width, float height)
     ImGui::SetNextWindowSize(ImVec2(width, height));
     ImGui::Begin("Right Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-    if (ImGui::Button("Button A")) {
-    }
-    if (ImGui::Button("Button B")) {
-    }
+	    ImVec2 valid = ImGui::GetContentRegionAvail();
 
+
+        Lss::Text("PopularLobbies", 5 * Lss::VH, Centered);
+		Lss::Child("Lobbies", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+	    Lss::Separator(2.0f);
+		Lss::Text("Friends online", 5 * Lss::VH, Centered);
+        Lss::Child("FriendsOnline", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+        Lss::Separator(2.0f);
+        Lss::Text("Friend lobbies", 5 * Lss::VH, Centered);
+        Lss::Child("FriendLobbies", ImVec2(0, valid.y / 3 - 6 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        ImGui::EndChild();
+
+        Lss::End();
     ImGui::End();
 }
 
@@ -727,7 +1323,12 @@ void SocialMedia::GetPosts()
         else post.imageId = postJson["imageId"];
         post.text = postJson["text"];
         post.time = ParsePostTime(postJson["date"]);
+        post.likes = postJson["likes"];
     
+		for (const auto& tags : postJson["tags"]) {
+			post.tags.push_back(tags);
+		}
+
         for (const auto& commentJson : postJson["comments"]) {
             Comment comment;
             comment.id = commentJson["id"];
@@ -783,6 +1384,16 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
             else {
                 imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
             }
+        } break;
+    case 5: {
+        auto start = std::chrono::high_resolution_clock::now();
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+
+        auto end = std::chrono::high_resolution_clock::now(); // End timing
+        std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
+
+        std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
         } break;
     default:
         break;

@@ -26,7 +26,6 @@
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 #endif
 
-
 struct RenderData
 {
 	std::shared_ptr<VertexArray> va;
@@ -36,11 +35,20 @@ struct RenderData
 	unsigned int fbo = 0;
 };
 
+struct CanvasData
+{
+	RenderData data;
+	float canvasX;
+	float canvasY;
+};
+
 struct Node {
 	std::string name;
 	bool visible = true;
 	bool editing = false;
+	bool selected = false;
 	int id;
+	int opacity = 100;
 
 	Node(const std::string& nodeName, int idIn) : name(nodeName), id(idIn) {}
 	virtual ~Node() = default;
@@ -82,15 +90,27 @@ public:
 	int nextFreeNodeIndex = 0;
 	int currentFolder = 0;
 	bool isEditor = false;
-	std::unordered_map<int, std::shared_ptr<Node>> nodes;
+	int tool = 0;
+	int currentLayerToDrawOn = 0;
 
-	void Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight);
+	std::vector<RenderData> brushes;
+	std::unordered_map<int, UserMoveMessage> usersToMove;
+	std::unordered_map<int, std::shared_ptr<Node>> nodes;
+	std::vector<int> folders;
+
+	bool inited = false;
+
+	void Init(GLFWwindow* windowIn);
+	void InitBrushes();
+	void InitLayers(CanvasData* canvasData);
+
+	void SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn);
 	void Draw(const RenderData& data);
 	void Clear();
 	void Render();
 	void RenderLayers();
 	void RenderCursor();
-	void RenderCursorToCanvas(int currentLayer = 0);
+	void RenderCursorToCanvas();
 	void MoveLayers(static float* offset);
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
@@ -101,8 +121,16 @@ public:
 	void SendDraw();
 	void SendLayerRename(std::string nameIn, int locationIn);
 
-	void AddLayer(std::string name, int location);
-	void AddFolder(std::string name, int location);
+	int GetParent(int& id);
+	int CreateLayer(int& parent);
+	int CreateFolder(int& parent);
+	void RemoveLayer(int& index);
+	void RemoveFolder(int& index);
+
+	void ChangeBrush(int index);
+
+	void SetOnline(bool value);
+	bool GetOnline();
 
 	ThreadSafeQueue taskQueue;
 

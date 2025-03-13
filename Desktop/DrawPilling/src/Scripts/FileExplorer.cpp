@@ -4,7 +4,7 @@
 #include "HighsManager.h"
 #include <vector>
 
-const char* formats[] = {"all file", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
+const char* formats[] = {"all", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
 GLuint folder;
@@ -55,7 +55,8 @@ void LoadDrives() {
 
 bool HasSpecificExtension(const std::string& file, const std::string& ext) {
     size_t pos = file.find_last_of(".");
-    if (pos == std::string::npos) return false;
+    if (pos == std::string::npos || pos == 0) return false;
+    if (file.find(" ") != std::string::npos) return false;
     return file.substr(pos) == ext;
 }
 
@@ -168,10 +169,11 @@ void SideBar(float& childHeight)
     ImGui::EndChild();
 }
 
-void Explorer::FileExplorerUI(bool* creatorStuff) {
+void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
     Lss::SetFontSize(1 * Lss::VH);
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
     {
+        bool isHovered = false;
         static const char* currentFormat = formats[0];
         static int currentId = 0;
         static char fileName[200];
@@ -233,7 +235,6 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
             bool isSelected = (file == selectedFile);
             if (!isDirectory) {
                 if (!ValidFormat(currentId, newPath)) continue;
-                if (isSelected) strcpy(fileName, file.c_str());
             }
 
             ImTextureID icon;
@@ -253,6 +254,8 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
             if (ImGui::Selectable(("##" + file).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
                 selectedFile = file;
                 std::cout << "Selected: " << file << std::endl;
+                isHovered = true;
+                strcpy(fileName, file.c_str());
             }
             ImVec2 pos = ImGui::GetItemRectMin();
             ImVec2 size = ImGui::GetItemRectSize();
@@ -278,6 +281,9 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
             }
             Lss::End();
             ImGui::NextColumn();
+        }
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !isHovered) {
+            selectedFile = "";
         }
         ImGui::PopItemFlag();
         ImGui::Columns(1);
@@ -320,9 +326,17 @@ void Explorer::FileExplorerUI(bool* creatorStuff) {
         if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 4 * Lss::VH))
         {
             std::string imagePrePath = currentPath +'\\' + fileName;
-            int idForFormat = 3;
             if (ValidFormat(idForFormat, imagePrePath))
             {
+                DWORD fileAttrib = GetFileAttributes(imagePrePath.c_str());
+                if (fileAttrib != INVALID_FILE_ATTRIBUTES) {
+                    std::cout << "The path does exist: " << imagePrePath << std::endl;
+                    imagePath = imagePrePath;
+                }
+                else {
+                    std::cout << "The path does not exist: " << imagePrePath << std::endl;
+                    imagePath = imagePrePath;
+                }
                 imagePath = imagePrePath;
                 *creatorStuff = false;
             }

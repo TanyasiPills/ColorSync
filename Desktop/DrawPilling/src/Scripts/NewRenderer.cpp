@@ -7,12 +7,12 @@
 
 #include "NewRenderer.h"
 #include "Texture.h"
-#include "NewDraw.h"
 #include "CallBacks.h"
 #include "DrawUI.h"
 #include "lss.h"
 #include "SocksManager.h"
 #include "FileExplorer.h"
+#include "NewDraw.h"
 
 
 void GLClearError() {
@@ -31,6 +31,7 @@ GLFWwindow* window;
 std::vector<int> layers;
 RenderData cursor;
 
+
 float cursorRadius = 0.01;
 float initialCanvasRatio[2] = { 1.0f,1.0f };
 float canvasRatio[2] = {1,1};
@@ -39,6 +40,7 @@ float offset[2] = {0,0};
 float cursorScale[3] = {1.0,1.0, 1};
 float identityOffset[2] = {0,0};
 float prevPos[2] = { 0,0 };
+float prevPrevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
 
 std::vector<Position> drawPositions;
@@ -46,7 +48,7 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
-int tool = 0;
+bool online = false;
 
 bool FileExists(const char* filename) {
 	FILE* file = fopen(filename, "r");
@@ -57,33 +59,114 @@ bool FileExists(const char* filename) {
 	return false;
 }
 
+void NewRenderer::SetOnline(bool value){
+	online = value;
+}
+bool NewRenderer::GetOnline() {
+	return online;
+}
 
-void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsigned int& canvasHeightIn, int screenWidth, int screenHeight)
+int NewRenderer::GetParent(int& id)
+{
+	for (int folderIndex : folders)
+	{
+		Folder* folder = dynamic_cast<Folder*>(nodes[folderIndex].get());
+
+		if (folder && std::find(folder->childrenIds.begin(), folder->childrenIds.end(), id) != folder->childrenIds.end()) {
+			return folderIndex;
+		}
+	}
+	return 0;
+}
+int NewRenderer::CreateLayer(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	layers.push_back(index);
+	RenderData createdLayer;
+	NewDraw::initLayer(createdLayer, canvasRatio[0], canvasRatio[1]);
+	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	return index;
+}
+int NewRenderer::CreateFolder(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	nodes[index] = std::make_unique<Folder>("Folder", index);
+	folders.push_back(index);
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	return index;
+}
+
+void NewRenderer::RemoveLayer(int& index)
+{
+	auto it = std::find(layers.begin(), layers.end(), index);
+	if (it != layers.end())
+	{
+		layers.erase(it);
+		nodes.erase(index);
+	}
+}
+void NewRenderer::RemoveFolder(int& index)
+{
+	auto it = std::find(folders.begin(), folders.end(), index);
+	if (it != folders.end())
+	{
+		folders.erase(it);
+		nodes.erase(index);
+	}
+}
+
+void NewRenderer::Init(GLFWwindow* windowIn)
 {
 	SetMainThreadCallback([this](const DrawMessage& msg) {
 		taskQueue.push(msg);
 	});
 
 	window = windowIn;
-	canvasSize[0] = canvasWidthIn;
-	canvasSize[1] = canvasHeightIn;
-	NewDraw::InitBrush(cursor, cursorRadius);
-	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	glViewport(0, 0, width, height);
+}
 
-	initialCanvasRatio[0] = canvasData.canvasX;
-	initialCanvasRatio[1] = canvasData.canvasY;
-	canvasRatio[0] = canvasData.canvasX;
-	canvasRatio[1] = canvasData.canvasY;
+void NewRenderer::InitBrushes()
+{
+	RenderData cursorBrush;
+	NewDraw::InitBrush(cursorBrush, cursorRadius, "Resources/Textures/cursor.png");
+	brushes.push_back(cursorBrush);
 
+	RenderData penBrush;
+	NewDraw::InitBrush(penBrush, cursorRadius);
+	brushes.push_back(penBrush);
+
+	RenderData airBrush;
+	NewDraw::InitBrush(airBrush, cursorRadius, "Resources/Textures/airBrush.png");
+	brushes.push_back(airBrush);
+
+	RenderData waterBrush;
+	NewDraw::InitBrush(waterBrush, cursorRadius, "Resources/Textures/waterBrush.png");
+	brushes.push_back(waterBrush);
+
+	RenderData charCoalBrush;
+	NewDraw::InitBrush(charCoalBrush, cursorRadius, "Resources/Textures/charCoalBrush.png");
+	brushes.push_back(charCoalBrush);
+
+	cursor = brushes[0];
+}
+
+void NewRenderer::InitLayers(CanvasData* canvasData)
+{
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData.data);
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData->data);
 	layers.push_back(nextFreeNodeIndex);
 	currentNode = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
 
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Folder", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(nextFreeNodeIndex);
 	int folder = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
@@ -96,21 +179,28 @@ void NewRenderer::Init(GLFWwindow* windowIn, unsigned int& canvasWidthIn, unsign
 	nextFreeNodeIndex++;
 }
 
-void NewRenderer::AddLayer(std::string name, int location) 
+void NewRenderer::ChangeBrush(int index)
 {
-	RenderData layer;
-	NewDraw::initLayer(layer, canvasRatio[0], canvasRatio[1]);
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>(name, nextFreeNodeIndex, layer);
-	layers.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
+	cursor = brushes[index];
 }
 
-void NewRenderer::AddFolder(std::string name, int location)
+void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
 {
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>(name, nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[location].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
+	canvasSize[0] = canvasWidthIn;
+	canvasSize[1] = canvasHeightIn;
+
+	InitBrushes();
+
+	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+
+	initialCanvasRatio[0] = canvasData.canvasX;
+	initialCanvasRatio[1] = canvasData.canvasY;
+	canvasRatio[0] = canvasData.canvasX;
+	canvasRatio[1] = canvasData.canvasY;
+
+	InitLayers(&canvasData);
+
+	inited = true;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -156,11 +246,14 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 
 void NewRenderer::LoadPrevCursor(float* prevIn)
 {
+	prevPrevPos[0] = prevIn[0];
+	prevPrevPos[1] = prevIn[1];
+
 	prevPos[0] = prevIn[0];
 	prevPos[1] = prevIn[1];
 }
 
-void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
+void NewRenderer::RenderCursorToCanvas()
 {
 	if (recieving) return;
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
@@ -171,33 +264,66 @@ void NewRenderer::RenderCursorToCanvas(int currentLayerIn)
 		float* pos = Callback::GlCursorPosition();
 		switch (tool)
 		{
-		case 0: {
+		case 0: { // draw
 			float dx = pos[0] - prevPos[0];
 			float dy = pos[1] - prevPos[1];
 			dx *= canvasSize[0];
 			dy *= canvasSize[1];
 			float distance = std::sqrt(dx * dx + dy * dy);
-			int num_samples = (((static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) < (100)) ? (static_cast<int>(std::exp(distance / (cursorRadius * canvasSize[0])))) : (100));
-			if (num_samples < 1) num_samples = 100;
+
+			int num_samples = 1+distance/(cursorRadius*1000);
+
+			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
+			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
 
 			for (int i = 0; i < num_samples; ++i) {
 				float t = static_cast<float>(i) / num_samples;
-				float vx = prevPos[0] * (1 - t) + pos[0] * t;
-				float vy = prevPos[1] * (1 - t) + pos[1] * t;
+
+				float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
+				float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
+
+				//drawPositions.push_back(Position(vx, vy));
+
 				float tmp[2] = { vx, vy };
-
-				drawPositions.push_back(Position(vx, vy));
-
 				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
 				Draw(cursor);
 			}
+			prevPrevPos[0] = prevPos[0];
+			prevPrevPos[1] = prevPos[1];
 			prevPos[0] = pos[0];
 			prevPos[1] = pos[1];
-			}break;
-		case 1: {
+		} break;
+		case 1: { // fill
 			ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
 			NewDraw::Fill(layerPtr, pos[0], pos[1], colorIn);
-		}break;
+		} break;
+		case 2: { // colorpicker[0]
+			int pixelX = static_cast<int>((pos[0]) / canvasRatio[0] * canvasSize[0]);
+			int pixelY = static_cast<int>((pos[1]) / canvasRatio[1] * canvasSize[0]);
+
+			unsigned char pixelColor[4];
+			glReadPixels(pixelX, pixelY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
+
+			ImVec4 pickedColor(pixelColor[0] / 255.0f,
+				pixelColor[1] / 255.0f,
+				pixelColor[2] / 255.0f,
+				pixelColor[3] / 255.0f);
+
+			color[0] = pickedColor.x;
+			color[1] = pickedColor.y;
+			color[2] = pickedColor.z;
+
+			unsigned char whiteColor[4] = { 255, 255, 255, 255 };
+
+			glRasterPos2i(pixelX, pixelY);
+			glDrawPixels(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteColor);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			DrawUI::SetColor(color);
+		} break;
+		case 3: { // erase
+
+		} break;
 		default:
 			break;
 		}
@@ -337,6 +463,7 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
+	DrawUI::InitWindow();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius);
 	DrawUI::BrushWindow(window);
@@ -391,6 +518,7 @@ void RenderMenu()
 void NewRenderer::SwapView()
 {
 	isEditor = !isEditor;
+	if(isEditor) DrawUI::InitData();
 	std::cout << "swapped to editor: " << isEditor << std::endl;
 }
 
@@ -399,8 +527,10 @@ void NewRenderer::Render()
 {
 	Clear();
 	if (isEditor) {
-		RenderLayers();
-		RenderCursor();
+		if (inited) {
+			RenderLayers();
+			RenderCursor();
+		}
 		RenderImGui(onUI);
 	}
 	else {

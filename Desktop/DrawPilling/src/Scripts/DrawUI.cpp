@@ -2,17 +2,20 @@
 #include "HighsManager.h"
 #include "SocksManager.h"
 #include "RuntimeData.h"
+#include "FileExplorer.h"
+#include "CallBacks.h"
+#include "lss.h"
 #include <thread>
 
 //Left side
-ImVec2 ColorWindowSize(100, 200);
+ImVec2 ColorWindowSize(100, 300);
 ImVec2 ColorWindowPos;
-ImVec2 SizeWindowSize(100, 200);
-ImVec2 SizeWindowPos(0, 200);
+ImVec2 SizeWindowSize(100, 300);
+ImVec2 SizeWindowPos(0, 300);
 ImVec2 BrushWindowSize(100, 200);
-ImVec2 BrushWindowPos(0, 450);
-int leftSize = 200;
-int leftMinSize = 200;
+ImVec2 BrushWindowPos(0, 600);
+int leftSize = 250;
+int leftMinSize = 250;
 
 //Right side
 ImVec2 ServerWindowSize(100, 200);
@@ -21,14 +24,19 @@ ImVec2 LayerWindowSize(100, 200);
 ImVec2 LayerWindowPos(0, 200);
 ImVec2 ChatWindowSize(100, 200);
 ImVec2 ChatWindowPos(0, 450);
-int rightSize = 200;
-int rightMinSize = 200;
+int rightSize = 400;
+int rightMinSize = 400;
 
 
 int windowSizeX, windowSizeY;
+int selectedLayer = -1;
 
 bool inited = false;
+bool canvasInitWindow = true;
 bool needLogin = true;
+bool isOnline = false;
+
+bool itemHovered = false;
 
 static std::vector<std::string> chatLog;
 
@@ -36,8 +44,56 @@ static NewRenderer* renderer;
 
 static RuntimeData& runtime = RuntimeData::getInstance();
 
+MyTexture visible;
+MyTexture notVisible;
+MyTexture folderLayer;
+MyTexture layerLayer;
+
+MyTexture cursor;
+MyTexture pen;
+MyTexture water;
+MyTexture air;
+MyTexture chalk;
+
+MyTexture sizecursor;
+
+MyTexture icons[5];
+
+std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
+
+static int selected = -1;
+static int selectedSize = -1;
+static const ImVec2 iconSize(50, 50);
+
+std::string savePath = "";
+
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
+	isOnline = renderer->GetOnline();
+	std::cout << "Is online: " << isOnline << std::endl;
+}
+
+void InitBrushIcons()
+{
+	
+	cursor.Init("Resources/icons/cursorBrush.png");
+	icons[0] = cursor;
+
+	
+	pen.Init("Resources/icons/penBrush.png");
+	icons[1] = pen;
+	
+	air.Init("Resources/icons/airBrush.png");
+	icons[2] = air;
+
+	water.Init("Resources/icons/waterBrush.png");
+	icons[3] = water;
+
+	
+	chalk.Init("Resources/icons/chalkBrush.png");
+	icons[4] = chalk;
+
+	sizecursor.Init("Resources/Textures/penBrush.png");
 }
 
 void DrawUI::InitData()
@@ -54,6 +110,21 @@ void DrawUI::InitData()
 	if (runtime.password[0] == '\0') {
 		std::cerr << "No password in appdata" << std::endl;
 	}
+	visible.Init("Resources/icons/eyesOpen.png");
+	notVisible.Init("Resources/icons/eyeClosed.png");
+	folderLayer.Init("Resources/icons/folderLayer.png");
+	layerLayer.Init("Resources/icons/layer.png");
+
+	InitBrushIcons();
+}
+
+static float color[3] = { 0.0f, 0.0f, 0.0f };
+
+void DrawUI::SetColor(float* colorIn)
+{
+	color[0] = colorIn[0];
+	color[1] = colorIn[1];
+	color[2] = colorIn[2];
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
@@ -63,12 +134,11 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-	static float color[3] = { 0.0f, 0.0f, 0.0f };
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
-	cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	if(renderer->inited)cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
 	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
@@ -89,42 +159,51 @@ void DrawUI::SizeWindow(float& cursorRadius)
 
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+		int sliderVal = cursorRadius * 100;
+		sliderVal -= 1;
+		sliderVal *= 2;
+		if (sliderVal == 0) sliderVal = 1;
+		ImGui::SliderInt("##Scale", &sliderVal, 1, 16);
+		if (sliderVal == 1) sliderVal = 0;
+		sliderVal /= 2;
+		sliderVal += 1;
+		
+		cursorRadius = float(sliderVal) / 100.0f;
 
-	if (ImGui::SliderFloat("Size", &cursorRadius, 0.01f, 0.16f, "%.2f")) {
-		for (int y = 0; y < 4; ++y) {
-			for (int x = 0; x < 4; ++x) {
-				selected[y][x] = 0;
-			}
-		}
-	}
+		ImGui::Columns(3, nullptr, false);
 
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
+		for (int i = 1; i < 10; i++)
 		{
-			int index = y * 4 + x + 1;
-			//int indexText = std::pow(2, (float)index);
-			std::string label = std::to_string(index);
+			int index = i - 1;
+			if ((index * 0.01f + 0.01f) <= cursorRadius && cursorRadius < ((index + 1) * 0.01f + 0.01f)) selectedSize = index;
 
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selected[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selected[i][j] = 0;
-					}
-				}
-				cursorRadius = 0.01 * index;
-				selected[y][x] ^= 1;
+			bool isSelected = (index == selectedSize);
+			if (ImGui::Selectable(("##" + std::to_string(index) + "sizes").c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+				cursorRadius = index * 0.01f + 0.01f;
+				selectedSize = index;
 			}
-			ImGui::PopID();
+
+			ImVec2 pos = ImGui::GetItemRectMin();
+			ImVec2 size = ImGui::GetItemRectSize();
+			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+			ImGui::SetCursorScreenPos(cursorPos);
+
+			float zoom = 0.025f * index;
+			Lss::Image(sizecursor.GetId(), iconSize, 0, ImVec2(zoom, zoom), ImVec2(1 - zoom, 1 - zoom));
+			Lss::SetFontSize(2 * Lss::VH);
+
+			std::string nameStuff = (index == 0) ? std::to_string(i) : std::to_string(index*2);
+			float nameSize = ImGui::CalcTextSize(nameStuff.c_str()).x;
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+			Lss::Text(nameStuff, 2 * Lss::VH);
+
+			ImGui::NextColumn();
+			Lss::End();
 		}
-	}
-	SizeWindowSize = ImGui::GetWindowSize();
-	leftSize = SizeWindowSize.x;
-	SizeWindowPos = ImGui::GetWindowPos();
+
+		SizeWindowSize = ImGui::GetWindowSize();
+		leftSize = SizeWindowSize.x;
+		SizeWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
 	if (SizeWindowSize.x < 200) {
 		leftSize = 200;
@@ -140,37 +219,38 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	static char selectedBrush[4][4] = { { 1, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+	ImGui::Columns(2, nullptr, false);
+	int index = 0;
 
-	for (int y = 0; y < 4; y++) {
-		for (int x = 0; x < 4; x++)
-		{
-			int index = y * 4 + x + 1;
-			std::string label = "Bruh " + std::to_string(index);
 
-			if (x > 0) ImGui::SameLine();
-
-			ImGui::PushID(y * 4 + x);
-			if (ImGui::Selectable(label.c_str(), selectedBrush[y][x] != 0, 0, ImVec2(50, 50)))
-			{
-				for (int i = 0; i < 4; ++i) {
-					for (int j = 0; j < 4; ++j) {
-						selectedBrush[i][j] = 0;
-					}
-				}
-				selectedBrush[y][x] ^= 1;
-			}
-			ImGui::PopID();
+	for (RenderData brush : renderer->brushes)
+	{
+		bool isSelected = (index == selected);
+		if (ImGui::Selectable(("##"+std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+			if(!isSelected) renderer->ChangeBrush(index);
+			selected = index;
 		}
+		ImVec2 pos = ImGui::GetItemRectMin();
+		ImVec2 size = ImGui::GetItemRectSize();
+		ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+		ImGui::SetCursorScreenPos(cursorPos);
+
+		Lss::Image(icons[index].GetId(), iconSize);
+		Lss::SetFontSize(2 * Lss::VH);
+
+		std::string fileNameStuff = names[index];
+		//if (file.size() > 10) fileNameStuff = file.substr(0, 10) + "...";
+		//else fileNameStuff = file;
+
+		float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+		Lss::Text(fileNameStuff, 2 * Lss::VH);
+
+		index++;
+		ImGui::NextColumn();
+		Lss::End();
 	}
-	BrushWindowSize = ImGui::GetWindowSize();
-	leftSize = BrushWindowSize.x;
-	BrushWindowPos = ImGui::GetWindowPos();
 	ImGui::End();
-	if (BrushWindowSize.x < 200) {
-		leftSize = 200;
-		std::cout << leftSize << std::endl;
-	}
 }
 
 void DrawUI::ServerWindow()
@@ -181,46 +261,20 @@ void DrawUI::ServerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
 	ImVec2 windowSize = ImGui::GetWindowSize();
-	ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
 
-	ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
-	ImGui::SetCursorPos(inputPos);
 
-	ImGui::SetNextItemWidth(120);
-	static char ipInput[100] = "";
-	ImGui::InputTextWithHint("##ipinput", "Ip", ipInput, IM_ARRAYSIZE(ipInput), ImGuiInputTextFlags_CharsNoBlank);
-	ImGui::SameLine();
-	if (ImGui::Button("Set", ImVec2(30, 0))) {
-		runtime.ip = ipInput;
+
+	if (isOnline) {
+		
 	}
-	inputPos.y += 30;
-	ImGui::SetCursorPos(inputPos);
-	// Set the size for input field and position
-	ImGui::SetNextItemWidth(150); // Set input width
-
-	static char lobbyName[100] = "";
-	ImGui::InputTextWithHint("##usernameInput", "Room", lobbyName, IM_ARRAYSIZE(lobbyName), ImGuiInputTextFlags_CharsNoBlank);
-
-	inputPos.y += 30;
-	ImGui::SetNextItemWidth(100);
-	ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
-	ImGui::SetCursorPos(buttonPos);
-
-	if (ImGui::Button("Create") && lobbyName != "") {
-		std::map<std::string, std::string> room;
-		room["name"] = lobbyName;
-		room["create"] = "true";
-		SManager::Connect(("http://"+runtime.ip+":3000").c_str(), runtime.token.c_str(), room);
-	}
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(300);
-	if (ImGui::Button("Join") && lobbyName != "") {
-		std::map<std::string, std::string> room;
-		room["name"] = lobbyName;
-		room["create"] = "false";
-		SManager::Connect(("http://" + runtime.ip + ":3000").c_str(), runtime.token.c_str(), room);
+	else {
+		Lss::SetFontSize(2 * Lss::VH);
+		std::string text = "Wumpus is very sad :c";
+		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
+		ImGui::SetCursorPos(ImVec2(windowSize.x / 2 - textWidth / 2, windowSize.y / 2 - 2 * Lss::VH));
+		Lss::Text(text, 2 * Lss::VH);
+		Lss::End();
 	}
 
 	ServerWindowSize = ImGui::GetWindowSize();
@@ -234,87 +288,144 @@ void DrawUI::ServerWindow()
 	}
 }
 
-void DrawLayerTreeTwo(Node& node) {
-	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+void ChangeVisibilityChild(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
 
-	if (Folder* folder = dynamic_cast<Folder*>(&node)) {
-		if (folder->id == 0) {
-			for (int childId : folder->childrenIds) {
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			ChangeVisibilityChild(child);
+		}
+		renderer->nodes[child]->visible = foldy->visible;
+	}
+}
+
+ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
+	ImGui::SetCursorPos(cursorPos);
+	float x = ImGui::GetContentRegionAvail().x;
+	float cursorX = ImGui::GetCursorPosX();
+	Node* nody = &node;
+	Folder* foldy = nullptr;
+
+	bool isFolder = dynamic_cast<Folder*>(&node) != nullptr;
+	if (isFolder) foldy = dynamic_cast<Folder*>(&node);
+	if (!nody) return cursorPos;
+	if (nody->selected && selectedLayer != nody->id) nody->selected = false;
+	if (nody->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
+	if (isFolder) {
+		if (foldy->id == 0) {
+			for (int childId : foldy->childrenIds) {
 				Node* childNode = renderer->nodes[childId].get();
-				DrawLayerTreeTwo(*childNode);
+				cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
 			}
+			return cursorPos;
+		}
+	}
+
+	Lss::Child(std::to_string(nody->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
+	Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
+	if (nody->visible) Lss::Image(visible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	else Lss::Image(notVisible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	Lss::End();
+	ImGui::EndChild();
+
+	if (ImGui::IsItemClicked()) {
+		nody->visible = !nody->visible;
+		if(isFolder) ChangeVisibilityChild(nody->id);
+		itemHovered = true;
+	}
+
+	ImGui::SameLine();
+	Lss::Left(-0.2 * Lss::VW);
+
+	Lss::Child(std::to_string(nody->id), ImVec2(x - 3 * Lss::VH, 3 * Lss::VH));
+	Lss::SetFontSize(2 * Lss::VH);
+	float validWidth = ImGui::GetContentRegionAvail().x;
+	std::string percent = std::to_string(nody->opacity) + "%%";
+	float textSize = ImGui::CalcTextSize((percent).c_str()).x;
+	Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
+	if (isFolder) Lss::Image(folderLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	else Lss::Image(layerLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	if (!nody->editing) {
+		ImGui::SameLine();
+		Lss::Text(nody->name, 2 * Lss::VH);
+	}
+	else {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		static char editBuffer[256] = "";
+		bool editing = ImGui::InputText("##editinput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+		ImGui::SetKeyboardFocusHere(-1);
+		if (editing) {
+			if (strlen(editBuffer) > 0 && nody->name != editBuffer) {
+				nody->name = editBuffer;
+				memset(editBuffer, 0, sizeof(editBuffer));
+				nody->editing = false;
+				renderer->SendLayerRename(nody->name, nody->id);
+			}
+		}
+	}
+	ImGui::SetCursorPos(ImVec2(validWidth - textSize - Lss::VW, 0.5f * Lss::VH));
+	Lss::Text(percent, 2 * Lss::VH);
+
+	Lss::End();
+	ImGui::EndChild();
+	if (ImGui::IsItemClicked()) {
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+			std::cout << "pressed on: " << nody->name << std::endl;
+			nody->editing = true;
 		}
 		else {
-			bool open = ImGui::TreeNodeEx(("##" +folder->name).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | (folder->open ? ImGuiTreeNodeFlags_DefaultOpen : 0));
-			ImGui::SameLine();
-			ImGui::Checkbox(("##" + folder->name + "visibility").c_str(), &folder->visible);
-			ImGui::SameLine();
-			if (folder->visible && !folder->editing) ImGui::Text((folder->name).c_str());
-
-			if (folder->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-				folder->editing = true;
-			}
-
-			if (open) {
-				folder->open = true;
-				for (int childId : folder->childrenIds) {
-					Node* childNode = renderer->nodes[childId].get();
-					//childNode->visible = folder->visible;
-					DrawLayerTreeTwo(*childNode);
-				}
-				ImGui::TreePop();
-			}
-			else {
-				folder->open = false;
-			}
-			if (folder->visible && folder->editing) {
-				ImGui::SameLine();
-				ImGui::SetNextItemWidth(100);
-				static char editBuffer[256] = "";
-				bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-				ImGui::SetKeyboardFocusHere(-1);
-				if (editing) {
-					if (strlen(editBuffer) > 0 && folder->name != editBuffer) {
-						folder->name = editBuffer;
-						memset(editBuffer, 0, sizeof(editBuffer));
-						folder->editing = false;
-						renderer->SendLayerRename(folder->name, folder->id);
-					}
-				}
-			}
+			if (isFolder) foldy->open = !foldy->open;
+			else renderer->currentNode = nody->id;
 		}
-	}
-	else if (Layer* layer = dynamic_cast<Layer*>(&node)) {
-		bool clicked = ImGui::Selectable(("##SelectableLayer" + layer->name).c_str(), (renderer->currentNode == layer->id));
-		if (clicked) {
-			renderer->currentNode = layer->id;
-		}
-		ImGui::TreeNodeEx(("##" + layer->name).c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
-		ImGui::SameLine();
-		ImGui::Checkbox(("##" + layer->name + "visibility").c_str(), &layer->visible);
-		ImGui::SameLine();
-		if (layer->visible && !layer->editing) ImGui::Text((layer->name).c_str());
-
-		if (layer->visible && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-			layer->editing = true;
-		}
-		if (layer->visible && layer->editing) {
-			ImGui::SameLine();
-			ImGui::SetNextItemWidth(100);
-			static char editBuffer[256] = "";
-			bool editing = ImGui::InputText("##ChatInput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-			ImGui::SetKeyboardFocusHere(-1);
-			if (editing) {
-				if (strlen(editBuffer) > 0 && layer->name != editBuffer) {
-					layer->name = editBuffer;
-					memset(editBuffer, 0, sizeof(editBuffer));
-					layer->editing = false;
-					renderer->SendLayerRename(layer->name, layer->id);
-				}
-			}
-		}
+	
+		nody->selected = true;
+		selectedLayer = nody->id;
+		itemHovered = true;
 	}
 
+	if (nody->selected) Lss::SetColor(ContainerBackground, ContainerBackground);
+
+	if (isFolder && foldy->open) {
+		cursorPos = ImGui::GetCursorPos();
+		for (int childId : foldy->childrenIds) {
+			cursorPos.x = cursorX;
+			cursorPos.x += 2 * Lss::VW;
+			Node* childNode = renderer->nodes[childId].get();
+			cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
+		}
+		cursorPos.x += 2 * Lss::VW;
+	}
+	return ImGui::GetCursorPos();
+}
+
+void DeleteChilds(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			DeleteChilds(child);
+			renderer->RemoveFolder(child);
+		}
+		else {
+			renderer->RemoveLayer(child);
+		}
+	}
+	foldy->childrenIds.clear();
 }
 
 void DrawUI::LayerWindow()
@@ -322,13 +433,75 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
-	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	itemHovered = false;
 
-	DrawLayerTreeTwo(*renderer->nodes[0].get());
+	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	itemHovered = !ImGui::IsWindowHovered();
+	Lss::SetFontSize(Lss::VH);
+	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
+		if (selectedLayer == -1) {
+			int parent = 0;
+			renderer->CreateLayer(parent);
+		}
+		else {
+			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				renderer->CreateLayer(selectedLayer);
+			}
+			else {
+				int parent = renderer->GetParent(selectedLayer);
+				renderer->CreateLayer(parent);
+			}
+		}
+		renderer->nextFreeNodeIndex++;
+	}
+	if(ImGui::IsItemHovered()) itemHovered = true;
+	if (Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	{
+		if (selectedLayer == -1) {
+			int parent = 0;
+			renderer->CreateFolder(parent);
+		}
+		else {
+			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				renderer->CreateFolder(selectedLayer);
+			}
+			else {
+				int parent = renderer->GetParent(selectedLayer);
+				renderer->CreateFolder(parent);
+			}
+		}
+		renderer->nextFreeNodeIndex++;
+	}
+	if (ImGui::IsItemHovered()) itemHovered = true;
+	if (Lss::Button("-", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	{
+		if (selectedLayer != -1) {
+			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				DeleteChilds(selectedLayer);
+				renderer->RemoveFolder(selectedLayer);
+			}
+			else {
+				renderer->RemoveLayer(selectedLayer);
+			}
+		}
+	}
+	if (ImGui::IsItemHovered()) itemHovered = true;
+	Lss::Top(Lss::VH);
+	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+	ImVec2 cursy = ImGui::GetCursorPos();
+	if(renderer->inited) DrawLayerTreeThree(*renderer->nodes[0].get(), cursy);
+	ImGui::PopStyleVar();
+
+	if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !itemHovered)
+	{
+		selectedLayer = -1;
+	}
 
 	LayerWindowSize = ImGui::GetWindowSize();
 	rightSize = LayerWindowSize.x;
 	LayerWindowPos = ImGui::GetWindowPos();
+
+	Lss::End();
 	ImGui::End();
 	if (LayerWindowSize.x < 200) {
 		rightSize = 200;
@@ -337,27 +510,27 @@ void DrawUI::LayerWindow()
 
 void DrawUI::ChatWindow()
 {
-	static char inputBuffer[256] = "";
+	ImVec2 avail = ImGui::GetContentRegionAvail();
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
-
+	float heightOfChat = windowSizeY - (LayerWindowPos.y + LayerWindowSize.y);
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	float availableHeight = ImGui::GetContentRegionAvail().y;
-	float inputBarHeight = ImGui::GetTextLineHeight() * 2 - ImGui::GetStyle().FramePadding.y * 2; //+ ImGui::GetStyle().FramePadding.y * 3; //+ ImGui::GetStyle().ItemSpacing.y;
-
-
-	ImGui::BeginChild("ChatLog", ImVec2(0, availableHeight - inputBarHeight), false, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("ChatLog", ImVec2(0, heightOfChat-4.8f*Lss::VH), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
 	{
+		Lss::SetFontSize(2 * Lss::VH);
 		ImGui::TextWrapped("%s", message.c_str());
 	}
+	Lss::End();
 	ImGui::EndChild();
 	ImGui::Separator();
-	ImGui::BeginChild("ChatInput", ImVec2(0, inputBarHeight - ImGui::GetStyle().ItemSpacing.y * 2), false);
-	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	if (ImGui::InputText("##ChatInput", inputBuffer, IM_ARRAYSIZE(inputBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
+	ImGui::BeginChild("ChatInput", ImVec2(0, 2.5f * Lss::VH), false);
+
+	static char inputBuffer[256] = "";
+
+	if (Lss::InputText("chatInput", inputBuffer, sizeof(inputBuffer), ImVec2(avail.x, 2*Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		if (strlen(inputBuffer) > 0)
 		{
@@ -368,6 +541,7 @@ void DrawUI::ChatWindow()
 		}
 		ImGui::SetKeyboardFocusHere(-1);
 	}
+	Lss::End();
 	ImGui::EndChild();
 
 	ChatWindowSize = ImGui::GetWindowSize();
@@ -381,58 +555,78 @@ void DrawUI::ChatWindow()
 	}
 }
 
-void DrawUI::LoginWindow()
+void DrawUI::InitWindow()
 {
-	if (needLogin) {
-		if (!inited) {
-			ImGui::SetNextWindowPos(ImVec2(windowSizeX / 2 - 50, windowSizeY / 2 - 50));
-			ImGui::SetNextWindowSize(ImVec2(200, 150)); // Adjusted window size to fit content
-			inited = true;
-		}
-		ImGui::Begin("Nem");
+	if (!inited && !isOnline) {
+		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+		{
+			Lss::Text("Create a Sync", 2 * Lss::VH);
+			Lss::Separator();
 
-		// Center the cursor in the window
-		ImVec2 windowSize = ImGui::GetWindowSize();
-		ImVec2 centerPos = ImVec2(windowSize.x / 2, windowSize.y / 2);
+			static char nameText[128] = "";
 
-		// Set the size for input field and position
-		ImGui::SetNextItemWidth(150); // Set input width
-		ImVec2 inputPos = ImVec2(centerPos.x - 75, centerPos.y - 30); // Center input horizontally
-		ImGui::SetCursorPos(inputPos);
+			Lss::Text("Name: ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(4.4f * Lss::VW);
+			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH));
 
-		static char usernameText[100] = "";
-		ImGui::InputTextWithHint("##usernameInput", "Email", usernameText, IM_ARRAYSIZE(usernameText), ImGuiInputTextFlags_CharsNoBlank);
-		inputPos.y += 30;
 
-		ImGui::SetCursorPos(inputPos);
-		ImGui::SetNextItemWidth(150);
-		static char passwordText[24] = "";
-		ImGui::InputTextWithHint("##passwordInput", "Password", passwordText, IM_ARRAYSIZE(passwordText), ImGuiInputTextFlags_Password | ImGuiInputTextFlags_CharsNoBlank);
+			ImGui::NewLine();
 
-		inputPos.y += 30;
-		ImGui::SetNextItemWidth(100);
-		ImVec2 buttonPos = ImVec2(centerPos.x - 25, inputPos.y);
-		ImGui::SetCursorPos(buttonPos);
+			static int width = 400;
+			static int height = 300;
 
-		if (ImGui::Button("Login")) {
-			std::thread([]() {
-				nlohmann::json body;
-				body["email"] = usernameText;
-				body["password"] = passwordText;
+			Lss::Text("Canvas", 2 * Lss::VH);
+			Lss::Separator();
+			Lss::Text("Width (px): ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(8.2f * Lss::VW);
+			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+			Lss::Text("Height (px): ", 3 * Lss::VH);
+			ImGui::SameLine();
+			Lss::Left(7.85f * Lss::VW);
+			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
 
-				std::cout << "Sending JSON: " << body.dump() << std::endl;
-				nlohmann::json res = HManager::Request((runtime.ip+":3000/users/login").c_str(), body.dump(), POST);
+			static char locationText[256] = "";
+			static bool openExplorer = false;
+			static bool wasOpen = false;
 
-				if (res.contains("access_token") && res.contains("username")) {
-					std::cout << "got this JSON: " << res["access_token"] << std::endl;
-					runtime.token = res["access_token"];
-					runtime.username = res["username"];
-					needLogin = false;
+			Lss::Text("Save Location", 2 * Lss::VH);
+			Lss::Separator();
+			Lss::SetFontSize(3 * Lss::VH);
+			float buttonTextSize = ImGui::CalcTextSize("...").x;
+			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH),0, ImGuiInputTextFlags_ReadOnly);
+			ImGui::SameLine();
+			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) {
+				openExplorer = true;
+				wasOpen = true;
+			}
+			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 4);
+			else if (wasOpen)
+			{
+				strcpy(locationText, Explorer::GetImagePath().c_str());
+			}
+			
+
+
+			ImVec2 buttonSize = ImVec2(100, 20);
+			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
+			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+			{
+				if (width > 0 && height > 0) {
+					unsigned int widthOut = width;
+					unsigned int heightOut = height;
+
+					renderer->SetDrawData(widthOut, heightOut);
+
+					canvasInitWindow = false;
+					inited = true;
 				}
-			}).detach();
-		}
+			}
 
-		ImGui::End();
+			Lss::End();
+			ImGui::EndPopup();
+		}
 	}
 }
 

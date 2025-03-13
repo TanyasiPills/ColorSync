@@ -65,11 +65,11 @@ SessionData Manager::Assembly(SessionData& data) {
 #endif
     ImGui_ImplOpenGL3_Init(glsl_version);
     glEnable(GL_BLEND);
-    //glBlendFunc(GL_ONE, GL_ZERO);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   // glBlendFunc(GL_ONE, GL_ZERO);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     DataManager::LoadAppData();
-    DrawUI::InitData();
 
     HManager::Init();
     Lss::Init(window, screenWidth, screenHeight);

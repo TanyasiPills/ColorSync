@@ -5,7 +5,6 @@
 
 
 sio::client h;
-const char* ip;
 bool onserver = false;
 NewRenderer* rendererSocks;
 
@@ -103,11 +102,12 @@ void SManager::OnAction(sio::event& ev) {
         case AddNode:
             try {
                 int typeOfNode = data["node"]->get_int();
+                int location = data["location"]->get_int();
                 if (typeOfNode == 0) {
-                    rendererSocks->AddLayer(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->CreateLayer(location);
                 }
                 else if (typeOfNode == 1) {
-                    rendererSocks->AddFolder(data["name"]->get_string(), data["location"]->get_int());
+                    rendererSocks->CreateFolder(location);
                 }
             }
             catch (...) {
@@ -121,6 +121,20 @@ void SManager::OnAction(sio::event& ev) {
             }
             catch (...) {
                 std::cerr << "Error recieving RenameNodeMessage" << std::endl;
+            }
+            break;
+        case Move:
+            try {
+                UserMoveMessage message;
+                message.name = data["name"]->get_string();
+                message.profileId = data["profileId"]->get_int();
+                std::map<std::string, sio::message::ptr> position = data["position"]->get_map();
+                message.position.x = position["x"]->get_double();
+                message.position.y = position["y"]->get_double();
+                rendererSocks->usersToMove[message.profileId] = message;
+            }
+            catch (...) {
+                std::cerr << "Error recieving MoveUserMessage" << std::endl;
             }
             break;
         default:
@@ -228,6 +242,27 @@ void SManager::SendAction(Message& dataIn)
                 msg->get_map()["type"] = sio::int_message::create(RenameNode);
                 data->get_map()["name"] = sio::string_message::create(node->name);
                 data->get_map()["location"] = sio::int_message::create(node->location);
+            }
+            catch (...) {
+                std::cerr << "bad data type: not NodeMessage" << std::endl;
+            }
+            break;
+        case Move:
+            try {
+                UserMoveMessage* node = dynamic_cast<UserMoveMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(Move);
+                data->get_map()["profileId"] = sio::int_message::create(node->profileId);
+                try {
+                    sio::message::ptr positionObj = sio::object_message::create();
+
+                    positionObj->get_map()["x"] = sio::double_message::create(node->position.x);
+                    positionObj->get_map()["y"] = sio::double_message::create(node->position.y);
+
+                    data->get_map()["position"] = positionObj;
+                }
+                catch (...) {
+                    std::cerr << "Error parsing user position JSON" << std::endl;
+                }
             }
             catch (...) {
                 std::cerr << "bad data type: not NodeMessage" << std::endl;

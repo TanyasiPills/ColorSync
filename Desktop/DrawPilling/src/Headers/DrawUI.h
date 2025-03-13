@@ -21,6 +21,7 @@ public:
     static void ChatWindow();
 
     static void LoginWindow();
+    static void InitWindow();
 
     static void InitData();
 
@@ -29,6 +30,8 @@ public:
     static std::string GetUsername();
     static std::string GetToken();
     static std::string GetIp();
+
+    static void SetColor(float* colorIn);
 
     static void SetRenderer(NewRenderer& renderer);
 };

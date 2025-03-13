@@ -2592,10 +2592,7 @@
     <None Include="Resources\Shaders\FloodFill.shader" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\Textures\circle.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\fish.jpg">
+    <Image Include="Resources\Textures\penBrush.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\icons\file.png">
@@ -2605,6 +2602,45 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\icons\folderFull.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\eyeClosed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\eyesOpen.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\folderLayer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\layer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\airBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\charCoalBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\waterBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\cursor.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\airBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\chalkBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\cursorBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\waterBrush.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\penBrush.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

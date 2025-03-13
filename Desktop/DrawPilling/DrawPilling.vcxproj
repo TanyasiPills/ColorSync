@@ -1034,11 +1034,23 @@
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Resources\icons\airBrush.png" />
+    <Image Include="Resources\icons\chalkBrush.png" />
+    <Image Include="Resources\icons\cursorBrush.png" />
+    <Image Include="Resources\icons\eyeClosed.png" />
+    <Image Include="Resources\icons\eyesOpen.png" />
     <Image Include="Resources\icons\file.png" />
     <Image Include="Resources\icons\folder.png" />
     <Image Include="Resources\icons\folderFull.png" />
-    <Image Include="Resources\Textures\circle.png" />
-    <Image Include="Resources\Textures\fish.jpg" />
+    <Image Include="Resources\icons\folderLayer.png" />
+    <Image Include="Resources\icons\layer.png" />
+    <Image Include="Resources\icons\penBrush.png" />
+    <Image Include="Resources\icons\waterBrush.png" />
+    <Image Include="Resources\Textures\airBrush.png" />
+    <Image Include="Resources\Textures\charCoalBrush.png" />
+    <Image Include="Resources\Textures\penBrush.png" />
+    <Image Include="Resources\Textures\cursor.png" />
+    <Image Include="Resources\Textures\waterBrush.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />

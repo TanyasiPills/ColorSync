@@ -2,6 +2,17 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include "NewRenderer.h"
+
+struct Sync {
+    int canvasWidth;
+    int canvasHeight;
+    int layerLength;
+    std::vector<Layer> layers;
+    int folderLength;
+    std::vector<Folder> folders;
+};
 
 struct ApplicationData {
     char token[256];

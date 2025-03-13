@@ -26,5 +26,6 @@ uniform vec3 Kolor;
 
 void main() {
 	vec4 texColor = texture(u_Texture, v_TexCoord);
-	color = texColor * vec4(Kolor, 1.0);
+	if (texColor.a < 0.01) discard;
+	color = texColor * vec4(Kolor, texColor.a);
 }

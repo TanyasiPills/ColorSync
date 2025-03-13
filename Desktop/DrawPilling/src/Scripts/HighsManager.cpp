@@ -48,6 +48,8 @@ void HManager::InitUser()
 					auto* textureQueue = SocialMedia::GetTextureQueue();
 					textureQueue->push(std::make_tuple(imageData, 0, 3));
 				}
+				result = HManager::Request("users/likes", "", GET);
+				if(!result.is_null() && !result.empty())for (auto& item : result) runtime.liked.insert((int)item);
 			}
 		}
 		catch (const std::exception& e) {
@@ -116,12 +118,16 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	}
 
 	if (!tags.empty()) {
-		nlohmann::json tagsJson = tags;
-		std::string tagsString = tagsJson.dump();
+		nlohmann::json tagsJson = nlohmann::json::array();
+		for (const auto& tag : tags) {
+			tagsJson.push_back(tag);
+		}
 
+		std::string tagsString = tagsJson.dump();
 		part = curl_mime_addpart(mime);
 		curl_mime_name(part, "tags");
-		curl_mime_data(part, tagsString.c_str(), CURL_ZERO_TERMINATED);
+		curl_mime_type(part, "application/json");
+		curl_mime_data(part, tagsString.c_str(), tagsString.size());
 	}
 
 	curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
@@ -141,6 +147,7 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	if (http_code != 200 && http_code != 201)
 	{
 		std::cerr << "Request failed with HTTP code: " << http_code << std::endl;
+		//return nlohmann::json::parse(result);
 		return nullptr;
 	}
 	if (res != CURLE_OK) {
@@ -237,9 +244,9 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 nlohmann::json HManager::Request(std::string query, std::string body, Method method)
 {
 	CURL* curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	if (curl) {
 		std::string url = "http://" +runtime.ip+":3000/" + query;
+		std::cout << "URL: " << url << std::endl;
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 
@@ -257,7 +264,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 
 
 		if (method == GET) {
-			curl_easy_setopt(curl, CURLOPT_HTTPGET, 10L);
+			curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 		}
 		else if (method == DEL) {
 			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
@@ -270,9 +277,11 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 			{
 				curl_easy_setopt(curl, CURLOPT_POST, 1L);
 			}
-			if (body.empty()) std::cerr << "Post/Patch sent with no body" << std::endl;
-
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
+			if (body.empty()) {
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{}");
+				std::cerr << "Post/Patch sent with no body" << std::endl;
+			}
+			else curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
 		}
 
 
@@ -280,8 +289,10 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+		curl_slist_free_all(headers);
+		curl_easy_cleanup(curl);
 
-		if (http_code != 200 && http_code != 201)
+		if (http_code != 200 && http_code != 201 && http_code != 204)
 		{
 			std::cerr << "Get voided bitch" << std::endl;
 			return nullptr;
@@ -292,19 +303,25 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		} 
 		else {
 			try {
-				nlohmann::json jsonResponse = nlohmann::json::parse(result);
-				if (!jsonResponse.empty()) {
-					return jsonResponse;
+				if (result.empty()) {
+					std::cerr << "Response body is empty" << std::endl;
+					return nlohmann::json{};
 				}
 				else {
-					std::cerr << "JSON array is empty" << std::endl;
+					nlohmann::json jsonResponse = nlohmann::json::parse(result);
+					if (!jsonResponse.empty()) {
+						return jsonResponse;
+					}
+					else {
+						std::cerr << "JSON array is empty" << std::endl;
+						return nullptr;
+					}
 				}
 			}
 			catch (const nlohmann::json::exception& e) {
 				std::cerr << "Error parsing JSON: " << e.what() << std::endl;
 			}
 		}
-		curl_easy_cleanup(curl);
 	}
 	else {
 		std::cerr << "HManager isn't initialized" << std::endl;
@@ -329,12 +346,20 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
+	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
+
+	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 0L);
+	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 0L);
+
+	curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 10L);
+	curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 5L);
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
@@ -358,7 +383,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	}
 
 	int width, height, channels;
-	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 3);
+	unsigned char* data = stbi_load_from_memory(imageData.data(), imageData.size(), &width, &height, &channels, 4);
 
 	if (!data) {
 		std::cerr << "Failed to load image from memory" << std::endl;
@@ -381,7 +406,7 @@ GLuint HManager::ImageFromRequest(const std::vector<uint8_t>& imageData, float& 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	stbi_image_free(data);
 
