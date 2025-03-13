@@ -48,7 +48,6 @@ export class UsersController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     const status = await this.authService.register(createUserDto);
     if (status) return this.authService.login(status);
     else if (status == null) throw new HttpException('Email already in use.', HttpStatus.CONFLICT); 
