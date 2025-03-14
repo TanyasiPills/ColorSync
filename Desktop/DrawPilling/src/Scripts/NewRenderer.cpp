@@ -28,7 +28,6 @@ bool GLLogCall(const char* function, const char* file, int line) {
 }
 
 GLFWwindow* window;
-std::vector<int> layers;
 RenderData cursor;
 
 
@@ -77,6 +76,11 @@ int NewRenderer::GetParent(int& id)
 		}
 	}
 	return 0;
+}
+
+unsigned int* NewRenderer::GetCanvasSize()
+{
+	return canvasSize;
 }
 int NewRenderer::CreateLayer(int& parent)
 {

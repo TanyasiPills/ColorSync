@@ -24,8 +24,11 @@ class DataManager
 {
 private:
 public:
-    static void SaveData(const ApplicationData& data, const std::string& filename);
-    static ApplicationData LoadData(const std::string& filename);
+    static void SetRenderer(NewRenderer* rendererIn);
+
     static void LoadAppData();
     static void SaveAppData();
+
+    static void SaveSyncData(std::string path);
+    static void LoadSyncData();
 };

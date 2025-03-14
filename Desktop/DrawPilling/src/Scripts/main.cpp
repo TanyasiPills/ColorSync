@@ -1,16 +1,5 @@
 #include "Headers.h"
 
-//Variables
-int screenwidth, screenheight;
-
-unsigned int VBO, VAO;
-unsigned int CanvasVBO, CanvasVAO;
-
-static float size = 0.1f;
-bool hover = false;
-
-unsigned int canvasX = 500, canvasY = 500;  
-
 // Main code
 int main()
 {
@@ -22,7 +11,7 @@ int main()
     Callback::Init(data.window, renderer);
     DrawUI::SetRenderer(renderer);
     SManager::SetRenderer(renderer);
-
+    DataManager::
 
     renderer.Init(data.window);
 

@@ -96,6 +96,7 @@ public:
 	std::vector<RenderData> brushes;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
+	std::vector<int> layers;
 	std::vector<int> folders;
 
 	bool inited = false;
@@ -131,6 +132,8 @@ public:
 
 	void SetOnline(bool value);
 	bool GetOnline();
+
+	unsigned int* GetCanvasSize();
 
 	ThreadSafeQueue taskQueue;
 
