@@ -11,7 +11,7 @@ int main()
     Callback::Init(data.window, renderer);
     DrawUI::SetRenderer(renderer);
     SManager::SetRenderer(renderer);
-    DataManager::
+    DataManager::SetRenderer(renderer);
 
     renderer.Init(data.window);
 

@@ -134,6 +134,7 @@ public:
 	bool GetOnline();
 
 	unsigned int* GetCanvasSize();
+	void SetCanvasSize(float* sizes);
 
 	ThreadSafeQueue taskQueue;
 

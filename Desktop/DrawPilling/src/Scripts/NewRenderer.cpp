@@ -82,6 +82,12 @@ unsigned int* NewRenderer::GetCanvasSize()
 {
 	return canvasSize;
 }
+
+void NewRenderer::SetCanvasSize(float* sizes)
+{
+	canvasSize[0] = sizes[0];
+	canvasSize[1] = sizes[1];
+}
 int NewRenderer::CreateLayer(int& parent)
 {
 	int index = nextFreeNodeIndex;
