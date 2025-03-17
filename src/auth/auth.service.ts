@@ -33,7 +33,7 @@ export class AuthService {
   async login(user: any) {
     const payload = {username: user.username, sub: user.id};
     const storedToken = await this.db.token.findFirst({where: {userId: user.id}})
-    if (storedToken) return {access_token: storedToken.token, username: user.username, id: user.id};
+    if (storedToken) return {access_token: storedToken.token, username: user.username, id: user.id, email: user.email};
     else {
       const token = await this.jwtService.sign(payload);
       await this.db.token.create({data: {token: token, userId: user.id}});
@@ -44,7 +44,7 @@ export class AuthService {
   async register(dto: CreateUserDto) {
     try {
       dto.password = await hash(dto.password);
-      const user = await this.db.user.create({data: dto});
+      const user = await this.db.user.create({data: dto, select: {id: true, username: true, email: true}});
       return user;
     } catch (e) {
       if (e.code == 'P2002') return null;

@@ -27,7 +27,13 @@ export class UserInfoType {
   username: string
 }
 
-export class LoginResponseType extends UserInfoType {
+export class UserInfoEmailType extends UserInfoType {
+  @IsEmail()
+  @ApiProperty({type: 'string', description: 'The email of the user', example: 'bob@example.com'})
+  email: string;
+}
+
+export class LoginResponseType extends UserInfoEmailType {
   @IsString()
   @ApiProperty({ type: 'string', description: 'The JWT token', example: "eyJhbGciOiJIUzI1NiIsInR5cKS6IkpXVCJ9.eyJ1c2VybmFtZSI6Im12YSIsInN1YiI6MSwiaWF0IjoxNzM5MDEwNzqwfQ.Ad-wyV-wtagv5vKZIVduMS977gUqIStLMT3RGoDAqAQ" })
   access_token: string;

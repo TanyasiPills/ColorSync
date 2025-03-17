@@ -1,4 +1,4 @@
-import { FileType, LoginBodyType, LoginResponseType, UserInfoType } from '../api.dto';
+import { FileType, LoginBodyType, LoginResponseType, UserInfoEmailType, UserInfoType } from '../api.dto';
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -144,10 +144,10 @@ export class UsersController {
   
   /**
    * Returns data about the currently logged in user
-   * @returns {UserInfoType} Information about the logged in user
+   * @returns {UserInfoEmailType} Information about the logged in user
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: 'Returns data about the currently logged in user', type: UserInfoType})
+  @ApiResponse({status: 200, description: 'Returns data about the currently logged in user', type: UserInfoEmailType})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @UseGuards(JwtAuthGuard)
