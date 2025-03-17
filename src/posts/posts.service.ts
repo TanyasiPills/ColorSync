@@ -19,7 +19,7 @@ export class PostsService {
       if (!image) throw new NotFoundException(`Image with id: ${createPostDto.imageId} not found`);
       if (image.visibility == 'private') throw new NotFoundException(`Image with id: ${createPostDto.imageId} is private`);
     }
-    const post = await this.db.post.create({
+    const post: any = await this.db.post.create({
       data:
       {
         userId,
@@ -29,9 +29,18 @@ export class PostsService {
           connectOrCreate: createPostDto.tags.map(e => ({ where: { name: e }, create: { name: e } }))
         } : undefined,
         imageForPost: uploaded
+      },
+      select: {
+        id: true, text: true, date: true, imageId: true, likes: true,
+        user: { select: { username: true, id: true } },
+        comments: {
+          select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } }
+        },
+        tags: true
       }
     });
-    this.elastic.indexPost(post.id, post.text, [], post.date);
+    if (post.tags) post.tags = post.tags.map(e => e.name);
+    this.elastic.indexPost(post.id, post.text, post.tags, post.date);
     return post;
   }
 

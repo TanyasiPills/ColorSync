@@ -25,7 +25,7 @@ export class PostsController {
    */
   @ApiConsumes('multipart/form-data')
   @ApiBody({description: "The data of the image, you can send either a image id for the image or a image file to upload", type: PostInputBodyType})
-  @ApiResponse({ status: 201, description: 'Post sucessfully created' })
+  @ApiResponse({ status: 201, description: 'Post sucessfully created', type: PostIncludesType })
   @ApiResponse({ status: 401, description: 'Invalid token' })
   @ApiBearerAuth()
 
@@ -50,8 +50,6 @@ export class PostsController {
   @HttpCode(201)
   @Post()
   async create(@Body() createPostDto: CreatePostDto, @Req() req: any, @UploadedFile() file: Express.Multer.File) {
-    console.log(createPostDto);
-    console.log(file)
     let uploaded = false;
     if (file) {
       const image = await this.imageService.create({visibility: 'public'}, file, req.user.id, true);

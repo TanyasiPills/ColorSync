@@ -60,6 +60,22 @@ export class ImagesController {
     return { id: result.id };
   }
 
+  
+  /**
+   * Returns the images uploaded by the logged in user
+   * @returns {ImageType[]} Array of images
+   */
+  @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
+  @ApiResponse({ status: 401, description: "Invalid token" })
+  @ApiResponse({ status: 404, description: "No images found" })
+  @ApiBearerAuth()
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getOwnImages(@Req() req) {
+    return this.imageService.findAll(req.user.id, req.usre.id);
+  }
+
   /**
    * Returns the images uploaded by a specific user that the requresting user has access to
    * @param id The id of the user
@@ -68,6 +84,7 @@ export class ImagesController {
   @ApiResponse({ status: 200, description: "Returns all the images", type: ImageType, isArray: true })
   @ApiResponse({ status: 401, description: "Invalid token" })
   @ApiResponse({ status: 404, description: "User not foud or no images found" })
+  @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the user" })
 
   @UseGuards(OptionalAuthGuard)
