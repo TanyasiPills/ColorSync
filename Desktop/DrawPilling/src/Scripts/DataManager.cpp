@@ -11,6 +11,7 @@ ApplicationData appdata;
 Sync sync;
 
 static NewRenderer* renderer;
+std::vector<GLuint> textures;
 
 void DataManager::SetRenderer(NewRenderer& rendererIn)
 {
@@ -66,6 +67,9 @@ void DataManager::SaveAppData()
 
 void SetSyncData()
 {
+    for (GLuint& texture : textures) glDeleteTextures(1, &texture);
+    textures.clear();
+
     sync.layers.clear();
     sync.folders.clear();
     sync.layerTextures.clear();
@@ -81,7 +85,7 @@ void SetSyncData()
         Layer* toAdd = dynamic_cast<Layer*>(renderer->nodes[item].get());
         sync.layers.push_back(*toAdd);
 
-        int id = toAdd->data.texture->GetId();
+        GLuint id = toAdd->data.texture->GetId();
 
         glBindTexture(GL_TEXTURE_2D, id);
         std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
@@ -268,7 +272,6 @@ void DataManager::SaveSyncData(std::string path)
 
     SetSyncData();
     SaveSync(path);
-    }
 }
 
 void DataManager::LoadSyncData(std::string path)
