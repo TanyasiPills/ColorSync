@@ -18,7 +18,7 @@ export interface comment {
 export interface user {
     id: number;
     username: string;
-    email?: string;
+    email: string;
 }
 
 export interface image {

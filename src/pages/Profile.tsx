@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { backendIp } from "../constants";
 import "../css/Profile.css";
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Spinner, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import { useParams } from "react-router-dom";
 import { image, user } from "../types"
+import { ProfileEdit } from "./ProfileEdit";
+import { PostingToProfile } from "./PostingToProfile";
 
 
 export function Profile({ own = false }: { own?: boolean }) {
@@ -22,6 +24,8 @@ export function Profile({ own = false }: { own?: boolean }) {
   const [user, setUser] = useState<user>();
   const [images, setImages] = useState<image[]>();
   const [imageURL, setImageURL] = useState<string[]>();
+  const [show, setShow] = useState(false);
+  const [imgShow, setImgShow] = useState(false);
 
 
   useEffect(() => {
@@ -61,11 +65,14 @@ export function Profile({ own = false }: { own?: boolean }) {
       <Row id='profilData' className="w-100" style={{ flex: '1' }}>
         <Col xs={6} id="mainData">
           <div className="d-flex align-items-center">
-            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" />
-            <h3 id="userName">{user.username}</h3>
+            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => setShow(true)}/>
+            <h3 id="userName" onClick={() => setShow(true)}>{user.username}</h3>
           </div>
+          <ProfileEdit show={show} onHide={() => setShow(false)} />
         </Col>
         <Col xs={6}>
+          <Button onClick={() => setImgShow(true)}>Add new Image!</Button>
+          <PostingToProfile show={imgShow} onHide={() => setImgShow(false)} />
         </Col>
       </Row>
       <Row id="drawings" className="w-100" style={{ display: 'flex', flexWrap: 'wrap' }}>
