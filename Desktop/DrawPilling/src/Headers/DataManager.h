@@ -10,6 +10,7 @@ struct Sync {
     int canvasHeight;
     int layerLength;
     std::vector<Layer> layers;
+    std::vector<std::vector<unsigned char>> layerTextures;
     int folderLength;
     std::vector<Folder> folders;
 };

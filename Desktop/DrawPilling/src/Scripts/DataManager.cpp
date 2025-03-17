@@ -2,6 +2,7 @@
 #include "DataManager.h"
 #include <filesystem>
 #include "RuntimeData.h"
+#include "NewDraw.h"
 
 
 ApplicationData appdata;
@@ -73,6 +74,14 @@ void SetSyncData()
     {
         Layer* toAdd = dynamic_cast<Layer*>(renderer->nodes[item].get());
         sync.layers.push_back(*toAdd);
+
+        int id = toAdd->data.texture->GetId();
+
+        glBindTexture(GL_TEXTURE_2D, id);
+        std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        glBindTexture(GL_TEXTURE_2D, 0);
+        sync.layerTextures.push_back(pixels);
     }
 
     sync.folderLength = renderer->folders.size();
@@ -104,8 +113,10 @@ void SaveSync(std::string path)
         syncFile.write(reinterpret_cast<const char*>(&layer.selected), sizeof(layer.selected));
         syncFile.write(reinterpret_cast<const char*>(&layer.id), sizeof(layer.id));
         syncFile.write(reinterpret_cast<const char*>(&layer.opacity), sizeof(layer.opacity));
-
-        syncFile.write(reinterpret_cast<const char*>(&layer.data), sizeof(layer.data));
+    }
+    for (auto& pixels : sync.layerTextures)
+    {
+        syncFile.write(reinterpret_cast<const char*>(pixels.data()), pixels.size());
     }
 
     syncFile.write(reinterpret_cast<const char*>(&sync.folderLength), sizeof(sync.folderLength));
@@ -156,7 +167,15 @@ void LoadSync(std::string path)
         syncFile.read(reinterpret_cast<char*>(&layer.id), sizeof(layer.id));
         syncFile.read(reinterpret_cast<char*>(&layer.opacity), sizeof(layer.opacity));
 
-        syncFile.read(reinterpret_cast<char*>(&layer.data), sizeof(layer.data));
+    }
+
+    sync.layerTextures.resize(layerSize);
+
+    for (auto& item : sync.layerTextures)
+    {
+        std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
+        syncFile.read(reinterpret_cast<char*>(pixels.data()), pixels.size());
+        item = pixels;
     }
 
     int folderSize;
@@ -194,11 +213,15 @@ void SetRenderData()
     float sizes[2] = {sync.canvasWidth, sync.canvasHeight};
     renderer->SetCanvasSize(sizes);
 
+    int index = 0;
     for (Layer layer : sync.layers)
     {
-        std::shared_ptr<Node> layerPtr = std::make_shared<Layer>(layer);
+        RenderData layerData;
+        NewDraw::initLayer(layerData, sizes[0], sizes[1],sync.layerTextures[index]);
+        std::shared_ptr<Node> layerPtr = std::make_shared<Layer>(layer,layer.id,layerData);
         renderer->nodes[layer.id] = layerPtr;
         renderer->layers.push_back(layer.id);
+        index++;
     }
 
     for (Folder folder : sync.folders)

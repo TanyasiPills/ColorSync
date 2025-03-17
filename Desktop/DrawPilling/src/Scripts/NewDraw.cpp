@@ -23,7 +23,7 @@ void fillPositions(float* positions, float xScale = 0.0, float yScale = 0.0, flo
 	positions[12] = (-xScale) + xPos; positions[13] = yScale + yPos; positions[14] = 0.0f; positions[15] = 1.0f;
 }
 
-void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0, int transparent = 0)
+void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0, int transparent = 0, std::vector<unsigned char> vectorOfTexture = {})
 {
 
 	if (!data.va) {
@@ -59,8 +59,12 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 
 	if (texture != nullptr)
 		data.texture->Init(texture);
-	else
-		data.texture->Init(canvasWidth, canvasHeight, transparent);
+	else {
+		if (vectorOfTexture.size() > 0) {
+			data.texture->Init(vectorOfTexture);
+		} else
+			data.texture->Init(canvasWidth, canvasHeight, transparent);
+	}
 
 	data.texture->Bind();
 	data.shader->SetUniform1i("u_Texture", 0);
@@ -109,11 +113,11 @@ CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvas
 }
 
 
-void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale)
+void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale, std::vector<unsigned char> textureData = {})
 {
 	float positions[16];
 	fillPositions(positions, xScale, yScale);
-	initData(data, positions, nullptr, 0, 1);
+	initData(data, positions, nullptr, 0, 1, textureData);
 
 	glGenFramebuffers(1, &data.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, data.fbo);
