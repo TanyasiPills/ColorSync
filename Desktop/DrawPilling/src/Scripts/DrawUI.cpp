@@ -226,27 +226,26 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 	for (RenderData brush : renderer->brushes)
 	{
-		bool isSelected = (index == selected);
-		if (ImGui::Selectable(("##"+std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-			if(!isSelected) renderer->ChangeBrush(index);
-			selected = index;
+		if (index <= 4) {
+			bool isSelected = (index == selected);
+			if (ImGui::Selectable(("##" + std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+				if (!isSelected) renderer->ChangeBrush(index);
+				selected = index;
+			}
+			ImVec2 pos = ImGui::GetItemRectMin();
+			ImVec2 size = ImGui::GetItemRectSize();
+			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+			ImGui::SetCursorScreenPos(cursorPos);
+
+			Lss::Image(icons[index].GetId(), iconSize);
+			Lss::SetFontSize(2 * Lss::VH);
+
+			std::string fileNameStuff = names[index];
+
+			float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+			Lss::Text(fileNameStuff, 2 * Lss::VH);
 		}
-		ImVec2 pos = ImGui::GetItemRectMin();
-		ImVec2 size = ImGui::GetItemRectSize();
-		ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
-		ImGui::SetCursorScreenPos(cursorPos);
-
-		Lss::Image(icons[index].GetId(), iconSize);
-		Lss::SetFontSize(2 * Lss::VH);
-
-		std::string fileNameStuff = names[index];
-		//if (file.size() > 10) fileNameStuff = file.substr(0, 10) + "...";
-		//else fileNameStuff = file;
-
-		float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
-		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
-		Lss::Text(fileNameStuff, 2 * Lss::VH);
-
 		index++;
 		ImGui::NextColumn();
 		Lss::End();
