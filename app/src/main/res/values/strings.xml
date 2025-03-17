@@ -17,4 +17,6 @@
     <string name="usernameHint">username</string>
     <string name="profile_pictureDescription">profile picture</string>
     <string name="send_buttonDescription">Send button</string>
+    <string name="post_previewCD">Selected image</string>
+    <string name="cancel_buttonCD">Cancel button</string>
 </resources>

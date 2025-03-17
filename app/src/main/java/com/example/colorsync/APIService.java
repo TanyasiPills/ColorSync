@@ -2,17 +2,22 @@ package com.example.colorsync;
 
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.LoginRequest;
+import com.example.colorsync.DataTypes.PostCreate;
 import com.example.colorsync.DataTypes.PostResponse;
 import com.example.colorsync.DataTypes.RegisterRequest;
 import com.example.colorsync.DataTypes.UserWIthToken;
 
 import java.util.List;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -35,4 +40,14 @@ public interface APIService {
     @GET("users/{id}")
     Call<User> getUserById(@Path("id") int id);
 
+    @Multipart
+    @POST("posts")
+    Call<Void> createPostWithFile(
+            @Part MultipartBody.Part file,
+            @Part("text") RequestBody text,
+            @Part("tags[]") List<RequestBody> tags
+    );
+
+    @POST("posts")
+    Call<Void> createPost(@Body PostCreate postCreate);
 }

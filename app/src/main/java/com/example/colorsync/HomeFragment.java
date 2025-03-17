@@ -26,6 +26,7 @@ import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
+import android.transition.Visibility;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,14 +34,22 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.colorsync.DataTypes.PostCreate;
 import com.example.colorsync.DataTypes.PostResponse;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -61,6 +70,10 @@ public class HomeFragment extends Fragment {
     private ImageButton post_upload;
     private ImageButton post_add;
     private EditText post_description;
+    private ImageView post_preview;
+    private ConstraintLayout post_previewContainer;
+    private ImageButton post_previewCancel;
+    private Uri selectedImage;
     private Cursor cursor;
     private boolean isLoadingUris;
 
@@ -107,7 +120,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (!cursor.isClosed()) cursor.close();
+        if (cursor != null && !cursor.isClosed()) cursor.close();
     }
 
     @Override
@@ -121,6 +134,7 @@ public class HomeFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         post_images = view.findViewById(R.id.post_images);
+        post_images.setVisibility(View.GONE);
         post_adapter = new ImageSelectionGrid(post_uris, this);
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
@@ -167,9 +181,81 @@ public class HomeFragment extends Fragment {
         post_description = view.findViewById(R.id.post_description);
         post_upload = view.findViewById(R.id.post_upload);
         post_add = view.findViewById(R.id.post_add);
+        post_preview = view.findViewById(R.id.post_preview);
+        post_previewContainer = view.findViewById(R.id.post_previewContainer);
+        post_previewCancel = view.findViewById(R.id.post_previewCancel);
 
         post_upload.setOnClickListener(v -> {
-            loadMoreUris();
+            post_previewContainer.setVisibility(View.GONE);
+            if (post_images.getVisibility() == View.VISIBLE) {
+                post_images.setVisibility(View.GONE);
+                if (selectedImage != null) post_previewContainer.setVisibility(View.VISIBLE);
+                post_previewContainer.setVisibility(View.VISIBLE);
+            }
+            else  {
+                post_images.setVisibility(View.VISIBLE);
+                if (post_uris.isEmpty()) loadMoreUris();
+            }
+        });
+
+        post_add.setOnClickListener(v -> {
+            //TODO: post_add onclick
+        });
+
+        post_send.setOnClickListener(v -> {
+            String text = post_description.getText().toString();
+            if (text.isEmpty()) return;
+            File file = null;
+            if (selectedImage != null && selectedImage.getPath() != null) {
+                try {
+                    file = new File(selectedImage.getPath());
+                    if (false) throw new IOException();
+                } catch (IOException e) {
+                    new android.app.AlertDialog.Builder(context)
+                            .setTitle("Failed to upload image")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    throw new RuntimeException(e);
+                }
+            }
+            if (file != null) {
+                RequestBody fileRequest = RequestBody.create(MediaType.parse("image/*"), file);
+                MultipartBody.Part fileBody = MultipartBody.Part.createFormData("file", file.getName(), fileRequest);
+                RequestBody textRequest = RequestBody.create(MediaType.parse("text/plain"), text);
+                //TODO: add tags
+                String[] tags = {"tag1", "tag2", "tag3"};
+                List<RequestBody> tagsBody = new ArrayList<>();
+
+                for (String tag : tags) {
+                    tagsBody.add(RequestBody.create(MediaType.parse("text/plain"), tag));
+                }
+                MainActivity.getApi().createPostWithFile(fileBody, textRequest, tagsBody).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful())
+                            Toast.makeText(getContext(), "Post upload succesfull", Toast.LENGTH_SHORT).show();
+                        else new AlertDialog.Builder(context)
+                                .setTitle("Error creating post")
+                                .setMessage(response.body().toString())
+                                .setPositiveButton("Ok", null)
+                                .show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable throwable) {
+                        new AlertDialog.Builder(context)
+                                .setTitle("Error creating post")
+                                .setMessage(throwable.getMessage())
+                                .setPositiveButton("Ok", null)
+                                .show();
+                    }
+                });
+            }
+        });
+
+        post_previewCancel.setOnClickListener(v -> {
+            post_previewContainer.setVisibility(View.GONE);
+            selectedImage = null;
         });
 
         loadMorePosts();
@@ -178,11 +264,15 @@ public class HomeFragment extends Fragment {
     }
 
     public void UriClickHandler(Uri uri) {
-        Toast.makeText(context, "Uri click: " + uri, Toast.LENGTH_SHORT).show();
+        post_previewContainer.setVisibility(View.VISIBLE);
+        selectedImage = uri;
+        post_preview.setImageURI(uri);
+        post_images.setVisibility(View.GONE);
     }
 
 
     public void loadMoreUris() {
+        post_upload.setVisibility(View.VISIBLE);
         if (isLoadingUris) return;
         isLoadingUris = true;
 

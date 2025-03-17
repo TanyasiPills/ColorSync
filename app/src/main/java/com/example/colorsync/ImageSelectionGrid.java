@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -31,6 +32,7 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
 
     public ImageSelectionGrid(List<Uri> items, HomeFragment parent) {
         this.items = items;
+        this.parent = parent;
         selected = -1;
     }
 
@@ -41,12 +43,14 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
     }
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
+        public ConstraintLayout imageLayout;
         public ImageView imageView;
         public Uri item;
 
         public ImageViewHolder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.image);
+            imageLayout = itemView.findViewById(R.id.imageLayout);
             ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
             int size = (int) ((imageView.getContext().getResources().getDisplayMetrics().widthPixels / 2.0) -
                     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, imageView.getContext().getResources().getDisplayMetrics()));
@@ -66,7 +70,9 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
                     .into(imageView);
 
             if (grid.selected == position) {
-                //TODO highlight
+                imageLayout.setBackgroundColor(itemView.getResources().getColor(R.color.bgHighlight));
+            } else {
+                imageLayout.setBackgroundColor(0);
             }
             imageView.setOnClickListener(view -> {
                 grid.SelectionHandler(position);
