@@ -80,10 +80,12 @@ int NewRenderer::GetParent(int& id)
 
 unsigned int* NewRenderer::GetCanvasSize()
 {
+	std::cout << "width: " << canvasSize[0] << ", height: " << canvasSize[1];
+
 	return canvasSize;
 }
 
-void NewRenderer::SetCanvasSize(float* sizes)
+void NewRenderer::SetCanvasSize(unsigned int* sizes)
 {
 	canvasSize[0] = sizes[0];
 	canvasSize[1] = sizes[1];
@@ -93,7 +95,7 @@ int NewRenderer::CreateLayer(int& parent)
 	int index = nextFreeNodeIndex;
 	layers.push_back(index);
 	RenderData createdLayer;
-	NewDraw::initLayer(createdLayer, canvasRatio[0], canvasRatio[1]);
+	NewDraw::initLayer(createdLayer);
 	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
@@ -182,7 +184,7 @@ void NewRenderer::InitLayers(CanvasData* canvasData)
 	nextFreeNodeIndex++;
 
 	RenderData layerTwo;
-	NewDraw::initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
+	NewDraw::initLayer(layerTwo);
 	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Not main", nextFreeNodeIndex, layerTwo);
 	layers.push_back(nextFreeNodeIndex);
 	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
@@ -201,7 +203,7 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 
 	InitBrushes();
 
-	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+	CanvasData canvasData = NewDraw::initCanvas(canvasSize[0], canvasSize[1], window);
 
 	initialCanvasRatio[0] = canvasData.canvasX;
 	initialCanvasRatio[1] = canvasData.canvasY;
@@ -384,7 +386,7 @@ void NewRenderer::SetColor(float* colorIn) {
 	color[2] = colorIn[2];
 }
 
-void NewRenderer::SetDrawData()
+void NewRenderer::SetDrawDataJa()
 {
 	sentBrushSize = cursorRadius;
 	sentOffset.x = offset[0];

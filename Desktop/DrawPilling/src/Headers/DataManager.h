@@ -6,8 +6,8 @@
 #include "NewRenderer.h"
 
 struct Sync {
-    int canvasWidth;
-    int canvasHeight;
+    unsigned int canvasWidth;
+    unsigned int canvasHeight;
     int layerLength;
     std::vector<Layer> layers;
     std::vector<std::vector<unsigned char>> layerTextures;

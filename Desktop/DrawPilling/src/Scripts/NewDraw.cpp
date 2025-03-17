@@ -9,6 +9,9 @@ unsigned int canvasWidth = 0, canvasHeight = 0;
 GLuint floodFillShader;
 GLuint texture, activeBuffer, visitedBuffer;
 
+float xScale = 1;
+float yScale = 1;
+
 bool AreColorsEqual(const ImVec4& col1, const ImVec4& col2, float epsilon = 0.01f) {
 	return fabs(col1.x - col2.x) < epsilon &&
 		fabs(col1.y - col2.y) < epsilon &&
@@ -61,7 +64,7 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 		data.texture->Init(texture);
 	else {
 		if (vectorOfTexture.size() > 0) {
-			data.texture->Init(vectorOfTexture);
+			data.texture->Init(vectorOfTexture, canvasWidth, canvasHeight);
 		} else
 			data.texture->Init(canvasWidth, canvasHeight, transparent);
 	}
@@ -75,26 +78,33 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 	data.texture->UnBind();
 }
 
-CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
+CanvasData NewDraw::initCanvas(unsigned int canvasWidthIn, unsigned int canvasHeightIn, GLFWwindow* window)
 {
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	float xMult = height / width;
+
 	CanvasData data;
 	canvasWidth = canvasWidthIn;
 	canvasHeight = canvasHeightIn;
 	float canvasRatio;
 	float positions[16];
-	float xScale = 1;
-	float yScale = 1;
+	
+	std::cout << "widthIn: " << canvasWidth << ", heightIn: " << canvasHeight << std::endl;
 
-	if (canvasWidthIn >= canvasHeightIn) {
-		canvasRatio = float(canvasHeightIn) / float(canvasWidthIn);
+	if (canvasWidth >= canvasHeight) {
+		canvasRatio = float(canvasHeight) / float(canvasWidth);
 		xScale = 0.8f;
 		yScale = canvasRatio * 0.8f;
+		std::cout << "hey\n";
 	}
 	else {
-		canvasRatio = float(canvasWidthIn) / float(canvasHeightIn);
-		xScale = canvasRatio * 0.8f;
+		canvasRatio = float(canvasWidth) / float(canvasHeight);
+		xScale = canvasRatio * 0.8f ;
 		yScale = 0.8f;	
+		std::cout << "hey2\n";
 	}
+	std::cout << "ratiox: " << xScale << ", ratioy: " << yScale << std::endl;
 	fillPositions(positions, xScale, yScale);
 	initData(data.data, positions, nullptr);
 
@@ -113,7 +123,7 @@ CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvas
 }
 
 
-void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale, std::vector<unsigned char> textureData = {})
+void NewDraw::initLayer(RenderData& data, std::vector<unsigned char> textureData)
 {
 	float positions[16];
 	fillPositions(positions, xScale, yScale);

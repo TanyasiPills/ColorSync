@@ -4,6 +4,7 @@
 #include "RuntimeData.h"
 #include "FileExplorer.h"
 #include "CallBacks.h"
+#include "DataManager.h"
 #include "lss.h"
 #include <thread>
 
@@ -262,14 +263,20 @@ void DrawUI::ServerWindow()
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 	ImVec2 windowSize = ImGui::GetWindowSize();
-
-
+	Lss::SetFontSize(2 * Lss::VH);
+	if (Lss::Button("Save", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
+	{
+		DataManager::SaveSyncData(savePath);
+	}
+	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
+	{
+		DataManager::LoadSyncData(savePath);
+	}
 
 	if (isOnline) {
-		
+
 	}
 	else {
-		Lss::SetFontSize(2 * Lss::VH);
 		std::string text = "Wumpus is very sad :c";
 		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
 		ImGui::SetCursorPos(ImVec2(windowSize.x / 2 - textWidth / 2, windowSize.y / 2 - 2 * Lss::VH));
@@ -280,6 +287,7 @@ void DrawUI::ServerWindow()
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
+	Lss::End();
 	ImGui::End();
 
 	if (ServerWindowSize.x < 200) {
@@ -605,6 +613,7 @@ void DrawUI::InitWindow()
 			else if (wasOpen)
 			{
 				strcpy(locationText, Explorer::GetImagePath().c_str());
+				savePath = Explorer::GetImagePath();
 			}
 			
 
@@ -616,7 +625,6 @@ void DrawUI::InitWindow()
 				if (width > 0 && height > 0) {
 					unsigned int widthOut = width;
 					unsigned int heightOut = height;
-
 					renderer->SetDrawData(widthOut, heightOut);
 
 					canvasInitWindow = false;

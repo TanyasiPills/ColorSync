@@ -69,7 +69,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 				mouseDown = true;
 				renderer->LoadPrevCursor(GlCursorPos);
 				renderer->RenderCursorToCanvas();
-				renderer->SetDrawData();
+				renderer->SetDrawDataJa();
 				break;
 
 			case GLFW_RELEASE:

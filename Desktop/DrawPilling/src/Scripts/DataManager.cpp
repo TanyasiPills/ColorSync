@@ -66,8 +66,9 @@ void DataManager::SaveAppData()
 void SetSyncData()
 {
     unsigned int* sizes = renderer->GetCanvasSize();
+    std::cout << "syncwidth: " << sizes[0] << ", syncheight: " << sizes[1] << std::endl;
     sync.canvasWidth = sizes[0];
-    sync.canvasWidth = sizes[1];
+    sync.canvasHeight = sizes[1];
 
     sync.layerLength = renderer->layers.size();
     for (int item : renderer->layers)
@@ -78,6 +79,7 @@ void SetSyncData()
         int id = toAdd->data.texture->GetId();
 
         glBindTexture(GL_TEXTURE_2D, id);
+        std::cout << sync.canvasWidth * sync.canvasHeight * 4 << std::endl;
         std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -210,24 +212,23 @@ void SetRenderData()
 {
     renderer->nodes.clear();
 
-    float sizes[2] = {sync.canvasWidth, sync.canvasHeight};
+    unsigned int sizes[2] = {sync.canvasWidth, sync.canvasHeight};
+    std::cout << "widthSet: " << sizes[0] << ", heightSet: " << sizes[1] << std::endl;
     renderer->SetCanvasSize(sizes);
 
     int index = 0;
     for (Layer layer : sync.layers)
     {
         RenderData layerData;
-        NewDraw::initLayer(layerData, sizes[0], sizes[1],sync.layerTextures[index]);
-        std::shared_ptr<Node> layerPtr = std::make_shared<Layer>(layer,layer.id,layerData);
-        renderer->nodes[layer.id] = layerPtr;
+        NewDraw::initLayer(layerData, sync.layerTextures[index]);
+       // renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name,layer.id,layerData);
         renderer->layers.push_back(layer.id);
         index++;
     }
 
     for (Folder folder : sync.folders)
     {
-        std::shared_ptr<Node> folderPtr = std::make_shared<Folder>(folder);
-        renderer->nodes[folder.id] = folderPtr;
+        //renderer->nodes[folder.id] = std::make_unique<Folder>(folder.name, folder.id);
         renderer->folders.push_back(folder.id);
     }
 }

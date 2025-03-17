@@ -50,12 +50,16 @@ struct Node {
 	int id;
 	int opacity = 100;
 
+	Node() = default;
+
 	Node(const std::string& nodeName, int idIn) : name(nodeName), id(idIn) {}
 	virtual ~Node() = default;
 };
 
 struct Layer : public Node {
 	RenderData data;
+
+	Layer() = default;
 
 	Layer(const std::string& layerName, int idIn, RenderData dataIn)
 		: Node(layerName, idIn), data(dataIn) {
@@ -65,6 +69,8 @@ struct Layer : public Node {
 struct Folder : public Node {
 	bool open = false;
 	std::vector<int> childrenIds;
+
+	Folder() = default;
 
 	Folder(const std::string& folderName, int idIn)
 		: Node(folderName, idIn) {
@@ -116,7 +122,7 @@ public:
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
 	void LoadPrevCursor(float* GlCursorPos);
-	void SetDrawData();
+	void SetDrawDataJa();
 	void SetColor(float* color);
 	void RenderDrawMessage(const DrawMessage& drawMessage);
 	void SendDraw();
@@ -134,7 +140,7 @@ public:
 	bool GetOnline();
 
 	unsigned int* GetCanvasSize();
-	void SetCanvasSize(float* sizes);
+	void SetCanvasSize(unsigned int* sizes);
 
 	ThreadSafeQueue taskQueue;
 

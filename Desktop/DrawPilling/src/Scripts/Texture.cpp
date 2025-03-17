@@ -7,7 +7,7 @@ MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0
 {
 }
 
-void MyTexture::Init(std::vector<unsigned char> data)
+void MyTexture::Init(std::vector<unsigned char> data, unsigned int canvasWidth, unsigned int canvasHeight)
 {
 	glGenTextures(1, &TO);
 	glBindTexture(GL_TEXTURE_2D, TO);
@@ -19,7 +19,7 @@ void MyTexture::Init(std::vector<unsigned char> data)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, canvasWidth, canvasHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -50,7 +50,7 @@ void MyTexture::Init(const std::string& path)
 	}
 }
 
-void MyTexture::Init(unsigned int& widthIn, unsigned int& heightIn, int transparent)
+void MyTexture::Init(unsigned int widthIn, unsigned int heightIn, int transparent)
 {
 	width = widthIn;
 	height = heightIn;
