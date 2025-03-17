@@ -82,29 +82,25 @@ CanvasData NewDraw::initCanvas(unsigned int canvasWidthIn, unsigned int canvasHe
 {
 	int width, height;
 	glfwGetWindowSize(window, &width, &height);
-	float xMult = height / width;
+	float xMult = (float)height / (float)width;
 
 	CanvasData data;
 	canvasWidth = canvasWidthIn;
 	canvasHeight = canvasHeightIn;
 	float canvasRatio;
 	float positions[16];
-	
-	std::cout << "widthIn: " << canvasWidth << ", heightIn: " << canvasHeight << std::endl;
 
 	if (canvasWidth >= canvasHeight) {
 		canvasRatio = float(canvasHeight) / float(canvasWidth);
-		xScale = 0.8f;
+		xScale = 0.8f * xMult;
 		yScale = canvasRatio * 0.8f;
-		std::cout << "hey\n";
 	}
 	else {
 		canvasRatio = float(canvasWidth) / float(canvasHeight);
-		xScale = canvasRatio * 0.8f ;
+		xScale = canvasRatio * 0.8f * xMult;
 		yScale = 0.8f;	
-		std::cout << "hey2\n";
 	}
-	std::cout << "ratiox: " << xScale << ", ratioy: " << yScale << std::endl;
+
 	fillPositions(positions, xScale, yScale);
 	initData(data.data, positions, nullptr);
 

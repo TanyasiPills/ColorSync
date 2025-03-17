@@ -616,20 +616,31 @@ void DrawUI::InitWindow()
 				savePath = Explorer::GetImagePath();
 			}
 			
-
-
 			ImVec2 buttonSize = ImVec2(100, 20);
 			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
 			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
 			{
-				if (width > 0 && height > 0) {
-					unsigned int widthOut = width;
-					unsigned int heightOut = height;
-					renderer->SetDrawData(widthOut, heightOut);
+				if (Explorer::Exists())
+				{
+					DataManager::LoadSyncData(savePath);
 
 					canvasInitWindow = false;
 					inited = true;
+					std::cout << "heoooo" << std::endl;
 				}
+				else {
+					if (width > 0 && height > 0) {
+						unsigned int widthOut = width;
+						unsigned int heightOut = height;
+						renderer->SetDrawData(widthOut, heightOut);
+						renderer->InitNewCanvas();
+
+						canvasInitWindow = false;
+						inited = true;
+						std::cout << "heoooo2" << std::endl;
+					}
+				}
+
 			}
 
 			Lss::End();

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include "RuntimeData.h"
 #include "NewDraw.h"
+#include <windows.h>
 
 
 ApplicationData appdata;
@@ -65,6 +66,10 @@ void DataManager::SaveAppData()
 
 void SetSyncData()
 {
+    sync.layers.clear();
+    sync.folders.clear();
+    sync.layerTextures.clear();
+
     unsigned int* sizes = renderer->GetCanvasSize();
     std::cout << "syncwidth: " << sizes[0] << ", syncheight: " << sizes[1] << std::endl;
     sync.canvasWidth = sizes[0];
@@ -79,7 +84,6 @@ void SetSyncData()
         int id = toAdd->data.texture->GetId();
 
         glBindTexture(GL_TEXTURE_2D, id);
-        std::cout << sync.canvasWidth * sync.canvasHeight * 4 << std::endl;
         std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -91,6 +95,23 @@ void SetSyncData()
     {
         Folder* toAdd = dynamic_cast<Folder*>(renderer->nodes[item].get());
         sync.folders.push_back(*toAdd);
+    }
+}
+
+void CheckAndDeleteFile(const std::string& filePath) {
+
+    DWORD fileAttrib = GetFileAttributes(filePath.c_str());
+
+    if (fileAttrib != INVALID_FILE_ATTRIBUTES && !(fileAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
+        if (DeleteFile(filePath.c_str())) {
+            std::cout << "File deleted successfully!" << std::endl;
+        }
+        else {
+            std::cerr << "Failed to delete file!" << std::endl;
+        }
+    }
+    else {
+        std::cout << "File does not exist or it's a directory." << std::endl;
     }
 }
 
@@ -173,15 +194,17 @@ void LoadSync(std::string path)
 
     sync.layerTextures.resize(layerSize);
 
+    int size = sync.canvasWidth * sync.canvasHeight * 4;
     for (auto& item : sync.layerTextures)
     {
-        std::vector<unsigned char> pixels(sync.canvasWidth * sync.canvasHeight * 4);
-        syncFile.read(reinterpret_cast<char*>(pixels.data()), pixels.size());
+        std::vector<unsigned char> pixels(size);
+        syncFile.read(reinterpret_cast<char*>(pixels.data()), size);
         item = pixels;
     }
 
     int folderSize;
     syncFile.read(reinterpret_cast<char*>(&folderSize), sizeof(folderSize));
+    std::cout << "folderSize: " << folderSize << std::endl;
     sync.folders.resize(folderSize);
 
     for (auto& folder : sync.folders) {
@@ -195,7 +218,7 @@ void LoadSync(std::string path)
         syncFile.read(reinterpret_cast<char*>(&folder.editing), sizeof(folder.editing));
         syncFile.read(reinterpret_cast<char*>(&folder.selected), sizeof(folder.selected));
         syncFile.read(reinterpret_cast<char*>(&folder.id), sizeof(folder.id));
-        syncFile.read(reinterpret_cast<char*>(&folder.opacity), sizeof(folder.opacity));
+        syncFile.read(reinterpret_cast <char*>(&folder.opacity), sizeof(folder.opacity));
 
         syncFile.read(reinterpret_cast<char*>(&folder.open), sizeof(folder.open));
 
@@ -213,30 +236,39 @@ void SetRenderData()
     renderer->nodes.clear();
 
     unsigned int sizes[2] = {sync.canvasWidth, sync.canvasHeight};
-    std::cout << "widthSet: " << sizes[0] << ", heightSet: " << sizes[1] << std::endl;
-    renderer->SetCanvasSize(sizes);
+    renderer->SetDrawData(sync.canvasWidth, sync.canvasHeight);
 
     int index = 0;
     for (Layer layer : sync.layers)
     {
         RenderData layerData;
         NewDraw::initLayer(layerData, sync.layerTextures[index]);
-       // renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name,layer.id,layerData);
+        renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name,layer.id,layerData);
         renderer->layers.push_back(layer.id);
         index++;
     }
 
     for (Folder folder : sync.folders)
     {
-        //renderer->nodes[folder.id] = std::make_unique<Folder>(folder.name, folder.id);
+        renderer->nodes[folder.id] = std::make_unique<Folder>(folder.name, folder.id);
+        Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[folder.id].get());
+        for (int child : folder.childrenIds)
+        {
+            foldy->AddChild(child);
+        }
         renderer->folders.push_back(folder.id);
     }
 }
 
 void DataManager::SaveSyncData(std::string path)
 {
+    int status = remove(path.c_str());
+    if (status != 0) perror("Error deleting file");
+    else std::cout << "File successfully deleted" << std::endl;
+
     SetSyncData();
     SaveSync(path);
+    }
 }
 
 void DataManager::LoadSyncData(std::string path)

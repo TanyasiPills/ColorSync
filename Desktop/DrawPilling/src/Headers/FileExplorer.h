@@ -13,6 +13,7 @@ class Explorer
 private:
 public:
 	static void Init();
+	static bool Exists();
 	static void FileExplorerUI(bool* creatorStuff, int idForFormat = 3);
 	static std::vector<std::string> GetFilesInDirectory(const std::string& directory);
 	static std::string GetImagePath();

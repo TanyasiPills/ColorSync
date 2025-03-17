@@ -109,9 +109,9 @@ public:
 
 	void Init(GLFWwindow* windowIn);
 	void InitBrushes();
-	void InitLayers(CanvasData* canvasData);
-
+	void InitNewCanvas();
 	void SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn);
+
 	void Draw(const RenderData& data);
 	void Clear();
 	void Render();

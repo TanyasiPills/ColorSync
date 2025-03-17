@@ -30,6 +30,8 @@ bool GLLogCall(const char* function, const char* file, int line) {
 GLFWwindow* window;
 RenderData cursor;
 
+CanvasData dataForCanvas;
+
 
 float cursorRadius = 0.01;
 float initialCanvasRatio[2] = { 1.0f,1.0f };
@@ -166,31 +168,6 @@ void NewRenderer::InitBrushes()
 	cursor = brushes[0];
 }
 
-void NewRenderer::InitLayers(CanvasData* canvasData)
-{
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
-	folders.push_back(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData->data);
-	layers.push_back(nextFreeNodeIndex);
-	currentNode = nextFreeNodeIndex;
-	nextFreeNodeIndex++;
-	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
-
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Folder", nextFreeNodeIndex);
-	folders.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[0].get())->AddChild(nextFreeNodeIndex);
-	int folder = nextFreeNodeIndex;
-	nextFreeNodeIndex++;
-
-	RenderData layerTwo;
-	NewDraw::initLayer(layerTwo);
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Not main", nextFreeNodeIndex, layerTwo);
-	layers.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
-}
-
 void NewRenderer::ChangeBrush(int index)
 {
 	cursor = brushes[index];
@@ -203,16 +180,27 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 
 	InitBrushes();
 
-	CanvasData canvasData = NewDraw::initCanvas(canvasSize[0], canvasSize[1], window);
+	dataForCanvas = NewDraw::initCanvas(canvasSize[0], canvasSize[1], window);
 
-	initialCanvasRatio[0] = canvasData.canvasX;
-	initialCanvasRatio[1] = canvasData.canvasY;
-	canvasRatio[0] = canvasData.canvasX;
-	canvasRatio[1] = canvasData.canvasY;
-
-	InitLayers(&canvasData);
+	initialCanvasRatio[0] = dataForCanvas.canvasX;
+	initialCanvasRatio[1] = dataForCanvas.canvasY;
+	canvasRatio[0] = dataForCanvas.canvasX;
+	canvasRatio[1] = dataForCanvas.canvasY;
 
 	inited = true;
+}
+
+void NewRenderer::InitNewCanvas()
+{
+	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
+	nextFreeNodeIndex++;
+
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, dataForCanvas.data);
+	layers.push_back(nextFreeNodeIndex);
+	currentNode = nextFreeNodeIndex;
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
