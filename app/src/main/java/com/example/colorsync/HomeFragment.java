@@ -26,9 +26,7 @@ import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
-import android.transition.Visibility;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -37,7 +35,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.colorsync.DataTypes.PostCreate;
+import com.example.colorsync.DataTypes.ImageData;
+import com.example.colorsync.DataTypes.Post;
 import com.example.colorsync.DataTypes.PostResponse;
 
 import java.io.File;
@@ -48,7 +47,6 @@ import java.util.Map;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -64,6 +62,7 @@ public class HomeFragment extends Fragment {
     private View view;
 
     private ImageSelectionGrid post_adapter;
+    private List<ImageData> post_userImages;
     private List<Uri> post_uris;
     private RecyclerView post_images;
     private ImageButton post_send;
@@ -83,6 +82,7 @@ public class HomeFragment extends Fragment {
         offset = 0;
         posts = new ArrayList<>();
         post_uris = new ArrayList<>();
+        post_userImages = new ArrayList<>();
     }
 
     @Override
@@ -199,7 +199,28 @@ public class HomeFragment extends Fragment {
         });
 
         post_add.setOnClickListener(v -> {
-            //TODO: post_add onclick
+            MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
+                @Override
+                public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        post_userImages.clear();
+                        post_userImages.addAll(response.body());
+                    } else if (response.code() != 401) {
+                        new AlertDialog.Builder(context)
+                                .setTitle("Failed to load images")
+                                .setMessage(response.message())
+                                .show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<List<ImageData>> call, Throwable throwable) {
+                    new AlertDialog.Builder(context)
+                            .setTitle("Failed to load images")
+                            .setMessage(throwable.getMessage())
+                            .show();
+                }
+            });
         });
 
         post_send.setOnClickListener(v -> {
@@ -208,7 +229,7 @@ public class HomeFragment extends Fragment {
             File file = null;
             if (selectedImage != null && selectedImage.getPath() != null) {
                 try {
-                    file = new File(selectedImage.getPath());
+                    file = FileUtils.getFileFromUri(context, selectedImage);
                     if (false) throw new IOException();
                 } catch (IOException e) {
                     new android.app.AlertDialog.Builder(context)
@@ -229,20 +250,28 @@ public class HomeFragment extends Fragment {
                 for (String tag : tags) {
                     tagsBody.add(RequestBody.create(MediaType.parse("text/plain"), tag));
                 }
-                MainActivity.getApi().createPostWithFile(fileBody, textRequest, tagsBody).enqueue(new Callback<Void>() {
+                MainActivity.getApi().createPostWithFile(UserManager.getBearer(), fileBody, textRequest, tagsBody).enqueue(new Callback<Post>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if (response.isSuccessful())
-                            Toast.makeText(getContext(), "Post upload succesfull", Toast.LENGTH_SHORT).show();
+                    public void onResponse(Call<Post> call, Response<Post> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            MainActivity.getInstance().hideKeyboard();
+                            selectedImage = null;
+                            post_description.setText("");
+                            post_previewContainer.setVisibility(View.GONE);
+                            posts.add(0, response.body());
+                            adapter.notifyItemInserted(0);
+                            offset++;
+                            addPost();
+                        }
                         else new AlertDialog.Builder(context)
                                 .setTitle("Error creating post")
-                                .setMessage(response.body().toString())
+                                .setMessage(response.message())
                                 .setPositiveButton("Ok", null)
                                 .show();
                     }
 
                     @Override
-                    public void onFailure(Call<Void> call, Throwable throwable) {
+                    public void onFailure(Call<Post> call, Throwable throwable) {
                         new AlertDialog.Builder(context)
                                 .setTitle("Error creating post")
                                 .setMessage(throwable.getMessage())
@@ -256,6 +285,7 @@ public class HomeFragment extends Fragment {
         post_previewCancel.setOnClickListener(v -> {
             post_previewContainer.setVisibility(View.GONE);
             selectedImage = null;
+            post_adapter.selectionHandler(-1);
         });
 
         loadMorePosts();
@@ -400,6 +430,8 @@ public class HomeFragment extends Fragment {
     private void loadMorePosts() {
         if (isLoading) return;
         isLoading = true;
+
+        Toast.makeText(context, "offset: " + offset, Toast.LENGTH_SHORT).show();
 
         MainActivity.getApi().getAllPost(offset).enqueue(new Callback<PostResponse>() {
             @Override

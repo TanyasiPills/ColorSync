@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import com.example.colorsync.DataTypes.LoginRequest;
 import com.example.colorsync.DataTypes.RegisterRequest;
+import com.example.colorsync.DataTypes.User;
 import com.example.colorsync.DataTypes.UserWIthToken;
 import com.google.android.material.textfield.TextInputEditText;
 

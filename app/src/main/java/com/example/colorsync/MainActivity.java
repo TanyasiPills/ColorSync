@@ -6,31 +6,22 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
-import android.transition.Slide;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.WindowInsetsController;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.Toast;
+import android.view.inputmethod.InputMethodManager;
 
-import androidx.activity.ComponentActivity;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.colorsync.DataTypes.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.internal.EdgeToEdgeUtils;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -68,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
         constraintLayout = findViewById(R.id.main);
 
+        login();
+
         UserManager.loadToken(this)
                 .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(pref -> {
@@ -75,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                                 login();
                                 return;
                             }
-                            if (UserManager.user == null) {
+                            if (UserManager.user == null || UserManager.token == null) {
                                 api.getUser("Bearer " + pref).enqueue(new Callback<User>() {
                                     @Override
                                     public void onResponse(Call<User> call, Response<User> response) {
@@ -85,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         if (response.isSuccessful() && response.body() != null) {
                                             UserManager.user = response.body();
+                                            UserManager.token = pref;
                                             goToHome();
                                         } else login();
                                     }
@@ -131,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 nav_home.setIcon(R.drawable.home);
             }
             if (fragment != null) {
+                hideKeyboard();
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
             }
             return true;
@@ -150,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         setFullScreen(false);
     }
     private void setFullScreen(boolean fullScreen) {
+        hideKeyboard();
         ConstraintSet off = new ConstraintSet();
         off.clone(constraintLayout);
         ConstraintSet on = new ConstraintSet();
@@ -177,5 +173,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToHome() {
         navbar.setSelectedItemId(R.id.nav_home);
+    }
+
+    public void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && getCurrentFocus() != null) {
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
     }
 }

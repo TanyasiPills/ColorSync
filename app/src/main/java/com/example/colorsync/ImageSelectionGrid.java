@@ -1,27 +1,17 @@
 package com.example.colorsync;
 
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.load.model.GlideUrl;
-import com.bumptech.glide.load.model.LazyHeaders;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
-import com.example.colorsync.DataTypes.ImageData;
 
 import java.util.List;
 
@@ -36,7 +26,7 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
         selected = -1;
     }
 
-    public void SelectionHandler(int position) {
+    public void selectionHandler(int position) {
         selected = position;
         parent.UriClickHandler(items.get(position));
         notifyDataSetChanged();
@@ -54,8 +44,6 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
             ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
             int size = (int) ((imageView.getContext().getResources().getDisplayMetrics().widthPixels / 2.0) -
                     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, imageView.getContext().getResources().getDisplayMetrics()));
-
-            Toast.makeText(imageView.getContext(), "size: " + size, Toast.LENGTH_SHORT).show();
             layoutParams.width = size;
             layoutParams.height = size;
             imageView.setLayoutParams(layoutParams);
@@ -75,7 +63,7 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
                 imageLayout.setBackgroundColor(0);
             }
             imageView.setOnClickListener(view -> {
-                grid.SelectionHandler(position);
+                grid.selectionHandler(position);
             });
         }
     }

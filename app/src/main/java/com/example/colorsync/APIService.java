@@ -2,9 +2,11 @@ package com.example.colorsync;
 
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.LoginRequest;
+import com.example.colorsync.DataTypes.Post;
 import com.example.colorsync.DataTypes.PostCreate;
 import com.example.colorsync.DataTypes.PostResponse;
 import com.example.colorsync.DataTypes.RegisterRequest;
+import com.example.colorsync.DataTypes.User;
 import com.example.colorsync.DataTypes.UserWIthToken;
 
 import java.util.List;
@@ -25,6 +27,19 @@ public interface APIService {
     @GET("posts")
     Call<PostResponse> getAllPost(@Query("offset") int offset);
 
+    @Multipart
+    @POST("posts")
+    Call<Post> createPostWithFile(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part file,
+            @Part("text") RequestBody text,
+            @Part("tags[]") List<RequestBody> tags
+    );
+
+    @POST("posts")
+    Call<Post> createPost(@Body PostCreate postCreate);
+
+
     @POST("users/login")
     Call<UserWIthToken> login(@Body LoginRequest loginRequest);
 
@@ -34,20 +49,14 @@ public interface APIService {
     @GET("users")
     Call<User> getUser(@Header("Authorization") String token);
 
+
     @GET("images/user/{id}")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token, @Path("id") int id);
 
     @GET("users/{id}")
     Call<User> getUserById(@Path("id") int id);
 
-    @Multipart
-    @POST("posts")
-    Call<Void> createPostWithFile(
-            @Part MultipartBody.Part file,
-            @Part("text") RequestBody text,
-            @Part("tags[]") List<RequestBody> tags
-    );
+    @GET("images")
+    Call<List<ImageData>> getUserImages(@Header("Authorization") String token);
 
-    @POST("posts")
-    Call<Void> createPost(@Body PostCreate postCreate);
 }

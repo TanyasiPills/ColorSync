@@ -33,7 +33,8 @@
         android:padding="30dp"
         android:id="@+id/addPostLayout"
         android:background="@color/bgAlpha"
-        android:visibility="visible"                  >
+        android:visibility="gone"
+        >
         <androidx.cardview.widget.CardView
             android:id="@+id/addPost_card"
             android:layout_width="match_parent"

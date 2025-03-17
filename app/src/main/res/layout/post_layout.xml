@@ -46,7 +46,6 @@
                 android:text="@string/description_default_text"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/profile_picture"
-                android:maxLines="2"
                 android:paddingTop="10dp"/>
             
             <ImageView

@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.DataTypes;
 
 public class User {
     private int id;

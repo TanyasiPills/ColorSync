@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.colorsync.DataTypes.Comment;
 
 import java.util.List;
 import java.util.Locale;

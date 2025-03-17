@@ -2,26 +2,18 @@ package com.example.colorsync;
 
 import android.content.Context;
 
-import androidx.datastore.core.DataStore;
 import androidx.datastore.preferences.core.MutablePreferences;
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory;
 import androidx.datastore.preferences.core.Preferences;
 import androidx.datastore.preferences.core.PreferencesKeys;
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
 import androidx.datastore.rxjava3.RxDataStore;
-import androidx.security.crypto.EncryptedFile;
-import androidx.security.crypto.MasterKeys;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import com.example.colorsync.DataTypes.User;
+
 import java.util.Objects;
-import java.util.StringTokenizer;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class UserManager {
     private static final String FILE_NAME = "user_data";
@@ -29,6 +21,10 @@ public class UserManager {
     private static RxDataStore<Preferences> dataStore;
     public static String token;
     public static User user;
+
+    public static String getBearer() {
+        return "Bearer " + token;
+    }
 
     private static RxDataStore<Preferences> getInstance(Context context) {
         if (dataStore == null) {

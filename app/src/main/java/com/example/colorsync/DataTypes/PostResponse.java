@@ -1,7 +1,5 @@
 package com.example.colorsync.DataTypes;
 
-import com.example.colorsync.Post;
-
 import java.util.List;
 
 public class PostResponse {
