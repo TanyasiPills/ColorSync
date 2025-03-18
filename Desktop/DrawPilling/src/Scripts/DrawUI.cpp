@@ -375,7 +375,13 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 				nody->name = editBuffer;
 				memset(editBuffer, 0, sizeof(editBuffer));
 				nody->editing = false;
-				renderer->SendLayerRename(nody->name, nody->id);
+				if (renderer->GetOnline() == true){
+					NodeRenameMessage renameMessage;
+					renameMessage.name = nody->name;
+					renameMessage.location = nody->id;
+					renameMessage.type = RenameNode;
+					SManager::SendAction(renameMessage);
+				}
 			}
 		}
 	}
@@ -664,7 +670,6 @@ void DrawUI::InitWindow()
 
 						canvasInitWindow = false;
 						inited = true;
-						std::cout << "heoooo2" << std::endl;
 					}
 				}
 
