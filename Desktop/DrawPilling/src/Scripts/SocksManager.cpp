@@ -297,11 +297,10 @@ void SManager::SendAction(Message& dataIn)
                 NodeAddMessage* node = dynamic_cast<NodeAddMessage*>(&dataIn);
                 msg->get_map()["type"] = sio::int_message::create(AddNode);
                 data->get_map()["node"] = sio::int_message::create(node->nodeType);
-                data->get_map()["name"] = sio::string_message::create(node->name);
                 data->get_map()["location"] = sio::int_message::create(node->location);
             }
             catch (...) {
-                std::cerr << "bad data type: not NodeMessage" << std::endl;
+                std::cerr << "bad data type: not AddNodeMessage" << std::endl;
             }
             break;
         case RenameNode:
@@ -312,9 +311,18 @@ void SManager::SendAction(Message& dataIn)
                 data->get_map()["location"] = sio::int_message::create(node->location);
             }
             catch (...) {
-                std::cerr << "bad data type: not NodeMessage" << std::endl;
+                std::cerr << "bad data type: not RenameNodeMessage" << std::endl;
             }
             break;
+        case DeleteNode:
+            try {
+                NodeDeleteMessage* node = dynamic_cast<NodeDeleteMessage*>(&dataIn);
+                msg->get_map()["type"] = sio::int_message::create(DeleteNode);
+                data->get_map()["location"] = sio::int_message::create(node->location);
+            }
+            catch (...) {
+                std::cerr << "bad data type: not DeleteNodeMessage" << std::endl;
+            }
         default:
             break;
     }
