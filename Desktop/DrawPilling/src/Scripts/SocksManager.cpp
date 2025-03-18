@@ -137,18 +137,19 @@ void ProcessAction(sio::object_message::ptr dataIn)
             node->name = data["name"]->get_string();
         }
         catch (...) {
-            std::cerr << "Error recieving DeleteNodeMessage" << std::endl;
+            std::cerr << "Error recieving RenameNodeMessage" << std::endl;
         }
         break;
     case DeleteNode:
         try {
             int id = data["location"]->get_int();
             if (dynamic_cast<Folder*>(rendererSocks->nodes[id].get())) {
+                DrawUI::DeleteChilds(id);
                 rendererSocks->RemoveFolder(id);
             } else rendererSocks->RemoveLayer(id);
         }
         catch (...) {
-            std::cerr << "Error recieving RenameNodeMessage" << std::endl;
+            std::cerr << "Error recieving DeleteNodeMessage" << std::endl;
         }
     default:
         break;

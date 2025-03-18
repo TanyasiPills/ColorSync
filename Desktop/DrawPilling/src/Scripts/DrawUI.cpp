@@ -414,7 +414,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	return ImGui::GetCursorPos();
 }
 
-void DeleteChilds(int& index)
+void DrawUI::DeleteChilds(int& index)
 {
 	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
 
@@ -467,6 +467,7 @@ void DrawUI::LayerWindow()
 			NodeAddMessage layerMessage;
 			layerMessage.location = parentToSend;
 			layerMessage.nodeType = 0;
+			layerMessage.type = AddNode;
 			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
@@ -494,6 +495,7 @@ void DrawUI::LayerWindow()
 			NodeAddMessage layerMessage;
 			layerMessage.location = parentToSend;
 			layerMessage.nodeType = 1;
+			layerMessage.type = AddNode;
 			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
@@ -505,9 +507,16 @@ void DrawUI::LayerWindow()
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
 				DeleteChilds(selectedLayer);
 				renderer->RemoveFolder(selectedLayer);
+
 			}
 			else {
 				renderer->RemoveLayer(selectedLayer);
+			}
+			if (renderer->GetOnline() == true) {
+				NodeDeleteMessage deleteMessage;
+				deleteMessage.location = selectedLayer;
+				deleteMessage.type = DeleteNode;
+				SManager::SendAction(deleteMessage);
 			}
 		}
 	}
