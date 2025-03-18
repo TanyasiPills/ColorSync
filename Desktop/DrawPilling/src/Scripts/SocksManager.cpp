@@ -8,19 +8,23 @@ sio::client h;
 bool onserver = false;
 NewRenderer* rendererSocks;
 
+std::vector<User> users;
+
 void SManager::SetRenderer(NewRenderer& rendererIn)
 {
     rendererSocks = &rendererIn;
 }
 
-void SManager::Connect(const char* ip, std::string token, std::map<std::string, std::string> room)
+void SManager::Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room)
 {
+    std::string connectionIp = "http://" + ip + ":3000";
     h.set_close_listener([](const sio::client::close_reason& reason) {
         std::cout << "Connection closed nya! " << std::endl;
         onserver = false;
         });
+    h.socket()->on("system message", OnSystemMessage);
     h.socket()->on("error", [](sio::event& ev) {
-        std::cout << "Error: ";
+        std::cout << "[ERROR]: ";
         sio::object_message::ptr nem = ev.get_message();
         std::string message = nem->get_map()["message"]->get_string();
         std::cout << message << std::endl;
@@ -44,9 +48,9 @@ void SManager::Connect(const char* ip, std::string token, std::map<std::string, 
     h.socket()->on("action", OnAction);
 
     std::map<std::string, std::string> headers;
-    headers["token"] = token;
-
-    h.connect(ip, room, headers);
+    headers["token"] = header["token"];
+    headers["password"] = header["password"];
+    h.connect(connectionIp, room, headers);
 }
 
 void SManager::Down()
@@ -54,92 +58,122 @@ void SManager::Down()
     h.socket()->close();
 }
 
-void SManager::OnAction(sio::event& ev) {
-    sio::object_message::ptr dataIn = ev.get_message();
+void ActionManager(sio::object_message::ptr dataIn)
+{
     int type = dataIn->get_map()["type"]->get_int();
     std::map<std::string, sio::message::ptr> data = dataIn->get_map()["data"]->get_map();
     switch (type)
     {
-        case Draw:
-            try {
-                DrawMessage drawMessage;
-                drawMessage.layer = data["layer"]->get_int();
-                drawMessage.brush = data["brush"]->get_int();
-                drawMessage.size = data["size"]->get_double();
+    case Draw:
+        try {
+            DrawMessage drawMessage;
+            drawMessage.layer = data["layer"]->get_int();
+            drawMessage.brush = data["brush"]->get_int();
+            drawMessage.size = data["size"]->get_double();
 
-                std::vector<sio::message::ptr> positionArray = data["positions"]->get_vector();
-                for (int i = 0; i < positionArray.size(); ++i) {
-                    std::map<std::string, sio::message::ptr> position = positionArray[i]->get_map();
-                    drawMessage.positions.push_back(Position(position["x"]->get_double(), position["y"]->get_double()));
-                }
+            std::vector<sio::message::ptr> positionArray = data["positions"]->get_vector();
+            for (int i = 0; i < positionArray.size(); ++i) {
+                std::map<std::string, sio::message::ptr> position = positionArray[i]->get_map();
+                drawMessage.positions.push_back(Position(position["x"]->get_double(), position["y"]->get_double()));
+            }
 
-                std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
-                std::cout << colors["r"]->get_double() << std::endl;
-                drawMessage.color[0] = colors["r"]->get_double();
-                drawMessage.color[1] = colors["g"]->get_double();
-                drawMessage.color[2] = colors["b"]->get_double();
+            std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
+            std::cout << colors["r"]->get_double() << std::endl;
+            drawMessage.color[0] = colors["r"]->get_double();
+            drawMessage.color[1] = colors["g"]->get_double();
+            drawMessage.color[2] = colors["b"]->get_double();
 
-                std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
-                drawMessage.offset.x = offsets["x"]->get_double();
-                drawMessage.offset.y = offsets["y"]->get_double();
+            std::map<std::string, sio::message::ptr> offsets = data["offset"]->get_map();
+            drawMessage.offset.x = offsets["x"]->get_double();
+            drawMessage.offset.y = offsets["y"]->get_double();
 
-                std::map<std::string, sio::message::ptr> ratio = data["ratio"]->get_map();
-                drawMessage.ratio.x = ratio["x"]->get_double();
-                drawMessage.ratio.y = ratio["y"]->get_double();
+            std::map<std::string, sio::message::ptr> ratio = data["ratio"]->get_map();
+            drawMessage.ratio.x = ratio["x"]->get_double();
+            drawMessage.ratio.y = ratio["y"]->get_double();
 
-                std::map<std::string, sio::message::ptr> curSca = data["CurSca"]->get_map();
-                drawMessage.cursorScale[0] = curSca["x"]->get_double();
-                drawMessage.cursorScale[1] = curSca["y"]->get_double();
-                drawMessage.cursorScale[2] = curSca["z"]->get_double();
-                
-                rendererSocks->ExecuteMainThreadTask(drawMessage);
-                //rendererSocks->RenderDrawMessage(drawMessage);
+            std::map<std::string, sio::message::ptr> curSca = data["CurSca"]->get_map();
+            drawMessage.cursorScale[0] = curSca["x"]->get_double();
+            drawMessage.cursorScale[1] = curSca["y"]->get_double();
+            drawMessage.cursorScale[2] = curSca["z"]->get_double();
+
+            rendererSocks->ExecuteMainThreadTask(drawMessage);
+            //rendererSocks->RenderDrawMessage(drawMessage);
+        }
+        catch (...) {
+            std::cerr << "Error recieving DrawMessage" << std::endl;
+        }
+        break;
+    case AddNode:
+        try {
+            int typeOfNode = data["node"]->get_int();
+            int location = data["location"]->get_int();
+            if (typeOfNode == 0) {
+                rendererSocks->CreateLayer(location);
             }
-            catch(...){
-                std::cerr << "Error recieving DrawMessage" << std::endl;
+            else if (typeOfNode == 1) {
+                rendererSocks->CreateFolder(location);
             }
-            break;
-        case AddNode:
-            try {
-                int typeOfNode = data["node"]->get_int();
-                int location = data["location"]->get_int();
-                if (typeOfNode == 0) {
-                    rendererSocks->CreateLayer(location);
-                }
-                else if (typeOfNode == 1) {
-                    rendererSocks->CreateFolder(location);
-                }
-            }
-            catch (...) {
-                std::cerr << "Error recieving AddNodeMessage" << std::endl;
-            }
-            break;
-        case RenameNode:
-            try {
-                Node* node = dynamic_cast<Node*>(rendererSocks->nodes[data["location"]->get_int()].get());
-                node->name = data["name"]->get_string();
-            }
-            catch (...) {
-                std::cerr << "Error recieving RenameNodeMessage" << std::endl;
-            }
-            break;
-        case Move:
-            try {
-                UserMoveMessage message;
-                message.name = data["name"]->get_string();
-                message.profileId = data["profileId"]->get_int();
-                std::map<std::string, sio::message::ptr> position = data["position"]->get_map();
-                message.position.x = position["x"]->get_double();
-                message.position.y = position["y"]->get_double();
-                rendererSocks->usersToMove[message.profileId] = message;
-            }
-            catch (...) {
-                std::cerr << "Error recieving MoveUserMessage" << std::endl;
-            }
-            break;
-        default:
-            break;
+        }
+        catch (...) {
+            std::cerr << "Error recieving AddNodeMessage" << std::endl;
+        }
+        break;
+    case RenameNode:
+        try {
+            Node* node = dynamic_cast<Node*>(rendererSocks->nodes[data["location"]->get_int()].get());
+            node->name = data["name"]->get_string();
+        }
+        catch (...) {
+            std::cerr << "Error recieving RenameNodeMessage" << std::endl;
+        }
+        break;
+    case Move:
+        try {
+            UserMoveMessage message;
+            message.name = data["name"]->get_string();
+            message.profileId = data["profileId"]->get_int();
+            std::map<std::string, sio::message::ptr> position = data["position"]->get_map();
+            message.position.x = position["x"]->get_double();
+            message.position.y = position["y"]->get_double();
+            rendererSocks->usersToMove[message.profileId] = message;
+        }
+        catch (...) {
+            std::cerr << "Error recieving MoveUserMessage" << std::endl;
+        }
+        break;
+    default:
+        break;
     }
+}
+
+void SManager::OnSystemMessage(sio::event& ev)
+{
+    std::cout << "[SYSTEM]: ";
+    sio::object_message::ptr dataIn = ev.get_message();
+    int type = dataIn->get_map()["type"]->get_int();
+    switch (type) {
+    case 0: {
+            std::vector<sio::message::ptr> usersData = dataIn->get_map()["users"]->get_vector();
+            for (sio::message::ptr userData : usersData)
+            {
+                std::string username = userData->get_map()["username"]->get_string();
+                int userId = userData->get_map()["id"]->get_int();
+                users.emplace_back(userId, username);
+                std::cout << username << std::endl;
+            }
+        } break;
+    case 1:
+        break;
+    case 2:
+        break;
+    default:
+        break;
+    }
+}
+
+void SManager::OnAction(sio::event& ev) {
+    sio::object_message::ptr dataIn = ev.get_message();
+    ActionManager(dataIn);
 }
 
 void SManager::SendAction(Message& dataIn)

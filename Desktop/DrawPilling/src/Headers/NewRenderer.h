@@ -42,6 +42,11 @@ struct CanvasData
 	float canvasY;
 };
 
+struct User {
+	int id;
+	std::string username;
+};
+
 struct Node {
 	std::string name;
 	bool visible = true;

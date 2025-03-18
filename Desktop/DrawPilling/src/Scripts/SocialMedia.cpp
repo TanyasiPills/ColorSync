@@ -11,6 +11,7 @@
 #include "RuntimeData.h"
 #include "FIleExplorer.h"
 #include "LoginRegister.h"
+#include "SocksManager.h"
 
 
 std::vector<Room> friendRooms;
@@ -1047,7 +1048,10 @@ void SocialMedia::RoomPage(float& width, float& height)
         std::thread(&RoomsRequest).detach();
         needRooms = false;
     }
+    static bool openJoin = false;
     static bool openCreate = false;
+    static bool privateLobby = false;
+    static std::string roomName = "";
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
     ImVec2 valid = ImGui::GetContentRegionAvail();
     static char searchRoomText[256];
@@ -1060,7 +1064,7 @@ void SocialMedia::RoomPage(float& width, float& height)
         openCreate = true;
     }
 
-    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40*Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
     {
         Lss::Text("Create a lobby", 2 * Lss::VH);
 
@@ -1094,15 +1098,15 @@ void SocialMedia::RoomPage(float& width, float& height)
         ImGui::SameLine();
         Lss::Left(7.85f * Lss::VW);
         Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
-     
+
 
 
 
         ImVec2 buttonSize = ImVec2(100, 20);
-        ImGui::SetCursorPosY(38*Lss::VH - buttonSize.y - 2 * Lss::VH);
+        ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
         if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
         {
-            
+
         }
 
         if (ImGui::IsMouseClicked(0))
@@ -1113,6 +1117,48 @@ void SocialMedia::RoomPage(float& width, float& height)
             if (!Lss::InBound(cursorPos, pos, size)) {
                 ImGui::CloseCurrentPopup();
                 openCreate = false;
+            }
+        }
+
+        Lss::End();
+        ImGui::EndPopup();
+    }
+
+    if (Lss::Modal("Joinyup", &openJoin, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    {
+        static char passWordText[256];
+        if (!privateLobby) {
+            Lss::Text("Are you sure u want to join?", 4*Lss::VH, Centered);
+            Lss::Button("Join", ImVec2(10*Lss::VH, 4*Lss::VH), 4*Lss::VH);
+            Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine);
+        } else {
+            ImVec2 valid = ImGui::GetContentRegionAvail();
+            Lss::Text("Please enter the room's password:", Centered);
+            Lss::InputText("roomPassword", passWordText, sizeof(passWordText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Centered);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH)) {
+                std::map<std::string, std::string> header;
+                std::map<std::string, std::string> room;
+                header["token"] = runtime.token;
+                header["password"] = std::string(passWordText);
+                room["name"] = roomName;
+                room["create"] = "false";
+                SManager::Connect(runtime.ip.c_str(), header, room);
+            }
+            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
+            {
+                ImGui::CloseCurrentPopup();
+                openJoin = false;
+            }
+        }
+
+        if (ImGui::IsMouseClicked(0))
+        {
+            ImVec2 pos = ImGui::GetWindowPos();
+            ImVec2 cursorPos = ImGui::GetMousePos();
+            ImVec2 size = ImGui::GetWindowSize();
+            if (!Lss::InBound(cursorPos, pos, size)) {
+                ImGui::CloseCurrentPopup();
+                openJoin = false;
             }
         }
 
@@ -1133,7 +1179,12 @@ void SocialMedia::RoomPage(float& width, float& height)
         float buttonPos = valid.x - 6 * Lss::VW;
         ImGui::SetCursorPosX(buttonPos);
         Lss::Top(0.5f * Lss::VH);
-        Lss::Button("Join", ImVec2(5 * Lss::VW, 5 * Lss::VH), 4 * Lss::VH, Rounded);
+        if (Lss::Button("Join", ImVec2(5 * Lss::VW, 5 * Lss::VH), 4 * Lss::VH, Rounded))
+        {
+            openJoin = true;
+            privateLobby = room.password;
+            roomName = room.roomName;
+        }
         Lss::LeftTop(Lss::VW, Lss::VH);
         Lss::Text(std::to_string(room.userCount) + "/" + std::to_string(room.capacity), 4 * Lss::VH);
         ImGui::SameLine();

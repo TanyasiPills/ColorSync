@@ -23,7 +23,7 @@ class SManager {
 private:
 public:
 	static void SetRenderer(NewRenderer& renderer);
-	static void Connect(const char* ip, std::string token, std::map<std::string, std::string> room);
+	static void Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room);
 	static void Down();
 
 	static void OnMessage(sio::event& ev);
@@ -31,5 +31,7 @@ public:
 
 	static void OnAction(sio::event& ev);
 	static void SendAction(Message& data);
+
+	static void OnSystemMessage(sio::event& ev);
 
 };
