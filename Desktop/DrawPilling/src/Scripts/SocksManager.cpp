@@ -8,7 +8,10 @@ sio::client h;
 bool onserver = false;
 NewRenderer* rendererSocks;
 
-std::vector<User> users;
+unsigned int canvasSizes[2];
+
+std::vector<RoomUser> users;
+std::vector<sio::object_message::ptr> history;
 
 void SManager::SetRenderer(NewRenderer& rendererIn)
 {
@@ -58,7 +61,7 @@ void SManager::Down()
     h.socket()->close();
 }
 
-void ActionManager(sio::object_message::ptr dataIn)
+void ProcessAction(sio::object_message::ptr dataIn)
 {
     int type = dataIn->get_map()["type"]->get_int();
     std::map<std::string, sio::message::ptr> data = dataIn->get_map()["data"]->get_map();
@@ -127,23 +130,14 @@ void ActionManager(sio::object_message::ptr dataIn)
             std::cerr << "Error recieving RenameNodeMessage" << std::endl;
         }
         break;
-    case Move:
-        try {
-            UserMoveMessage message;
-            message.name = data["name"]->get_string();
-            message.profileId = data["profileId"]->get_int();
-            std::map<std::string, sio::message::ptr> position = data["position"]->get_map();
-            message.position.x = position["x"]->get_double();
-            message.position.y = position["y"]->get_double();
-            rendererSocks->usersToMove[message.profileId] = message;
-        }
-        catch (...) {
-            std::cerr << "Error recieving MoveUserMessage" << std::endl;
-        }
-        break;
     default:
         break;
     }
+}
+
+void SManager::ProcessHistory()
+{
+
 }
 
 void SManager::OnSystemMessage(sio::event& ev)
@@ -152,20 +146,46 @@ void SManager::OnSystemMessage(sio::event& ev)
     sio::object_message::ptr dataIn = ev.get_message();
     int type = dataIn->get_map()["type"]->get_int();
     switch (type) {
-    case 0: {
+    case 0:
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
+        break;
+    case 1: {
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
+        sio::object_message::ptr dataOut;
+        dataOut->get_map()["type"] = sio::int_message::create(type);
+        sio::message::ptr data = sio::object_message::create();
+        data->get_map()["id"] = dataIn->get_map()["id"];
+        data->get_map()["username"] = dataIn->get_map()["username"];
+        dataOut->get_map()["data"] = data;
+        ProcessAction(dataOut);
+        } break;
+    case 2:{
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
+        sio::object_message::ptr dataOut;
+        dataOut->get_map()["type"] = sio::int_message::create(type);
+        sio::message::ptr data = sio::object_message::create();
+        data->get_map()["id"] = dataIn->get_map()["id"];
+        dataOut->get_map()["data"] = data;
+        ProcessAction(dataOut);
+        }
+        break;
+    case 3: {
+            users.clear();
+            history.clear();
+
             std::vector<sio::message::ptr> usersData = dataIn->get_map()["users"]->get_vector();
             for (sio::message::ptr userData : usersData)
             {
                 std::string username = userData->get_map()["username"]->get_string();
                 int userId = userData->get_map()["id"]->get_int();
                 users.emplace_back(userId, username);
-                std::cout << username << std::endl;
             }
+
+            history = dataIn->get_map()["history"]->get_vector();
+
+            canvasSizes[0] = dataIn->get_map()["width"]->get_int();
+            canvasSizes[0] = dataIn->get_map()["height"]->get_int();
         } break;
-    case 1:
-        break;
-    case 2:
-        break;
     default:
         break;
     }
@@ -173,7 +193,7 @@ void SManager::OnSystemMessage(sio::event& ev)
 
 void SManager::OnAction(sio::event& ev) {
     sio::object_message::ptr dataIn = ev.get_message();
-    ActionManager(dataIn);
+    ProcessAction(dataIn);
 }
 
 void SManager::SendAction(Message& dataIn)
@@ -276,27 +296,6 @@ void SManager::SendAction(Message& dataIn)
                 msg->get_map()["type"] = sio::int_message::create(RenameNode);
                 data->get_map()["name"] = sio::string_message::create(node->name);
                 data->get_map()["location"] = sio::int_message::create(node->location);
-            }
-            catch (...) {
-                std::cerr << "bad data type: not NodeMessage" << std::endl;
-            }
-            break;
-        case Move:
-            try {
-                UserMoveMessage* node = dynamic_cast<UserMoveMessage*>(&dataIn);
-                msg->get_map()["type"] = sio::int_message::create(Move);
-                data->get_map()["profileId"] = sio::int_message::create(node->profileId);
-                try {
-                    sio::message::ptr positionObj = sio::object_message::create();
-
-                    positionObj->get_map()["x"] = sio::double_message::create(node->position.x);
-                    positionObj->get_map()["y"] = sio::double_message::create(node->position.y);
-
-                    data->get_map()["position"] = positionObj;
-                }
-                catch (...) {
-                    std::cerr << "Error parsing user position JSON" << std::endl;
-                }
             }
             catch (...) {
                 std::cerr << "bad data type: not NodeMessage" << std::endl;

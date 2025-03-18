@@ -13,10 +13,9 @@ enum Type {
 	Draw = 0,
 	AddNode = 1,
 	RenameNode = 2,
-	Undo = 3,
-	Redo = 4,
-	Delete = 5,
-	Move = 6
+	Delete = 3,
+	PlayerLeave = 4,
+	PlayerJoin = 5,
 };
 
 class SManager {
@@ -33,5 +32,7 @@ public:
 	static void SendAction(Message& data);
 
 	static void OnSystemMessage(sio::event& ev);
+
+	static void ProcessHistory();
 
 };

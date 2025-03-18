@@ -42,7 +42,7 @@ struct CanvasData
 	float canvasY;
 };
 
-struct User {
+struct RoomUser {
 	int id;
 	std::string username;
 };
