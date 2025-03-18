@@ -89,13 +89,13 @@ public class LoginFragment extends Fragment {
 
                     if (response.isSuccessful() && response.body() != null) {
                         UserManager.user = new User(response.body().id, response.body().username);
-                        UserManager.saveToken(e.getContext(), response.body().access_token);
-                        Toast.makeText(e.getContext(), "Registered", Toast.LENGTH_SHORT).show();
+                        UserManager.token = response.body().access_token;
+                        UserManager.saveToken(e.getContext(), UserManager.token);
                         MainActivity.getInstance().goToHome();
                     } else {
                         new AlertDialog.Builder(e.getContext())
-                                .setTitle("Error")
-                                .setMessage("Failed to register")
+                                .setTitle("Failed to register")
+                                .setMessage(response.message())
                                 .setPositiveButton("OK", null)
                                 .show();
                     }
@@ -132,12 +132,13 @@ public class LoginFragment extends Fragment {
 
                     if (response.isSuccessful() && response.body() != null) {
                         UserManager.user = new User(response.body().id, response.body().username);
-                        UserManager.saveToken(e.getContext(), response.body().access_token);
+                        UserManager.token = response.body().access_token;
+                        UserManager.saveToken(e.getContext(), UserManager.token);
                         MainActivity.getInstance().goToHome();
                     } else {
                         new AlertDialog.Builder(e.getContext())
-                                .setTitle("Error")
-                                .setMessage("Failed to login")
+                                .setTitle("Failed to login")
+                                .setMessage(response.message())
                                 .setPositiveButton("OK", null)
                                 .show();
                     }

@@ -166,7 +166,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 Glide.with(itemView)
                     .load(String.format(Locale.getDefault(), "%simages/%d", APIInstance.BASE_URL, post.getImageId()))
                     .into(image);
-            else image.setImageURI(null);
+            else image.setImageResource(0);
             if (post.getComments() != null && !post.getComments().isEmpty()) {
                 showCommentsContainer.setVisibility(View.VISIBLE);
             } else showCommentsContainer.setVisibility(View.GONE);

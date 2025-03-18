@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.colorsync.DataTypes.ImageData;
@@ -99,7 +100,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadImages() {
-        MainActivity.getApi().getUserImages(UserManager.token, user.getId()).enqueue(new Callback<List<ImageData>>() {
+        MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
@@ -107,10 +108,11 @@ public class ProfileFragment extends Fragment {
                     items.clear();
                     items.addAll(response.body());
                     adapter.notifyDataSetChanged();
+                    if (items.size() == 0) view.findViewById(R.id.imagesCardView).setVisibility(View.GONE);
                 } else if (response.code() != 404) {
                     new AlertDialog.Builder(requireContext())
-                            .setTitle("Error")
-                            .setMessage("Error loading images")
+                            .setTitle("Error loading images")
+                            .setMessage(response.message())
                             .setPositiveButton("OK", null)
                             .show();
                 }

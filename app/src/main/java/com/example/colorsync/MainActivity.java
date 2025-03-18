@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 nav_home.setIcon(R.drawable.home);
             } else if (item.getItemId() == R.id.nav_draw) {
                 fragment = new LoginFragment();
-                currentPage = R.id.nav_draw;
+                currentPage = R.id.loginLayout;
                 nav_home.setIcon(R.drawable.home);
             }
             if (fragment != null) {

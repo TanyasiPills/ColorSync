@@ -8,13 +8,15 @@ public class Post {
     private User user;
     private String text;
     private List<Comment> comments;
+    private int likes;
 
-    public Post(int id, int imageId, User user, String text, List<Comment> comments) {
+    public Post(int id, int imageId, User user, String text, List<Comment> comments, int likes) {
         this.id = id;
         this.imageId = imageId;
         this.user = user;
         this.text = text;
         this.comments = comments;
+        this.likes = likes;
     }
 
     public int getId() {
@@ -55,5 +57,13 @@ public class Post {
 
     public void setComments(List<Comment> comments) {
         this.comments = comments;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
     }
 }

@@ -1,5 +1,7 @@
 package com.example.colorsync;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
 import android.animation.ValueAnimator;
 import android.content.ContentUris;
 import android.content.Context;
@@ -13,6 +15,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -30,13 +33,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.Post;
+import com.example.colorsync.DataTypes.PostCreate;
 import com.example.colorsync.DataTypes.PostResponse;
 
 import java.io.File;
@@ -73,8 +84,10 @@ public class HomeFragment extends Fragment {
     private ConstraintLayout post_previewContainer;
     private ImageButton post_previewCancel;
     private Uri selectedImage;
+    private Integer selectedImageId;
     private Cursor cursor;
     private boolean isLoadingUris;
+    private boolean upload;
 
     public HomeFragment() {
         isLoading = false;
@@ -83,6 +96,9 @@ public class HomeFragment extends Fragment {
         posts = new ArrayList<>();
         post_uris = new ArrayList<>();
         post_userImages = new ArrayList<>();
+        selectedImage = null;
+        selectedImageId = null;
+        upload = true;
     }
 
     @Override
@@ -128,14 +144,14 @@ public class HomeFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_home, container, false);
         context = view.getContext();
 
-        RecyclerView recyclerView = view.findViewById(R.id.recycleView);
+        recyclerView = view.findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ScrollAdapter(posts);
         recyclerView.setAdapter(adapter);
 
         post_images = view.findViewById(R.id.post_images);
         post_images.setVisibility(View.GONE);
-        post_adapter = new ImageSelectionGrid(post_uris, this);
+        post_adapter = new ImageSelectionGrid(post_uris, post_userImages, this);
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
@@ -164,18 +180,21 @@ public class HomeFragment extends Fragment {
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+                if (upload) {
+                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
 
-                int visibleItemCount = layoutManager.getChildCount();
-                int totalItemCount = layoutManager.getItemCount();
-                int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
 
-                if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 10) {
-                    loadMoreUris();
+                    if ((visibleItemCount + pastVisibleItems) >= totalItemCount - 10) {
+                        loadMoreUris();
+                    }
                 }
             }
         });
 
+        if (view.findViewById(R.id.addPostLayout).getVisibility() == View.VISIBLE) addPost();
 
         post_send = view.findViewById(R.id.post_send);
         post_description = view.findViewById(R.id.post_description);
@@ -187,47 +206,72 @@ public class HomeFragment extends Fragment {
 
         post_upload.setOnClickListener(v -> {
             post_previewContainer.setVisibility(View.GONE);
-            if (post_images.getVisibility() == View.VISIBLE) {
+            if (upload && post_images.getVisibility() == View.VISIBLE) {
                 post_images.setVisibility(View.GONE);
                 if (selectedImage != null) post_previewContainer.setVisibility(View.VISIBLE);
-                post_previewContainer.setVisibility(View.VISIBLE);
             }
             else  {
+                if (!upload) {
+                    upload = true;
+                    selectedImageId = null;
+                    post_adapter.changeToUri();
+                }
                 post_images.setVisibility(View.VISIBLE);
                 if (post_uris.isEmpty()) loadMoreUris();
             }
         });
 
         post_add.setOnClickListener(v -> {
-            MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
-                @Override
-                public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        post_userImages.clear();
-                        post_userImages.addAll(response.body());
-                    } else if (response.code() != 401) {
-                        new AlertDialog.Builder(context)
-                                .setTitle("Failed to load images")
-                                .setMessage(response.message())
-                                .show();
-                    }
+            post_previewContainer.setVisibility(View.GONE);
+            if (!upload && post_images.getVisibility() == View.VISIBLE) {
+                post_images.setVisibility(View.GONE);
+                if (selectedImageId != null) post_previewContainer.setVisibility(View.VISIBLE);
+            } else {
+                if (upload) {
+                    upload = false;
+                    selectedImage = null;
+                    post_adapter.changeToData();
                 }
+                post_images.setVisibility(View.VISIBLE);
+                if (post_userImages.isEmpty()) {
+                    MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
+                        @Override
+                        public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                post_userImages.clear();
+                                post_userImages.addAll(response.body());
+                                post_adapter.notifyDataSetChanged();
+                            } else if (response.code() != 404) {
+                                new AlertDialog.Builder(context)
+                                        .setTitle("Failed to load images")
+                                        .setMessage(response.message())
+                                        .show();
+                            }
+                        }
 
-                @Override
-                public void onFailure(Call<List<ImageData>> call, Throwable throwable) {
-                    new AlertDialog.Builder(context)
-                            .setTitle("Failed to load images")
-                            .setMessage(throwable.getMessage())
-                            .show();
+                        @Override
+                        public void onFailure(Call<List<ImageData>> call, Throwable throwable) {
+                            new AlertDialog.Builder(context)
+                                    .setTitle("Failed to load images")
+                                    .setMessage(throwable.getMessage())
+                                    .show();
+                        }
+                    });
                 }
-            });
+            }
         });
 
         post_send.setOnClickListener(v -> {
             String text = post_description.getText().toString();
-            if (text.isEmpty()) return;
+            //TODO: add tags
+            String[] tags = {"tag1", "tag2", "tag3"};
+            if (text.isEmpty()) {
+                Animation shake = AnimationUtils.loadAnimation(context, R.anim.shake);
+                post_description.startAnimation(shake);
+                return;
+            }
             File file = null;
-            if (selectedImage != null && selectedImage.getPath() != null) {
+            if (upload && selectedImage != null && selectedImage.getPath() != null) {
                 try {
                     file = FileUtils.getFileFromUri(context, selectedImage);
                     if (false) throw new IOException();
@@ -243,8 +287,6 @@ public class HomeFragment extends Fragment {
                 RequestBody fileRequest = RequestBody.create(MediaType.parse("image/*"), file);
                 MultipartBody.Part fileBody = MultipartBody.Part.createFormData("file", file.getName(), fileRequest);
                 RequestBody textRequest = RequestBody.create(MediaType.parse("text/plain"), text);
-                //TODO: add tags
-                String[] tags = {"tag1", "tag2", "tag3"};
                 List<RequestBody> tagsBody = new ArrayList<>();
 
                 for (String tag : tags) {
@@ -254,16 +296,60 @@ public class HomeFragment extends Fragment {
                     @Override
                     public void onResponse(Call<Post> call, Response<Post> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            MainActivity.getInstance().hideKeyboard();
-                            selectedImage = null;
-                            post_description.setText("");
-                            post_previewContainer.setVisibility(View.GONE);
-                            posts.add(0, response.body());
-                            adapter.notifyItemInserted(0);
-                            offset++;
-                            addPost();
+                            postCreated(response.body());
                         }
                         else new AlertDialog.Builder(context)
+                                .setTitle("Error creating post")
+                                .setMessage(response.message())
+                                .setPositiveButton("Ok", null)
+                                .show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<Post> call, Throwable throwable) {
+                        new AlertDialog.Builder(context)
+                                .setTitle("Error creating post")
+                                .setMessage(throwable.getMessage())
+                                .setPositiveButton("Ok", null)
+                                .show();
+                    }
+                });
+            } else {
+                MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, tags)).enqueue(new Callback<Post>() {
+                    @Override
+                    public void onResponse(Call<Post> call, Response<Post> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            postCreated(response.body());
+                        } else if (response.code() == 409) {
+                            new AlertDialog.Builder(context)
+                                    .setTitle("Warning")
+                                    .setMessage("You are trying to post a private image, do you want to make it public?")
+                                    .setNegativeButton("No", null)
+                                    .setPositiveButton("Yes", (dialogInterface, i) -> {
+                                        MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, tags).forcePost()).enqueue(new Callback<Post>() {
+                                            @Override
+                                            public void onResponse(Call<Post> call, Response<Post> response) {
+                                                if (response.isSuccessful() && response.body() != null) {
+                                                    postCreated(response.body());
+                                                } else new AlertDialog.Builder(context)
+                                                        .setTitle("Error creating post")
+                                                        .setMessage(response.message())
+                                                        .setPositiveButton("Ok", null)
+                                                        .show();
+                                            }
+
+                                            @Override
+                                            public void onFailure(Call<Post> call, Throwable throwable) {
+                                                new AlertDialog.Builder(context)
+                                                        .setTitle("Error creating post")
+                                                        .setMessage(throwable.getMessage())
+                                                        .setPositiveButton("Ok", null)
+                                                        .show();
+                                            }
+                                        });
+                                    })
+                                    .show();
+                        } else new AlertDialog.Builder(context)
                                 .setTitle("Error creating post")
                                 .setMessage(response.message())
                                 .setPositiveButton("Ok", null)
@@ -285,7 +371,8 @@ public class HomeFragment extends Fragment {
         post_previewCancel.setOnClickListener(v -> {
             post_previewContainer.setVisibility(View.GONE);
             selectedImage = null;
-            post_adapter.selectionHandler(-1);
+            selectedImageId = null;
+            post_adapter.deselect();
         });
 
         loadMorePosts();
@@ -293,16 +380,60 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    public void UriClickHandler(Uri uri) {
+    private void postCreated(Post post) {
+        MainActivity.getInstance().hideKeyboard();
+        selectedImage = null;
+        post_description.setText("");
+        post_previewContainer.setVisibility(View.GONE);
+        posts.add(0, post);
+        adapter.notifyItemInserted(0);
+        offset++;
+        addPost();
+
+        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+        if (layoutManager != null) {
+            int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+            if (firstVisibleItemPosition < 2) recyclerView.scrollToPosition(0);
+        }
+    }
+    public void uriClickHandler(Uri uri) {
         post_previewContainer.setVisibility(View.VISIBLE);
         selectedImage = uri;
-        post_preview.setImageURI(uri);
+        selectedImageId = null;
+        Glide.with(context)
+                .load(uri)
+                .into(post_preview);
         post_images.setVisibility(View.GONE);
+    }
+
+    public void dataClickHandler(ImageData data) {
+        selectedImageId = data.id;
+        selectedImage = null;
+        Glide.with(context)
+                .load(APIInstance.BASE_URL + "images/" + data.id)
+                .listener(new RequestListener<Drawable>() {
+                    @Override
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        new android.app.AlertDialog.Builder(context)
+                                .setTitle("Failed to load image")
+                                .setPositiveButton("OK", null)
+                                .show();
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        post_previewContainer.setVisibility(View.VISIBLE);
+                        post_images.setVisibility(View.GONE);
+                        return false;
+                    }
+                })
+                .into(post_preview);
     }
 
 
     public void loadMoreUris() {
-        post_upload.setVisibility(View.VISIBLE);
+        post_images.setVisibility(View.VISIBLE);
         if (isLoadingUris) return;
         isLoadingUris = true;
 
@@ -341,7 +472,6 @@ public class HomeFragment extends Fragment {
         post_adapter.notifyItemRangeInserted(start, i);
         isLoadingUris = false;
     }
-
 
     public void addPost() {
         ConstraintLayout layout = view.findViewById(R.id.addPostLayout);
@@ -394,6 +524,14 @@ public class HomeFragment extends Fragment {
                         @Override
                         public void onTransitionEnd(Transition transition) {
                             layout.setVisibility(View.GONE);
+                            if (cursor != null && !cursor.isClosed()) cursor.close();
+                            post_uris.clear();
+                            post_userImages.clear();
+                            selectedImage = null;
+                            selectedImageId = null;
+                            post_description.setText("");
+                            post_previewContainer.setVisibility(View.GONE);
+                            post_images.setVisibility(View.GONE);
                         }
 
                         @Override
@@ -430,8 +568,6 @@ public class HomeFragment extends Fragment {
     private void loadMorePosts() {
         if (isLoading) return;
         isLoading = true;
-
-        Toast.makeText(context, "offset: " + offset, Toast.LENGTH_SHORT).show();
 
         MainActivity.getApi().getAllPost(offset).enqueue(new Callback<PostResponse>() {
             @Override

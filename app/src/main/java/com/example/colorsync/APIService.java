@@ -37,7 +37,7 @@ public interface APIService {
     );
 
     @POST("posts")
-    Call<Post> createPost(@Body PostCreate postCreate);
+    Call<Post> createPost(@Header("Authorization") String token, @Body PostCreate postCreate);
 
 
     @POST("users/login")
@@ -53,10 +53,9 @@ public interface APIService {
     @GET("images/user/{id}")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token, @Path("id") int id);
 
-    @GET("users/{id}")
-    Call<User> getUserById(@Path("id") int id);
-
     @GET("images")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token);
+    @GET("users/{id}")
+    Call<User> getUserById(@Path("id") int id);
 
 }
