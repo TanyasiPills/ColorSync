@@ -493,7 +493,7 @@ void DrawUI::LayerWindow()
 		if (renderer->GetOnline() == true) {
 			NodeAddMessage layerMessage;
 			layerMessage.location = parentToSend;
-			layerMessage.nodeType = 0;
+			layerMessage.nodeType = 1;
 			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
