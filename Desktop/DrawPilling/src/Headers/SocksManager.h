@@ -34,5 +34,6 @@ public:
 	static void OnSystemMessage(sio::event& ev);
 
 	static void ProcessHistory();
-
+	static unsigned int* GetCanvasSize();
+	static void SetCanvasSize(unsigned int width, unsigned int height);
 };

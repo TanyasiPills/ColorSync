@@ -45,6 +45,9 @@ struct CanvasData
 struct RoomUser {
 	int id;
 	std::string username;
+
+	RoomUser() = default;
+	RoomUser(const int idIn, const std::string nameIn) : id(idIn), username(nameIn) {}
 };
 
 struct Node {
@@ -165,5 +168,5 @@ public:
 		mainThreadCallback = callback;
 	}
 
-	void SwapView();
+	void SwapView(bool isOnline);
 };

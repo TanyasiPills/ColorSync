@@ -130,9 +130,9 @@ void onCloseCallback(GLFWwindow* window) {
 	std::cout << "Window closing\n";
 	Manager::DisAssembly(window);
 }
-void Callback::EditorSwapCallBack()
+void Callback::EditorSwapCallBack(bool online)
 {
-	renderer->SwapView();
+	renderer->SwapView(online);
 }
 
 void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)

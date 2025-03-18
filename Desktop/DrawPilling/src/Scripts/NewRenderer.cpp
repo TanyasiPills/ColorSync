@@ -201,6 +201,8 @@ void NewRenderer::InitNewCanvas()
 	currentNode = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
+
+	if (online) SManager::ProcessHistory();
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -515,11 +517,13 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void NewRenderer::SwapView()
+void NewRenderer::SwapView(bool isOnline)
 {
 	isEditor = !isEditor;
-	if(isEditor) DrawUI::InitData();
-	std::cout << "swapped to editor: " << isEditor << std::endl;
+	if (isEditor) {
+		online = isOnline;
+		DrawUI::InitData();
+	}
 }
 
 

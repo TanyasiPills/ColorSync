@@ -18,6 +18,16 @@ void SManager::SetRenderer(NewRenderer& rendererIn)
     rendererSocks = &rendererIn;
 }
 
+unsigned int* SManager::GetCanvasSize()
+{
+    return canvasSizes;
+}
+void SManager::SetCanvasSize(unsigned int width, unsigned int height)
+{
+    canvasSizes[0] = width;
+    canvasSizes[1] = height;
+}
+
 void SManager::Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room)
 {
     std::string connectionIp = "http://" + ip + ":3000";
@@ -198,7 +208,7 @@ void SManager::OnSystemMessage(sio::event& ev)
             history = dataIn->get_map()["history"]->get_vector();
 
             canvasSizes[0] = dataIn->get_map()["width"]->get_int();
-            canvasSizes[0] = dataIn->get_map()["height"]->get_int();
+            canvasSizes[1] = dataIn->get_map()["height"]->get_int();
         } break;
     default:
         break;
@@ -215,7 +225,6 @@ void SManager::SendAction(Message& dataIn)
     if (!onserver) return;
     sio::message::ptr msg = sio::object_message::create();
     sio::message::ptr data = sio::object_message::create();
-
 
     switch (dataIn.type)
     {

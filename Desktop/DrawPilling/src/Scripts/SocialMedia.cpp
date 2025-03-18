@@ -1106,7 +1106,17 @@ void SocialMedia::RoomPage(float& width, float& height)
         ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
         if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
         {
-
+            std::map<std::string, std::string> header;
+            std::map<std::string, std::string> room;
+            header["token"] = runtime.token;
+            if (passwordText[0] != '\0') header["password"] = std::string(passwordText);
+            room["name"] = nameText;
+            room["create"] = "true";
+            room["width"] = width;
+            room["height"] = height;
+            SManager::SetCanvasSize(width, height);
+            SManager::Connect(runtime.ip.c_str(), header, room);
+            Callback::EditorSwapCallBack(true);
         }
 
         if (ImGui::IsMouseClicked(0))
@@ -1129,7 +1139,16 @@ void SocialMedia::RoomPage(float& width, float& height)
         static char passWordText[256];
         if (!privateLobby) {
             Lss::Text("Are you sure u want to join?", 4*Lss::VH, Centered);
-            Lss::Button("Join", ImVec2(10*Lss::VH, 4*Lss::VH), 4*Lss::VH);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
+            {
+                std::map<std::string, std::string> header;
+                std::map<std::string, std::string> room;
+                header["token"] = runtime.token;
+                room["name"] = roomName;
+                room["create"] = "false";
+                SManager::Connect(runtime.ip.c_str(), header, room);
+                Callback::EditorSwapCallBack(true);
+            }
             Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine);
         } else {
             ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -1143,6 +1162,7 @@ void SocialMedia::RoomPage(float& width, float& height)
                 room["name"] = roomName;
                 room["create"] = "false";
                 SManager::Connect(runtime.ip.c_str(), header, room);
+                Callback::EditorSwapCallBack(true);
             }
             if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
             {

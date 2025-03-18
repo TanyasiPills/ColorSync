@@ -70,7 +70,6 @@ std::string savePath = "";
 
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
-	isOnline = renderer->GetOnline();
 	std::cout << "Is online: " << isOnline << std::endl;
 }
 
@@ -115,6 +114,8 @@ void DrawUI::InitData()
 	notVisible.Init("Resources/icons/eyeClosed.png");
 	folderLayer.Init("Resources/icons/folderLayer.png");
 	layerLayer.Init("Resources/icons/layer.png");
+
+	isOnline = renderer->GetOnline();
 
 	InitBrushIcons();
 }
@@ -645,6 +646,13 @@ void DrawUI::InitWindow()
 			Lss::End();
 			ImGui::EndPopup();
 		}
+	}
+	else if (!inited && isOnline)
+	{
+		unsigned int* sizes = SManager::GetCanvasSize();
+		renderer->SetDrawData(sizes[0], sizes[1]);
+		renderer->InitNewCanvas();
+		inited = true;
 	}
 }
 
