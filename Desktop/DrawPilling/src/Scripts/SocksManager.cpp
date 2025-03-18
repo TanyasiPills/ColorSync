@@ -127,9 +127,19 @@ void ProcessAction(sio::object_message::ptr dataIn)
             node->name = data["name"]->get_string();
         }
         catch (...) {
-            std::cerr << "Error recieving RenameNodeMessage" << std::endl;
+            std::cerr << "Error recieving DeleteNodeMessage" << std::endl;
         }
         break;
+    case DeleteNode:
+        try {
+            int id = data["location"]->get_int();
+            if (dynamic_cast<Folder*>(rendererSocks->nodes[id].get())) {
+                rendererSocks->RemoveFolder(id);
+            } else rendererSocks->RemoveLayer(id);
+        }
+        catch (...) {
+            std::cerr << "Error recieving RenameNodeMessage" << std::endl;
+        }
     default:
         break;
     }
@@ -137,7 +147,11 @@ void ProcessAction(sio::object_message::ptr dataIn)
 
 void SManager::ProcessHistory()
 {
-
+    for (sio::object_message::ptr data : history)
+    {
+        ProcessAction(data);
+    }
+    history.clear();
 }
 
 void SManager::OnSystemMessage(sio::event& ev)

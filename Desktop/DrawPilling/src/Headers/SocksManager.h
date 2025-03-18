@@ -13,7 +13,7 @@ enum Type {
 	Draw = 0,
 	AddNode = 1,
 	RenameNode = 2,
-	Delete = 3,
+	DeleteNode = 3,
 	PlayerLeave = 4,
 	PlayerJoin = 5,
 };
