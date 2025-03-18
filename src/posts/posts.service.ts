@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -17,7 +17,10 @@ export class PostsService {
     if (createPostDto.imageId) {
       const image = await this.db.image.findUnique({ where: { id: createPostDto.imageId, userId } });
       if (!image) throw new NotFoundException(`Image with id: ${createPostDto.imageId} not found`);
-      if (image.visibility == 'private') throw new NotFoundException(`Image with id: ${createPostDto.imageId} is private`);
+      if (image.visibility == 'private') {
+        if (createPostDto.forcePost) this.db.image.update({ where: { id: createPostDto.imageId }, data: { visibility: 'public' }});
+        else throw new ConflictException(`Image with id: ${createPostDto.imageId} is private`); 
+      }
     }
     const post: any = await this.db.post.create({
       data:

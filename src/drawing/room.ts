@@ -5,14 +5,18 @@ import { checkUser, socketError } from "./helper";
 export class Room {
   private static server: Server;
   private name: string;
+  private width: number;
+  private height: number;
   private password: string | undefined;
   private clients: Socket[];
   private maxClients: number;
   private owner: Socket;
   private history: History;
 
-  public constructor(name: string, password: string | undefined, maxClients: number, owner: Socket, ownerUser: User) {
+  public constructor(name: string, password: string | undefined, maxClients: number, owner: Socket, ownerUser: User, width: number, height: number) {
     this.name = name;
+    this.width = width;
+    this.height = height;
     this.password = password;
     this.maxClients = maxClients;
     this.clients = [owner];
@@ -35,13 +39,16 @@ export class Room {
     }
     socket.join(this.name);
     socket.emit('system message', {
+      type: 3,
+      width: this.width,
+      height: this.height,
       history: this.history.getActions(),
       compilePosition: this.history.getUndoPosition(),
       users: this.clients.map(e => e.data.user)
     });
     this.clients.push(socket);
     this.history.connect(user.id);
-    this.emitFromSocket(socket, 'system message', {message: `${user.username} joined the room!`, id: user.id});
+    this.emitFromSocket(socket, 'system message', {type: 1, username: user.username, message: `${user.username} joined the room!`, id: user.id});
     return true;
   }
 
@@ -50,7 +57,7 @@ export class Room {
     socket.leave(this.name);
     this.clients = this.clients.filter(c => c !== socket);
     this.history.disconnect(user.id);
-    this.emit('system message', {message: `${user.username} left the room!`, id: user.id});
+    this.emit('system message', {type: 2, message: `${user.username} left the room!`, id: user.id});
     socket.disconnect();
 
     if (this.clients.length === 0) return true;
@@ -93,7 +100,7 @@ export class Room {
       return false;
     }
     this.disconnect(client);
-    client.emit('system message', {message: 'You have been kicked from the room!'});
+    client.emit('system message', {type: 0, message: 'You have been kicked from the room!'});
     return true;
   }
 

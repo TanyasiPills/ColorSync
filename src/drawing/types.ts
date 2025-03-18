@@ -110,7 +110,7 @@ export class History {
     }
     last--;
 
-    this.redoActions[id].add(this.actions[index]);
+    this.redoActions.get(id).add(this.actions[index]);
 
     this.ids.splice(index, 1);
     this.actions.splice(index, 1);

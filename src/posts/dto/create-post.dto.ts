@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsArray, IsInt, IsOptional, isString, IsString, MaxLength, Min, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsOptional, isString, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class CreatePostDto {
   @IsOptional()
@@ -17,9 +17,6 @@ export class CreatePostDto {
 
   @Transform(({ value }) => {
     try {
-      console.log(isString(value));
-      console.log(value);
-      console.log(JSON.parse(value));
       return isString(value) ? JSON.parse(value) : value;
     } catch {
       return value;
@@ -30,4 +27,9 @@ export class CreatePostDto {
   @IsOptional()
   @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme']})
   tags?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ type: 'boolean', description: 'Change image to public if private, default = false', example: false })
+  forcePost?: boolean;
 }

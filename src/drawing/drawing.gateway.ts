@@ -84,7 +84,8 @@ export class DrawingWS
     let room: Room;
     if (create && create === 'true') {
       if (this.rooms.some(e => e.getName().toLowerCase() === name)) {
-        socketError(socket, "Name already in use", 41);
+        socketError(socket, "Name already in use", 41, true);
+        return;
       }
       let maxClientsQuery = socket.handshake.query.maxClients;
       let maxClients = 4;
@@ -92,9 +93,32 @@ export class DrawingWS
         try {
           if (Array.isArray(maxClientsQuery)) maxClientsQuery = maxClientsQuery[0];
           maxClients = parseInt(maxClientsQuery);
-        } catch { }
+        } catch {
+          socketError(socket, "Max clients must be a integer, defaulting to 4", 20);
+        }
       }
-      room = new Room(name, password, Math.min(maxClients, 10), socket, user);
+      let widthQuery = socket.handshake.query.width;
+      let heightQuery = socket.handshake.query.height;
+      let width;
+      let height;
+      if (!widthQuery) {
+        socketError(socket, "Width is required", 20, true);
+        return;
+      }
+      if (!heightQuery) {
+        socketError(socket, "Height is required", 20, true);
+        return;
+      }
+      if (Array.isArray(widthQuery)) widthQuery = widthQuery[0];
+      if (Array.isArray(heightQuery)) heightQuery = heightQuery[0];
+      if (isPositiveInt(widthQuery) && isPositiveInt(heightQuery)) {
+        socketError(socket, "Width and height must be positive integers", 20, true);
+        return;
+      }
+      width = parseInt(widthQuery);
+      height = parseInt(heightQuery);
+
+      room = new Room(name, password, Math.min(maxClients, 10), socket, user, width, height);
       this.rooms.push(room);
     } else {
       room = this.rooms.find(room => room.getName() === name);
@@ -161,6 +185,7 @@ export class DrawingWS
 
     if (!isPositiveInt(type)) {
       socketError(socket, 'Type must be a positive integer', 20);
+      return;
     }
     switch (type) {
       case 0: // draw
@@ -201,7 +226,6 @@ export class DrawingWS
           return;
         }
         if (
-          !data.name ||
           !isPositiveInt(data.location) ||
           !isPositiveInt(data.node)
         ) {
@@ -211,7 +235,7 @@ export class DrawingWS
         room.action(socket, { type, data });
         break;
 
-      case 2: // remame node
+      case 2: // rename node
         if (!data) {
           socketError(socket, 'Data is required', 20);
           return;

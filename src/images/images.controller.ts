@@ -73,7 +73,7 @@ export class ImagesController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getOwnImages(@Req() req) {
-    return this.imageService.findAll(req.user.id, req.usre.id);
+    return this.imageService.findAll(req.user.id, req.user.id);
   }
 
   /**

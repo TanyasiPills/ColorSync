@@ -27,6 +27,7 @@ export class PostsController {
   @ApiBody({description: "The data of the image, you can send either a image id for the image or a image file to upload", type: PostInputBodyType})
   @ApiResponse({ status: 201, description: 'Post sucessfully created', type: PostIncludesType })
   @ApiResponse({ status: 401, description: 'Invalid token' })
+  @ApiResponse({ status: 409, description: "Can't post private image" })
   @ApiBearerAuth()
 
   @UseGuards(JwtAuthGuard)

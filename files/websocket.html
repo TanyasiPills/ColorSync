@@ -129,7 +129,7 @@
           <td>Access token of the user</td>
         </tr>
         <tr>
-          <td>password<span>token</span></td>
+          <td>password<span>string</span></td>
           <td>The password of the room</td>
         </tr>
       </table>
@@ -144,6 +144,14 @@
         <tr>
           <td>create<span>boolean</span></td>
           <td>Do you want to create the room or join, false = join, true = create, default is false</td>
+        </tr>
+        <tr>
+          <td>width<span>integer</span></td>
+          <td>The width of the canvas, required when creating the room</td>
+        </tr>
+        <tr>
+          <td>height<span>integer</span></td>
+          <td>The height of the canvas, required when creating the room</td>
         </tr>
       </table>
     </div>
@@ -191,7 +199,7 @@
               </tr>
               <tr>
                 <td>add node - 1</td>
-                <td>{name: string, location: int, node: int}</td>
+                <td>{location: int, node: int}</td>
               </tr>
               <tr>
                 <td>rename node - 2</td>
@@ -419,6 +427,10 @@
       <h3>Message from the server</h3>
       <table>
         <tr class="required">
+          <td>type = 0<span>integer</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
           <td>message<span>string</span></td>
           <td>The message sent by the server</td>
         </tr>
@@ -428,6 +440,10 @@
       <h3>Other user joined the room</h3>
       <table>
         <tr class="required">
+          <td>type = 1<span>integer</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
           <td>message<span>string</span></td>
           <td>The message sent by the server</td>
         </tr>
@@ -435,20 +451,53 @@
           <td>id<span>int</span></td>
           <td>The id of the joined user</td>
         </tr>
+        <tr class="required">
+          <td>username<span>string</span></td>
+          <td>The username of the user</td>
+        </tr>
       </table>
     </div>
     <div>
-      <h3>Joining the room</h3>
+      <h3>Other user disconnected the room</h3>
       <table>
+        <tr class="required">
+          <td>type = 2<span>integer</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the disconnected user</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 id="joining the room">Joining the room</h3>
+      <table>
+        <tr class="required">
+          <td>type = 3<span>integer</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>width<span>integer</span></td>
+          <td>The width of the canvas</td>
+        </tr>
+        <tr class="required">
+          <td>height<span>integer</span></td>
+          <td>The height of the canvas</td>
+        </tr>
         <tr class="required">
           <td>history<span>Action[]</span></td>
           <td>All the past actions.</td>
         </tr>
-        <tr>
+        <tr class="required">
           <td>compilePosition<span>int</span></td>
           <td>Save the rendered image up to this index in the history.</td>
         </tr>
-        <tr>
+        <tr class="required">
           <td>users<span>{id: int, username: string}[]</span></td>
           <td>List of all the connected users.</td>
         </tr>
@@ -459,21 +508,21 @@
   <div class="endpoint">
     <h2>Types</h2>
     <div>
-      <h3>Action</h3>
+      <h3 id="action">Action</h3>
       <p>{<br>
         &emsp;type: string*<br>
         &emsp;data: any<br>
         }</p>
     </div>
     <div>
-      <h3>Postion</h3>
+      <h3 id="position">Postion</h3>
       <p>{<br>
         &emsp;x: float*<br>
         &emsp;y: float*<br>
         }</p>
     </div>
     <div>
-      <h3>Postiion</h3>
+      <h3 id="position3">Postiion3</h3>
       <p>{<br>
         &emsp;x: float*<br>
         &emsp;y: float*<br>

@@ -26,7 +26,6 @@ export class SearchService implements OnModuleInit {
         date
       }
     });
-    this.logger.log(`Indexed post with id: ${id}`);
   }
 
   async updatePost(id: number, text?: string, tags?: string[], date?: Date) {
@@ -169,6 +168,8 @@ export class SearchService implements OnModuleInit {
       from: offset,
       size: take
     });
+
+    //TODO: likes
 
     //console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
 
