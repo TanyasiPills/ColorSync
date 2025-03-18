@@ -447,36 +447,54 @@ void DrawUI::LayerWindow()
 	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
 	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
+		int parentToSend = 0;
 		if (selectedLayer == -1) {
 			int parent = 0;
 			renderer->CreateLayer(parent);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				parentToSend = selectedLayer;
 				renderer->CreateLayer(selectedLayer);
 			}
 			else {
 				int parent = renderer->GetParent(selectedLayer);
+				parentToSend = parent;
 				renderer->CreateLayer(parent);
 			}
+		}
+		if (renderer->GetOnline() == true) {
+			NodeAddMessage layerMessage;
+			layerMessage.location = parentToSend;
+			layerMessage.nodeType = 0;
+			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
 	}
 	if(ImGui::IsItemHovered()) itemHovered = true;
 	if (Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
 	{
+		int parentToSend = 0;
 		if (selectedLayer == -1) {
 			int parent = 0;
 			renderer->CreateFolder(parent);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				parentToSend = selectedLayer;
 				renderer->CreateFolder(selectedLayer);
 			}
 			else {
 				int parent = renderer->GetParent(selectedLayer);
+				parentToSend = selectedLayer;
 				renderer->CreateFolder(parent);
 			}
+		}
+		if (renderer->GetOnline() == true) {
+			NodeAddMessage layerMessage;
+			layerMessage.location = parentToSend;
+			layerMessage.nodeType = 0;
+			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
 	}
