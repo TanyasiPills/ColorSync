@@ -1,1 +1,1 @@
-export const backendIp = "http://10.4.18.41:3000";
+export const backendIp = "http://10.4.117.88:3000";

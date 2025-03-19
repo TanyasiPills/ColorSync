@@ -59,6 +59,7 @@ export const SignIn: React.FC<modalProp> = ({ show, onHide }) => {
             placeholder="Enter email"
             id='email'
             name='email'
+            onChange={() => setIsSubmitting(false)}
             required
           />
           <Form.Text>
@@ -73,6 +74,7 @@ export const SignIn: React.FC<modalProp> = ({ show, onHide }) => {
             placeholder="Password"
             id='password'
             name='password'
+            onChange={() => setIsSubmitting(false)}
             required
           />
         </Form.Group>

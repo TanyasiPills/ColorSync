@@ -10,7 +10,6 @@ import { PostingToProfile } from "./PostingToProfile";
 
 
 export function Profile({ own = false }: { own?: boolean }) {
-  //username, id, profile kép, email, 
   const cookie = new Cookies();
   const thisUser = cookie.get("AccessToken");
   const { id } = useParams();
@@ -65,13 +64,13 @@ export function Profile({ own = false }: { own?: boolean }) {
       <Row id='profilData' className="w-100" style={{ flex: '1' }}>
         <Col xs={6} id="mainData">
           <div className="d-flex align-items-center">
-            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => setShow(true)}/>
-            <h3 id="userName" onClick={() => setShow(true)}>{user.username}</h3>
+            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => {if(own) setShow(true)}}/>
+            <h3 id="userName" onClick={() => {if(own) setShow(true)}}>{user.username}</h3>
           </div>
           <ProfileEdit show={show} onHide={() => setShow(false)} />
         </Col>
         <Col xs={6}>
-          <Button onClick={() => setImgShow(true)}>Add new Image!</Button>
+          {own? <Button onClick={() => setImgShow(true)}>Add new Image!</Button> : null}
           <PostingToProfile show={imgShow} onHide={() => setImgShow(false)} />
         </Col>
       </Row>

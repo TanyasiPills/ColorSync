@@ -6,6 +6,7 @@ export interface post {
     user: { username: string; id: number};
     comments: comment[];
     tags: string[];
+    likes: number
 }
 
 export interface comment {

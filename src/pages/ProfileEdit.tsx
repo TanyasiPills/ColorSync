@@ -77,6 +77,7 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
 
             onHide();
             setError('');
+            window.location.reload();
         } catch (err: any) {
             setError('An error occurred: ' + err.message);
             setIsSubmitting(false);

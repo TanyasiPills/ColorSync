@@ -53,7 +53,6 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
       const res = await fetch(backendIp + '/posts', {
         method: 'POST',
         headers: {
-          
           "Authorization": "Bearer " + cookies.get("AccessToken").access_token
         },
         body: sendingData

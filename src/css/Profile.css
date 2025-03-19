@@ -1,8 +1,11 @@
 #profilData {
-    border-bottom: 2px solid var(--borderCol);
-    padding: auto;
-    align-content: center;
-}
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--backgroundColor);
+    padding: 10px;
+    box-shadow: 0 2px 5px var(--borderCol);
+  }
 
 .d-flex {
     display: flex;
@@ -29,10 +32,6 @@
     margin: 0;
 }
 
-#drawings{
-    
-}
-
 #col{
     border-left: 2px solid var(--borderCol);
     border-bottom: 2px solid var(--borderCol);
@@ -42,7 +41,15 @@
     border-right: 2px solid var(--borderCol);
 }
 
-#drawings img{
+#drawings {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    height: calc(100vh - 150px);
+  }
+  
+  .drawing-img {
     width: 100%;
+    height: 100%;
     object-fit: cover;
-}
+  }

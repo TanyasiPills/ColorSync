@@ -21,11 +21,15 @@ export const PostingToProfile: React.FC<modalProp> = ({ show, onHide }) => {
         const data: FormData = new FormData(event.target as HTMLFormElement);
         const sendingData: FormData = new FormData();
 
-        sendingData.append("text", data.get("text")!);
         const file = data.get("file");
-        if (file && (file instanceof File) && file.size > 0) {
+        if (file && file instanceof File && file.size > 0) {
             sendingData.append("file", file);
+        } else if (file) {
+            setError("Invalid file format");
+            setIsSubmitting(false);
+            return;
         }
+        
         sendingData.append("visibility", data.has("public") ? "public" : "private");
 
         try {
@@ -46,6 +50,7 @@ export const PostingToProfile: React.FC<modalProp> = ({ show, onHide }) => {
 
             onHide();
             setError('');
+            window.location.reload();
         } catch (err: any) {
             setError('An error occurred: ' + err.message);
             setIsSubmitting(false);

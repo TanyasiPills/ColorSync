@@ -60,3 +60,11 @@ button{
   background-color: #1F1F4C !important;
   color: #7A74A6 !important;
 }
+
+input{
+  background-color: var(--backgroundColor) !important;
+  color: var(--textCol)  !important;
+  box-shadow: none;
+  border: none !important;
+
+}

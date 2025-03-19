@@ -160,12 +160,40 @@ details summary:hover {
 }
 
 .comment-container {
-    height: fit-content;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
     padding: 10px;
+    border-bottom: 1px solid var(--borderCol);
+}
+
+details {
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--borderCol) transparent;
+    position: relative;
+}
+
+details::-webkit-scrollbar {
+    width: 6px;
+}
+
+details::-webkit-scrollbar-thumb {
+    background-color: var(--borderCol);
+    border-radius: 3px;
+}
+
+details > summary {
+    position: sticky;
+    top: 0;
+    background: var(--bgColor);
+    padding: 10px;
+    cursor: pointer;
+    z-index: 10;
     border-bottom: 1px solid var(--borderCol);
 }
 
@@ -184,6 +212,17 @@ details summary:hover {
     border-radius: 20%;
 }
 
+.like-text {
+    font-size: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .input-group .form-control {
+    height: 38px;  /* Adjust if necessary to match the heart size */
+  }
+  
 
 
 /*phone overview*/

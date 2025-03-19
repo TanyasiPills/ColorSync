@@ -13,7 +13,7 @@ export function NavBar() {
 
 
 
-  function signOut() {
+  function signOut() {    
     cookies.remove("AccessToken");
     window.location.reload();
   }
