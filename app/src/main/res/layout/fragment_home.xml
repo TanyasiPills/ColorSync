@@ -87,8 +87,8 @@
                     app:layout_constraintStart_toStartOf="@id/post_description"
                     android:id="@+id/post_buttonBar"
                     android:orientation="horizontal"
-                    app:flow_horizontalGap="10dp"
-                    android:paddingBottom="10dp">
+                    android:paddingTop="5dp"
+                    android:paddingBottom="15dp">
                     <ImageButton
                         android:layout_width="35dp"
                         android:layout_height="35dp"
@@ -108,6 +108,7 @@
                         android:background="?android:selectableItemBackgroundBorderless"
                         android:stateListAnimator="@animator/click_grow"
                         app:tint="@color/text"
+                        android:layout_marginLeft="5dp"
                         android:contentDescription="@string/post_addCD"/>
                 </LinearLayout>
                 <androidx.constraintlayout.widget.ConstraintLayout

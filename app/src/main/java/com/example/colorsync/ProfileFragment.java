@@ -36,6 +36,11 @@ public class ProfileFragment extends Fragment {
     private ImageGridAdapter adapter;
     private boolean loaded = false;
 
+
+    public ProfileFragment() {
+        this(0);
+    }
+
     public ProfileFragment(int id) {
         if (id < 1) {
             user = UserManager.user;

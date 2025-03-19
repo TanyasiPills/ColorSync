@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
     annotationProcessor(libs.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

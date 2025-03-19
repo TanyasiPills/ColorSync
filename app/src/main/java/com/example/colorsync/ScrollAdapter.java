@@ -151,12 +151,12 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
         public void bind(Post post) {
+            //TODO: add the add comment to the top
             this.post = post;
             username.setText(post.getUser().getUsername());
             description.setText(post.getText());
 
             commentsView.setAdapter(null);
-            commentsView.setVisibility(View.GONE);
             showComments.setRotation(0f);
 
             Glide.with(itemView)
@@ -167,9 +167,6 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     .load(String.format(Locale.getDefault(), "%simages/%d", APIInstance.BASE_URL, post.getImageId()))
                     .into(image);
             else image.setImageResource(0);
-            if (post.getComments() != null && !post.getComments().isEmpty()) {
-                showCommentsContainer.setVisibility(View.VISIBLE);
-            } else showCommentsContainer.setVisibility(View.GONE);
         }
     }
 

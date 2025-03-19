@@ -12,6 +12,8 @@ constraintlayout = "2.2.0"
 retrofit = "2.11.0"
 rxandroid = "3.0.2"
 securityCrypto = "1.0.0"
+navigationFragment = "2.8.9"
+navigationUi = "2.8.9"
 
 [libraries]
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
@@ -29,6 +31,8 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
 security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

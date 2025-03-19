@@ -7,19 +7,31 @@ import android.os.Build;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
+import android.util.AttributeSet;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 import com.example.colorsync.DataTypes.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.Objects;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import retrofit2.Call;
@@ -32,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout constraintLayout;
     private BottomNavigationView navbar;
     private static MainActivity instance;
+    public NavController navController;
+    private NavHostFragment navHostFragment;
+    private boolean navbarUIOnly;
 
     public static APIService getApi() {
         return api;
@@ -53,13 +68,54 @@ public class MainActivity extends AppCompatActivity {
             getWindow().setNavigationBarContrastEnforced(false);
         }
 
+        navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        navController = Objects.requireNonNull(navHostFragment).getNavController();
+
         api = APIInstance.getInstance().create(APIService.class);
 
         instance = this;
+        navbarUIOnly = false;
 
         constraintLayout = findViewById(R.id.main);
 
-        login();
+        navbar = findViewById(R.id.navbar);
+        navbar.setSelectedItemId(R.id.nav_home);
+        currentPage = R.id.loginFragment;
+
+        navbar.setOnItemSelectedListener(item -> {
+            if (navbarUIOnly) {
+                navbarUIOnly = false;
+                return true;
+            }
+            int destination = item.getItemId();
+            if (destination == R.id.nav_draw) login();
+            else navigateTo(destination);
+            return true;
+        });
+
+        navController.addOnDestinationChangedListener((navController1, navDestination, bundle) -> {
+            MenuItem nav_home = navbar.getMenu().getItem(1);
+            int destination = navDestination.getId();
+            if (destination == R.id.loginFragment) {
+                Toast.makeText(this, "login", Toast.LENGTH_SHORT).show();
+                if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
+                currentPage = R.id.loginFragment;
+            }
+            else if (destination == R.id.homeFragment) {
+                Toast.makeText(this, "home", Toast.LENGTH_SHORT).show();
+                if (currentPage != R.id.nav_home) nav_home.setIcon(R.drawable.add);
+                currentPage = R.id.nav_home;
+            }
+            else if (destination == R.id.profileFragment) {
+                Toast.makeText(this, "profile", Toast.LENGTH_SHORT).show();
+                if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
+                currentPage = R.id.nav_profile;
+            }
+            if (currentPage != R.id.loginFragment) {
+                navbarUIOnly = true;
+                navbar.setSelectedItemId(currentPage);
+            }
+        });
 
         UserManager.loadToken(this)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -99,42 +155,57 @@ public class MainActivity extends AppCompatActivity {
                         }, throwable -> {
                             login();
                         });
+    }
 
-        navbar = findViewById(R.id.navbar);
-        navbar.setSelectedItemId(R.id.nav_home);
+    private void nagviatePop(int id, int destination) {
+        boolean popped = navController.popBackStack(id, false);
+        if (!popped) {
+            navController.navigate(destination);
+        }
+    }
 
-        navbar.setOnItemSelectedListener(item -> {
-            Fragment fragment = null;
-            MenuItem nav_home = navbar.getMenu().getItem(1);
-            if (item.getItemId() == R.id.nav_home) {
-                if (currentPage == R.id.nav_home) {
-                    HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-                    if (homeFragment != null) homeFragment.addPost();
-                } else {
-                    fragment = new HomeFragment();
-                    currentPage = R.id.nav_home;
-                    nav_home.setIcon(R.drawable.add);
+    private void navigateTo(int destination) {
+        if (destination == R.id.nav_home) {
+            if (currentPage == R.id.nav_home) {
+                if (navHostFragment != null) {
+                    Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+                    if (currentFragment instanceof HomeFragment) {
+                        HomeFragment homeFragment = (HomeFragment) currentFragment;
+                        homeFragment.addPost();
+                    }
                 }
-            } else if (item.getItemId() == R.id.nav_profile) {
-                fragment = new ProfileFragment(0);
-                currentPage = R.id.nav_profile;
-                nav_home.setIcon(R.drawable.home);
-            } else if (item.getItemId() == R.id.nav_draw) {
-                fragment = new LoginFragment();
-                currentPage = R.id.loginLayout;
-                nav_home.setIcon(R.drawable.home);
+            } else if (currentPage == R.id.loginFragment) {
+                navController.navigate(R.id.action_loginFragment_to_homeFragment);
+                navController.popBackStack(destination, true, false);
+            } else if (currentPage == R.id.nav_profile) {
+                nagviatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
+                navController.popBackStack(destination, true, false);
             }
-            if (fragment != null) {
-                hideKeyboard();
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+        } else if (destination == R.id.nav_profile) {
+            if (currentPage == R.id.nav_home) {
+                navController.navigate(R.id.action_homeFragment_to_profileFragment);
+                navController.popBackStack(destination, true, false);
+            } else if (currentPage == R.id.loginFragment) {
+                navController.navigate(R.id.action_loginFragment_to_profileFragment);
+                navController.popBackStack(destination, true, false);
             }
-            return true;
-        });
+        } else if (destination == R.id.loginFragment) {
+            if (currentPage == R.id.nav_home) {
+                navController.navigate(R.id.action_homeFragment_to_loginFragment);
+                navController.popBackStack(destination, true, false);
+            } else if (currentPage == R.id.nav_profile) {{
+                navController.navigate(R.id.action_profileFragment_to_loginFragment);
+                navController.popBackStack(destination, true, false);
+            }}
+        }
     }
 
     private void login() {
-        currentPage = R.id.loginLayout;
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new LoginFragment()).commit();
+        navigateTo(R.id.loginFragment);
+    }
+
+    public void goToHome() {
+        navbar.setSelectedItemId(R.id.nav_home);
     }
 
     public void setFullScreenOn() {
@@ -169,10 +240,6 @@ public class MainActivity extends AppCompatActivity {
                 off.applyTo(constraintLayout);
             }
         });
-    }
-
-    public void goToHome() {
-        navbar.setSelectedItemId(R.id.nav_home);
     }
 
     public void hideKeyboard() {
