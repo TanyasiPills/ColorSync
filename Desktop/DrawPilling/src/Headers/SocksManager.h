@@ -40,4 +40,5 @@ public:
 	static std::vector<RoomUser>* GetUsers();
 	static void Kick(unsigned int id);
 	static bool AmIOwner();
+	static void SetMyOwnerState(bool in);
 };

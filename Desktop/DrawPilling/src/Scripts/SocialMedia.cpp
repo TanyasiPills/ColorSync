@@ -1117,6 +1117,7 @@ void SocialMedia::RoomPage(float& width, float& height)
             SManager::SetCanvasSize(width, height);
             std::vector<RoomUser>* users = SManager::GetUsers();
             users->emplace_back(runtime.id, runtime.username, true);
+            SManager::SetMyOwnerState(true);
             SManager::Connect(runtime.ip.c_str(), header, room);
             Callback::EditorSwapCallBack(true);
         }

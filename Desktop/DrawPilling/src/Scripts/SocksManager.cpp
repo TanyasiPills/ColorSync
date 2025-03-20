@@ -21,6 +21,11 @@ void SManager::SetRenderer(NewRenderer& rendererIn)
     rendererSocks = &rendererIn;
 }
 
+void SManager::SetMyOwnerState(bool in)
+{
+    isAmOwner = in;
+}
+
 bool SManager::AmIOwner()
 {
     return isAmOwner;
