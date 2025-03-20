@@ -36,4 +36,6 @@ public:
 	static void ProcessHistory();
 	static unsigned int* GetCanvasSize();
 	static void SetCanvasSize(unsigned int width, unsigned int height);
+
+	static std::vector<RoomUser>* GetUsers();
 };

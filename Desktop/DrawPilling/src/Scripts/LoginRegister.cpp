@@ -5,7 +5,7 @@
 #include "HighsManager.h"
 #include "RuntimeData.h"
 
-auto& runtime = RuntimeData::getInstance();
+static auto& runtime = RuntimeData::getInstance();
 static bool loginOpen = false;
 static bool registerOpen = false;
 

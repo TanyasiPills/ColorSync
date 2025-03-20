@@ -39,6 +39,9 @@ bool isOnline = false;
 
 bool itemHovered = false;
 
+bool usersGot = false;
+std::vector<RoomUser>* usersPtr;
+
 static std::vector<std::string> chatLog;
 
 static NewRenderer* renderer;
@@ -57,6 +60,8 @@ MyTexture air;
 MyTexture chalk;
 
 MyTexture sizecursor;
+
+MyTexture adminCrown;
 
 MyTexture icons[5];
 
@@ -114,6 +119,8 @@ void DrawUI::InitData()
 	notVisible.Init("Resources/icons/eyeClosed.png");
 	folderLayer.Init("Resources/icons/folderLayer.png");
 	layerLayer.Init("Resources/icons/layer.png");
+
+	adminCrown.Init("Resources/icons/crown.png");
 
 	isOnline = renderer->GetOnline();
 
@@ -274,7 +281,22 @@ void DrawUI::ServerWindow()
 	}
 
 	if (isOnline) {
-
+		if (!usersGot) {
+			usersPtr = SManager::GetUsers();
+			usersGot = true;
+		}
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		for (RoomUser user : *usersPtr)
+		{
+			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
+				if (user.id == runtime.id) {
+					Lss::Text(user.username+" - ME", 4 * Lss::VH);
+				}
+				else Lss::Text(user.username, 4 * Lss::VH);
+				if (user.admin) Lss::Image(adminCrown.GetId(), ImVec2(4*Lss::VH, 4*Lss::VH),SameLine);
+			ImGui::EndChild();
+		}
+		Lss::End();
 	}
 	else {
 		std::string text = "Wumpus is very sad :c";

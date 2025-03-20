@@ -45,9 +45,10 @@ struct CanvasData
 struct RoomUser {
 	int id;
 	std::string username;
+	bool admin = false;
 
 	RoomUser() = default;
-	RoomUser(const int idIn, const std::string nameIn) : id(idIn), username(nameIn) {}
+	RoomUser(const int idIn, const std::string nameIn, bool isOwner) : id(idIn), username(nameIn), admin(isOwner){}
 };
 
 struct Node {

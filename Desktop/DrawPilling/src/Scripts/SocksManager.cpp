@@ -7,6 +7,7 @@
 sio::client h;
 bool onserver = false;
 NewRenderer* rendererSocks;
+auto& runtime = RuntimeData::getInstance();
 
 unsigned int canvasSizes[2];
 
@@ -26,6 +27,11 @@ void SManager::SetCanvasSize(unsigned int width, unsigned int height)
 {
     canvasSizes[0] = width;
     canvasSizes[1] = height;
+}
+
+std::vector<RoomUser>* SManager::GetUsers()
+{
+    return &users;
 }
 
 void SManager::Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room)
@@ -198,12 +204,15 @@ void SManager::OnSystemMessage(sio::event& ev)
             users.clear();
             history.clear();
 
+            int admin = dataIn->get_map()["owner"]->get_int();
+            users.emplace_back(runtime.id, runtime.username, (runtime.id == admin));
             std::vector<sio::message::ptr> usersData = dataIn->get_map()["users"]->get_vector();
             for (sio::message::ptr userData : usersData)
             {
                 std::string username = userData->get_map()["username"]->get_string();
                 int userId = userData->get_map()["id"]->get_int();
-                users.emplace_back(userId, username);
+                
+                users.emplace_back(userId, username, (userId == admin));
             }
 
             history = dataIn->get_map()["history"]->get_vector();

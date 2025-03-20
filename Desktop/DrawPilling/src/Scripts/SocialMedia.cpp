@@ -1217,6 +1217,7 @@ void SocialMedia::RoomPage(float& width, float& height)
     }
     Lss::SetColor(ContainerBackground, ContainerBackground);
     ImGui::PopStyleVar();
+    Lss::End();
 }
 
 void SocialMedia::MainFeed(float position, float width, float height)

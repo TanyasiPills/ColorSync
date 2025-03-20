@@ -1036,6 +1036,7 @@
   <ItemGroup>
     <Image Include="Resources\icons\airBrush.png" />
     <Image Include="Resources\icons\chalkBrush.png" />
+    <Image Include="Resources\icons\crown.png" />
     <Image Include="Resources\icons\cursorBrush.png" />
     <Image Include="Resources\icons\eyeClosed.png" />
     <Image Include="Resources\icons\eyesOpen.png" />
