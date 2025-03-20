@@ -7,26 +7,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
-import android.util.AttributeSet;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
 import com.example.colorsync.DataTypes.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -47,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     public NavController navController;
     private NavHostFragment navHostFragment;
     private boolean navbarUIOnly;
-
     public static APIService getApi() {
         return api;
     }
@@ -83,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         currentPage = R.id.loginFragment;
 
         navbar.setOnItemSelectedListener(item -> {
+            if (currentPage == R.id.loginFragment) return true;
             if (navbarUIOnly) {
                 navbarUIOnly = false;
                 return true;
@@ -97,17 +89,14 @@ public class MainActivity extends AppCompatActivity {
             MenuItem nav_home = navbar.getMenu().getItem(1);
             int destination = navDestination.getId();
             if (destination == R.id.loginFragment) {
-                Toast.makeText(this, "login", Toast.LENGTH_SHORT).show();
                 if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
                 currentPage = R.id.loginFragment;
             }
             else if (destination == R.id.homeFragment) {
-                Toast.makeText(this, "home", Toast.LENGTH_SHORT).show();
                 if (currentPage != R.id.nav_home) nav_home.setIcon(R.drawable.add);
                 currentPage = R.id.nav_home;
             }
             else if (destination == R.id.profileFragment) {
-                Toast.makeText(this, "profile", Toast.LENGTH_SHORT).show();
                 if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
                 currentPage = R.id.nav_profile;
             }
@@ -157,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                         });
     }
 
-    private void nagviatePop(int id, int destination) {
+    private void navigatePop(int id, int destination) {
         boolean popped = navController.popBackStack(id, false);
         if (!popped) {
             navController.navigate(destination);
@@ -175,27 +164,21 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             } else if (currentPage == R.id.loginFragment) {
-                navController.navigate(R.id.action_loginFragment_to_homeFragment);
-                navController.popBackStack(destination, true, false);
+                navigatePop(R.id.homeFragment, R.id.action_loginFragment_to_homeFragment);
             } else if (currentPage == R.id.nav_profile) {
-                nagviatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
-                navController.popBackStack(destination, true, false);
+                navigatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
             }
         } else if (destination == R.id.nav_profile) {
             if (currentPage == R.id.nav_home) {
-                navController.navigate(R.id.action_homeFragment_to_profileFragment);
-                navController.popBackStack(destination, true, false);
+                navigatePop(R.id.profileFragment, R.id.action_homeFragment_to_profileFragment);
             } else if (currentPage == R.id.loginFragment) {
-                navController.navigate(R.id.action_loginFragment_to_profileFragment);
-                navController.popBackStack(destination, true, false);
+                navigatePop(R.id.profileFragment, R.id.action_loginFragment_to_profileFragment);
             }
         } else if (destination == R.id.loginFragment) {
             if (currentPage == R.id.nav_home) {
                 navController.navigate(R.id.action_homeFragment_to_loginFragment);
-                navController.popBackStack(destination, true, false);
             } else if (currentPage == R.id.nav_profile) {{
                 navController.navigate(R.id.action_profileFragment_to_loginFragment);
-                navController.popBackStack(destination, true, false);
             }}
         }
     }
@@ -205,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void goToHome() {
-        navbar.setSelectedItemId(R.id.nav_home);
+        navigateTo(R.id.nav_home);
     }
 
     public void setFullScreenOn() {

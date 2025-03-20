@@ -1,5 +1,6 @@
 package com.example.colorsync.DataTypes;
 
+import java.util.Date;
 import java.util.List;
 
 public class Post {
@@ -9,14 +10,18 @@ public class Post {
     private String text;
     private List<Comment> comments;
     private int likes;
+    private Date date;
+    private boolean liked;
 
-    public Post(int id, int imageId, User user, String text, List<Comment> comments, int likes) {
+    public Post(int id, int imageId, User user, String text, List<Comment> comments, int likes, Date date, boolean liked) {
         this.id = id;
         this.imageId = imageId;
         this.user = user;
         this.text = text;
         this.comments = comments;
         this.likes = likes;
+        this.date = date;
+        this.liked = liked;
     }
 
     public int getId() {
@@ -65,5 +70,21 @@ public class Post {
 
     public void setLikes(int likes) {
         this.likes = likes;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public boolean isLiked() {
+        return liked;
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
     }
 }

@@ -68,6 +68,7 @@ public class HomeFragment extends Fragment {
     private int offset;
     private ScrollAdapter adapter;
     private List<Post> posts;
+    private List<Integer> likes;
     private RecyclerView recyclerView;
     private Context context;
     private View view;
@@ -88,6 +89,7 @@ public class HomeFragment extends Fragment {
     private Cursor cursor;
     private boolean isLoadingUris;
     private boolean upload;
+
 
     public HomeFragment() {
         isLoading = false;
@@ -146,7 +148,7 @@ public class HomeFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        adapter = new ScrollAdapter(posts);
+        adapter = new ScrollAdapter(posts, likes);
         recyclerView.setAdapter(adapter);
 
         post_images = view.findViewById(R.id.post_images);
@@ -374,10 +376,30 @@ public class HomeFragment extends Fragment {
             selectedImageId = null;
             post_adapter.deselect();
         });
+        MainActivity.getApi().getLikes(UserManager.getBearer()).enqueue(new Callback<List<Integer>>() {
+            @Override
+            public void onResponse(Call<List<Integer>> call, Response<List<Integer>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    likes = response.body();
+                    if (!posts.isEmpty()) likePosts(posts);
+                }
+            }
 
+            @Override
+            public void onFailure(Call<List<Integer>> call, Throwable throwable) {
+
+            }
+        });
         loadMorePosts();
 
         return view;
+    }
+
+    private void likePosts(List<Post> posts) {
+        if (likes == null) return;
+        for (Post post : posts) {
+            if (likes.contains(post.getId())) post.setLiked(true);
+        }
     }
 
     private void postCreated(Post post) {
@@ -578,6 +600,7 @@ public class HomeFragment extends Fragment {
                     int start = posts.size();
                     posts.addAll(data.data);
                     offset = data.offset;
+                    likePosts(data.data);
                     adapter.notifyItemRangeInserted(start, data.data.size());
                     isLoading = false;
                 } else {
