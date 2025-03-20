@@ -1112,9 +1112,11 @@ void SocialMedia::RoomPage(float& width, float& height)
             if (passwordText[0] != '\0') header["password"] = std::string(passwordText);
             room["name"] = nameText;
             room["create"] = "true";
-            room["width"] = width;
-            room["height"] = height;
+            room["width"] = std::to_string(width);
+            room["height"] = std::to_string(height);
             SManager::SetCanvasSize(width, height);
+            std::vector<RoomUser>* users = SManager::GetUsers();
+            users->emplace_back(runtime.id, runtime.username, true);
             SManager::Connect(runtime.ip.c_str(), header, room);
             Callback::EditorSwapCallBack(true);
         }

@@ -294,6 +294,10 @@ void DrawUI::ServerWindow()
 				}
 				else Lss::Text(user.username, 4 * Lss::VH);
 				if (user.admin) Lss::Image(adminCrown.GetId(), ImVec2(4*Lss::VH, 4*Lss::VH),SameLine);
+				if (SManager::AmIOwner()) {
+					if (Lss::Button("Kick", ImVec2(4 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH))
+						SManager::Kick(user.id);
+				}
 			ImGui::EndChild();
 		}
 		Lss::End();

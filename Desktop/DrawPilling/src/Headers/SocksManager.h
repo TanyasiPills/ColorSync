@@ -38,4 +38,6 @@ public:
 	static void SetCanvasSize(unsigned int width, unsigned int height);
 
 	static std::vector<RoomUser>* GetUsers();
+	static void Kick(unsigned int id);
+	static bool AmIOwner();
 };

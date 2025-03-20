@@ -2,6 +2,7 @@
 #include "DrawUI.h"
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <algorithm>
 
 
 sio::client h;
@@ -13,10 +14,16 @@ unsigned int canvasSizes[2];
 
 std::vector<RoomUser> users;
 std::vector<sio::object_message::ptr> history;
+bool isAmOwner = false;
 
 void SManager::SetRenderer(NewRenderer& rendererIn)
 {
     rendererSocks = &rendererIn;
+}
+
+bool SManager::AmIOwner()
+{
+    return isAmOwner;
 }
 
 unsigned int* SManager::GetCanvasSize()
@@ -69,6 +76,7 @@ void SManager::Connect(std::string ip, std::map<std::string, std::string> header
     std::map<std::string, std::string> headers;
     headers["token"] = header["token"];
     headers["password"] = header["password"];
+    std::cout << room["width"] << std::endl;
     h.connect(connectionIp, room, headers);
 }
 
@@ -178,26 +186,18 @@ void SManager::OnSystemMessage(sio::event& ev)
     int type = dataIn->get_map()["type"]->get_int();
     switch (type) {
     case 0:
-        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["message"]->get_string() << std::endl;
         break;
     case 1: {
-        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
-        sio::object_message::ptr dataOut;
-        dataOut->get_map()["type"] = sio::int_message::create(type);
-        sio::message::ptr data = sio::object_message::create();
-        data->get_map()["id"] = dataIn->get_map()["id"];
-        data->get_map()["username"] = dataIn->get_map()["username"];
-        dataOut->get_map()["data"] = data;
-        ProcessAction(dataOut);
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["message"]->get_string() << std::endl;
+        users.emplace_back(dataIn->get_map()["id"]->get_int(), dataIn->get_map()["username"]->get_string(), false);
         } break;
     case 2:{
-        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["mesage"]->get_string() << std::endl;
-        sio::object_message::ptr dataOut;
-        dataOut->get_map()["type"] = sio::int_message::create(type);
-        sio::message::ptr data = sio::object_message::create();
-        data->get_map()["id"] = dataIn->get_map()["id"];
-        dataOut->get_map()["data"] = data;
-        ProcessAction(dataOut);
+        std::cout << "[SERVER MESSAGE]: " << dataIn->get_map()["message"]->get_string() << std::endl;
+        int userToDel = dataIn->get_map()["id"]->get_int();
+        users.erase(std::remove_if(users.begin(), users.end(),
+            [userToDel](const RoomUser& user) { return user.id == userToDel; }),
+            users.end());
         }
         break;
     case 3: {
@@ -206,6 +206,7 @@ void SManager::OnSystemMessage(sio::event& ev)
 
             int admin = dataIn->get_map()["owner"]->get_int();
             users.emplace_back(runtime.id, runtime.username, (runtime.id == admin));
+            isAmOwner = runtime.id == admin;
             std::vector<sio::message::ptr> usersData = dataIn->get_map()["users"]->get_vector();
             for (sio::message::ptr userData : usersData)
             {
@@ -228,6 +229,21 @@ void SManager::OnSystemMessage(sio::event& ev)
 void SManager::OnAction(sio::event& ev) {
     sio::object_message::ptr dataIn = ev.get_message();
     ProcessAction(dataIn);
+}
+
+void SManager::Kick(unsigned int id) {
+    if (!onserver) return;
+
+    sio::message::ptr msg = sio::object_message::create();
+    sio::message::ptr data = sio::object_message::create();
+
+    data->get_map()["id"] = sio::int_message::create(id);
+    msg->get_map()["type"] = sio::string_message::create("kick");
+
+    msg->get_map()["data"] = data;
+
+    h.socket()->emit("manage", msg);
+
 }
 
 void SManager::SendAction(Message& dataIn)
