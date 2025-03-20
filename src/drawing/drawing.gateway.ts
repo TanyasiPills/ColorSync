@@ -13,7 +13,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { AuthService } from "src/auth/auth.service";
 import { Room } from "./room";
-import { getUserData, isPositiveInt, socketError } from "./helper";
+import { getUserData, isLargerThan0Int, isPositiveInt, socketError } from "./helper";
 import { User } from "./types";
 
 @WebSocketGateway({ cors: { origin: "*" } })
@@ -111,13 +111,19 @@ export class DrawingWS
       }
       if (Array.isArray(widthQuery)) widthQuery = widthQuery[0];
       if (Array.isArray(heightQuery)) heightQuery = heightQuery[0];
-      if (isPositiveInt(widthQuery) && isPositiveInt(heightQuery)) {
+      width = parseInt(widthQuery);
+      height = parseInt(heightQuery);
+      console.log("width query", widthQuery);
+      console.log(heightQuery);
+      if (!isLargerThan0Int(width) || !isLargerThan0Int(height)) {
         socketError(socket, "Width and height must be positive integers", 20, true);
         return;
       }
-      width = parseInt(widthQuery);
-      height = parseInt(heightQuery);
+      console.log(width);
+      console.log(height);
 
+      console.log(isLargerThan0Int(width));
+    
       room = new Room(name, password, Math.min(maxClients, 10), socket, user, width, height);
       this.rooms.push(room);
     } else {

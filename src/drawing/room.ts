@@ -24,6 +24,8 @@ export class Room {
     this.history = new History(30);
     this.history.connect(ownerUser.id);
     owner.join(name);
+
+    console.log("room width: ", width);
   }
 
   public static init(server: Server): void {
@@ -44,7 +46,8 @@ export class Room {
       height: this.height,
       history: this.history.getActions(),
       compilePosition: this.history.getUndoPosition(),
-      users: this.clients.map(e => e.data.user)
+      users: this.clients.map(e => e.data.user),
+      owner: this.owner.data.user.id
     });
     this.clients.push(socket);
     this.history.connect(user.id);

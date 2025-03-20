@@ -17,8 +17,17 @@ export function checkUser(socket: Socket): User {
 }
 
 export function isPositiveInt(value: any) {
+  if (Number.isNaN(value)) return false;
   if (Number.isInteger(value)) {
     if (value >= 0) return true;
+  }
+  return false;
+}
+
+export function isLargerThan0Int(value: any) {
+  if (Number.isNaN(value)) return false;
+  if (Number.isInteger(value)) {
+    if (value > 0) return true;
   }
   return false;
 }

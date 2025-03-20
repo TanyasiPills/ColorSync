@@ -146,11 +146,11 @@
           <td>Do you want to create the room or join, false = join, true = create, default is false</td>
         </tr>
         <tr>
-          <td>width<span>integer</span></td>
+          <td>width<span>int</span></td>
           <td>The width of the canvas, required when creating the room</td>
         </tr>
         <tr>
-          <td>height<span>integer</span></td>
+          <td>height<span>int</span></td>
           <td>The height of the canvas, required when creating the room</td>
         </tr>
       </table>
@@ -427,7 +427,7 @@
       <h3>Message from the server</h3>
       <table>
         <tr class="required">
-          <td>type = 0<span>integer</span></td>
+          <td>type = 0<span>int</span></td>
           <td>The type of the system message</td>
         </tr>
         <tr class="required">
@@ -440,7 +440,7 @@
       <h3>Other user joined the room</h3>
       <table>
         <tr class="required">
-          <td>type = 1<span>integer</span></td>
+          <td>type = 1<span>int</span></td>
           <td>The type of the system message</td>
         </tr>
         <tr class="required">
@@ -461,7 +461,7 @@
       <h3>Other user disconnected the room</h3>
       <table>
         <tr class="required">
-          <td>type = 2<span>integer</span></td>
+          <td>type = 2<span>int</span></td>
           <td>The type of the system message</td>
         </tr>
         <tr class="required">
@@ -478,15 +478,15 @@
       <h3 id="joining the room">Joining the room</h3>
       <table>
         <tr class="required">
-          <td>type = 3<span>integer</span></td>
+          <td>type = 3<span>int</span></td>
           <td>The type of the system message</td>
         </tr>
         <tr class="required">
-          <td>width<span>integer</span></td>
+          <td>width<span>int</span></td>
           <td>The width of the canvas</td>
         </tr>
         <tr class="required">
-          <td>height<span>integer</span></td>
+          <td>height<span>int</span></td>
           <td>The height of the canvas</td>
         </tr>
         <tr class="required">
@@ -500,6 +500,10 @@
         <tr class="required">
           <td>users<span>{id: int, username: string}[]</span></td>
           <td>List of all the connected users.</td>
+        </tr>
+        <tr class="required">
+          <td>owner<span>int</span></td>
+          <td>The id of the owner.</td>
         </tr>
       </table>
     </div>
