@@ -5,7 +5,7 @@
     background-color: var(--backgroundColor);
     padding: 10px;
     box-shadow: 0 2px 5px var(--borderCol);
-  }
+}
 
 .d-flex {
     display: flex;
@@ -32,12 +32,12 @@
     margin: 0;
 }
 
-#col{
+#col {
     border-left: 2px solid var(--borderCol);
     border-bottom: 2px solid var(--borderCol);
 }
 
-#col:nth-child(3n){
+#col:nth-child(3n) {
     border-right: 2px solid var(--borderCol);
 }
 
@@ -46,10 +46,13 @@
     overflow-y: auto;
     padding: 10px;
     height: calc(100vh - 150px);
-  }
-  
-  .drawing-img {
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+.drawing-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
+}

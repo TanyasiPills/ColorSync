@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../css/SocialMedia.css";
 import { Container, Row, Col, Card, Spinner, InputGroup, FormControl, Button } from 'react-bootstrap';
 import { backendIp } from "../constants";
-import { post } from "../types"
+import { comment, post } from "../types"
 import { Posting } from "./Posting";
 import Cookies from "universal-cookie";
 
@@ -25,14 +25,13 @@ export function SocialMedia() {
       const result = await fetch(`${backendIp}/posts?offset=${offset}`, {
         method: "GET",
         headers: {
-          "Accept": "application/json",
-          "Authorization": "Bearer " + cookies.get("AccessToken").access_token
+          "Accept": "application/json",         
         }
       })
       if (result.ok) {
         const json = await result.json()
         setPost(prev => [...prev, ...json.data])
-        console.log("off", json.offset)
+
         offset = json.offset;
       } else {
         console.log(await result.text())
@@ -45,7 +44,6 @@ export function SocialMedia() {
 
   useEffect(() => {
     fetchPosts()
-    console.log("potstststst")
 
     const fetchLikes = async () => {
       try {
@@ -103,8 +101,7 @@ export function SocialMedia() {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false,
-      timeZone: 'UTC',
+      hour12: false      
     }).formatToParts(formattedDate).reduce((acc: any, part) => {
       acc[part.type] = part.value;
       return acc;
@@ -132,6 +129,25 @@ export function SocialMedia() {
       if (!res.ok) {
         return;
       }
+
+      const json = await res.json()
+
+      const addComment: comment = {
+        id: json.id,
+        text: newComment,
+        date: new Date(),
+        user: { id: thisUser.id, username: thisUser.username },
+      };
+
+      setNewComment("");
+
+      setPost((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? { ...post, comments: [...post.comments, addComment] }
+            : post
+        )
+      );
 
     } catch (err: any) {
       console.log(err);
@@ -201,10 +217,13 @@ export function SocialMedia() {
                 <Card.Body>
                   <Row className="align-items-center">
                     <Col xs="auto" className="text-center">
-                      <img src={`${backendIp}/users/${post.user.id}/pfp`} alt="Profile" className="profile-img" data-id={post.user.id}  key={post.id} onClick={takeToProfile} />
+                      <img src={`${backendIp}/users/${post.user.id}/pfp`} alt="Profile" className="profile-img" data-id={post.user.id} key={post.id} onClick={takeToProfile} />
                     </Col>
                     <Col>
-                      <h5 className="profile-name" key={post.id} data-id={post.user.id}  onClick={takeToProfile}>{post.user.username}</h5>
+                      <h5 className="profile-name" key={post.id} data-id={post.user.id} onClick={takeToProfile}>{post.user.username}</h5>
+                    </Col>
+                    <Col xs="auto">
+                      <p>{generateDatabaseDateTime(post.date)}</p>
                     </Col>
                   </Row>
                 </Card.Body>
@@ -243,7 +262,7 @@ export function SocialMedia() {
                 </div>
                 {post.comments.length > 0 && (
                   <details className="mt-2">
-                    <summary>Comments</summary>
+                    <summary className="summary">Comments</summary>
                     {post.comments.map((comment) => (
                       <div key={comment.id} className="comment-container p-2">
                         <Row className="align-items-center">

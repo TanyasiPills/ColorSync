@@ -178,6 +178,10 @@ details {
     position: relative;
 }
 
+.summary{
+    background-color: var(--backgroundColor);
+}
+
 details::-webkit-scrollbar {
     width: 6px;
 }

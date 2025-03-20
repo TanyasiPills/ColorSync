@@ -2,24 +2,36 @@ import { useEffect, useState } from "react";
 import "../css/SocialMedia.css";
 import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { backendIp } from "../constants";
-import { user } from "../types"
+import { post, user } from "../types"
 import Cookies from "universal-cookie";
 
 export function Search() {
-  const [users, setUsers] = useState<user[]>();
+  const [users, setUsers] = useState<user[]>([]);
+  const [posts, setPosts] = useState<post[]>([]); 
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
   const [show, setShow] = useState(false);
   const cookie = new Cookies();
-  const thisUser = cookie.get("AccessToken");
-  useEffect(() => {
-    async function load() {
-      const params: any = {};
-      if (searchQuery) params.name = searchQuery;
-      const result = await fetch(backendIp + '/users/search?' + new URLSearchParams(params), { method: "GET", headers: { "Accept": "application/json" } });
-      if (result.ok) { setUsers(await result.json()); } else { console.log(await result.text()) }
-    }
-    load();
 
+  async function loadUsers() {
+    const params: any = {};
+    if (searchQuery) params.name = searchQuery;
+    const result = await fetch(backendIp + '/users/search?' + new URLSearchParams(params), { method: "GET", headers: { "Accept": "application/json" } });
+    if (result.ok) { setUsers(await result.json()); } else { console.log(await result.text()) }
+  }
+
+  async function loadPosts() {
+    const params: any = {};
+    if (searchQuery) params.q = searchQuery;
+    const result = await fetch(backendIp + '/posts/search?' + new URLSearchParams(params), { method: "GET", headers: { "Accept": "application/json" } });
+    if (result.ok) { let json =await result.json(); setPosts(json.data); } else { console.log(await result.text()) }
+  }
+
+  useEffect(() => {
+
+    loadUsers();
+    loadPosts();
+
+    console.log(posts);
 
     const homeButton = document.getElementById("homeButton")!;
     const searchButton = document.getElementById("searchButton")!;
@@ -30,7 +42,7 @@ export function Search() {
     searchButton.addEventListener("click", () => {
       window.location.href = '/CMS/SRC';
     });
-  }, []);
+  }, [searchQuery]);
 
   function Search(event: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(event.target.value);
@@ -47,21 +59,25 @@ export function Search() {
         <Col xs="2" id="left" className="h-100 d-flex flex-column align-items-center py-4">
           <h3 className="costumButtons" id="homeButton">Home</h3>
           <h3 className="costumButtons" id="searchButton">Search</h3>
-          {thisUser ?
-            <h3 className="costumButtons" id="postButton" tabIndex={0} onClick={() => setShow(true)} >Post</h3> :
-            null}
         </Col>
         <Col id="middle" className="h-100 d-flex justify-content-center align-items-center">
           <div id="feed">
             <input type="text" id="userSearch" onChange={Search} />
             <div id="allUsers">
-              {users ? users.map((e) => (
-                <div className="d-flex align-items-center" id="users" data-id={e.id} onClick={takeToProfile}>
-                  <img src={backendIp + "/users/" + e.id + "/pfp"} />
-                  <h4>{e.username}</h4>
+              {users && users.map((user) => (
+                <div className="d-flex align-items-center" id="users" data-id={user.id} onClick={takeToProfile} key={user.id}>
+                  <img src={backendIp + "/users/" + user.id + "/pfp"} alt="Profile" />
+                  <h4>{user.username}</h4>
                 </div>
-              )) : <Spinner animation="border" size="sm" />}
+              ))}
             </div>
+            <Row id="drawings" className="w-100 justify-content-center">
+              {posts && posts.map((post) => (
+                <Col id="col" key={post.id} xs={12} sm={6} md={4} lg={4} className="d-flex justify-content-center">
+                  <img src={`${backendIp}/images/${post.imageId}`} className="drawing-img img-thumbnail shadow" alt="Post" />
+                </Col>
+              ))}
+            </Row>
           </div>
         </Col>
         <Col xs="2" id="right" className="h-100"></Col>

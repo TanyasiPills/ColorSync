@@ -26,35 +26,35 @@ export function Profile({ own = false }: { own?: boolean }) {
   const [show, setShow] = useState(false);
   const [imgShow, setImgShow] = useState(false);
 
+  async function loadUsers() {
+    const header: any = {};
+    if (own) {
+      header["Authorization"] = "Bearer " + thisUser.access_token;
+    }
+    const result = await fetch(backendIp + '/users' + (own ? '' : '/' + id), { method: "GET", headers: header });
+    if (result.ok) {
+      const resultJson: user = await result.json();
+      setUser(resultJson);
+      const imageResult = await fetch(backendIp + '/images/user/' + resultJson.id, { method: "GET", headers: header });
+      if (imageResult.ok) {
+        const imageResultJson: image[] = await imageResult.json()
+        setImages(imageResultJson);
+        const promises = imageResultJson.map((e) => fetch(backendIp + '/images/' + e.id, { method: "GET", headers: header }).then(res => {
+          if (res.ok) {
+            return res.blob();
+          }
+          else {
+            return new Blob();
+          }
+        }).then(blob => URL.createObjectURL(blob)));
+        console.log(await Promise.all(promises));
+        setImageURL(await Promise.all(promises));
+      }
+    } else { console.log(await result.text()) }
+  }
 
   useEffect(() => {
-    async function load() {
-      const header: any = {};
-      if (own) {
-        header["Authorization"] = "Bearer " + thisUser.access_token;
-      }
-      const result = await fetch(backendIp + '/users' + (own ? '' : '/' + id), { method: "GET", headers: header });
-      if (result.ok) {
-        const resultJson: user = await result.json();
-        setUser(resultJson);
-        const imageResult = await fetch(backendIp + '/images/user/' + resultJson.id, { method: "GET", headers: header });
-        if (imageResult.ok) {
-          const imageResultJson: image[] = await imageResult.json()
-          setImages(imageResultJson);
-          const promises = imageResultJson.map((e) => fetch(backendIp + '/images/' + e.id, { method: "GET", headers: header }).then(res => {
-            if (res.ok) {
-              return res.blob();
-            }
-            else {
-              return new Blob();
-            }
-          }).then(blob => URL.createObjectURL(blob)));
-          console.log(await Promise.all(promises));
-          setImageURL(await Promise.all(promises));
-        }
-      } else { console.log(await result.text()) }
-    }
-    load();
+    loadUsers();
   }, [])
   if (!user) {
     return <Spinner animation="border" size="sm" />
@@ -74,7 +74,7 @@ export function Profile({ own = false }: { own?: boolean }) {
           <PostingToProfile show={imgShow} onHide={() => setImgShow(false)} />
         </Col>
       </Row>
-      <Row id="drawings" className="w-100" style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <Row id="drawings" className="w-100" style={{  }}>
         {imageURL && imageURL.map((e, index) => (
           <Col id="col" key={index} xs={12} sm={6} md={4} lg={4} className="d-flex justify-content">
             <img src={e} className="drawing-img" />
