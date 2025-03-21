@@ -591,7 +591,7 @@ public class HomeFragment extends Fragment {
         if (isLoading) return;
         isLoading = true;
 
-        MainActivity.getApi().getAllPost(offset).enqueue(new Callback<PostResponse>() {
+        MainActivity.getApi().getAllPost(UserManager.getBearer(), offset).enqueue(new Callback<PostResponse>() {
             @Override
             public void onResponse(Call<PostResponse> call, Response<PostResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {

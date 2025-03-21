@@ -25,7 +25,7 @@ import retrofit2.http.Query;
 
 public interface APIService {
     @GET("posts")
-    Call<PostResponse> getAllPost(@Query("offset") int offset);
+    Call<PostResponse> getAllPost(@Header("Authorization") String token, @Query("offset") int offset);
 
     @Multipart
     @POST("posts")
