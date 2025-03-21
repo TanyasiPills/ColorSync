@@ -90,19 +90,41 @@ export class SearchService implements OnModuleInit {
     this.logger.log('Reindexing complete');
   }
 
-  async searchPosts(searchText: string, searchTags: string[], userPreferences: { queries: { text: string, weight: number }[], tags: { name: string, weight: number }[] } = undefined, offset: number = 0, take: number = 10): Promise<number[]> {
+  async searchPosts(searchText: string, searchTags: string[], offset: number = 0, take: number = 10, userId: number = undefined): Promise<number[]> {
     if (searchTags) searchTags = searchTags.map(e => e.toLowerCase());
-    
     if (searchText == "") searchText == undefined;
+    
+    const userPreferences: { queries: { text: string, weight: number }[], tags: { name: string, weight: number }[] } = {queries: [], tags: []};
+
     const userPrefenceMultiplier = { text: 0, tags: 0 };
-    if (userPreferences) {
-      if (userPreferences.queries && userPreferences.queries.length > 0) {
-        userPrefenceMultiplier.text = 1 + (1 / userPreferences.queries.length);
+    if (userId) {
+      const likes = await this.db.user.findUnique({where: {id: userId}, select: {likes: {select: {text: true, tags: true}, take: 100}}});
+      let tags = new Map<string, number>();
+      for (let e of likes.likes) { // e: {text: string, tags: {name: string}}
+        userPreferences.queries.push({text: e.text, weight: 1});
+        e.tags.forEach(tag => {
+          if (tags.has(tag.name)) tags.set(tag.name, tags.get(tag.name));
+          else tags.set(tag.name, 1);
+        });
       }
-      if (userPreferences.tags && userPreferences.tags.length > 0) {
-        userPrefenceMultiplier.tags = 1 + (1 / userPreferences.tags.length);
+
+      for (let kvp of tags.entries()) {
+        userPreferences.tags.push({name: kvp[0], weight: kvp[1]});
+      }
+
+      if (userPreferences) {
+        if (userPreferences.queries && userPreferences.queries.length > 0) {
+          userPrefenceMultiplier.text = (0.5 / userPreferences.queries.length);
+        }
+        if (userPreferences.tags && userPreferences.tags.length > 0) {
+          userPrefenceMultiplier.tags = (0.5 / userPreferences.tags.length);
+        }
       }
     }
+
+    console.log(userPreferences);
+
+    
 
     const result = await this.elastic.search({
       index: 'post',
@@ -136,7 +158,7 @@ export class SearchService implements OnModuleInit {
                     text: e.text
                   }
                 },
-                weight: Math.max(userPrefenceMultiplier.text * e.weight, 1)
+                weight: Math.max(userPrefenceMultiplier.text * e.weight, 0.01)
               })) : []),
               ...(userPrefenceMultiplier.tags > 0 ? userPreferences.tags.map(e => ({
                 filter: {
@@ -144,15 +166,15 @@ export class SearchService implements OnModuleInit {
                     tags: e.name
                   }
                 },
-                weight: Math.max(userPrefenceMultiplier.tags * e.weight, 1)
+                weight: Math.max(userPrefenceMultiplier.tags * e.weight, 0.01)
               })) : []),
               {
                 exp: {
                   date: {
                     origin: 'now',
-                    scale: '30d',
-                    offset: '7d',
-                    decay: 0.75
+                    scale: '14d',
+                    offset: '1d',
+                    decay: 0.5
                   }
                 }
               }
@@ -168,8 +190,6 @@ export class SearchService implements OnModuleInit {
       from: offset,
       size: take
     });
-
-    //TODO: likes
 
     console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
 

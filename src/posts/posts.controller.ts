@@ -71,10 +71,12 @@ export class PostsController {
   @ApiQuery({ name: 'offset', description: 'The id of the last post you got', required: false })
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
-  
+  @ApiBearerAuth()
+
+  @UseGuards(OptionalAuthGuard)
   @Get()
-  findAll(@Query('take') take: string, @Query('offset') offset: string) {
-    return this.postService.search(null, null, take, offset, false);
+  findAll(@Query('take') take: string, @Query('offset') offset: string, @Req() req: any) {
+    return this.postService.search(null, null, take, offset, false, req.user ? req.user.id : undefined);
   }
 
   /**
@@ -90,12 +92,14 @@ export class PostsController {
   @ApiQuery({ name: 'take', description: 'The amount of posts to take', required: false, minimum: 1, maximum: 10 })
   @ApiQuery({ name: 'imageOnly', description: 'Only imageid and id is returned, default is 1', required: false })
   @ApiResponse({ status: 200, description: 'Returns the posts and the last id', schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: getSchemaPath(PostIncludesType) } }, offset: { type: 'integer' } } } })
+  @ApiBearerAuth()
 
+  @UseGuards(OptionalAuthGuard)
   @Get('search') 
   search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1", @Req() req: any) {
     if (!tags) tags = [];
     else if (!Array.isArray(tags)) tags = [tags];
-    return this.postService.search(tags, q, take, offset, imageOnly == '1');
+    return this.postService.search(tags, q, take, offset, imageOnly == '1', req.user ? req.user.id : undefined);
   }
 
   /**

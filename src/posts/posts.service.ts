@@ -47,7 +47,7 @@ export class PostsService {
     return post;
   }
 
-  async search(tags: string[], q: string, take: string, offset: string, imageOnly: boolean = false) {
+  async search(tags: string[], q: string, take: string, offset: string, imageOnly: boolean = false, userId = undefined) {
     let parsedTake = 10;
     if (take) {
       parsedTake = parseInt(take);
@@ -59,7 +59,7 @@ export class PostsService {
       if (!Number.isFinite(parsedOffset)) parsedOffset = 0;
     }
 
-    const ids = await this.elastic.searchPosts(q, tags, null, parsedOffset, parsedTake);
+    const ids = await this.elastic.searchPosts(q, tags, parsedOffset, parsedTake, userId);
     let selectBody;
     if (imageOnly) selectBody = {
       id: true, imageId: true
