@@ -298,6 +298,7 @@ void DrawUI::ServerWindow()
 					if (Lss::Button("Kick", ImVec2(4 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH))
 						SManager::Kick(user.id);
 				}
+				Lss::End();
 			ImGui::EndChild();
 		}
 		Lss::End();

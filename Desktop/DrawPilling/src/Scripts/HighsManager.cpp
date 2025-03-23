@@ -33,10 +33,11 @@ void HManager::InitUser()
 			if (result.contains("statusCode") && result["statusCode"] == 401) {
 				runtime.logedIn = false;
 			}
-			else if (result.contains("id") && result.contains("username")) {
+			else if (result.contains("id") && result.contains("username") && result.contains("email")) {
 
 				runtime.id = result["id"];
 				runtime.username = result["username"];
+				runtime.email = result["email"];
 
 				std::vector<uint8_t> imageData = ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
 

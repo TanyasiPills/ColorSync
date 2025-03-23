@@ -700,7 +700,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
 
             ImGui::SameLine();
             Lss::Top(7.5 * Lss::VH);
-            Lss::Text(users[user].username, 5 * Lss::VH);
+            Lss::Text(runtime.username, 5 * Lss::VH);
 
             if (user == runtime.id) {
                 ImGui::SameLine();
@@ -733,6 +733,65 @@ void SocialMedia::SettingsPage()
 {
     ImVec2 valid = ImGui::GetContentRegionAvail();
     Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+        Lss::Text("Profile settings", 5 * Lss::VH);
+
+        ImGui::SameLine();
+        Lss::Top(2.4f * Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4);
+
+
+        Lss::Left(5 * Lss::VW);
+        Lss::Child("##UserVariables", ImVec2(0, 10 * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+            Lss::Text("Username: ", 3 * Lss::VH);
+
+            ImGui::SameLine();
+            Lss::Top(0.25f * Lss::VH);
+            static char usernameText[128];
+            if (usernameText[0] == '\0') std::strcpy(usernameText, runtime.username.c_str());
+            if (Lss::InputText("usernameNono", usernameText, sizeof(usernameText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                runtime.username = usernameText;
+                nlohmann::json body;
+                body["username"] = usernameText;
+                HManager::Request("users", body.dump(), PATCH);
+            }
+
+            Lss::Text("Password: ", 3 * Lss::VH);
+
+            ImGui::SameLine();
+            Lss::Top(0.25f * Lss::VH);
+            static char passwordText[128];
+            if (passwordText[0] == '\0') std::strcpy(passwordText, runtime.password.c_str());
+            if (Lss::InputText("passwordNono", passwordText, sizeof(passwordText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                if (passwordText[0] != '\0')
+                {
+                    runtime.password = passwordText;
+                    nlohmann::json body;
+                    body["password"] = passwordText;
+                    HManager::Request("users", body.dump(), PATCH);
+                }
+            }
+
+            Lss::Text("Email: ", 3 * Lss::VH);
+
+            ImGui::SameLine();
+            Lss::Top(0.25f * Lss::VH);
+            static char emailText[128];
+            if (emailText[0] == '\0') std::strcpy(emailText, runtime.email.c_str());
+            if (Lss::InputText("emailNono", emailText, sizeof(emailText), ImVec2(25 * Lss::VH, 2.5f * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                runtime.email = emailText;
+                nlohmann::json body;
+                body["email"] = emailText;
+                HManager::Request("users", body.dump(), PATCH);
+            }
+
+            Lss::End();
+
+        ImGui::EndChild();
 
         Lss::Text("Network Variables", 5 * Lss::VH);
 

@@ -44,18 +44,19 @@ void LoginRegister::Login(bool& loginWindow)
                     std::cout << "got this JSON: " << res["access_token"] << std::endl;
                     runtime.token = res["access_token"];
                     runtime.username = res["username"];
+                    runtime.email = res["email"];
                     runtime.password = passText;
                     runtime.logedIn = true;
                     nlohmann::json result = HManager::Request("users", "", GET);
                     runtime.id = result["id"];
                     loginOpen = false;
-                    std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
+                    std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
                     float ratioStuff = 0.0f;
                     runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
                     ImGui::CloseCurrentPopup();
 
                     res = HManager::Request("users/likes","", GET);
-                    if (!res.is_null() && !result.empty())for (auto& item : result) runtime.liked.insert((int)item);
+                    if (!res.is_null() && !result.empty())for (auto& item : res) runtime.liked.insert((int)item);
                 }
             }
             Lss::End();
