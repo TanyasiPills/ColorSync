@@ -3,6 +3,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import { existsSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
+import { hash } from 'argon2';
 
 @Injectable()
 export class UsersService {
@@ -12,7 +13,10 @@ export class UsersService {
     return this.db.user.findUnique({where: {id}, select: {id: true, username: true}});
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    if (updateUserDto.password) {
+      updateUserDto.password = await hash(updateUserDto.password);
+    }
     return this.db.user.update({where: {id}, data: updateUserDto, select: {username: true, email: true}});
   }
 

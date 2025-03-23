@@ -124,8 +124,6 @@ export class SearchService implements OnModuleInit {
 
     console.log(userPreferences);
 
-    
-
     const result = await this.elastic.search({
       index: 'post',
       body: {

@@ -3,8 +3,8 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-valid
 export class CreateUserDto {
 	@IsNotEmpty()
 	@IsString()
-  @MinLength(3)
-  @MaxLength(24)
+	@MinLength(3)
+	@MaxLength(24)
 	username: string;
 
 	@IsNotEmpty()
@@ -13,7 +13,7 @@ export class CreateUserDto {
 
 	@IsNotEmpty()
 	@IsString()
-  @MinLength(3)
-  @MaxLength(24)
+	@MinLength(3)
+	@MaxLength(24)
 	password: string;
 }

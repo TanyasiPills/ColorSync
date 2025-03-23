@@ -64,7 +64,34 @@ export class Room {
     socket.disconnect();
 
     if (this.clients.length === 0) return true;
-    else return false;
+    else {
+      if (this.owner === socket) {
+        this.changeOwnerP(this.clients[0]);
+      }
+      return false;
+    }
+  }
+
+  private changeOwnerP(socket: Socket) {
+    const user = checkUser(socket);
+    if (!user) return;
+    const newOwner = this.clients.find(e => e.data.user.id == user.id);
+    if (!newOwner) return;
+    this.owner = newOwner;
+    this.emit('system message', {type: 4, message: `${newOwner.data.user.username} is now the owner of the room!`, id: newOwner.data.user.id});
+  }
+
+  public changeOwner(socket: Socket, userId: number) {
+    if (this.owner !== socket) {
+      socketError(socket, 'Unauthorized', 32);
+    }
+    const newOwner = this.clients.find(e => e.data.user.id == userId);
+    if (!newOwner) {
+      socketError(socket, 'User not found', 51);
+      return;
+    }
+    this.owner = newOwner;
+    this.emit('system message', {type: 4, message: `${newOwner.data.user.username} is now the owner of the room!`, id: newOwner.data.user.id});
   }
 
   public emit(event: string, message: any): void {
@@ -97,13 +124,17 @@ export class Room {
   }
 
   public kick(socket: Socket, id: number): boolean {
-    const client: Socket = this.clients.find(e => e.data.user.id == id);
-    if (!socket) {
-      socketError(socket, 'User not found', 51);
+    if (socket !== this.owner) {
+      socketError(socket, 'Unauthorized', 32);
       return false;
     }
-    this.disconnect(client);
+    const client: Socket = this.clients.find(e => e.data.user.id == id);
+    if (!client) {
+      socketError(client, 'User not found', 51);
+      return false;
+    }
     client.emit('system message', {type: 0, message: 'You have been kicked from the room!'});
+    this.disconnect(client);
     return true;
   }
 

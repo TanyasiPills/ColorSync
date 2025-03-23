@@ -113,16 +113,10 @@ export class DrawingWS
       if (Array.isArray(heightQuery)) heightQuery = heightQuery[0];
       width = parseInt(widthQuery);
       height = parseInt(heightQuery);
-      console.log("width query", widthQuery);
-      console.log(heightQuery);
       if (!isLargerThan0Int(width) || !isLargerThan0Int(height)) {
         socketError(socket, "Width and height must be positive integers", 20, true);
         return;
       }
-      console.log(width);
-      console.log(height);
-
-      console.log(isLargerThan0Int(width));
     
       room = new Room(name, password, Math.min(maxClients, 10), socket, user, width, height);
       this.rooms.push(room);
@@ -304,10 +298,6 @@ export class DrawingWS
 
     switch (type) {
       case 'kick':
-        if (room.getOwner() != socket) {
-          socketError(socket, 'Unauthorized', 32);
-          return;
-        }
         if (!data) {
           socketError(socket, 'Data is requierd', 20);
           return;
@@ -317,6 +307,17 @@ export class DrawingWS
           return;
         }
         room.kick(socket, data.id);
+      case 'changeOwner':
+        if (!data) {
+          socketError(socket, 'Data is required', 20);
+          return;
+        }
+        if (!isPositiveInt(data.id)) {
+          socketError(socket, 'Id must be a positive integer', 20);
+          return;
+        }
+        room.changeOwner(socket, data.id);
+        break;
     }
   }
 }

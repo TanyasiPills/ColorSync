@@ -386,6 +386,10 @@
                 <td>kick</td>
                 <td>{id: int}</td>
               </tr>
+              <tr>
+                <td>changeOwner</td>
+                <td>{id: int}</td>
+              </tr>
             </table>
           </td>
         </tr>
@@ -504,6 +508,23 @@
         <tr class="required">
           <td>owner<span>int</span></td>
           <td>The id of the owner.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Owner has been changed</h3>
+      <table>
+        <tr class="required">
+          <td>type = 4<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the new owner</td>
         </tr>
       </table>
     </div>
