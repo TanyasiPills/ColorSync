@@ -9,13 +9,48 @@ export class RenderData {
     ib!: IndexBuffer;
     shader!: Shader;
     texture!: Texture;
-    fbo!: WebGLBuffer | null;
+    fbo: WebGLBuffer | null = null;
+}
+
+export class Node {
+    name: string;
+    visible: boolean = true;
+    editing: boolean = false;
+    selected: boolean = false;
+    id: number;
+    opacity: number = 100;
+
+    constructor(name: string, id: number) {
+        this.name = name;
+        this.id = id;
+    }
+}
+
+export class Layer extends Node {
+    data: RenderData;
+
+    constructor(name: string, id: number, data: RenderData) {
+        super(name, id);
+        this.data = data;
+    }
+}
+
+export class Folder extends Node {
+    open: boolean = false;
+    childrenIds: number[] = [];
+
+    constructor(name: string, id: number) {
+        super(name, id);
+    }
+
+    addChild(childId: number): void {
+        this.childrenIds.push(childId);
+    }
 }
 
 
 export class Render {
     private gl: WebGL2RenderingContext;
-    private layers: RenderData[];
     public cursor!: RenderData;
 
     private cursorRadius: number;
@@ -45,6 +80,7 @@ export class Render {
     
     public nodes: Map<number, NodeMatyi> = new Map();
     public folders: number[] = [];
+    public layers: number[] =  [];
 
 
 
