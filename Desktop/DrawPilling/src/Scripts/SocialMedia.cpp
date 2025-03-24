@@ -1402,7 +1402,7 @@ void SocialMedia::RightSide(float position, float width, float height)
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
     ImGui::Begin("Right Side", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
+        /*
 	    ImVec2 valid = ImGui::GetContentRegionAvail();
 
 
@@ -1419,6 +1419,7 @@ void SocialMedia::RightSide(float position, float width, float height)
         ImGui::EndChild();
 
         Lss::End();
+        */
     ImGui::End();
 }
 

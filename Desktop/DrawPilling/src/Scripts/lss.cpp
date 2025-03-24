@@ -20,13 +20,14 @@ float Lss::VH = 0;
 int prevType = -1;
 
 ImVec4 colorArray[] = {
-	ImVec4(0.149f, 0.149f, 0.345f, 1.0f),
-	ImVec4(0.122f, 0.122f, 0.298f, 1.0f),
-	ImVec4(0.208f, 0.208f, 0.353f, 1.0f),
-	ImVec4(0.286f, 0.282f, 0.451f, 1.0f),
+	ImVec4(0.0588f, 0.0549f, 0.1804f, 1.0f),
+	ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f),
+	ImVec4(0.0863f, 0.0863f, 0.2706f, 1.0f),
+	ImVec4(0.1059f, 0.1059f, 0.3294f, 1.0f),
 	ImVec4(0.478f, 0.455f, 0.651f, 1.0f),
 	ImVec4(0.647f, 0.627f, 0.831f, 1.0f),
-	ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+	ImVec4(0.0f, 0.0f, 0.0f, 0.0f),
+	ImVec4(0.1059f, 0.1059f, 0.2980f, 1.0f)
 };
 int regionArray[] = {
 	ImGuiCol_WindowBg,
@@ -47,6 +48,7 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
 
 	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = colorArray[InputBg];
 
 
 	window = windowIn;

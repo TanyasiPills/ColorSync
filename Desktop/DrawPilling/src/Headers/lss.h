@@ -23,7 +23,8 @@ enum Colors {
 	HeavyHighlight = 3,
 	Border = 4,
 	Font = 5,
-	Transparent = 6
+	Transparent = 6,
+	InputBg = 7
 };
 
 class Lss {
