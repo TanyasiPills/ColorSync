@@ -26,9 +26,9 @@ export class Texture {
             image.onload = () => {
                 this.width = image.width;
                 this.height = image.height;
-    
+
                 this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
-    
+
                 this.gl.texImage2D(
                     this.gl.TEXTURE_2D,
                     0,
@@ -37,20 +37,23 @@ export class Texture {
                     this.gl.UNSIGNED_BYTE,
                     image
                 );
-    
+
                 this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+            };
+            image.onerror = () => {
+                console.error("Failed to load texture:", arg1);
             };
         } else {
             this.width = arg1;
             this.height = arg2!;
-    
+
             const data = new Uint8Array(this.width * this.height * 4);
             for (let i = 0; i < data.length; i++) {
-                data[i] = (i + 1) % 4 === 0 ? ((arg3)? 0 : 255): 100;
+                data[i] = (i + 1) % 4 === 0 ? ((arg3) ? 0 : 255) : 100;
             }
-    
+
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
-    
+
             this.gl.texImage2D(
                 this.gl.TEXTURE_2D,
                 0,
@@ -62,7 +65,7 @@ export class Texture {
                 this.gl.UNSIGNED_BYTE,
                 data
             );
-    
+
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         }
 

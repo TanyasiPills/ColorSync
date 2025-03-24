@@ -101,10 +101,15 @@ export class Drawing{
         this.initData(data, positions, null);
     }
 
-    public initBrush(data: RenderData, radius: number): void{
+    public initBrush(data: RenderData, radius: number, texture: string|null): void{
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, radius, radius);
-        this.initData(data, positions, "Resources/Texture/circle.png", 1);
+        if (texture == null) {
+            this.initData(data, positions, "Shaders/Textures/penBrush.png", 1);
+        } else{
+            this.initData(data, positions, texture.toString(), 1);
+        }
+        
     }
 
     brushToPosition(cursor: RenderData, radius: number, aspect: Float32Array, offset: Float32Array, scale: Float32Array, position: Float32Array): void {

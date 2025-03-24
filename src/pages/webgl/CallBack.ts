@@ -162,6 +162,7 @@ export function useColorWheel() {
 }
 
 export class useRender {
+    private gl: WebGL2RenderingContext;
     private prevCursorPos: [number, number] = [0, 0];
     private GlCursorPos: [number, number] = [0, 0];
     private render!: Render;
@@ -180,34 +181,131 @@ export class useRender {
     private originalSizeX: number = 1.0;
     private originalSizeY: number = 1.0;
 
-    constructor() {
-        let canvas: HTMLCanvasElement;
+    constructor(gl: WebGL2RenderingContext) {
+        this.gl = gl;
+        this.setupCanvasListeners();
+    }
+   
+    private setupCanvasListeners() {
         if (this.canvasRef.current) {
-            canvas = this.canvasRef.current;
+            this.canvasRef.current.addEventListener("mouseenter", this.handleMouseEnter);
+            this.canvasRef.current.addEventListener("mouseleave", this.handleMouseLeave);
+            this.canvasRef.current.addEventListener("wheel", this.handleWheel);
+            this.canvasRef.current.addEventListener("mousemove", this.handleMouseMove);
+            this.canvasRef.current.addEventListener("mousedown", this.handleMouseDown);
+            this.canvasRef.current.addEventListener("mouseup", this.handleMouseUp);
         }
-        
-        if (this.canvasRef.current) {
-            this.canvasRef.current.addEventListener("mouseenter", () => {
-                this.mouseIn = true;
-            });
-            this.canvasRef.current.addEventListener("mouseleave", () => {
-                this.mouseIn = false;
-            });
-            if (!this.mouseIn) return;
-            this.canvasRef.current.addEventListener("wheel", (event) =>{
-                if (event.deltaY > 0) {
-                    this.offset[0] -= (this.GlCursorPos[0] - this.offset[0]) * 0.25;
-                    this.offset[1] -= (this.GlCursorPos[1] - this.offset[1]) * 0.25;
-                    this.render.zoom(1.25, this.offset);
-                }
-                else if(event.deltaY < 0){
-                    this.offset[0] += (this.GlCursorPos[0] - this.offset[0]) * 0.2;
-                    this.offset[1] += (this.GlCursorPos[1] - this.offset[1]) * 0.2;
-                    this.render.zoom(0.8, this.offset);
-                }
-            })
+    }
+   
+    private handleMouseEnter = () => {
+        this.mouseIn = true;
+    };
+   
+    private handleMouseLeave = () => {
+        this.mouseIn = false;
+    };
+   
+    private handleWheel = (event: WheelEvent): void => {
+        if (!this.mouseIn) return;
 
+        if (event.deltaY > 0) {
+            this.offset[0] -= (this.GlCursorPos[0] - this.offset[0]) * 0.25;
+            this.offset[1] -= (this.GlCursorPos[1] - this.offset[1]) * 0.25;
+            this.render.zoom(1.25, this.offset);
+        } else if (event.deltaY < 0) {
+            this.offset[0] += (this.GlCursorPos[0] - this.offset[0]) * 0.2;
+            this.offset[1] += (this.GlCursorPos[1] - this.offset[1]) * 0.2;
+            this.render.zoom(0.8, this.offset);
+        }
+    };
+   
+    private handleMouseMove = (event: MouseEvent): void => {
+        if (!this.mouseIn) return;
+        const rect = this.canvasRef.current!.getBoundingClientRect();
+        this.GlCursorPos[0] = (event.clientX - rect.left) / this.screenW * 2 - 1;
+        this.GlCursorPos[1] = (event.clientY - rect.top) / this.screenH * 2 - 1;
+        this.renderCursorToCanvas();
+    };
+   
+    private handleMouseDown = (event: MouseEvent): void => {
+        if (!this.mouseIn) return;
+
+        this.mousedown = true;
+        this.prevCursorPos = [this.GlCursorPos[0], this.GlCursorPos[1]];       
+    };
+   
+    private handleMouseUp = (event: MouseEvent): void => {
+        if (!this.mouseIn) return;
+
+        this.mousedown = false;       
+    };
+   
+    private renderCursorToCanvas(): void {
+        if (this.mousedown) {
+            this.render.RenderCursorToCanvas();
+        }
+    }
+   
+    public framebufferSizeCallback(width: number, height: number): void {
+        this.gl.viewport(0, 0, width, height);
+        this.screenW = width;
+        this.screenH = height;
+        this.render.ResizeCanvas();
+    }
+   
+    private handleCanvasMovement(event: MouseEvent): void {
+        if (this.moveCanvas && this.canvasRef.current) {
+            const deltaX = (event.clientX - this.prevCursorPos[0]) / this.screenW;
+            const deltaY = (event.clientY - this.prevCursorPos[1]) / this.screenH;
+
+            this.offset[0] += deltaX * 2;
+            this.offset[1] -= deltaY * 2;
+
+            this.prevCursorPos = [event.clientX, event.clientY];
+
+            this.render.MoveLayers(this.offset);
+        }
+    }
+   
+    public handleKeyDown(event: KeyboardEvent): void {
+        if (event.key === " ") {
+            this.moveCanvas = true;
+        }
+    }
+
+    public handleKeyUp(event: KeyboardEvent): void {
+        if (event.key === " ") {
+            this.moveCanvas = false;
+        }
+    }
+
+    private updateMarkerPosition(marker: HTMLElement, x: number, y: number): void {
+        if (marker) {
+            marker.style.left = `${x}px`;
+            marker.style.top = `${y}px`;
+        }
+    }
+       
+   
+    public onResize(width: number, height: number): void {
+        this.gl.viewport(0, 0, width, height);
+        this.render.ResizeCanvas();
+        this.screenW = width;
+        this.screenH = height;
+    }
+   
+    public cleanup() {
+        const canvas = this.canvasRef.current;
+        if (canvas) {
+            canvas.removeEventListener("mouseenter", this.handleMouseEnter);
+            canvas.removeEventListener("mouseleave", this.handleMouseLeave);
+            canvas.removeEventListener("wheel", this.handleWheel);
+            canvas.removeEventListener("mousemove", this.handleMouseMove);
+            canvas.removeEventListener("mousedown", this.handleMouseDown);
+            canvas.removeEventListener("mouseup", this.handleMouseUp);
         }
 
+        window.removeEventListener("keydown", this.handleKeyDown);
+        window.removeEventListener("keyup", this.handleKeyUp);
     }
 }

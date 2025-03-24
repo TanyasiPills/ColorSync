@@ -30,12 +30,30 @@ export class Render {
     private fbo: WebGLFramebuffer | null;
     private drawing: Drawing | null;
 
+    public brushes: RenderData[] = [];
+    public usersToMove: Map<number, UserMoveMessage> = new Map();
+    public recieving: boolean = false;
+    public onUI: boolean = false;
+    public currentNode: number = 0;
+    public nextFreeNodeIndex: number = 0;
+    public currentFolder: number = 0;
+    public isEditor: boolean = false;
+    public tool: number = 0;
+    public currentLayerToDrawOn: number = 0;
+    public inited: boolean = false;
+    public online: boolean = false;
+    
+    public nodes: Map<number, NodeMatyi> = new Map();
+    public folders: number[] = [];
+
+
+
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
         this.layers = [];
         this.cursor = new RenderData();
         this.drawing = null;
-    
+
         this.cursorRadius = 0.01;
         this.initialCanvasRatio = [1.0, 1.0];
         this.canvasRatio = new Float32Array([1.0, 1.0]);
@@ -47,13 +65,13 @@ export class Render {
         this.canvasSize = [1, 1];
         this.fbo = null;
     }
-    
+
     init(canvasWIn: number, canvasHIn: number, screenW: number, screenH: number): void {
         this.fbo = this.gl.createFramebuffer();
         this.canvasSize[0] = canvasWIn;
         this.canvasSize[1] = canvasHIn;
         this.drawing = new Drawing(this.gl, canvasWIn, canvasHIn);
-        this.drawing.initBrush(this.cursor, this.cursorRadius);
+        this.drawing.initBrush(this.cursor, this.cursorRadius, null);
         const canvasData: CanvasData = this.drawing.initCanvas(canvasWIn, canvasHIn);
         this.layers.push(canvasData.data);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo);
@@ -66,16 +84,73 @@ export class Render {
         this.initialCanvasRatio[1] = canvasData.canvasY;
     }
 
-    moveLayers(offsetIn: Float32Array): void{
+    initBrushes(): void {
+        let cursorBrush: RenderData = new RenderData();
+        this.drawing?.initBrush(cursorBrush, this.cursorRadius, "Shaders/Textures/cursor.png");
+        this.brushes.push(cursorBrush);
+
+        let penBrush: RenderData = new RenderData();
+        this.drawing?.initBrush(penBrush, this.cursorRadius, "Shaders/Textures/penBrush.png");
+        this.brushes.push(penBrush);
+
+        let airBrush: RenderData = new RenderData();
+        this.drawing?.initBrush(airBrush, this.cursorRadius, "Shaders/Textures/airBrush.png");
+        this.brushes.push(airBrush);
+
+        let waterBrush: RenderData = new RenderData();
+        this.drawing?.initBrush(waterBrush, this.cursorRadius, "Shaders/Textures/waterBrush.png");
+        this.brushes.push(waterBrush);
+
+        let charCoalBrush: RenderData = new RenderData();
+        this.drawing?.initBrush(charCoalBrush, this.cursorRadius, "Shaders/Textures/charCoalBrush.png");
+        this.brushes.push(charCoalBrush);
+
+        this.cursor = this.brushes[0];
+    }
+
+    InitLayers(canvasData: CanvasData): void {
+        this.nodes.set(this.nextFreeNodeIndex, new Folder("Root", this.nextFreeNodeIndex));
+        this.folders.push(this.nextFreeNodeIndex);
+        this.nextFreeNodeIndex++;
+
+        this.nodes.set(this.nextFreeNodeIndex, new Layer("Main", this.nextFreeNodeIndex, canvasData.data));
+        this.layers.push(this.nodes[this.nextFreeNodeIndex]);
+        this.currentNode = this.nextFreeNodeIndex;
+        this.nextFreeNodeIndex++;
+
+        (this.nodes.get(0) as Folder)?.AddChild(this.currentNode);
+
+        this.nodes.set(this.nextFreeNodeIndex, new Folder("Folder", this.nextFreeNodeIndex));
+        this.folders.push(this.nextFreeNodeIndex);
+        (this.nodes.get(0) as Folder)?.AddChild(this.nextFreeNodeIndex);
+
+        let folder = this.nextFreeNodeIndex;
+        this.nextFreeNodeIndex++;
+
+        let layerTwo: RenderData = new RenderData();
+        NewDraw.initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
+
+        this.nodes.set(this.nextFreeNodeIndex, new Layer("Not main", this.nextFreeNodeIndex, layerTwo));
+        this.layers.push(this.nextFreeNodeIndex);
+        (this.nodes.get(folder) as Folder)?.AddChild(this.nextFreeNodeIndex);
+        this.nextFreeNodeIndex++;
+    }
+
+    /**
+     * rövid leírás
+     * 
+     * @param offsetIn leírás
+     */
+    moveLayers(offsetIn: Float32Array): void {
         this.offset[0] = offsetIn[0];
         this.offset[1] = offsetIn[1];
-        for (let item of this.layers){
+        for (let item of this.layers) {
             this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
         }
     }
 
 
-    zoom(scale: number, offsetIn: [number, number]): void{
+    zoom(scale: number, offsetIn: [number, number]): void {
         this.offset[0] *= scale;
         this.offset[1] *= scale;
         this.initialCanvasRatio[0] *= scale;
@@ -99,7 +174,7 @@ export class Render {
         this.offset[0] = offsetIn[0];
         this.offset[1] = offsetIn[1];
 
-        
+
         for (let item of this.layers) {
             this.drawing?.moveCanvas(item, this.canvasRatio, this.offset)
         }
@@ -114,8 +189,145 @@ export class Render {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo);
         this.gl.viewport(0, 0, this.canvasSize[0], this.canvasSize[1]);
         //var pos: Float32Array = 
-        
+
     }
 
+    setDrawData(canvasWidthIn: number, canvasHeightIn: number): void {
+        // Implement setting draw data logic
+    }
+    
+    draw(data: RenderData): void {
+        // Implement drawing logic
+    }
+    
+    clear(): void {
+        // Implement clearing logic
+    }
+    
+    render(): void {
+        // Implement full render logic
+    }
+    
+    renderLayers(): void {
+        // Implement layer rendering logic
+    }
+    
+    renderCursor(): void {
+        // Implement cursor rendering logic
+    }
+    
+    renderCursorToCanvas(): void {
+        // Implement cursor rendering on canvas
+    }
+    
+    moveLayers(offset: Float32Array): void {
+        this.offset[0] = offset[0];
+        this.offset[1] = offset[1];
+        for (let item of this.layers) {
+            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
+        }
+    }
+    
+    zoom(scale: number, cursorPos: Float32Array): void {
+        this.offset[0] *= scale;
+        this.offset[1] *= scale;
+        this.initialCanvasRatio[0] *= scale;
+        this.initialCanvasRatio[1] *= scale;
+        this.offset[0] = cursorPos[0];
+        this.offset[1] = cursorPos[1];
+    
+        for (let item of this.layers) {
+            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
+        }
+    
+        this.cursorRadius *= scale;
+    }
+    
+    onResize(x: number, y: number, offsetIn: Float32Array, yRatio: number): void {
+        this.cursorScale[0] = x;
+        this.cursorScale[1] = y * yRatio;
+        this.canvasRatio[0] = x * this.initialCanvasRatio[0];
+        this.canvasRatio[1] = y * this.initialCanvasRatio[1];
+    
+        this.offset[0] = offsetIn[0];
+        this.offset[1] = offsetIn[1];
+    
+        for (let item of this.layers) {
+            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
+        }
+    }
+    
+    loadPrevCursor(GlCursorPos: Float32Array): void {
+        this.prevPos[0] = GlCursorPos[0];
+        this.prevPos[1] = GlCursorPos[1];
+    }
+    
+    setColor(color: Float32Array): void {
+        // Implement color setting logic
+    }
+    
+    renderDrawMessage(drawMessage: DrawMessage): void {
+        // Implement rendering logic for draw messages
+    }
+    
+    sendDraw(): void {
+        // Implement sending draw data
+    }
+    
+    sendLayerRename(name: string, location: number): void {
+        // Implement renaming layer logic
+    }
+    
+    getParent(id: number): number {
+        for (const foldrIndex of this.folders) {
+            Folder
+        }
+        return -1;
+    }
+    
+    createLayer(parent: number): number {
+        return -1;
+    }
+    
+    createFolder(parent: number): number {
+        return -1;
+    }
+    
+    removeLayer(index: number): void {
+        // Implement removing layer logic
+    }
+    
+    removeFolder(index: number): void {
+        // Implement removing folder logic
+    }
+    
+    changeBrush(index: number): void {
+        // Implement brush change logic
+    }
+    
+    setOnline(value: boolean): void {
+        this.online = value;
+    }
+    
+    getOnline(): boolean {
+        return this.online;
+    }
+    
+    executeMainThreadTask(drawMessage: DrawMessage): void {
+        this.taskQueue.push(drawMessage);
+    }
+    
+    processTasks(): void {
+        let task: DrawMessage | null;
+        while ((task = this.taskQueue.pop()) !== null) {
+            this.renderDrawMessage(task);
+        }
+    }
+    
+    
+    swapView(): void {
+        // Implement view swapping logic
+    }
+    
 
 }
