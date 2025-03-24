@@ -457,10 +457,8 @@ void SocialMedia::MainPage(float& width, float& height)
 		float startPos = ImGui::GetCursorPosY();
         ImVec2 valid = ImGui::GetContentRegionAvail();
 
-        Lss::Text("What's on your ming?", 2 * Lss::VH);
-
         static char inputtext[128] = "";
-        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans);
+        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans, 0, 0, "What is on your mind? :3");
 
         Lss::Top(-Lss::VH / 2);
         Lss::Separator(1.0f, 18 * Lss::VW, 4, Centered);

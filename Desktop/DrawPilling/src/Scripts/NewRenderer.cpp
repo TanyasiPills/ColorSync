@@ -51,15 +51,6 @@ float sentBrushSize;
 
 bool online = false;
 
-bool FileExists(const char* filename) {
-	FILE* file = fopen(filename, "r");
-	if (file) {
-		fclose(file);
-		return true;
-	}
-	return false;
-}
-
 void NewRenderer::SetOnline(bool value){
 	online = value;
 }
