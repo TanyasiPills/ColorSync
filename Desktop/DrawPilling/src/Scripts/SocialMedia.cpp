@@ -238,7 +238,7 @@ void SocialMedia::LoadProfile(int id)
 {
     userImages.clear();
     nlohmann::json jsonData;
-    if(id == 0) jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
+    if(id == runtime.id) jsonData = HManager::Request(("images/user/" + std::to_string(runtime.id)).c_str(), "", GET);
 	else jsonData = HManager::Request(("images/user/" + std::to_string(id)).c_str(), "", GET);
     if (jsonData.is_null()) {
         std::cout << "cant recieve profile image list" << std::endl;
@@ -386,34 +386,6 @@ void SocialMedia::MainPage(float& width, float& height)
             post.openComments = !post.openComments;
             post.needChange = true;
         }
-        /*
-        if (Lss::Button("Like", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH)) {
-            if (contains) {
-                runtime.liked.erase(post.id);
-                post.likes--;
-            }
-            else {
-                runtime.liked.insert(post.id);
-                post.likes++;
-            }
-            nlohmann::json jsonData;
-            jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
-            if (jsonData.is_null()) {
-                std::cout << "couldn't post like" << std::endl;
-            }
-        }
-        if (contains) Lss::SetColor(LowHighlight, LowHighlight);
-
-        Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
-
-        
-        if (post.openComments) Lss::SetColor(LowHighlight, Border);
-        if (Lss::Button("Comment", ImVec2(validWidth / 2, 6 * Lss::VH), 4 * Lss::VH, SameLine))
-        {
-            post.openComments = !post.openComments;
-            post.needChange = true;
-        }
-        */
         if (post.openComments) {
             static char text[256];
             if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(validWidth, 4 * Lss::VH), Centered, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -616,7 +588,7 @@ void SocialMedia::MainPage(float& width, float& height)
                 wasCreated = true;
             }
             if (Lss::Button("Remove File", addFileButton, 3 * Lss::VH, SameLine)) {
-                imageToPost = -1;
+                imageToPost = 0;
             }
         }
 
@@ -795,7 +767,9 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
 
             ImGui::SameLine();
             Lss::Top(7.5 * Lss::VH);
-            Lss::Text(runtime.username, 5 * Lss::VH);
+            if(runtime.id == user) Lss::Text(runtime.username, 5 * Lss::VH);
+            else Lss::Text(users[user].username, 5 * Lss::VH);
+
 
             if (user == runtime.id) {
                 ImGui::SameLine();
@@ -813,7 +787,19 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
             float xWidth = avail.x / 3;
             for (size_t i = 0; i < userImages.size(); i++)
             {
-                ImGui::Image(userImages[i], ImVec2(xWidth, xWidth));
+                int width, height;
+                glGetTextureLevelParameteriv(userImages[i], 0, GL_TEXTURE_WIDTH, &width);
+                glGetTextureLevelParameteriv(userImages[i], 0, GL_TEXTURE_HEIGHT, &height);
+
+                float shiftX = 0.0f;
+                float shiftY = 0.0f;
+                if (width >= height) {
+                    shiftX = (1 - (float)height / width) / 2;
+                }
+                else {
+                    shiftY = (1 - (float)width / height) / 2;
+                }
+                ImGui::Image(userImages[i], ImVec2(xWidth, xWidth),ImVec2(shiftX, shiftY),ImVec2(1.0f-shiftX, 1.0f-shiftY));
 
                 if ((i + 1) % 3 != 0)
                     ImGui::SameLine();
@@ -996,6 +982,8 @@ void SocialMedia::SearchPage(float& width, float& height)
                     Lss::End();
 				ImGui::EndChild();
                 if (ImGui::IsItemClicked()) {
+                    userImages.clear();
+                    needImages = true;
 					searchMode = 1;
                     selectedUser = user;
                 }
@@ -1174,8 +1162,6 @@ void SocialMedia::SearchPage(float& width, float& height)
         Lss::End();
         ImGui::EndChild();
     } else {
-		userImages.clear();
-        needImages = true;
         ProfilePage(width, height, selectedUser);
     }
 }
@@ -1452,7 +1438,11 @@ void SocialMedia::LeftSide(float position, float width, float height)
     if (runtime.logedIn) {
         Lss::Top(1 * Lss::VH);
         if (Lss::Button("Profile", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            if (mode != 3) mode = 3;
+            if (mode != 3) {
+                mode = 3;
+                userImages.clear();
+                needImages = true;
+            }
             else mode = 0;
         }
     }
