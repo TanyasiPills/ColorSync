@@ -25,6 +25,8 @@ private:
 	static int lastId;
 	static int searchOffset;
 public:
+	static void LoadTextures();
+
 	static void MainFeed(float position, float width, float height);
 	static void LeftSide(float position, float width, float height);
 	static void RightSide(float position, float width, float height);

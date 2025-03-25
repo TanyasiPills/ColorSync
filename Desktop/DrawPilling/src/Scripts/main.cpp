@@ -13,6 +13,8 @@ int main()
     SManager::SetRenderer(renderer);
     DataManager::SetRenderer(renderer);
 
+    SocialMedia::LoadTextures();
+
     renderer.Init(data.window);
 
 
