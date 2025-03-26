@@ -112,7 +112,7 @@ export class Drawing{
         
     }
 
-    brushToPosition(cursor: RenderData, radius: number, aspect: Float32Array, offset: Float32Array, scale: Float32Array, position: Float32Array): void {
+    brushToPosition(cursor: RenderData, radius: number, aspect: Float32Array, offset: Float32Array, scale: Float32Array, position: Float32Array, debug: number): void {
         const positions: Float32Array = new Float32Array(16);
         const yMult: number = aspect[0] / aspect[1];
         this.fillPositions(positions, radius/aspect[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);

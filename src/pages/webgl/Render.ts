@@ -1,8 +1,10 @@
+import { useRender } from "./CallBack";
 import { CanvasData, Drawing } from "./Drawing";
 import { IndexBuffer } from "./IndexBuffer";
 import { Shader } from "./Shader";
 import { VertexArray } from "./Shaders/VertexArray ";
 import { Texture } from "./Texture";
+
 
 export class RenderData {
     va!: VertexArray;
@@ -61,9 +63,13 @@ export class Render {
     private cursorScale: [number, number, number];
     private identityOffset: [number, number];
     private prevPos: [number, number];
+    private prevPrevPos: [number, number];
     private canvasSize: [number, number];
-    private fbo: WebGLFramebuffer | null;
+
+    //Nézd át Matyi mit ad hozzá
+
     private drawing: Drawing | null;
+    private callBack: useRender | null;
 
     public brushes: RenderData[] = [];
     public usersToMove: Map<number, UserMoveMessage> = new Map();
@@ -78,18 +84,17 @@ export class Render {
     public inited: boolean = false;
     public online: boolean = false;
     
-    public nodes: Map<number, NodeMatyi> = new Map();
+    public nodes: Map<number, Node> = new Map();
     public folders: number[] = [];
     public layers: number[] =  [];
 
-
-
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
-        this.layers = [];
         this.cursor = new RenderData();
-        this.drawing = null;
 
+        this.drawing = null;
+        this.callBack = null;
+        
         this.cursorRadius = 0.01;
         this.initialCanvasRatio = [1.0, 1.0];
         this.canvasRatio = new Float32Array([1.0, 1.0]);
@@ -98,26 +103,28 @@ export class Render {
         this.cursorScale = [1.0, 1.0, 1.0];
         this.identityOffset = [0, 0];
         this.prevPos = [0, 0];
+        this.prevPrevPos = [0, 0];
         this.canvasSize = [1, 1];
-        this.fbo = null;
     }
 
-    init(canvasWIn: number, canvasHIn: number, screenW: number, screenH: number): void {
-        this.fbo = this.gl.createFramebuffer();
+    setDrawData(canvasWIn: number, canvasHIn: number): void {
         this.canvasSize[0] = canvasWIn;
         this.canvasSize[1] = canvasHIn;
+
         this.drawing = new Drawing(this.gl, canvasWIn, canvasHIn);
         this.drawing.initBrush(this.cursor, this.cursorRadius, null);
+
         const canvasData: CanvasData = this.drawing.initCanvas(canvasWIn, canvasHIn);
-        this.layers.push(canvasData.data);
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo);
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, canvasData.data.texture.getId(), 0);
-        if (this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER) != this.gl.FRAMEBUFFER_COMPLETE) {
-            console.error(this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER));
-        }
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, 0);
+
         this.initialCanvasRatio[0] = canvasData.canvasX;
         this.initialCanvasRatio[1] = canvasData.canvasY;
+
+        this.canvasRatio[0] = canvasData.canvasX;
+        this.canvasRatio[1] = canvasData.canvasY;
+
+        this.initLayers(canvasData);
+
+        this.inited = true;
     }
 
     initBrushes(): void {
@@ -144,31 +151,31 @@ export class Render {
         this.cursor = this.brushes[0];
     }
 
-    InitLayers(canvasData: CanvasData): void {
+    initLayers(canvasData: CanvasData): void {
         this.nodes.set(this.nextFreeNodeIndex, new Folder("Root", this.nextFreeNodeIndex));
         this.folders.push(this.nextFreeNodeIndex);
         this.nextFreeNodeIndex++;
 
         this.nodes.set(this.nextFreeNodeIndex, new Layer("Main", this.nextFreeNodeIndex, canvasData.data));
-        this.layers.push(this.nodes[this.nextFreeNodeIndex]);
+        this.layers.push(this.nextFreeNodeIndex);
         this.currentNode = this.nextFreeNodeIndex;
         this.nextFreeNodeIndex++;
 
-        (this.nodes.get(0) as Folder)?.AddChild(this.currentNode);
+        (this.nodes.get(0) as Folder)?.addChild(this.currentNode);
 
         this.nodes.set(this.nextFreeNodeIndex, new Folder("Folder", this.nextFreeNodeIndex));
         this.folders.push(this.nextFreeNodeIndex);
-        (this.nodes.get(0) as Folder)?.AddChild(this.nextFreeNodeIndex);
+        (this.nodes.get(0) as Folder)?.addChild(this.nextFreeNodeIndex);
 
         let folder = this.nextFreeNodeIndex;
         this.nextFreeNodeIndex++;
 
         let layerTwo: RenderData = new RenderData();
-        NewDraw.initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
+        this.drawing?.initLayer(layerTwo, this.canvasRatio[0], this.canvasRatio[1]);
 
         this.nodes.set(this.nextFreeNodeIndex, new Layer("Not main", this.nextFreeNodeIndex, layerTwo));
         this.layers.push(this.nextFreeNodeIndex);
-        (this.nodes.get(folder) as Folder)?.AddChild(this.nextFreeNodeIndex);
+        (this.nodes.get(folder) as Folder)?.addChild(this.nextFreeNodeIndex);
         this.nextFreeNodeIndex++;
     }
 
@@ -177,14 +184,15 @@ export class Render {
      * 
      * @param offsetIn leírás
      */
-    moveLayers(offsetIn: Float32Array): void {
+    moveLayers(offsetIn: [number, number]): void {
         this.offset[0] = offsetIn[0];
         this.offset[1] = offsetIn[1];
+
         for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
+            const layer: Layer = this.nodes.get(item) as Layer;
+            this.drawing?.moveCanvas(layer.data, this.canvasRatio, this.offset)
         }
     }
-
 
     zoom(scale: number, offsetIn: [number, number]): void {
         this.offset[0] *= scale;
@@ -195,7 +203,8 @@ export class Render {
         this.offset[1] = offsetIn[1];
 
         for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset)
+            const layer: Layer = this.nodes.get(item) as Layer;
+            this.drawing?.moveCanvas(layer.data, this.canvasRatio, this.offset)
         }
 
         this.cursorRadius *= scale;
@@ -212,24 +221,59 @@ export class Render {
 
 
         for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset)
+            const layer: Layer = this.nodes.get(item) as Layer;
+            this.drawing?.moveCanvas(layer.data, this.canvasRatio, this.offset)
         }
     }
 
     loadPrevCursor(prevIn: Float32Array): void {
+        this.prevPrevPos[0] = prevIn[0];
+        this.prevPrevPos[1] = prevIn[1];
+
         this.prevPos[0] = prevIn[0];
         this.prevPos[1] = prevIn[1];
     }
 
     renderCursorToCanvas(): void {
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.fbo);
-        this.gl.viewport(0, 0, this.canvasSize[0], this.canvasSize[1]);
-        //var pos: Float32Array = 
+        if (this.recieving) return;
+        const node = this.nodes.get(this.currentNode);
+        if (node instanceof Layer) {          
+          const layer = node.data;
+          this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, layer.fbo);
+          this.gl.viewport(0, 0, this.canvasSize[0], this.canvasSize[1]);
 
-    }
+          const pos: [number, number] = this.callBack!.cursorPosition();
 
-    setDrawData(canvasWidthIn: number, canvasHeightIn: number): void {
-        // Implement setting draw data logic
+          switch (this.tool) {
+            case 0: {
+              const dx = pos[0] - this.prevPos[0];
+              const dy = pos[1] - this.prevPos[1];
+              const scaledDx = dx * this.canvasSize[0];
+              const scaledDy = dy * this.canvasSize[1];
+              const distance = Math.sqrt(scaledDx * scaledDx + scaledDy * scaledDy);
+              const numSamples = 1 + distance / (this.cursorRadius * 1000);
+              const ctrlX = 2 * this.prevPos[0] - 0.5 * (this.prevPrevPos[0] + pos[0]);
+              const ctrlY = 2 * this.prevPos[1] - 0.5 * (this.prevPrevPos[1] + pos[1]);
+              for (let i = 0; i < numSamples; i++) {
+                const t = i / numSamples;
+                const vx =
+                  (1 - t) * (1 - t) * this.prevPrevPos[0] +
+                  2 * (1 - t) * t * ctrlX +
+                  t * t * pos[0];
+                const vy =
+                  (1 - t) * (1 - t) * this.prevPrevPos[1] +
+                  2 * (1 - t) * t * ctrlY +
+                  t * t * pos[1];
+                const tmp: [number, number] = [vx, vy];
+                this.drawing?.brushToPosition(window, this.cursor, this.cursorRadius, this.canvasRatio, this.offset, this.cursorScale, tmp);
+                this.draw(this.cursor);
+              }
+              break;
+            }
+          }
+          
+        }
+
     }
     
     draw(data: RenderData): void {
@@ -251,53 +295,8 @@ export class Render {
     renderCursor(): void {
         // Implement cursor rendering logic
     }
-    
-    renderCursorToCanvas(): void {
-        // Implement cursor rendering on canvas
-    }
-    
-    moveLayers(offset: Float32Array): void {
-        this.offset[0] = offset[0];
-        this.offset[1] = offset[1];
-        for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
-        }
-    }
-    
-    zoom(scale: number, cursorPos: Float32Array): void {
-        this.offset[0] *= scale;
-        this.offset[1] *= scale;
-        this.initialCanvasRatio[0] *= scale;
-        this.initialCanvasRatio[1] *= scale;
-        this.offset[0] = cursorPos[0];
-        this.offset[1] = cursorPos[1];
-    
-        for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
-        }
-    
-        this.cursorRadius *= scale;
-    }
-    
-    onResize(x: number, y: number, offsetIn: Float32Array, yRatio: number): void {
-        this.cursorScale[0] = x;
-        this.cursorScale[1] = y * yRatio;
-        this.canvasRatio[0] = x * this.initialCanvasRatio[0];
-        this.canvasRatio[1] = y * this.initialCanvasRatio[1];
-    
-        this.offset[0] = offsetIn[0];
-        this.offset[1] = offsetIn[1];
-    
-        for (let item of this.layers) {
-            this.drawing?.moveCanvas(item, this.canvasRatio, this.offset);
-        }
-    }
-    
-    loadPrevCursor(GlCursorPos: Float32Array): void {
-        this.prevPos[0] = GlCursorPos[0];
-        this.prevPos[1] = GlCursorPos[1];
-    }
-    
+       
+        
     setColor(color: Float32Array): void {
         // Implement color setting logic
     }
@@ -348,11 +347,7 @@ export class Render {
     getOnline(): boolean {
         return this.online;
     }
-    
-    executeMainThreadTask(drawMessage: DrawMessage): void {
-        this.taskQueue.push(drawMessage);
-    }
-    
+        
     processTasks(): void {
         let task: DrawMessage | null;
         while ((task = this.taskQueue.pop()) !== null) {

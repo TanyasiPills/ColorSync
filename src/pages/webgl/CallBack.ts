@@ -240,9 +240,13 @@ export class useRender {
         this.mousedown = false;       
     };
    
+    public cursorPosition(): [number, number] {
+        return this.GlCursorPos;
+    }
+
     private renderCursorToCanvas(): void {
         if (this.mousedown) {
-            this.render.RenderCursorToCanvas();
+            this.render.renderCursorToCanvas();
         }
     }
    
@@ -250,7 +254,7 @@ export class useRender {
         this.gl.viewport(0, 0, width, height);
         this.screenW = width;
         this.screenH = height;
-        this.render.ResizeCanvas();
+        this.render.onResize();
     }
    
     private handleCanvasMovement(event: MouseEvent): void {
@@ -263,7 +267,7 @@ export class useRender {
 
             this.prevCursorPos = [event.clientX, event.clientY];
 
-            this.render.MoveLayers(this.offset);
+            this.render.moveLayers(this.offset);
         }
     }
    
@@ -289,7 +293,7 @@ export class useRender {
    
     public onResize(width: number, height: number): void {
         this.gl.viewport(0, 0, width, height);
-        this.render.ResizeCanvas();
+        this.render.onResize();
         this.screenW = width;
         this.screenH = height;
     }

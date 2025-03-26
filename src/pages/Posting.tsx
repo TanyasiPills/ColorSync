@@ -22,9 +22,11 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && text.trim() !== "") {
-      event.preventDefault();
-      setTags([...tags, text]);
-      setText("");
+      if (!tags.includes(text)) {
+        event.preventDefault();
+        setTags([...tags, text]);
+        setText("");
+      }
     }
   }
 
@@ -83,31 +85,9 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
         </ModalHeader>
         <ModalBody>
           <Form noValidate validated={validated} onSubmit={handleSubmit}>
-            <Row>
-              <Col>
-                <Form.Group>
-                  <Form.Label>New Image</Form.Label>
-                  <Form.Control
-                    type="file"
-                    accept="image/png, image/jpeg"
-                    name="file"
-                    id="file"
-                    className='costum-input'
-                  />
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label>Choose Existing Image</Form.Label>
-                  <Button className="mt-2" onClick={() => setShowExistingImageModal(true)}>
-                    Select Image
-                  </Button>
-                </Form.Group>
-              </Col>
-            </Row>
 
             <Form.Group>
-              <Form.Label>Share your thoughts: </Form.Label>
+              <Form.Label>Share your thoughts</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter text"
@@ -139,6 +119,28 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
                   </ListGroup.Item>
                 ))}
               </ListGroup>
+              <Row>
+                <Col>
+                  <Form.Group>
+                    <Form.Label>New Image</Form.Label>
+                    <Form.Control
+                      type="file"
+                      accept="image/png, image/jpeg"
+                      name="file"
+                      id="file"
+                      className='costum-input'
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group>
+                    <Form.Label>Choose Existing Image</Form.Label>
+                    <Button className="mt-2" onClick={() => setShowExistingImageModal(true)}>
+                      Select Image
+                    </Button>
+                  </Form.Group>
+                </Col>
+              </Row>
             </Form.Group>
 
             <Button variant="dark" type="submit" className="w-100 mt-3" disabled={isSubmitting}>

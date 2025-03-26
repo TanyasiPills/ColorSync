@@ -1,4 +1,4 @@
-import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col, ListGroup } from 'react-bootstrap';
+import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col } from 'react-bootstrap';
 import { modalProp } from "../types";
 import { useState } from 'react';
 import "../css/Modal.css";
@@ -14,6 +14,11 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
 
     const cookie = new Cookies();
     const thisUser = cookie.get("AccessToken");
+
+    if (!thisUser) {
+     onHide();   
+     return
+    }
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError('');
