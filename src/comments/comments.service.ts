@@ -8,7 +8,7 @@ export class CommentsService {
   constructor(private readonly db: PrismaService) { }
 
   create(createCommentDto: CreateCommentDto, userId: number) {
-    return this.db.comment.create({ data: { ...createCommentDto, userId }, select: { id: true } });
+    return this.db.comment.create({ data: { ...createCommentDto, userId }, select: { id: true, text: true, date: true, user: { select: { username: true, id: true } } } });
   }
 
   async findAllOnPost(postId: number) {

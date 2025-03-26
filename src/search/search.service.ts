@@ -122,7 +122,7 @@ export class SearchService implements OnModuleInit {
       }
     }
 
-    console.log(userPreferences);
+    //console.log(userPreferences);
 
     const result = await this.elastic.search({
       index: 'post',
@@ -189,7 +189,7 @@ export class SearchService implements OnModuleInit {
       size: take
     });
 
-    console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
+    //console.log(result.hits.hits.map(e => ({id: e._id, score: e._score, text: (e._source as any).text, tags: (e._source as any).tags, date: (e._source as any).date })));
 
     return result.hits.hits.map(hit => parseInt(hit._id));
   }

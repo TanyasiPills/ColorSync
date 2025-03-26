@@ -77,6 +77,7 @@ export class PostsService {
       select: selectBody
     })));
     if (!result || result.length == 0) return { data: [], offset: null };
+
     if (!imageOnly) {
       result.map(e => e.tags = e.tags.map(e => e.name));
     }
