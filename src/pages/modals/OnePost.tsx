@@ -1,11 +1,11 @@
 import { Card, Col, Row } from "react-bootstrap";
-import { backendIp } from "../constants";
+import { backendIp } from "../../constants";
 import { useEffect, useState } from "react";
-import { post } from "../types";
-import { useParams } from "react-router-dom"; // Assuming you're using React Router
+import { post } from "../../types";
+import { useParams } from "react-router-dom";
 
 export default function OnePost() {
-    const { postId } = useParams(); // Get post ID from URL
+    const { postId } = useParams();
     const [singlePost, setSinglePost] = useState<post | null>(null);
 
     useEffect(() => {

@@ -3,7 +3,7 @@ export interface post {
     imageId?: number;
     text: string;
     date: Date;
-    user: { username: string; id: number};
+    user: { username: string; id: number };
     comments: comment[];
     tags: string[];
     likes: number
@@ -31,11 +31,16 @@ export interface image {
     visibility?: visibility;
 }
 
-export enum visibility{
+export enum visibility {
     public, private
 }
 
 export interface modalProp {
     show: boolean;
     onHide: () => void;
-  }
+}
+
+export interface colorData {
+    currentRGB: string;
+    colorPickedRGB: string;
+}

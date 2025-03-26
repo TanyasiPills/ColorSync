@@ -2,8 +2,8 @@ import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import '../css/Navbar.css';
 import Cookies from 'universal-cookie';
 import { useState } from 'react';
-import { SignIn } from '../pages/SignIn';
-import { SignUp } from '../pages/SignUp';
+import { SignIn } from '../pages/modals/SignIn';
+import { SignUp } from '../pages/modals/SignUp';
 
 export function NavBar() {
   const cookies = new Cookies();

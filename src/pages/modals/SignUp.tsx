@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'react-bootstrap';
 import Cookies from 'universal-cookie';
-import { backendIp } from '../constants';
-import { modalProp } from '../types';
+import { backendIp } from '../../constants';
+import { modalProp } from '../../types';
 import "../css/Modal.css";
 
 export const SignUp: React.FC<modalProp> = ({ show, onHide }) => {
