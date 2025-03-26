@@ -32,5 +32,5 @@ public:
 	static nlohmann::json ImageUploadRequest(std::string path, int type);
 	static std::vector<uint8_t> ImageRequest(const std::string query);
 	static GLuint ImageFromRequest(const std::vector<uint8_t>& imageData, float& ratio);
-	static nlohmann::json PostRequest(std::string text, std::string path = "", int imageId = 0, std::vector<std::string> tags = {});
+	static nlohmann::json PostRequest(std::string text, std::string path = "", int imageId = 0, std::vector<std::string> tags = {}, bool forcePost = false);
 };

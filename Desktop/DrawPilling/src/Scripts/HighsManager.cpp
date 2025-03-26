@@ -77,7 +77,7 @@ void HManager::Down()
 	curl_global_cleanup();
 }
 
-nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags)
+nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags, bool forcePost)
 {
 	CURL* curl = curl_easy_init();
 	if (!curl) {
@@ -114,11 +114,16 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 		curl_mime_name(part, "file");
 		curl_mime_filedata(part, path.c_str());
 	}
-
-	if (imageId > 0) {
+	else if (imageId > 0) {
 		part = curl_mime_addpart(mime);
 		curl_mime_name(part, "imageId");
 		curl_mime_data(part, std::to_string(imageId).c_str(), CURL_ZERO_TERMINATED);
+	}
+
+	if (forcePost) {
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "forcePost");
+		curl_mime_data(part, "1", CURL_ZERO_TERMINATED);
 	}
 
 	if (!tags.empty()) {
@@ -151,6 +156,14 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	if (http_code != 200 && http_code != 201)
 	{
 		std::cerr << "Request failed with HTTP code: " << http_code << std::endl;
+		try {
+			nlohmann::json jsonResponse = nlohmann::json::parse(result);
+			std::cerr << "Error with request: " << jsonResponse.dump() << std::endl;
+		}
+		catch (...) {
+			std::cerr << "no body for error" << std::endl;
+		}
+
 		//return nlohmann::json::parse(result);
 		return nullptr;
 	}

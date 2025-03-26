@@ -65,6 +65,8 @@ MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
 
+std::unordered_map<GLuint, int> imageIndexes;
+
 std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
 {
 	return &textureQueue;
@@ -223,7 +225,9 @@ void SocialMedia::ProcessThreads()
         case 4:
             {
                 float ratioAF = 0.0f;
-                userImages.emplace_back(HManager::ImageFromRequest(imageData, ratioAF));
+                GLuint idForImage = HManager::ImageFromRequest(imageData, ratioAF);
+                imageIndexes[idForImage] = dataId;
+                userImages.emplace_back(idForImage);
             } break;
         case 5: {
                 images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
@@ -255,7 +259,7 @@ void SocialMedia::LoadProfile(int id)
     {
         std::vector<uint8_t> imageData = HManager::ImageRequest(("images/" + std::to_string(image)).c_str());
         std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-        textureQueue.push(std::make_tuple(std::move(imageData), 0, 4));
+        textureQueue.push(std::make_tuple(std::move(imageData), image, 4));
     }
 }
 
@@ -490,7 +494,8 @@ void SocialMedia::MainPage(float& width, float& height)
     {
         static bool webCreated = false;
         static bool webWasStarted = false;
-        static bool webNeedImages = false;
+        static bool webOpen = false;
+        static int prevRows = 0;
 
         if (created) Explorer::FileExplorerUI(&created);
         else if (wasCreated) {
@@ -504,6 +509,11 @@ void SocialMedia::MainPage(float& width, float& height)
             else {
                 wasCreated = false;
             }
+        }
+
+        if (!webCreated && webOpen) {
+            ImGui::CloseCurrentPopup();
+            webOpen = false;
         }
 
         static float webSize = 0.0f;
@@ -551,6 +561,10 @@ void SocialMedia::MainPage(float& width, float& height)
                     rows++;
                     Lss::Left(ImGui::GetStyle().FramePadding.x);
                 }
+            }
+            if (rows > prevRows) {
+                ImGui::CloseCurrentPopup();
+                prevRows = rows;
             }
 
             style.ItemSpacing.y = originalItemSpacingY;
@@ -668,7 +682,8 @@ void SocialMedia::MainPage(float& width, float& height)
         if (web) {
             webCreated = true;
             webWasStarted = true;
-            webNeedImages = true;
+            webOpen = true;
+            prevRows = 0;
 
             fromDisk = false;
             fromWeb = true;
@@ -719,15 +734,16 @@ void SocialMedia::MainPage(float& width, float& height)
         {
             std::string imagePath = Explorer::GetImagePath();
             nlohmann::json jsonData;
-            if (textToTags != "None") {
-                jsonData = HManager::PostRequest(inputtext, imagePath, 0, tags);
-            }
-            else jsonData = HManager::PostRequest(inputtext, imagePath);
+            
+            int imageIndexForPost;
+            auto it = imageIndexes.find(imageToPost);
+            if (it != imageIndexes.end()) imageIndexForPost = imageIndexes[imageToPost];
+            else imageIndexForPost = 0;
+            jsonData = HManager::PostRequest(inputtext, imagePath, imageIndexes[imageToPost], tags, (imagePath == "" && imageIndexForPost > 0));
             if (jsonData.is_null()) {
                 std::cout << "couldn't post post" << std::endl;
             }
             else {
-				std::cout << jsonData.dump(4) << std::endl;
                 posts = {};
                 openStuff = false;
                 lastId = 0;
