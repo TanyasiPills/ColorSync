@@ -486,7 +486,7 @@ void SocialMedia::MainPage(float& width, float& height)
 	static float modalSize = 0.0f;
 	ImVec2 cursorAtCurrent = ImGui::GetCursorPos();
     ImGui::SetNextWindowPos(ImVec2(cursorAtCurrent.x, cursorAtCurrent.y - modalSize / 2));
-    if (Lss::Modal("Sup", &openStuff, ImVec2(20 * Lss::VW, modalSize), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    if (Lss::Modal("Sup", &openStuff, ImVec2(30 * Lss::VW, modalSize), Centered | Trans | Bordering | Rounded, ImGuiWindowFlags_NoDecoration))
     {
 
         if (created) Explorer::FileExplorerUI(&created);
@@ -503,46 +503,48 @@ void SocialMedia::MainPage(float& width, float& height)
             }
         }
 
-		float startPos = ImGui::GetCursorPosY();
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-
         ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
 
+		float startPos = ImGui::GetCursorPosY();
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        ImVec2 def = ImGui::GetStyle().FramePadding;
+        ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
+
+
+        Lss::SetColor(ContainerBackground, LowHighlight);
+        Lss::Child("##Postheader", ImVec2(valid.x, 7 * Lss::VH), false, Rounded);
+            Lss::LeftTop(Lss::VW,Lss::VH);
+            Lss::Text("Make a post", 5 * Lss::VH);
+            Lss::End();
+        ImGui::EndChild();
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+        ImGui::GetStyle().FramePadding = def;
+
+        Lss::Top(0.2 * Lss::VH);
+        Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
+
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Text("Share your thoughts", 2 * Lss::VH);
         static char inputtext[128] = "";
-        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(18 * Lss::VW, 2 * Lss::VH), Centered | Trans, 0, 0, "What is on your mind? :3");
+        Lss::LeftTop(1.2*Lss::VW, Lss::VH);
+        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
 
-        static bool fromDisk = false;
-        static bool fromWeb = false;
-
-        Lss::Top(-Lss::VH / 2);
-        Lss::Separator(1.0f, 18 * Lss::VW, 4, Centered);
 
         static std::vector<std::string> tags;
         static std::string textToTags = "None";
         static char tagsText[128] = "";
         static bool focusNextFrame = false;
-        Lss::Text("Tags:", 2 * Lss::VH);
-        ImGui::SameLine();
-        Lss::Text(textToTags, 2 * Lss::VH);
 
-        Lss::Child("tagsinputchild", ImVec2(16 * Lss::VW, 2.5 * Lss::VH), false, Centered);
-        if (Lss::InputText("TagsInput", tagsText, sizeof(tagsText), ImVec2(16 * Lss::VW, 2 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue, 1))
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Text("Tags", 2 * Lss::VH);
+        Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
+        if (Lss::InputText("Tagsfortagspost", tagsText, sizeof(tagsText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Tags for your post :>"))
         {
-
             if (tagsText[0] != '\0') {
-                tags.emplace_back(tagsText);
+                if (std::find(tags.begin(), tags.end(), tagsText) == tags.end())
+                    tags.emplace_back(tagsText);
+                tagsText[0] = '\0';
             }
-            if (!tags.empty())
-            {
-                std::string tmp;
-                for (const auto& item : tags)
-                {
-                    tmp += "#" + item + " ";
-                }
-                textToTags = tmp;
-            }
-            tagsText[0] = '\0';
-
             focusNextFrame = true;
         }
         if (focusNextFrame)
@@ -550,21 +552,46 @@ void SocialMedia::MainPage(float& width, float& height)
             ImGui::SetKeyboardFocusHere(-1);
             focusNextFrame = false;
         }
-        Lss::End();
-        ImGui::EndChild();
 
-        Lss::Top(4 * Lss::VH);
+        Lss::LeftTop(2 * Lss::VW, Lss::VH);
+        float sizeOfTags = 0.0f;
+        for (auto it = tags.begin(); it != tags.end();)
+        {
+            Lss::SetFontSize(2.5f * Lss::VH);
+            float width = ImGui::CalcTextSize(it->c_str()).x+Lss::VW;
+            if (sizeOfTags + width > 22 * Lss::VW) {
+                sizeOfTags = 0.0f;
+                ImGui::NewLine();
+                Lss::LeftTop(2 * Lss::VW, Lss::VH);
+            }
+            sizeOfTags += width;
+
+            if (Lss::Button(("#" + *it).c_str(), ImVec2(width, 3 * Lss::VH), 2.5f * Lss::VH, Rounded))
+                it = tags.erase(it);
+            else ++it;
+
+            ImGui::SameLine();
+        }
+        ImGui::NewLine();
+
+        static bool fromDisk = false;
+        static bool fromWeb = false;
+
+        Lss::Top(1 * Lss::VH);
 
         ImGuiStyle& style = ImGui::GetStyle();
         float oldSpacing = style.ItemSpacing.x;
 
-        style.ItemSpacing.x = Lss::VW;
+        style.ItemSpacing.x = Lss::VH;
 
         bool disk = Lss::Button("Disk", ImVec2(valid.x/2 - (ImGui::GetStyle().ItemSpacing.x/2), 4 * Lss::VH), 4 * Lss::VH, (!fromDisk) ? Invisible : None);
         bool web = Lss::Button("Cloud", ImVec2(valid.x / 2 - (ImGui::GetStyle().ItemSpacing.x/2), 4 * Lss::VH), 4 * Lss::VH, SameLine | ((!fromWeb) ? Invisible : None));
         
         style.ItemSpacing.x = oldSpacing;
         if (disk) {
+            created = true;
+            wasCreated = true;
+
             fromDisk = true;
             fromWeb = false;
         }
@@ -572,25 +599,39 @@ void SocialMedia::MainPage(float& width, float& height)
             fromDisk = false;
             fromWeb = true;
         }
-        Lss::Separator(1.0f, 20 * Lss::VW, 4, Centered);
-        if (fromDisk && imageToPost < 1) {
-            if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-                created = true;
-                wasCreated = true;
-            }
-        }
-        
+
+        Lss::Top(Lss::VH);
+        Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
+
         if (imageToPost > 0) {
+            Lss::Top(2.5f*Lss::VH);
             float toPostRatio = (float)imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
-            Lss::Image(imageToPost, ImVec2(18 * Lss::VW, 18 * Lss::VW * toPostRatio),Centered);
-            if (Lss::Button("Change File", addFileButton, 3 * Lss::VH)) {
-                created = true;
-                wasCreated = true;
+            float widthOfImage = 25 * Lss::VW;
+            float heightOfImage = widthOfImage * toPostRatio;
+            ImVec2 start(0.0f, 0.0f);
+            ImVec2 end(1.0f, 1.0f);
+            float yPos = ImGui::GetCursorPosY();
+
+            if (heightOfImage > 30*Lss::VH) {
+                float toVisualize = 30 * Lss::VH / heightOfImage;
+                toVisualize = 1.0f - toVisualize;
+
+                heightOfImage = 30*Lss::VH;
+
+                start.y = toVisualize/4;
+                end.y = 1.0f - (toVisualize/4*3);
             }
-            if (Lss::Button("Remove File", addFileButton, 3 * Lss::VH, SameLine)) {
+            Lss::Image(imageToPost, ImVec2(widthOfImage, heightOfImage),Centered, start, end);
+            ImVec2 originPos = ImGui::GetCursorPos();
+            ImGui::SetCursorPos(ImVec2(26.5 * Lss::VW, yPos - Lss::VW));
+            if (Lss::Button("X", ImVec2(2*Lss::VW, 2*Lss::VW), 2*Lss::VW)) {
                 imageToPost = 0;
             }
+            ImGui::SetCursorPos(originPos);
+            Lss::Top(Lss::VH);
+            Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
         }
+        Lss::Top(Lss::VH);
 
         float endPos = ImGui::GetCursorPosY();
         modalSize = endPos - startPos + Lss::VH * 6;

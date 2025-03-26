@@ -57,7 +57,7 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	VH = (float)screenHeight / 100;
 	VW = (float)screenWidth / 100;
-	for (int x = VH; x < 10*(int)VH; x += VH)
+	for (int x = VH; x < 10*(int)VH; x += VH/2)
 	{
 		fonts.push_back(io.Fonts->AddFontFromFileTTF("Resources/fonts/Aptos.ttf", x));
 	}
@@ -88,7 +88,7 @@ void CenterWindow() {
 
 void Lss::SetFontSize(float size) {
 	haveFont = true;
-	int type = (size/VH)-1;
+	int type = (size/VH*2)-1;
 	if (prevType != type) {
 		if (type >= 0 && type < fonts.size()) {
 			ImGui::PushFont(fonts[type]);
@@ -105,8 +105,14 @@ void Lss::SetFontSize(float size) {
 
 void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
 	if (flags & Centered && size.x > 0) Center(size.x);
+	if (flags & Rounded) {
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+	}
 	if(size.x == 0 && size.y == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
 	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
+	if (flags & Rounded) {
+		ImGui::PopStyleVar();
+	}
 }
 
 bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
@@ -121,18 +127,23 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 
 	if (rounded) {
 		originalRounding = ImGui::GetStyle().FrameRounding;
-		ImGui::GetStyle().FrameRounding = size.y/2;
+		ImGui::GetStyle().FrameRounding = size.y/4;
 	}
 	if (flags & Invisible) {
 		originalBtnBgColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
 		ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	}
 
-	//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 500));
 	if (centered) Center(size.x);
-	//ImGui::PopStyleVar();
 	if (flags & SameLine) ImGui::SameLine();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	float originalPaddingY = style.FramePadding.y;
+	style.FramePadding.y -= 4.0f;
+
 	bool pressed = ImGui::Button(textIn.c_str(), size);
+
+	style.FramePadding.y = originalPaddingY;
 
 	if (rounded) ImGui::GetStyle().FrameRounding = originalRounding;
 	if (flags & Invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
@@ -168,7 +179,7 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) 
 }
 bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags, int maxWidth, std::string hint) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-	SetFontSize(size.y);
+	SetFontSize(size.y/2);
 	if(maxWidth == 0) ImGui::SetNextItemWidth(size.x - (size.y));
 	else ImGui::SetNextItemWidth(-FLT_MIN);
 
@@ -179,7 +190,7 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	if (flags & Rounded) {
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		ImU32 bg_color = ImGui::GetColorU32(ImGuiCol_FrameBg);
-		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
+		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 4);
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
@@ -244,10 +255,25 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 		if (flags & Centered) {
 			CenterWindow();
 		}
+		if (flags & Bordering) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH/6);
+		}
+		if (flags & Rounded) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		}
 	}
 	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
+	
 	if (*open && flags & Trans) {
-		ImGui::PopStyleColor();
+		if (flags & Trans) {
+			ImGui::PopStyleColor();
+		}
+		if (flags & Bordering) {
+			ImGui::PopStyleVar();
+		}
+		if (flags & Rounded) {
+			ImGui::PopStyleVar();
+		}
 	}
 	return isOpen;
 }

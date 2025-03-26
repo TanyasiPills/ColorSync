@@ -13,7 +13,8 @@ enum CSS {
 	Invisible = 1 << 1,
 	Rounded = 1 << 2,
 	Trans = 1 << 3,
-	SameLine = 1 << 4
+	SameLine = 1 << 4,
+	Bordering = 1 << 5
 };
 
 enum Colors {
