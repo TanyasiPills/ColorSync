@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.colorsync.DataTypes.ImageData;
@@ -48,7 +48,7 @@ public class ProfileFragment extends Fragment {
         }
         else MainActivity.getApi().getUserById(id).enqueue(new Callback<User>() {
             @Override
-            public void onResponse(Call<User> call, Response<User> response) {
+            public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     user = response.body();
                     load();
@@ -61,7 +61,7 @@ public class ProfileFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<User> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<User> call, @NonNull Throwable throwable) {
                 new AlertDialog.Builder(MainActivity.getInstance())
                         .setTitle("Failed to load user")
                         .setMessage(throwable.getMessage())
@@ -95,7 +95,7 @@ public class ProfileFragment extends Fragment {
         if (!loaded) {
             loaded = true;
             return;
-        };
+        }
         username.setText(user.getUsername());
         Glide.with(view)
                 .load(APIInstance.BASE_URL + "users/" + user.getId() + "/pfp")
@@ -105,16 +105,19 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadImages() {
-        MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
+        MainActivity.getApi().getUserImages(UserManager.getBearer(), user.getId()).enqueue(new Callback<List<ImageData>>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
-            public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
-                if (response.isSuccessful()) {
+            public void onResponse(@NonNull Call<List<ImageData>> call, @NonNull Response<List<ImageData>> response) {
+                if (response.isSuccessful() && response.body() != null) {
                     items.clear();
                     items.addAll(response.body());
                     adapter.notifyDataSetChanged();
-                    if (items.size() == 0) view.findViewById(R.id.imagesCardView).setVisibility(View.GONE);
-                } else if (response.code() != 404) {
+                    if (items.isEmpty()) view.findViewById(R.id.imagesCardView).setVisibility(View.GONE);
+                } else if (response.code() == 404) {
+                    //TODO: no profile images
+                }
+                else {
                     new AlertDialog.Builder(requireContext())
                             .setTitle("Error loading images")
                             .setMessage(response.message())
@@ -124,7 +127,7 @@ public class ProfileFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<List<ImageData>> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<List<ImageData>> call, @NonNull Throwable throwable) {
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Error loading images")
                         .setMessage(throwable.getMessage())

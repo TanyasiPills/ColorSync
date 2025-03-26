@@ -1,8 +1,7 @@
 package com.example.colorsync;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -38,7 +37,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -55,6 +53,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -67,15 +66,15 @@ public class HomeFragment extends Fragment {
     private boolean isLoading;
     private int offset;
     private ScrollAdapter adapter;
-    private List<Post> posts;
-    private List<Integer> likes;
+    private final List<Post> posts;
+    private final List<Integer> likes;
     private RecyclerView recyclerView;
     private Context context;
     private View view;
 
     private ImageSelectionGrid post_adapter;
-    private List<ImageData> post_userImages;
-    private List<Uri> post_uris;
+    private final List<ImageData> post_userImages;
+    private final List<Uri> post_uris;
     private RecyclerView post_images;
     private ImageButton post_send;
     private ImageButton post_upload;
@@ -84,6 +83,10 @@ public class HomeFragment extends Fragment {
     private ImageView post_preview;
     private ConstraintLayout post_previewContainer;
     private ImageButton post_previewCancel;
+    private RecyclerView post_tags;
+    private TagAdapter post_tagsAdapter;
+    private final List<String> post_tagsList;
+    private EditText post_tagInput;
     private Uri selectedImage;
     private Integer selectedImageId;
     private Cursor cursor;
@@ -96,8 +99,10 @@ public class HomeFragment extends Fragment {
         isLoadingUris = false;
         offset = 0;
         posts = new ArrayList<>();
+        likes = new ArrayList<>();
         post_uris = new ArrayList<>();
         post_userImages = new ArrayList<>();
+        post_tagsList = new ArrayList<>();
         selectedImage = null;
         selectedImageId = null;
         upload = true;
@@ -109,12 +114,7 @@ public class HomeFragment extends Fragment {
 
         ActivityResultLauncher<String[]> requestPermissions = registerForActivityResult(
                 new ActivityResultContracts.RequestMultiplePermissions(),
-                new ActivityResultCallback<Map<String, Boolean>>() {
-                    @Override
-                    public void onActivityResult(Map<String, Boolean> o) {
-
-                    }
-                }
+                o -> {}
         );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -157,6 +157,11 @@ public class HomeFragment extends Fragment {
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
+        post_tags = view.findViewById(R.id.post_tags);
+        post_tagsAdapter = new TagAdapter((ArrayList<String>)post_tagsList, true);
+        post_tags.setAdapter(post_tagsAdapter);
+        post_tags.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -179,13 +184,13 @@ public class HomeFragment extends Fragment {
 
         post_images.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
                 if (upload) {
                     GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
 
-                    int visibleItemCount = layoutManager.getChildCount();
+                    int visibleItemCount = Objects.requireNonNull(layoutManager).getChildCount();
                     int totalItemCount = layoutManager.getItemCount();
                     int pastVisibleItems = layoutManager.findFirstVisibleItemPosition();
 
@@ -205,6 +210,20 @@ public class HomeFragment extends Fragment {
         post_preview = view.findViewById(R.id.post_preview);
         post_previewContainer = view.findViewById(R.id.post_previewContainer);
         post_previewCancel = view.findViewById(R.id.post_previewCancel);
+        post_tagInput = view.findViewById(R.id.post_tagInput);
+
+        post_tagInput.setOnEditorActionListener((textView, i, keyEvent) -> {
+            String tag = post_tagInput.getText().toString();
+            if (tag.isEmpty()) {
+                Animation shake = AnimationUtils.loadAnimation(context, R.anim.shake);
+                post_tagInput.startAnimation(shake);
+                return true;
+            }
+            post_tagsAdapter.insertItem(tag, 0);
+            post_tagInput.setText("");
+            post_tags.scrollToPosition(0);
+            return true;
+        });
 
         post_upload.setOnClickListener(v -> {
             post_previewContainer.setVisibility(View.GONE);
@@ -237,8 +256,9 @@ public class HomeFragment extends Fragment {
                 post_images.setVisibility(View.VISIBLE);
                 if (post_userImages.isEmpty()) {
                     MainActivity.getApi().getUserImages(UserManager.getBearer()).enqueue(new Callback<List<ImageData>>() {
+                        @SuppressLint("NotifyDataSetChanged")
                         @Override
-                        public void onResponse(Call<List<ImageData>> call, Response<List<ImageData>> response) {
+                        public void onResponse(@NonNull Call<List<ImageData>> call, @NonNull Response<List<ImageData>> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 post_userImages.clear();
                                 post_userImages.addAll(response.body());
@@ -252,7 +272,7 @@ public class HomeFragment extends Fragment {
                         }
 
                         @Override
-                        public void onFailure(Call<List<ImageData>> call, Throwable throwable) {
+                        public void onFailure(@NonNull Call<List<ImageData>> call, @NonNull Throwable throwable) {
                             new AlertDialog.Builder(context)
                                     .setTitle("Failed to load images")
                                     .setMessage(throwable.getMessage())
@@ -265,8 +285,6 @@ public class HomeFragment extends Fragment {
 
         post_send.setOnClickListener(v -> {
             String text = post_description.getText().toString();
-            //TODO: add tags
-            String[] tags = {"tag1", "tag2", "tag3"};
             if (text.isEmpty()) {
                 Animation shake = AnimationUtils.loadAnimation(context, R.anim.shake);
                 post_description.startAnimation(shake);
@@ -276,7 +294,6 @@ public class HomeFragment extends Fragment {
             if (upload && selectedImage != null && selectedImage.getPath() != null) {
                 try {
                     file = FileUtils.getFileFromUri(context, selectedImage);
-                    if (false) throw new IOException();
                 } catch (IOException e) {
                     new android.app.AlertDialog.Builder(context)
                             .setTitle("Failed to upload image")
@@ -291,12 +308,12 @@ public class HomeFragment extends Fragment {
                 RequestBody textRequest = RequestBody.create(MediaType.parse("text/plain"), text);
                 List<RequestBody> tagsBody = new ArrayList<>();
 
-                for (String tag : tags) {
+                for (String tag : post_tagsList) {
                     tagsBody.add(RequestBody.create(MediaType.parse("text/plain"), tag));
                 }
                 MainActivity.getApi().createPostWithFile(UserManager.getBearer(), fileBody, textRequest, tagsBody).enqueue(new Callback<Post>() {
                     @Override
-                    public void onResponse(Call<Post> call, Response<Post> response) {
+                    public void onResponse(@NonNull Call<Post> call, @NonNull Response<Post> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             postCreated(response.body());
                         }
@@ -308,7 +325,7 @@ public class HomeFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<Post> call, Throwable throwable) {
+                    public void onFailure(@NonNull Call<Post> call, @NonNull Throwable throwable) {
                         new AlertDialog.Builder(context)
                                 .setTitle("Error creating post")
                                 .setMessage(throwable.getMessage())
@@ -317,9 +334,9 @@ public class HomeFragment extends Fragment {
                     }
                 });
             } else {
-                MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, tags)).enqueue(new Callback<Post>() {
+                MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, post_tagsList)).enqueue(new Callback<Post>() {
                     @Override
-                    public void onResponse(Call<Post> call, Response<Post> response) {
+                    public void onResponse(@NonNull Call<Post> call, @NonNull Response<Post> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             postCreated(response.body());
                         } else if (response.code() == 409) {
@@ -328,9 +345,9 @@ public class HomeFragment extends Fragment {
                                     .setMessage("You are trying to post a private image, do you want to make it public?")
                                     .setNegativeButton("No", null)
                                     .setPositiveButton("Yes", (dialogInterface, i) -> {
-                                        MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, tags).forcePost()).enqueue(new Callback<Post>() {
+                                        MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, post_tagsList).forcePost()).enqueue(new Callback<Post>() {
                                             @Override
-                                            public void onResponse(Call<Post> call, Response<Post> response) {
+                                            public void onResponse(@NonNull Call<Post> call, @NonNull Response<Post> response) {
                                                 if (response.isSuccessful() && response.body() != null) {
                                                     postCreated(response.body());
                                                 } else new AlertDialog.Builder(context)
@@ -341,7 +358,7 @@ public class HomeFragment extends Fragment {
                                             }
 
                                             @Override
-                                            public void onFailure(Call<Post> call, Throwable throwable) {
+                                            public void onFailure(@NonNull Call<Post> call, @NonNull Throwable throwable) {
                                                 new AlertDialog.Builder(context)
                                                         .setTitle("Error creating post")
                                                         .setMessage(throwable.getMessage())
@@ -359,7 +376,7 @@ public class HomeFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<Post> call, Throwable throwable) {
+                    public void onFailure(@NonNull Call<Post> call, @NonNull Throwable throwable) {
                         new AlertDialog.Builder(context)
                                 .setTitle("Error creating post")
                                 .setMessage(throwable.getMessage())
@@ -378,15 +395,15 @@ public class HomeFragment extends Fragment {
         });
         MainActivity.getApi().getLikes(UserManager.getBearer()).enqueue(new Callback<List<Integer>>() {
             @Override
-            public void onResponse(Call<List<Integer>> call, Response<List<Integer>> response) {
+            public void onResponse(@NonNull Call<List<Integer>> call, @NonNull Response<List<Integer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    likes = response.body();
+                    likes.addAll(response.body());
                     if (!posts.isEmpty()) likePosts(posts);
                 }
             }
 
             @Override
-            public void onFailure(Call<List<Integer>> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<List<Integer>> call, @NonNull Throwable throwable) {
 
             }
         });
@@ -396,7 +413,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void likePosts(List<Post> posts) {
-        if (likes == null) return;
+        if (likes.isEmpty()) return;
         for (Post post : posts) {
             if (likes.contains(post.getId())) post.setLiked(true);
         }
@@ -408,6 +425,7 @@ public class HomeFragment extends Fragment {
         post_description.setText("");
         post_previewContainer.setVisibility(View.GONE);
         posts.add(0, post);
+        post_tagsAdapter.clear();
         adapter.notifyItemInserted(0);
         offset++;
         addPost();
@@ -593,7 +611,7 @@ public class HomeFragment extends Fragment {
 
         MainActivity.getApi().getAllPost(UserManager.getBearer(), offset).enqueue(new Callback<PostResponse>() {
             @Override
-            public void onResponse(Call<PostResponse> call, Response<PostResponse> response) {
+            public void onResponse(@NonNull Call<PostResponse> call, @NonNull Response<PostResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     PostResponse data = response.body();
                     if (data.offset == null) return;
@@ -612,7 +630,7 @@ public class HomeFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<PostResponse> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<PostResponse> call, @NonNull Throwable throwable) {
                 new AlertDialog.Builder(context)
                         .setTitle("Error")
                         .setMessage(throwable.getMessage())

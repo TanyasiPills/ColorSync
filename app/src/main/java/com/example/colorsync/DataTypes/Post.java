@@ -12,8 +12,9 @@ public class Post {
     private int likes;
     private Date date;
     private boolean liked;
+    private List<String> tags;
 
-    public Post(int id, int imageId, User user, String text, List<Comment> comments, int likes, Date date, boolean liked) {
+    public Post(int id, int imageId, User user, String text, List<Comment> comments, int likes, Date date, boolean liked, List<String> tags) {
         this.id = id;
         this.imageId = imageId;
         this.user = user;
@@ -22,6 +23,7 @@ public class Post {
         this.likes = likes;
         this.date = date;
         this.liked = liked;
+        this.tags = tags;
     }
 
     public int getId() {
@@ -86,5 +88,13 @@ public class Post {
 
     public void setLiked(boolean liked) {
         this.liked = liked;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }

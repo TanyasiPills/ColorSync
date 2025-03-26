@@ -1,5 +1,7 @@
 package com.example.colorsync;
 
+import com.example.colorsync.DataTypes.Comment;
+import com.example.colorsync.DataTypes.CreateComment;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.LoginRequest;
 import com.example.colorsync.DataTypes.Post;
@@ -41,6 +43,10 @@ public interface APIService {
 
     @POST("posts/like/{id}")
     Call<Void> likePost(@Header("Authorization") String token, @Path("id") int postId);
+
+
+    @POST("/comments")
+    Call<Comment> createComment(@Header("Authorization") String token, @Body CreateComment comment);
 
 
     @POST("users/login")

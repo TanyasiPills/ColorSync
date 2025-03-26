@@ -80,6 +80,34 @@
                     android:background="?android:selectableItemBackgroundBorderless"
                     app:tint="@color/text"/>
 
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_tagInput"
+                    app:layout_constraintStart_toStartOf="@id/post_description"
+                    app:layout_constraintTop_toBottomOf="@id/post_description"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintWidth_min="40dp"
+                    app:layout_constraintWidth_max="200dp"
+                    app:layout_constraintHorizontal_bias="0"
+                    android:hint="@string/tagHint"
+                    android:inputType="text"
+                    android:autofillHints="tag"
+                    android:textColor="@color/text"
+                    android:textColorHint="@color/text"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_tags"
+                    app:layout_constraintStart_toEndOf="@id/post_tagInput"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/post_description"
+                    app:layout_constraintHorizontal_bias="0"
+                    android:requiresFadingEdge="horizontal"
+                    />
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -108,7 +136,7 @@
                         android:background="?android:selectableItemBackgroundBorderless"
                         android:stateListAnimator="@animator/click_grow"
                         app:tint="@color/text"
-                        android:layout_marginLeft="5dp"
+                        android:layout_marginStart="5dp"
                         android:contentDescription="@string/post_addCD"/>
                 </LinearLayout>
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -116,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/post_previewContainer"
                     app:layout_constraintStart_toStartOf="@id/post_description"
-                    app:layout_constraintTop_toBottomOf="@id/post_description"
+                    app:layout_constraintTop_toBottomOf="@id/post_tagInput"
                     android:visibility="gone">
                      <ImageView
                          android:layout_width="200dp"

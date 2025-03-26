@@ -1,9 +1,11 @@
 package com.example.colorsync.DataTypes;
 
+import java.util.List;
+
 public class PostCreate {
     public String text;
     public Integer imageId;
-    public String[] tags;
+    public List<String> tags;
     public boolean forcePost;
 
     public PostCreate(String text) {
@@ -20,14 +22,14 @@ public class PostCreate {
         this.forcePost = false;
     }
 
-    public PostCreate(String text, String[] tags) {
+    public PostCreate(String text, List<String> tags) {
         this.text = text;
         this.tags = tags;
         this.imageId = null;
         this.forcePost = false;
     }
 
-    public PostCreate(String text, Integer imageId, String[] tags) {
+    public PostCreate(String text, Integer imageId, List<String> tags) {
         this.text = text;
         this.tags = tags;
         this.imageId = imageId;

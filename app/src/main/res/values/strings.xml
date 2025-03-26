@@ -22,4 +22,7 @@
     <string name="post_addCD">Add uploaded image</string>
     <string name="post_uploadCD">Upload new image</string>
     <string name="likeButtonCD">like button</string>
+    <string name="createCommentHint">Write a comment</string>
+    <string name="tagHint">tag</string>
+    <string name="remove_tagCD">remove tag</string>
 </resources>

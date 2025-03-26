@@ -5,7 +5,6 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,6 +25,7 @@ import com.example.colorsync.DataTypes.Post;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -36,8 +36,6 @@ import retrofit2.Response;
 public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final List<Post> items;
     private final List<Integer> likes;
-    private static final int ADD_POST_TYPE = 0;
-    private static final int POST_TYPE = 1;
 
     public ScrollAdapter(List<Post> items, List<Integer> likes) {
         this.items = items;
@@ -45,7 +43,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     }
 
     public void like(int postId) {
-        if (likes.contains(postId)) likes.remove(postId);
+        if (likes.contains(postId)) likes.remove(Integer.valueOf(postId));
         else likes.add(postId);
     }
 
@@ -56,17 +54,14 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         private final ImageView image;
         private final RecyclerView commentsView;
         private final ImageView showComments;
-        private final Context context;
         private final LinearLayout showCommentsContainer;
         private final TextView likeText;
         private final ImageButton likeButton;
         private Post post;
-        private TextView date;
-        private ScrollAdapter adapter;
+        private final TextView date;
+        private final RecyclerView tags;
         public PostViewHolder(@NonNull View itemView, Context context, ViewGroup parent, ScrollAdapter adapter) {
             super(itemView);
-            this.context = context;
-            this.adapter = adapter;
             username = itemView.findViewById(R.id.username);
             description = itemView.findViewById(R.id.description);
             profilePicture = itemView.findViewById(R.id.profile_picture);
@@ -77,6 +72,8 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             likeText = itemView.findViewById(R.id.likes);
             likeButton = itemView.findViewById(R.id.likeButton);
             date = itemView.findViewById(R.id.date);
+            tags = itemView.findViewById(R.id.tags);
+            tags.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
 
             commentsView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
                 @Override
@@ -109,12 +106,12 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     likeText.setText(String.valueOf(post.getLikes() - 1));
                     likeButton.setImageResource(R.drawable.heart_empty);
                 } else {
-                    likeText.setText(post.getLikes() + 1);
+                    likeText.setText(String.valueOf(post.getLikes() + 1));
                     likeButton.setImageResource(R.drawable.heart);
                 }
                 MainActivity.getApi().likePost(UserManager.getBearer(), post.getId()).enqueue(new Callback<Void>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                         if (response.isSuccessful()) {
                             if (post.isLiked()) {
                                 post.setLiked(false);
@@ -137,7 +134,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     }
 
                     @Override
-                    public void onFailure(Call<Void> call, Throwable throwable) {
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable throwable) {
                         if (post.isLiked()) likeButton.setImageResource(R.drawable.heart);
                         else likeButton.setImageResource(R.drawable.heart_empty);
                         likeText.setText(String.valueOf(post.getLikes()));
@@ -150,81 +147,84 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 });
             });
 
-            showCommentsContainer.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (commentsView.getAdapter() == null) {
-                        commentsView.setLayoutManager(new LinearLayoutManager(context));
-                        commentsView.setAdapter(new CommentAdapter(post.getComments()));
-                    }
-                    if (commentsView.getVisibility() == View.GONE) {
+            showCommentsContainer.setOnClickListener(v -> {
+                if (commentsView.getAdapter() == null) {
+                    commentsView.setLayoutManager(new LinearLayoutManager(context));
+                    commentsView.setAdapter(new CommentAdapter(post.getComments(), post.getId()));
+                }
+                if (commentsView.getVisibility() == View.GONE) {
 
-                        commentsView.measure(
-                                View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.AT_MOST),
-                                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-                        );
+                    commentsView.measure(
+                            View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.AT_MOST),
+                            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                    );
 
-                        int targetHeight = commentsView.getMeasuredHeight();
-                        int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
-                        targetHeight = Math.min(targetHeight, maxHeight);
+                    int targetHeight = commentsView.getMeasuredHeight();
+                    int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
+                    targetHeight = Math.min(targetHeight, maxHeight);
 
-                        commentsView.getLayoutParams().height = 0;
+                    commentsView.getLayoutParams().height = 0;
+                    commentsView.requestLayout();
+
+                    commentsView.setVisibility(View.VISIBLE);
+
+                    ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
+                    heightAnimator.addUpdateListener(animation -> {
+                        commentsView.getLayoutParams().height = (int) animation.getAnimatedValue();
                         commentsView.requestLayout();
+                    });
 
-                        commentsView.setVisibility(View.VISIBLE);
+                    ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(showComments, "rotation", 0f, 90f);
+                    AnimatorSet animatorSet = new AnimatorSet();
+                    animatorSet.playTogether(heightAnimator, rotationAnimator);
+                    animatorSet.setDuration(500);
+                    animatorSet.start();
+                } else {
+                    int initialHeight = commentsView.getMeasuredHeight();
+                    ValueAnimator heightAnimator = ValueAnimator.ofInt(initialHeight, 0);
+                    heightAnimator.addUpdateListener(animation -> {
+                        commentsView.getLayoutParams().height = (int) animation.getAnimatedValue();
+                        commentsView.requestLayout();
+                    });
+                    ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(showComments, "rotation", 90f, 0f);
+                    AnimatorSet animatorSet = new AnimatorSet();
+                    animatorSet.playTogether(heightAnimator, rotationAnimator);
+                    animatorSet.setDuration(500);
 
-                        ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
-                        heightAnimator.addUpdateListener(animation -> {
-                            commentsView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                            commentsView.requestLayout();
-                        });
+                    animatorSet.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(@NonNull Animator animation) {
+                        }
 
-                        ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(showComments, "rotation", 0f, 90f);
-                        AnimatorSet animatorSet = new AnimatorSet();
-                        animatorSet.playTogether(heightAnimator, rotationAnimator);
-                        animatorSet.setDuration(500);
-                        animatorSet.start();
-                    } else {
-                        int initialHeight = commentsView.getMeasuredHeight();
-                        ValueAnimator heightAnimator = ValueAnimator.ofInt(initialHeight, 0);
-                        heightAnimator.addUpdateListener(animation -> {
-                            commentsView.getLayoutParams().height = (int) animation.getAnimatedValue();
-                            commentsView.requestLayout();
-                        });
-                        ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(showComments, "rotation", 90f, 0f);
-                        AnimatorSet animatorSet = new AnimatorSet();
-                        animatorSet.playTogether(heightAnimator, rotationAnimator);
-                        animatorSet.setDuration(500);
+                        @Override
+                        public void onAnimationEnd(@NonNull Animator animation) {
+                            commentsView.setVisibility(View.GONE);
+                        }
 
-                        animatorSet.addListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(@NonNull Animator animation) {
-                            }
+                        @Override
+                        public void onAnimationCancel(@NonNull Animator animation) {
+                        }
 
-                            @Override
-                            public void onAnimationEnd(@NonNull Animator animation) {
-                                commentsView.setVisibility(View.GONE);
-                            }
-
-                            @Override
-                            public void onAnimationCancel(@NonNull Animator animation) {
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(@NonNull Animator animation) {
-                            }
-                        });
-                        animatorSet.start();
-                    }
+                        @Override
+                        public void onAnimationRepeat(@NonNull Animator animation) {
+                        }
+                    });
+                    animatorSet.start();
                 }
             });
         }
 
         public void bind(Post post) {
-            //TODO: add the add comment to the top
             this.post = post;
             username.setText(post.getUser().getUsername());
             description.setText(post.getText());
+
+            if (post.getTags().isEmpty()) {
+                tags.setVisibility(View.GONE);
+            } else {
+                tags.setVisibility(View.VISIBLE);
+                tags.setAdapter(new TagAdapter(new ArrayList<>(post.getTags())));
+            }
 
             commentsView.setAdapter(null);
             showComments.setRotation(0f);
