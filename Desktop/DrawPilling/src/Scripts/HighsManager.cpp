@@ -8,10 +8,13 @@ static auto& runtime = RuntimeData::getInstance();
 
 class SocialMedia;
 
+constexpr size_t MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
 	return size * nmemb;
 }
+
 size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) {
 	auto& buffer = *reinterpret_cast<std::vector<uint8_t>*>(userdata);
 	size_t totalSize = size * nmemb;
@@ -347,20 +350,17 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1L);
+	curl_easy_setopt(curl, CURLOPT_DNS_CACHE_TIMEOUT, 60L);
+
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
-
-	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 0L);
-	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 0L);
-
-	curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 10L);
-	curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 5L);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);;
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
@@ -371,6 +371,10 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+	double totalTime;
+	curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
+	std::cout << "Total time: " << totalTime << " seconds" << std::endl;
 
 	curl_easy_cleanup(curl);
 	return imageData;

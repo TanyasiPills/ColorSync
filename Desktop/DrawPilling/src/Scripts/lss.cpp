@@ -264,7 +264,7 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 	}
 	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
 	
-	if (*open && flags & Trans) {
+	if (*open) {
 		if (flags & Trans) {
 			ImGui::PopStyleColor();
 		}

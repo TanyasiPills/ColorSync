@@ -488,6 +488,9 @@ void SocialMedia::MainPage(float& width, float& height)
     ImGui::SetNextWindowPos(ImVec2(cursorAtCurrent.x, cursorAtCurrent.y - modalSize / 2));
     if (Lss::Modal("Sup", &openStuff, ImVec2(30 * Lss::VW, modalSize), Centered | Trans | Bordering | Rounded, ImGuiWindowFlags_NoDecoration))
     {
+        static bool webCreated = false;
+        static bool webWasStarted = false;
+        static bool webNeedImages = false;
 
         if (created) Explorer::FileExplorerUI(&created);
         else if (wasCreated) {
@@ -501,6 +504,73 @@ void SocialMedia::MainPage(float& width, float& height)
             else {
                 wasCreated = false;
             }
+        }
+
+        static float webSize = 0.0f;
+        if (Lss::Modal("fromWeb", &webCreated, ImVec2(40 * Lss::VW, webSize), Centered | Bordering | Rounded, ImGuiWindowFlags_NoDecoration))
+        {
+            ImGuiStyle& style = ImGui::GetStyle();
+            float originalItemSpacingY = style.ItemSpacing.y;
+            style.ItemSpacing.y = style.ItemSpacing.x;
+
+            if (webWasStarted) {
+                userImages.clear();
+                std::thread(&SocialMedia::LoadProfile, runtime.id).detach();
+                webWasStarted = false;
+            }
+
+            float webStartPos = ImGui::GetCursorPosY();
+
+            ImVec2 avail = ImGui::GetContentRegionAvail();
+            float xWidth = avail.x / 3 - (ImGui::GetStyle().FramePadding.x * 2);
+            Lss::Left(ImGui::GetStyle().FramePadding.x);
+            int rows = 0;
+            if (userImages.size() > 0) rows = 1;
+            for (size_t i = 0; i < userImages.size(); i++)
+            {
+                int width, height;
+                glGetTextureLevelParameteriv(userImages[i], 0, GL_TEXTURE_WIDTH, &width);
+                glGetTextureLevelParameteriv(userImages[i], 0, GL_TEXTURE_HEIGHT, &height);
+
+                float shiftX = 0.0f;
+                float shiftY = 0.0f;
+                if (width >= height) {
+                    shiftX = (1 - (float)height / width) / 2;
+                }
+                else {
+                    shiftY = (1 - (float)width / height) / 2;
+                }
+                ImGui::Image(userImages[i], ImVec2(xWidth, xWidth), ImVec2(shiftX, shiftY), ImVec2(1.0f - shiftX, 1.0f - shiftY));
+                if (ImGui::IsItemClicked()) {
+                    imageToPost = userImages[i];
+                    webCreated = false;
+                }
+                if ((i + 1) % 3 != 0)
+                    ImGui::SameLine();
+                else {
+                    rows++;
+                    Lss::Left(ImGui::GetStyle().FramePadding.x);
+                }
+            }
+
+            style.ItemSpacing.y = originalItemSpacingY;
+
+            if (ImGui::IsMouseClicked(0))
+            {
+                ImVec2 pos = ImGui::GetWindowPos();
+                ImVec2 cursorPos = ImGui::GetMousePos();
+                ImVec2 size = ImGui::GetWindowSize();
+                if (!Lss::InBound(cursorPos, pos, size)) {
+                    ImGui::CloseCurrentPopup();
+                    webCreated = false;
+                }
+            }
+
+            float contentHeight = rows * (xWidth + ImGui::GetStyle().ItemSpacing.y);
+            webSize = webStartPos + contentHeight + ImGui::GetStyle().ItemSpacing.x;
+
+            Lss::End();
+            ImGui::EndPopup();
         }
 
         ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
@@ -596,6 +666,10 @@ void SocialMedia::MainPage(float& width, float& height)
             fromWeb = false;
         }
         if (web) {
+            webCreated = true;
+            webWasStarted = true;
+            webNeedImages = true;
+
             fromDisk = false;
             fromWeb = true;
         }
@@ -605,7 +679,10 @@ void SocialMedia::MainPage(float& width, float& height)
 
         if (imageToPost > 0) {
             Lss::Top(2.5f*Lss::VH);
-            float toPostRatio = (float)imageToPostTexture.GetHeight() / imageToPostTexture.GetWidht();
+            int width, height;
+            glGetTextureLevelParameteriv(imageToPost, 0, GL_TEXTURE_WIDTH, &width);
+            glGetTextureLevelParameteriv(imageToPost, 0, GL_TEXTURE_HEIGHT, &height);
+            float toPostRatio = (float)height/ width;
             float widthOfImage = 25 * Lss::VW;
             float heightOfImage = widthOfImage * toPostRatio;
             ImVec2 start(0.0f, 0.0f);
