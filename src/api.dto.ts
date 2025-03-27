@@ -1,5 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Visibility } from "@prisma/client";
+import { Transform } from "class-transformer";
 import { IsArray, IsBoolean, IsDate, IsEmail, IsEnum, IsInt, IsObject, IsOptional, IsPositive, IsString, MaxLength, Min, MinLength } from "class-validator";
 
 export class LoginBodyType {
@@ -69,6 +70,11 @@ export class PostInputBodyType extends PartialType(FileType) {
   @IsOptional()
   @ApiProperty({ type: 'array', description: 'The tags on the post', example: ['funny', 'cat', 'meme'] })
   tags?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ type: 'boolean', description: 'Change image to public if private, default = false', example: false })
+  forcePost?: boolean;
 }
 
 export class PostBaseType {
