@@ -10,7 +10,7 @@ export class UsersService {
   constructor (private readonly db: PrismaService) {}
   
   findOne(id: number) {
-    return this.db.user.findUnique({where: {id}, select: {id: true, username: true}});
+    return this.db.user.findUnique({where: {id}, select: {id: true, username: true, profile_description: true}});
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
