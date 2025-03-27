@@ -3,7 +3,7 @@ import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'rea
 import Cookies from 'universal-cookie';
 import { backendIp } from '../../constants';
 import { modalProp } from '../../types';
-import "../css/Modal.css";
+import "../../css/Modal.css";
 
 export const SignUp: React.FC<modalProp> = ({ show, onHide }) => {
 

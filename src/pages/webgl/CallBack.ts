@@ -5,7 +5,12 @@ export function useColorWheel() {
     const colorWheelRef = useRef<HTMLCanvasElement | null>(null);
     const colorColumnRef = useRef<HTMLCanvasElement | null>(null);
     const [cwColor, setCwColor] = useState("rgb(255, 0, 0)");
-    const [RGBColor, setRGBColor] = useState("rgb(0, 0, 0)");
+    const [RGBColor, setRGBColor] = useState<string>(() => {        
+        return localStorage.getItem("currentRGB") || "rgb(0, 0, 0)";
+    });
+    const [selectedColor, setSelectedColor] = useState<string | null>(() => {       
+        return localStorage.getItem("selectedRGB");
+    });
     const [holdC, setHoldC] = useState(false);
     const [holdCW, setHoldCW] = useState(false);
     const markerCW = useRef<HTMLDivElement | null>(null);

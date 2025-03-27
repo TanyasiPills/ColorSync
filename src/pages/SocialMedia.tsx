@@ -3,7 +3,7 @@ import "../css/SocialMedia.css";
 import { Container, Row, Col, Card, Spinner, InputGroup, FormControl, Button } from 'react-bootstrap';
 import { backendIp } from "../constants";
 import { comment, post } from "../types"
-import { Posting } from "./Posting";
+import { Posting } from "./modals/Posting";
 import Cookies from "universal-cookie";
 
 export function SocialMedia() {

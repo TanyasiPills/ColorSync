@@ -67,7 +67,7 @@ export class Render {
     private prevPrevPos: [number, number];
     private canvasSize: [number, number];
     private color: [number, number, number];
-    private storedColor = localStorage.getItem("selectedColor");
+    
 
     //Nézd át Matyi mit ad hozzá
 
@@ -277,33 +277,7 @@ export class Render {
                     this.prevPos[1] = pos[1];
                 } break;                
 
-                case 1: { // color picker
-                    const pixelX = Math.floor((pos[0] / this.canvasRatio[0]) * this.canvasSize[0]);
-                    const pixelY = Math.floor((pos[1] / this.canvasRatio[1]) * this.canvasSize[1]);
-
-                    const pixelColor = new Uint8Array(4);
-                    this.gl.readPixels(pixelX, pixelY, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixelColor);
-
-                    const pickedColor: [number, number, number] = [
-                        pixelColor[0] / 255.0,
-                        pixelColor[1] / 255.0,
-                        pixelColor[2] / 255.0
-                    ];
-
-                    this.color[0] = pickedColor[0];
-                    this.color[1] = pickedColor[1];
-                    this.color[2] = pickedColor[2];
-
-                    const whiteColor = new Uint8Array([255, 255, 255, 255]);
-
-                    // WebGL does not support glRasterPos2i or glDrawPixels directly.
-                    // You would need to use a texture-based approach for equivalent behavior.
-
-                    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-                    DrawUI.SetColor(this.color);
-                } break;
-
-                case 2: { // erase
+                case 1: { // erase
                     // Implementation needed
                 } break;
 

@@ -1,8 +1,9 @@
 import { Col, Modal, Row } from "react-bootstrap";
-import { image, modalProp } from "../types";
+import { image, modalProp } from "../../types";
 import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
-import { backendIp } from "../constants";
+import { backendIp } from "../../constants";
+import "../../css/Modal.css";
 
 interface ExistingImageProps extends modalProp {
     onSelectImage: (imageId: number) => void;

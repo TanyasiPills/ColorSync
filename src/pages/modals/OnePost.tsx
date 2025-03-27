@@ -3,6 +3,7 @@ import { backendIp } from "../../constants";
 import { useEffect, useState } from "react";
 import { post } from "../../types";
 import { useParams } from "react-router-dom";
+import "../../css/Modal.css";
 
 export default function OnePost() {
     const { postId } = useParams();

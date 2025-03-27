@@ -1,11 +1,11 @@
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col, ListGroup } from 'react-bootstrap';
 import { X } from "react-bootstrap-icons";
-import { modalProp } from "../types";
+import { modalProp } from "../../types";
 import { useState } from 'react';
-import "../css/Modal.css";
+import "../../css/Modal.css";
 import Cookies from 'universal-cookie';
 import { ExistingImage } from './ExistingImage';
-import { backendIp } from '../constants';
+import { backendIp } from '../../constants';
 
 /**
  *  what it does

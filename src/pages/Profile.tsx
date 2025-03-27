@@ -6,7 +6,7 @@ import Cookies from "universal-cookie";
 import { useParams } from "react-router-dom";
 import { image, user } from "../types"
 import { ProfileEdit } from "./ProfileEdit";
-import { PostingToProfile } from "./PostingToProfile";
+import { PostingToProfile } from "./modals/PostingToProfile";
 
 
 export function Profile({ own = false }: { own?: boolean }) {
