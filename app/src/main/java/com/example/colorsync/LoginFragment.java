@@ -20,7 +20,7 @@ import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.EditText;
 
 import com.example.colorsync.DataTypes.LoginRequest;
 import com.example.colorsync.DataTypes.RegisterRequest;
@@ -45,6 +45,7 @@ public class LoginFragment extends Fragment {
     private Button registerButton;
     private ConstraintSet registerSet;
     private ConstraintSet loginSet;
+    private EditText password;
 
     public LoginFragment() { }
 
@@ -57,7 +58,6 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Toast.makeText(getContext(), "login", Toast.LENGTH_SHORT).show();
         View view = inflater.inflate(R.layout.fragment_login, container, false);
 
         constraintLayout = view.findViewById(R.id.loginLayout);
@@ -68,6 +68,7 @@ public class LoginFragment extends Fragment {
         loginChange = view.findViewById(R.id.loginChange);
         loginButton = view.findViewById(R.id.login);
         registerButton = view.findViewById(R.id.register);
+        password = view.findViewById(R.id.password);
 
         registerButton.setOnClickListener(e -> {
             String username = Objects.requireNonNull(usernameInput.getText()).toString();
@@ -229,6 +230,10 @@ public class LoginFragment extends Fragment {
             });
         });
 
+        password.setOnEditorActionListener((textView, i, keyEvent) -> {
+            loginButton.performClick();
+            return true;
+        });
         return view;
     }
 

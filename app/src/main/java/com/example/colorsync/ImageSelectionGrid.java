@@ -15,18 +15,21 @@ import com.bumptech.glide.Glide;
 import com.example.colorsync.DataTypes.ImageData;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid.ImageViewHolder> {
     private List<Uri> imageUriLIst;
     private List<ImageData> imageDataList;
     private boolean uri;
-    private HomeFragment parent;
+    private Function<Uri, Void> uriClickHandler;
+    private Function<ImageData, Void> dataClickHandler;
     public long selected;
 
-    public ImageSelectionGrid(List<Uri> imageUriLIst, List<ImageData> imageDataList, HomeFragment parent) {
+    public ImageSelectionGrid(List<Uri> imageUriLIst, List<ImageData> imageDataList, Function<Uri, Void> uriClickHandler, Function<ImageData, Void> dataClickHandler ) {
         this.imageUriLIst = imageUriLIst;
         this.imageDataList = imageDataList;
-        this.parent = parent;
+        this.uriClickHandler = uriClickHandler;
+        this.dataClickHandler = dataClickHandler;
         uri = true;
         selected = -1;
     }
@@ -45,8 +48,8 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
 
     public void selectionHandler(int position) {
         selected = position;
-        if (uri) parent.uriClickHandler(imageUriLIst.get(position));
-        else parent.dataClickHandler(imageDataList.get(position));
+        if (uri) uriClickHandler.apply(imageUriLIst.get(position));
+        else dataClickHandler.apply(imageDataList.get(position));
         notifyDataSetChanged();
     }
 

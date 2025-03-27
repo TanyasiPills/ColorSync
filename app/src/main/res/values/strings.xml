@@ -25,4 +25,6 @@
     <string name="createCommentHint">Write a comment</string>
     <string name="tagHint">tag</string>
     <string name="remove_tagCD">remove tag</string>
+    <string name="uploadImageCD">Upload image</string>
+    <string name="uploadText">Upload a image</string>
 </resources>

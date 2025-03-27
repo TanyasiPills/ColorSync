@@ -153,7 +153,7 @@ public class HomeFragment extends Fragment {
 
         post_images = view.findViewById(R.id.post_images);
         post_images.setVisibility(View.GONE);
-        post_adapter = new ImageSelectionGrid(post_uris, post_userImages, this);
+        post_adapter = new ImageSelectionGrid(post_uris, post_userImages, this::uriClickHandler, this::dataClickHandler);
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
@@ -214,7 +214,7 @@ public class HomeFragment extends Fragment {
 
         post_tagInput.setOnEditorActionListener((textView, i, keyEvent) -> {
             String tag = post_tagInput.getText().toString();
-            if (tag.isEmpty()) {
+            if (tag.isEmpty() || post_tagsList.contains(tag)) {
                 Animation shake = AnimationUtils.loadAnimation(context, R.anim.shake);
                 post_tagInput.startAnimation(shake);
                 return true;
@@ -436,7 +436,7 @@ public class HomeFragment extends Fragment {
             if (firstVisibleItemPosition < 2) recyclerView.scrollToPosition(0);
         }
     }
-    public void uriClickHandler(Uri uri) {
+    public Void uriClickHandler(Uri uri) {
         post_previewContainer.setVisibility(View.VISIBLE);
         selectedImage = uri;
         selectedImageId = null;
@@ -444,9 +444,10 @@ public class HomeFragment extends Fragment {
                 .load(uri)
                 .into(post_preview);
         post_images.setVisibility(View.GONE);
+        return null;
     }
 
-    public void dataClickHandler(ImageData data) {
+    public Void dataClickHandler(ImageData data) {
         selectedImageId = data.id;
         selectedImage = null;
         Glide.with(context)
@@ -469,6 +470,7 @@ public class HomeFragment extends Fragment {
                     }
                 })
                 .into(post_preview);
+        return null;
     }
 
 

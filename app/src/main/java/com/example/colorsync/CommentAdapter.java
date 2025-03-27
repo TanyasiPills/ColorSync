@@ -85,6 +85,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     description.startAnimation(shake);
                     return;
                 }
+                MainActivity.getInstance().hideKeyboard();
                 MainActivity.getApi().createComment(UserManager.getBearer(), new CreateComment(adapter.postId, text)).enqueue(new Callback<Comment>() {
                     @Override
                     public void onResponse(@NonNull Call<Comment> call, @NonNull Response<Comment> response) {
