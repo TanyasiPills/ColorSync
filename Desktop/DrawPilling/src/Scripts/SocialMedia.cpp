@@ -1048,7 +1048,10 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     {
                         std::string imagePath = Explorer::GetImagePath();
                         if (imagePath.size() > 2 && userImageTexture.GetId() > 0) {
-                            nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
+                            std::string piranah;
+                            if (privating) piranah = "private";
+                            else piranah = "public";
+                            nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0, piranah);
                             if (!jsonData.is_null()) {
                                 imageUploadpen = false;
                                 needImages = true;

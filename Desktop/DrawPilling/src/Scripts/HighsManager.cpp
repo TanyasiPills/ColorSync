@@ -189,7 +189,7 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	return nlohmann::json{};
 }
 
-nlohmann::json HManager::ImageUploadRequest(std::string path, int type) 
+nlohmann::json HManager::ImageUploadRequest(std::string path, int type, std::string visibility)
 {
 	std::string fileName = path.substr(path.find_last_of('\\') + 1);
 
@@ -199,7 +199,7 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 		return nlohmann::json{};
 	}
 	std::string url;
-	if(type == 0) url = "http://" + runtime.ip + ":3000/images";
+	if (type == 0) url = "http://" + runtime.ip + ":3000/images";
 	else url = "http://" + runtime.ip + ":3000/users/pfp";
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
@@ -217,7 +217,7 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 	curl_mime_name(part, "file");
 
 	curl_mime_filename(part, fileName.c_str());
-	
+
 	curl_mime_filedata(part, path.c_str());
 
 	if (fileName.find(".png") != std::string::npos) {
@@ -225,6 +225,12 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 	}
 	else if (fileName.find(".jpg") != std::string::npos || fileName.find(".jpeg") != std::string::npos) {
 		curl_mime_type(part, "image/jpeg");
+	}
+
+	if (!visibility.empty()) {
+		curl_mimepart* visibilityPart = curl_mime_addpart(mime);
+		curl_mime_name(visibilityPart, "visibility");
+		curl_mime_data(visibilityPart, visibility.c_str(), CURL_ZERO_TERMINATED);
 	}
 
 
