@@ -57,7 +57,7 @@ void LoadDrives() {
 bool HasSpecificExtension(const std::string& file, const std::string& ext) {
     size_t pos = file.find_last_of(".");
     if (pos == std::string::npos || pos == 0) return false;
-    if (file.find(" ") != std::string::npos) return false;
+    //if (file.find(" ") != std::string::npos) return false;
     return file.substr(pos) == ext;
 }
 

@@ -803,7 +803,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (user == runtime.id) {
                 //pfp change
-                if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+                if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
                 {
                     ImVec2 valid = ImGui::GetContentRegionAvail();
                     float halfWidth = valid.x / 2;
@@ -942,29 +942,112 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     ImGui::EndPopup();
                 }
 
+                static float imageAddYPrev = 0.0f;
+                static float imageAddY = 25*Lss::VH;
                 //image add
-                if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+                if (Lss::Modal("imageToGalery", &imageUploadpen, ImVec2(30 * Lss::VW, imageAddY), Centered | Trans | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
                 {
+                    static bool privating = true;
+                    float startPos = ImGui::GetCursorPosY();
                     ImVec2 valid = ImGui::GetContentRegionAvail();
-                    Lss::Text("Add file to galery", 4 * Lss::VH, Centered);
 
-                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                    ImVec2 def = ImGui::GetStyle().FramePadding;
+                    ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
+
+                    Lss::SetColor(ContainerBackground, LowHighlight);
+                    Lss::Child("##Postheader", ImVec2(valid.x, 7 * Lss::VH), false, Rounded);
+                    Lss::LeftTop(Lss::VW, Lss::VH);
+                    Lss::Text("Add file to galery", 5 * Lss::VH);
+                    Lss::End();
+                    ImGui::EndChild();
+                    Lss::SetColor(ContainerBackground, ContainerBackground);
+                    ImGui::GetStyle().FramePadding = def;
+
+                    Lss::Top(0.2 * Lss::VH);
+                    Lss::Separator(2.0f, 30 * Lss::VW, 4, Centered);
+                    Lss::Top(Lss::VH);
+
+                    Lss::Left(0.5f * Lss::VW);
+                    ImVec2 addFileButton = ImVec2(valid.x/2-Lss::VW, 5 * Lss::VH);
+                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Rounded)) {
                         openExplorer2 = true;
                         wasOpenExplorer2 = true;
                     }
 
+                    ImGui::SameLine();
+                    Lss::Left(Lss::VW);
+                    Lss::Child("selectPrivacy", ImVec2(valid.x/2-Lss::VW, 5 * Lss::VH), true, Bordering, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+                        ImVec2 validPrivacy = ImGui::GetWindowSize();
+                        ImGui::SetCursorPos(ImVec2(0, 0));
+                        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
+                        if (privating) Lss::SetColor(LowHighlight, HeavyHighlight);
+                        if (Lss::Button("Private", ImVec2(validPrivacy.x / 2, 5 * Lss::VH), 4 * Lss::VH))
+                            privating = true;
+                        if (privating) Lss::SetColor(LowHighlight, LowHighlight);
+
+                        if (!privating) Lss::SetColor(LowHighlight, HeavyHighlight);
+                        if (Lss::Button("Public", ImVec2(validPrivacy.x / 2, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+                            privating = false;
+                        if (!privating) Lss::SetColor(LowHighlight, LowHighlight);
+
+                        ImGui::PopStyleVar();
+                        Lss::End();
+                    ImGui::EndChild();
+
                     if (openExplorer2) Explorer::FileExplorerUI(&openExplorer2);
                     else if (wasOpenExplorer2) {
-                        wasOpenExplorer2 = false;
-                    }
-                    if (userImageTexture.GetId() > 0) Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
-                    ImVec2 buttonSize = ImVec2(100, 20);
-                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-                    if (Lss::Button("Add##addImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
-                    {
                         std::string imagePath = Explorer::GetImagePath();
                         if (imagePath.size() > 2) {
+                            userImageTexture.Init(imagePath);
+                        }
+                        wasOpenExplorer2 = false;
+                    }
+
+                    Lss::Top(Lss::VH);
+                    Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
+
+                    if (userImageTexture.GetId() > 0) {
+                        Lss::Top(2.5f * Lss::VH);
+                        int width, height;
+                        glGetTextureLevelParameteriv(userImageTexture.GetId(), 0, GL_TEXTURE_WIDTH, &width);
+                        glGetTextureLevelParameteriv(userImageTexture.GetId(), 0, GL_TEXTURE_HEIGHT, &height);
+                        float toPostRatio = (float)height / width;
+                        float widthOfImage = 25 * Lss::VW;
+                        float heightOfImage = widthOfImage * toPostRatio;
+                        ImVec2 start(0.0f, 0.0f);
+                        ImVec2 end(1.0f, 1.0f);
+                        float yPos = ImGui::GetCursorPosY();
+
+                        if (heightOfImage > 30 * Lss::VH) {
+                            float toVisualize = 30 * Lss::VH / heightOfImage;
+                            toVisualize = 1.0f - toVisualize;
+
+                            heightOfImage = 30 * Lss::VH;
+
+                            start.y = toVisualize / 4;
+                            end.y = 1.0f - (toVisualize / 4 * 3);
+                        }
+                        Lss::Image(userImageTexture.GetId(), ImVec2(widthOfImage, heightOfImage), Centered, start, end);
+                        ImVec2 originPos = ImGui::GetCursorPos();
+                        ImGui::SetCursorPos(ImVec2(26.5 * Lss::VW, yPos - Lss::VW));
+                        if (Lss::Button("X", ImVec2(2 * Lss::VW, 2 * Lss::VW), 2 * Lss::VW)) {
+                            MyTexture heo;
+                            userImageTexture = heo;
+                        }
+                        ImGui::SetCursorPos(originPos);
+                        Lss::Top(Lss::VH);
+                        Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
+                    }
+                    Lss::Top(Lss::VH);
+                    float endPos = ImGui::GetCursorPosY();
+                    
+                    ImVec2 buttonSize = ImVec2(valid.x, 4 * Lss::VH);
+                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                    if (Lss::Button("Add##addImage", buttonSize, 3 * Lss::VH, Centered | Rounded))
+                    {
+                        std::string imagePath = Explorer::GetImagePath();
+                        if (imagePath.size() > 2 && userImageTexture.GetId() > 0) {
                             nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 0);
                             if (!jsonData.is_null()) {
                                 imageUploadpen = false;
@@ -973,6 +1056,11 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         }
                     }
 
+                    imageAddY = endPos - startPos + buttonSize.y + 4*Lss::VH;
+                    if (imageAddY != imageAddYPrev) {
+                        imageAddYPrev = imageAddY;
+                        ImGui::CloseCurrentPopup();
+                    }
 
                     if (!openExplorer2 && ImGui::IsMouseClicked(0))
                     {

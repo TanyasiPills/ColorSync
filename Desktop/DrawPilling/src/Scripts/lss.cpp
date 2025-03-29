@@ -109,9 +109,15 @@ void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWind
 	if (flags & Rounded) {
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 	}
+	if (flags & Bordering) {
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, Lss::VH / 6);
+	}
 	if(size.x == 0 && size.y == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
 	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
 	if (flags & Rounded) {
+		ImGui::PopStyleVar();
+	}
+	if (flags & Bordering) {
 		ImGui::PopStyleVar();
 	}
 }
@@ -178,6 +184,7 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) 
 		ImGui::Image(texture, size, min, max);
 	}
 }
+
 bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags, int maxWidth, std::string hint) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 	if(!(flags & MultiLine))SetFontSize(size.y/2);
@@ -230,7 +237,6 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	}
 	return modified;
 }
-
 bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
