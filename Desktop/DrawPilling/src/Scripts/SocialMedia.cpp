@@ -779,6 +779,10 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     static bool imageUploadpen = false;
     static bool openExplorer2 = false;
     static bool wasOpenExplorer2 = false;
+    static int selectedImage = -1;
+    static bool imageViewOpen = false;
+    static bool prevImageViewOpen = false;
+    static ImVec2 imageViewSize;
 
     static std::string fileName;
 
@@ -1031,12 +1035,54 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                 }
                 ImGui::Image(userImages[i], ImVec2(xWidth, xWidth),ImVec2(shiftX, shiftY),ImVec2(1.0f-shiftX, 1.0f-shiftY));
 
+                if (ImGui::IsItemClicked()) {
+                    imageViewOpen = true;
+                    selectedImage = userImages[i];
+                    float max = 50 * Lss::VW;
+                    if (width > max) {
+                        float ratio = max / width;
+                        width = max;
+                        height *= ratio;
+                    }
+                    if (height > max) {
+                        float ratio = max / height;
+                        height = max;
+                        width *= ratio;
+                    }
+                    imageViewSize = ImVec2(width, height);
+                }
+
                 if ((i + 1) % 3 != 0)
                     ImGui::SameLine();
                 else {
                     Lss::Top(0.3f * Lss::VH);
                 }
             }
+
+            if (Lss::Modal("imageViewModal", &imageViewOpen, imageViewSize, Centered | Trans, ImGuiWindowFlags_NoDecoration))
+            {
+                ImVec2 valid = ImGui::GetContentRegionAvail();
+                Lss::Image(selectedImage, valid);
+
+                if (prevImageViewOpen && ImGui::IsMouseClicked(0))
+                {
+                    ImVec2 pos = ImGui::GetWindowPos();
+                    ImVec2 cursorPos = ImGui::GetMousePos();
+                    ImVec2 size = ImGui::GetWindowSize();
+                    if (!Lss::InBound(cursorPos, pos, size)) {
+                        imageViewOpen = false;
+                        selectedImage = -1;
+                        prevImageViewOpen = false;
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                if (imageViewOpen) prevImageViewOpen = true;
+
+                Lss::End();
+                ImGui::EndPopup();
+            }
+
 
             Lss::End();
         ImGui::EndChild();
