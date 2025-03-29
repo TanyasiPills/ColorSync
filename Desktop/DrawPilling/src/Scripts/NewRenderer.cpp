@@ -457,6 +457,8 @@ void RenderImGui(bool& onUIIn)
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
 	DrawUI::InitWindow();
+
+	DrawUI::DrawMenu();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius);
 	DrawUI::BrushWindow(window);

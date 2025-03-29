@@ -73,6 +73,8 @@ static const ImVec2 iconSize(50, 50);
 
 std::string savePath = "";
 
+float startPosY = 0.0f;
+
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 	std::cout << "Is online: " << isOnline << std::endl;
@@ -136,10 +138,60 @@ void DrawUI::SetColor(float* colorIn)
 	color[2] = colorIn[2];
 }
 
+void DrawUI::DrawMenu() {
+	Lss::SetFontSize(2 * Lss::VH);
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("New")) {
+				// Handle "New" action
+			}
+			if (ImGui::MenuItem("Open...")) {
+				// Handle "Open" action
+			}
+			if (ImGui::MenuItem("Save")) {
+				// Handle "Save" action
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit")) {
+				renderer->SwapView(isOnline);
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Edit")) {
+			if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+				// Handle Undo
+			}
+			if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+				// Handle Redo
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cut", "Ctrl+X")) {
+				// Handle Cut
+			}
+			if (ImGui::MenuItem("Copy", "Ctrl+C")) {
+				// Handle Copy
+			}
+			if (ImGui::MenuItem("Paste", "Ctrl+V")) {
+				// Handle Paste
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View")) {
+			bool showGrid = true;
+			ImGui::MenuItem("Show Grid", nullptr, &showGrid);
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
+}
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
-
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -265,7 +317,7 @@ void DrawUI::ServerWindow()
 {
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));

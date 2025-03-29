@@ -12,7 +12,10 @@
 #include "FIleExplorer.h"
 #include "LoginRegister.h"
 #include "SocksManager.h"
+#include <mutex>
 
+
+std::mutex postMutex;
 
 std::vector<Room> friendRooms;
 std::vector<Room> rooms = {
@@ -777,6 +780,14 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     static bool openExplorer2 = false;
     static bool wasOpenExplorer2 = false;
 
+    static std::string fileName;
+
+    if (users[user].bio.empty()) {
+        nlohmann::json result = HManager::Request(("users/" + std::to_string(user)).c_str(), "", GET);
+        if(!result["profile_description"].is_null())
+            users[user].bio = result["profile_description"];
+    }
+
     if (needImages) {
         std::thread(&SocialMedia::LoadProfile, user).detach();
         needImages = false;
@@ -788,23 +799,84 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (user == runtime.id) {
                 //pfp change
-                if (Lss::Modal("pfpChange", &imageEditOpen, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+                if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
                 {
                     ImVec2 valid = ImGui::GetContentRegionAvail();
-                    Lss::Text("Change your avatar", 4 * Lss::VH, Centered);
+                    float halfWidth = valid.x / 2;
+                    float halfWidthObj = halfWidth -2.4f * Lss::VW;
 
-                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                    ImVec2 def = ImGui::GetStyle().FramePadding;
+                    ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
+
+                    Lss::SetColor(ContainerBackground, LowHighlight);
+                    Lss::Child("##Postheader", ImVec2(valid.x, 7 * Lss::VH), false, Rounded);
+                    Lss::LeftTop(Lss::VW, Lss::VH);
+                    Lss::Text("Change your profile", 5 * Lss::VH);
+                    Lss::End();
+                    ImGui::EndChild();
+                    Lss::SetColor(ContainerBackground, ContainerBackground);
+                    ImGui::GetStyle().FramePadding = def;
+
+                    Lss::Top(0.2 * Lss::VH);
+                    Lss::Separator(1.0f, 30 * Lss::VW, 4, Centered);
+
+                    Lss::LeftTop(Lss::VW, Lss::VH);
+
+                    float yPos = ImGui::GetCursorPosY();
+                    Lss::Text("Profile Image", 2 * Lss::VH);
+                    ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
+                    Lss::Text("Username", 2 * Lss::VH);
+
+                    Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
+                    yPos = ImGui::GetCursorPosY();
+
+                    if (Lss::Button((fileName.empty()) ? "Select image file" : fileName, ImVec2(halfWidthObj, 4 * Lss::VH), 2 * Lss::VH, Rounded)) {
                         openExplorer = true;
                         wasOpenExplorer = true;
                     }
+
+                    ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
+                    static char usernameText[128] = "";
+                    if (usernameText[0] == '\0') std::strcpy(usernameText, runtime.username.c_str());
+                    Lss::InputText("usernameInput", usernameText, sizeof(usernameText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+
+                    Lss::LeftTop(Lss::VW, Lss::VH);
+
+                    yPos = ImGui::GetCursorPosY();
+                    Lss::Text("Email", 2 * Lss::VH);
+                    ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
+                    Lss::Text("Password", 2 * Lss::VH);
+
+                    Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
+                    yPos = ImGui::GetCursorPosY();
+
+                    static char emailText[128] = "";
+                    if (emailText[0] == '\0') std::strcpy(emailText, runtime.email.c_str());
+                    Lss::InputText("emailInput", emailText, sizeof(emailText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+
+                    ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
+                    static char passText[128] = "";
+                    if (passText[0] == '\0') std::strcpy(passText, runtime.password.c_str());
+                    Lss::InputText("passwordInput", passText, sizeof(passText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+
+                    Lss::LeftTop(Lss::VW, Lss::VH);
+;
+                    Lss::Text("Description", 2 * Lss::VH);
+                    static char detailText[1026] = "";
+                    if (detailText[0] == '\0') std::strcpy(detailText, users[user].bio.c_str());
+                    Lss::InputText("descriptionInput", detailText, sizeof(detailText), ImVec2(valid.x-2.8f*Lss::VW, 10 * Lss::VH), Centered | MultiLine | Rounded);
+
+
+                    /*
+                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
+                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
+                    }*/
 
                     if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
                     else if (wasOpenExplorer) {
                         std::string imagePath = Explorer::GetImagePath();
                         if (imagePath.size() > 2) {
                             userImageTexture.Init(imagePath);
-                            runtime.pfpTexture = userImageTexture.GetId();
                             wasOpenExplorer = false;
                         }
                         else {
@@ -812,23 +884,37 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         }
                     }
 
-                    if (userImageTexture.GetId() <= 0)
+                    if (userImageTexture.GetId() > 0)
                     {
-                        std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + " / pfp").c_str());
-                        float ratioStuff = 0.0f;
-                        runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioStuff);
+                        std::string imagePath = Explorer::GetImagePath();
+                        fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
                     }
-                    Lss::Image(runtime.pfpTexture, ImVec2(20 * Lss::VH, 20 * Lss::VH), Centered);
 
                     ImVec2 buttonSize = ImVec2(100, 20);
                     ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-                    if (Lss::Button("Modify##modifyImage", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+                    if (Lss::Button("Modify##modifyImage", ImVec2(valid.x, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
                     {
                         std::string imagePath = Explorer::GetImagePath();
-                        if (imagePath.size() > 2) {
-                            std::string fileName = imagePath.substr(imagePath.find_last_of('\\') + 1);
+                        if (userImageTexture.GetId() > 0) {
                             nlohmann::json jsonData = HManager::ImageUploadRequest(imagePath, 1);
-                            if (!jsonData.is_null()) imageEditOpen = false;
+                            if (!jsonData.is_null()) {
+                                imageEditOpen = false;
+                                runtime.pfpTexture = userImageTexture.GetId();
+                            }
+                        }
+                        nlohmann::json userPatch;
+                        if (runtime.username != usernameText) userPatch["username"] = usernameText;
+                        if (runtime.email != emailText) userPatch["email"] = emailText;
+                        if (runtime.password != passText) userPatch["password"] = passText;
+                        if (!userPatch.empty()) {
+                            HManager::Request("users", userPatch.dump(), PATCH);
+                            if (!userPatch.is_null()) {
+                                std::cout << "patched" << std::endl;
+                            }
+
+                        }
+                        else {
+                            std::cout << "did not sent" << std::endl;
                         }
                     }
 
@@ -840,6 +926,12 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         ImVec2 size = ImGui::GetWindowSize();
                         if (!Lss::InBound(cursorPos, pos, size)) {
                             imageEditOpen = false;
+
+                            usernameText[0] = '\0';
+                            emailText[0] = '\0';
+                            passText[0] = '\0';
+                            detailText[0] = '\0';
+
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -907,12 +999,17 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
 
             if (user == runtime.id) {
                 ImGui::SameLine();
-                Lss::LeftTop(10 * Lss::VH, 7.5 * Lss::VH);
-                if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH))
+                float availForButton = ImGui::GetContentRegionAvail().x;
+                Lss::SetFontSize(4 * Lss::VH);
+                float buttonSize = ImGui::CalcTextSize("Add image").x+ 3*Lss::VW;
+                Lss::LeftTop(availForButton-buttonSize, 7.5 * Lss::VH);
+                if (Lss::Button("Add image", ImVec2(20 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH,Rounded))
                 {
                     imageUploadpen = true;
                 }
             }
+            Lss::LeftTop(2*Lss::VW,2*Lss::VH);
+            Lss::Text(users[user].bio, 2 * Lss::VH);
 
             Lss::Top(2 * Lss::VH);
             Lss::Separator(2.0f);
@@ -937,6 +1034,9 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
 
                 if ((i + 1) % 3 != 0)
                     ImGui::SameLine();
+                else {
+                    Lss::Top(0.3f * Lss::VH);
+                }
             }
 
             Lss::End();
@@ -1388,8 +1488,8 @@ void SocialMedia::RoomPage(float& width, float& height)
             room["width"] = std::to_string(width);
             room["height"] = std::to_string(height);
             SManager::SetCanvasSize(width, height);
-            std::vector<RoomUser>* users = SManager::GetUsers();
-            users->emplace_back(runtime.id, runtime.username, true);
+            std::vector<RoomUser>* roomyUsers = SManager::GetUsers();
+            roomyUsers->emplace_back(runtime.id, runtime.username, true);
             SManager::SetMyOwnerState(true);
             SManager::Connect(runtime.ip.c_str(), header, room);
             Callback::EditorSwapCallBack(true);
@@ -1501,7 +1601,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
     ImGui::GetStyle().WindowBorderSize = 0.0f;
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
-    Lss::SetColor(Background, ContainerBackground);
+    //Lss::SetColor(Background, ContainerBackground);
     ImGui::Begin("Main Feed", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     switch (mode)
     {
@@ -1714,12 +1814,21 @@ void SocialMedia::LoadImages()
 
 void SocialMedia::LoadDependencies(Post& post, int index) 
 {
-    LoadImageJa(post.userId, 2);
 
-    for (Comment comment : post.comments) {
-        LoadImageJa(comment.userId, 2);
+    LoadImageJa(post.userId, 2);
+    try {
+        std::unique_lock<std::mutex> lock(postMutex);
+        std::vector<Comment> commentsHere = post.comments;
+        lock.unlock();
+        for (Comment comment : commentsHere) {
+            LoadImageJa(comment.userId, 2);
+        }
     }
-    if(post.imageId != -1) LoadImageJa(post.imageId, 1, index);
+    catch (...)
+    {
+        std::cerr << "error while loading commnents" << std::endl;
+    }
+    if (post.imageId != -1) LoadImageJa(post.imageId, 1, index);
     else post.picLoaded = true;
 }
 

@@ -12,6 +12,8 @@ class DrawUI
 private:
 
 public:
+    static void DrawMenu();
+
     static void ColorWindow(RenderData& cursor);
     static void SizeWindow(float& cursorRadius);
     static void BrushWindow(GLFWwindow* window);

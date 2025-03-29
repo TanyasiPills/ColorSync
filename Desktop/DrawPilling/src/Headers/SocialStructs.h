@@ -38,6 +38,7 @@ struct User
 {
 	std::string username;
 	GLuint userImage = -1;
+	std::string bio;
 	bool pPicLoaded = false;
 };
 

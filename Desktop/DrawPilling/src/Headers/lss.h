@@ -14,7 +14,8 @@ enum CSS {
 	Rounded = 1 << 2,
 	Trans = 1 << 3,
 	SameLine = 1 << 4,
-	Bordering = 1 << 5
+	Bordering = 1 << 5,
+	MultiLine = 1 << 6
 };
 
 enum Colors {
