@@ -24,10 +24,11 @@ void SetStringValue(char* dest, const char* value, size_t size) {
     dest[size - 1] = '\0';
 }
 
-void SetAppDataData(ApplicationData& data, std::string nameIn, std::string tokenIn, std::string ipIn) {
+void SetAppDataData(ApplicationData& data, std::string nameIn, std::string tokenIn, std::string ipIn, std::string passIn) {
     SetStringValue(data.name, nameIn.c_str(), sizeof(data.name));
     SetStringValue(data.token, tokenIn.c_str(), sizeof(data.token));
     SetStringValue(data.ip, ipIn.c_str(), sizeof(data.ip));
+    SetStringValue(data.passWord, passIn.c_str(), sizeof(data.passWord));
 }
 
 void SaveAppDataData(const ApplicationData& data, const std::string& filename) {
@@ -43,6 +44,7 @@ ApplicationData LoadAppDataData(const std::string& filename) {
         data.name[0] = '\0';
         data.token[0] = '\0';
         data.ip[0] = '\0';
+        data.passWord[0] = '\0';
     }
     return data;
 }
@@ -55,12 +57,13 @@ void DataManager::LoadAppData()
     runtime.ip = appdata.ip;
     runtime.username = appdata.name;
     runtime.token = appdata.token;
+    runtime.password = appdata.passWord;
 }
 
 void DataManager::SaveAppData()
 {   
     auto& runtime = RuntimeData::getInstance();
-    SetAppDataData(appdata, runtime.username, runtime.token, runtime.ip);
+    SetAppDataData(appdata, runtime.username, runtime.token, runtime.ip, runtime.password);
     SaveAppDataData(appdata, "appdata.bin");
 }
 

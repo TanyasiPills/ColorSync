@@ -19,6 +19,7 @@ struct ApplicationData {
     char token[256];
     char name[25];
     char ip[100];
+    char passWord[1024];
 };
 
 class DataManager

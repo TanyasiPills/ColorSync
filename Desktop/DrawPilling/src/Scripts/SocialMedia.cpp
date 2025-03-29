@@ -142,7 +142,7 @@ void SocialMedia::GetPostForSearch(const int& postId)
         std::cerr << "search request failed" << std::endl;
     }
     else {
-        searchedPost = Post();
+        Post searchedPost;
 		std::cout << "1" << std::endl;
         searchedPost.id = result["id"];
         std::cout << "id: " << searchedPost.id << std::endl;
@@ -867,11 +867,6 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     Lss::InputText("descriptionInput", detailText, sizeof(detailText), ImVec2(valid.x-2.8f*Lss::VW, 10 * Lss::VH), Centered | MultiLine | Rounded);
 
 
-                    /*
-                    ImVec2 addFileButton = ImVec2(12 * Lss::VH, 4 * Lss::VH);
-                    if (Lss::Button("Add File", addFileButton, 4 * Lss::VH, Centered)) {
-                    }*/
-
                     if (openExplorer) Explorer::FileExplorerUI(&openExplorer);
                     else if (wasOpenExplorer) {
                         std::string imagePath = Explorer::GetImagePath();
@@ -906,12 +901,16 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         if (runtime.username != usernameText) userPatch["username"] = usernameText;
                         if (runtime.email != emailText) userPatch["email"] = emailText;
                         if (runtime.password != passText) userPatch["password"] = passText;
+                        if (users[user].bio != detailText) userPatch["profile_description"] = detailText;
                         if (!userPatch.empty()) {
                             HManager::Request("users", userPatch.dump(), PATCH);
                             if (!userPatch.is_null()) {
                                 std::cout << "patched" << std::endl;
+                                if (runtime.username != usernameText) runtime.username = usernameText;
+                                if (runtime.email != emailText) runtime.email = emailText;
+                                if (runtime.password != passText) runtime.password = passText;
+                                if (users[user].bio != detailText) users[user].bio = "";
                             }
-
                         }
                         else {
                             std::cout << "did not sent" << std::endl;
@@ -1652,14 +1651,8 @@ void SocialMedia::LeftSide(float position, float width, float height)
     }
     Lss::Top(2 * Lss::VH);
     ImGui::Separator();
-    if (runtime.logedIn) {
-        Lss::Top(2 * Lss::VH);
-        if (Lss::Button("Message", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            //GetPosts();
-        }
-    }
 
-    Lss::Top(1 * Lss::VH);
+    Lss::Top(2 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
         else {
