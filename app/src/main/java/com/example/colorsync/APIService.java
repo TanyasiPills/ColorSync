@@ -2,6 +2,7 @@ package com.example.colorsync;
 
 import com.example.colorsync.DataTypes.Comment;
 import com.example.colorsync.DataTypes.CreateComment;
+import com.example.colorsync.DataTypes.IdType;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.LoginRequest;
 import com.example.colorsync.DataTypes.Post;
@@ -69,4 +70,11 @@ public interface APIService {
     @GET("images")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token);
 
+    @Multipart
+    @POST("images")
+    Call<IdType> uploadImage(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part file,
+            @Part("visibility") RequestBody text
+    );
 }

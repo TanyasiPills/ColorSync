@@ -153,7 +153,7 @@ public class HomeFragment extends Fragment {
 
         post_images = view.findViewById(R.id.post_images);
         post_images.setVisibility(View.GONE);
-        post_adapter = new ImageSelectionGrid(post_uris, post_userImages, this::uriClickHandler, this::dataClickHandler);
+        post_adapter = new ImageSelectionGrid(post_uris, post_userImages, this::uriClickHandler, this::dataClickHandler, 50);
         post_images.setAdapter(post_adapter);
         post_images.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 

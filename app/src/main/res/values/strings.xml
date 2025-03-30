@@ -27,4 +27,6 @@
     <string name="remove_tagCD">remove tag</string>
     <string name="uploadImageCD">Upload image</string>
     <string name="uploadText">Upload a image</string>
+    <string name="publicText">Public</string>
+    <string name="uploadButtonText">Upload</string>
 </resources>

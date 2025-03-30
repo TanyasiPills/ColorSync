@@ -1,11 +1,13 @@
 package com.example.colorsync;
 
 import android.net.Uri;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -24,12 +26,14 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
     private Function<Uri, Void> uriClickHandler;
     private Function<ImageData, Void> dataClickHandler;
     public long selected;
+    private int padding;
 
-    public ImageSelectionGrid(List<Uri> imageUriLIst, List<ImageData> imageDataList, Function<Uri, Void> uriClickHandler, Function<ImageData, Void> dataClickHandler ) {
+    public ImageSelectionGrid(List<Uri> imageUriLIst, List<ImageData> imageDataList, Function<Uri, Void> uriClickHandler, Function<ImageData, Void> dataClickHandler, int padding) {
         this.imageUriLIst = imageUriLIst;
         this.imageDataList = imageDataList;
         this.uriClickHandler = uriClickHandler;
         this.dataClickHandler = dataClickHandler;
+        this.padding = padding;
         uri = true;
         selected = -1;
     }
@@ -64,13 +68,17 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
         public Uri uri;
         public ImageData imageData;
 
-        public ImageViewHolder(View itemView) {
+        public ImageViewHolder(View itemView, int padding) {
             super(itemView);
             imageView = itemView.findViewById(R.id.image);
             imageLayout = itemView.findViewById(R.id.imageLayout);
+            setImageSize(padding);
+        }
+
+        public void setImageSize(int padding) {
             ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
             int size = (int) ((imageView.getContext().getResources().getDisplayMetrics().widthPixels / 2.0) -
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, imageView.getContext().getResources().getDisplayMetrics()));
+                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, padding, imageView.getContext().getResources().getDisplayMetrics()));
             layoutParams.width = size;
             layoutParams.height = size;
             imageView.setLayoutParams(layoutParams);
@@ -120,7 +128,7 @@ public class ImageSelectionGrid extends  RecyclerView.Adapter<ImageSelectionGrid
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.image_item, parent, false);
-        return new ImageViewHolder(itemView);
+        return new ImageViewHolder(itemView, this.padding);
     }
 
     @Override

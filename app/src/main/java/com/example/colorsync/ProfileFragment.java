@@ -9,7 +9,6 @@ import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
@@ -24,19 +23,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.colorsync.DataTypes.IdType;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.User;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -53,7 +60,7 @@ public class ProfileFragment extends Fragment {
     private boolean loaded = false;
 
     private ConstraintLayout mainConstraint;
-    private ImageButton uploadButton;
+    private ImageButton uploadOpenButton;
     private RecyclerView uploadImages;
     private ConstraintLayout uploadConstraint;
     private boolean isUploadOpen;
@@ -61,6 +68,8 @@ public class ProfileFragment extends Fragment {
     private Cursor cursor;
     private List<Uri> uris;
     private ImageSelectionGrid uploadAdapter;
+    private CheckBox uploadCheckbox;
+    private Button uploadButton;
 
     private Uri selected;
 
@@ -107,10 +116,12 @@ public class ProfileFragment extends Fragment {
         username = view.findViewById(R.id.username);
         profilePicture = view.findViewById(R.id.profilePicture);
         description = view.findViewById(R.id.description);
-        uploadButton = view.findViewById(R.id.uploadButton);
+        uploadOpenButton = view.findViewById(R.id.uploadOpenButton);
         uploadImages = view.findViewById(R.id.uploadImages);
         uploadConstraint = view.findViewById(R.id.uploadConstraint);
         mainConstraint = view.findViewById(R.id.profileConstraint);
+        uploadCheckbox = view.findViewById(R.id.uploadCheckbox);
+        uploadButton = view.findViewById(R.id.uploadButton);
 
         isUploadOpen = false;
         isLoadingUris = false;
@@ -121,11 +132,11 @@ public class ProfileFragment extends Fragment {
         imagesContainer.setAdapter(adapter);
         imagesContainer.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        uploadAdapter = new ImageSelectionGrid(uris, null, this::uriClickHandler, null);
+        uploadAdapter = new ImageSelectionGrid(uris, null, this::uriClickHandler, null, 50);
         uploadImages.setAdapter(uploadAdapter);
         uploadImages.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        uploadButton.setOnClickListener(v -> {
+        uploadOpenButton.setOnClickListener(v -> {
             if (isUploadOpen) upload();
             else uploadOpen();
         });
@@ -160,7 +171,46 @@ public class ProfileFragment extends Fragment {
     }
 
     private void upload() {
+        if (selected == null) {
+            Toast.makeText(requireContext(), "No image selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        File file;
+        try {
+            file = FileUtils.getFileFromUri(getContext(), selected);
+        } catch (IOException e) {
+            new android.app.AlertDialog.Builder(getContext())
+                    .setTitle("Failed to upload image")
+                    .setPositiveButton("OK", null)
+                    .show();
+            throw new RuntimeException(e);
+        }
+        RequestBody fileRequest = RequestBody.create(MediaType.parse("image/*"), file);
+        MultipartBody.Part fileBody = MultipartBody.Part.createFormData("file", file.getName(), fileRequest);
+        RequestBody visibilityRequest = RequestBody.create(MediaType.parse("text/plain"), "public");
+        MainActivity.getApi().uploadImage(UserManager.getBearer(), fileBody, visibilityRequest).enqueue(new Callback<IdType>() {
+            @Override
+            public void onResponse(Call<IdType> call, Response<IdType> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Toast.makeText(requireContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
+                    loadImages();
+                    uploadOpen();
+                } else new AlertDialog.Builder(requireContext())
+                        .setTitle("Failed to upload image")
+                        .setMessage(response.message())
+                        .setPositiveButton("OK", null)
+                        .show();
+            }
 
+            @Override
+            public void onFailure(Call<IdType> call, Throwable throwable) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Failed to upload image")
+                        .setMessage(throwable.getMessage())
+                        .setPositiveButton("OK", null)
+                        .show();
+            }
+        });
     }
 
     private void load() {
@@ -222,9 +272,15 @@ public class ProfileFragment extends Fragment {
 
         open.setVisibility(R.id.uploadText, View.VISIBLE);
         open.setVisibility(R.id.uploadImages, View.VISIBLE);
+        open.setVisibility(R.id.uploadPublicText, View.VISIBLE);
+        open.setVisibility(R.id.uploadCheckbox, View.VISIBLE);
+        open.setVisibility(R.id.uploadCancel, View.VISIBLE);
+        open.setVisibility(R.id.uploadOpenButton, View.VISIBLE);
 
         closed.setVisibility(R.id.uploadText, View.GONE);
         closed.setVisibility(R.id.uploadImages, View.GONE);
+        closed.setVisibility(R.id.uploadPublicText, View.GONE);
+        closed.setVisibility(R.id.uploadCheckbox, View.GONE);
 
         ConstraintSet closedMain = new ConstraintSet();
         closedMain.clone(mainConstraint);
