@@ -431,39 +431,47 @@ void SocialMedia::MainPage(float& width, float& height)
                     myComment.text = text;
                     myComment.id = result["id"];
                     myComment.userId = runtime.id;
-                    post.comments.emplace_back(myComment);
+                    post.comments.push_back(myComment);
+                    post.needChange = true;
                 }
             }
         }
         
         if (post.openComments) {
+            Lss::Text("Comments", 3 * Lss::VH);
             if (!post.comments.empty()) {
                 ImVec2 commentChildSize;
                 if (post.comments.size() == 1) {
                     commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
                 }
                 else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
-                ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
 
-                for (Comment& comment : post.comments)
+                Lss::SetColor(ContainerBackground, Background);
+                Lss::Child("CommentsRegion", commentChildSize, false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+                for (auto it = post.comments.rbegin(); it != post.comments.rend(); ++it)
                 {
+                    Comment& comment = *it;
                     if (!users[comment.userId].pPicLoaded) continue;
 
-                    Lss::SetColor(ContainerBackground, Background);
+                    Lss::SetColor(ContainerBackground, LowHighlight);
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 
                     std::string name = std::to_string(comment.id);
-                    Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+                    Lss::Child(name, ImVec2(0, 8.5 * Lss::VH));
 
                     Lss::LeftTop(Lss::VH, Lss::VH);
                     Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
 
                     ImGui::SameLine();
-                    Lss::Top(Lss::VH);
-                    Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+                    ImVec2 currentCursor = ImGui::GetCursorPos();
 
-                    Lss::Left(7 * Lss::VH);
-                    Lss::Text(comment.text, 3 * Lss::VH);
+                    Lss::Text(users[comment.userId].username, 3.5f * Lss::VH);
+
+                    currentCursor.x += Lss::VH;
+                    currentCursor.y += 3 * Lss::VH;
+                    ImGui::SetCursorPos(currentCursor);
+                    Lss::Text(comment.text, 2.5f * Lss::VH);
 
                     Lss::End();
 
@@ -472,8 +480,10 @@ void SocialMedia::MainPage(float& width, float& height)
                     ImGui::PopStyleVar(1);
                     Lss::SetColor(ContainerBackground, ContainerBackground);
 
-                    if (post.comments[post.comments.size() - 1].id != comment.id) {
-                        Lss::Top(Lss::VH);
+                    Lss::Top(0.25f*Lss::VH);
+                    if (post.comments[0].id != comment.id) {
+                        Lss::Separator();
+                        Lss::Top(0.25f * Lss::VH);
                     }
                 }
 
