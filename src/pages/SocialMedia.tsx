@@ -227,7 +227,7 @@ export function SocialMedia() {
                     </Col>
                   </Row>
                 </Card.Body>
-                {post.imageId && <Card.Img variant="top" src={`${backendIp}/images/${post.imageId}`} alt="Post Image" />}
+                {post.imageId && <Card.Img variant="top" className="postImg" src={`${backendIp}/images/${post.imageId}`} alt="Post Image" />}
                 <div className="tagsConatiner">
                   {post.tags.length > 0 && post.tags.map((tag) => (
                     <div className="tags">#{tag}</div>

@@ -1,15 +1,16 @@
 import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import '../css/Navbar.css';
+import '../css/TopNavbar.css';
 import Cookies from 'universal-cookie';
 import { useState } from 'react';
-import { SignIn } from '../pages/modals/SignIn';
-import { SignUp } from '../pages/modals/SignUp';
+//import { SignIn } from '../pages/modals/SignIn';
+//import { SignUp } from '../pages/modals/SignUp';
+import { SignInAndUp } from '../pages/modals/SignIn&Up';
 
-export function NavBar() {
+export function TopNavbar() {
   const cookies = new Cookies();
   const thisUser = cookies.get("AccessToken");
-  const [showLogin, setShowLogin] = useState<boolean>(false);
-  const [showRegister, setShowRegister] = useState<boolean>(false);
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [show, setShow] = useState<boolean>(false);
 
 
 
@@ -43,8 +44,8 @@ export function NavBar() {
                     <NavDropdown.Item href={"/Profile"}>Profile</NavDropdown.Item>
                     <NavDropdown.Item onClick={signOut}>Sign out</NavDropdown.Item>
                   </> : <>
-                    <NavDropdown.Item onClick={() => setShowLogin(true)}>Sign In</NavDropdown.Item>
-                    <NavDropdown.Item onClick={() => setShowRegister(true)}>Sign Up</NavDropdown.Item>
+                    <NavDropdown.Item onClick={() => {setIsSignUp(false); setShow(true);}}>Sign In</NavDropdown.Item>
+                    <NavDropdown.Item onClick={() => {setIsSignUp(true); setShow(true);}}>Sign Up</NavDropdown.Item>
                   </>}
 
               </NavDropdown>
@@ -52,8 +53,7 @@ export function NavBar() {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      <SignIn show={showLogin} onHide={() => setShowLogin(false)} />
-      <SignUp show={showRegister} onHide={() => setShowRegister(false)} />
+      <SignInAndUp show={show} onHide={() => setShow(false)} defaultToSignUp={isSignUp} />
     </>
   );
 }

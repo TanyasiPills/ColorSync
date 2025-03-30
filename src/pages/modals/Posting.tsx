@@ -106,6 +106,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
+              
               <ListGroup className="mt-3" horizontal id='tagsList'>
                 {tags.map((tag, index) => (
                   <ListGroup.Item key={index} className='tagsList' onClick={() => deleteTag(index)}>
@@ -119,6 +120,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
                   </ListGroup.Item>
                 ))}
               </ListGroup>
+
               <Row>
                 <Col>
                   <Form.Group>

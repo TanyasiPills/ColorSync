@@ -166,6 +166,10 @@ export function useColorWheel() {
     return { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos };
 }
 
+export function useColorPicker(){
+
+}
+
 export class useRender {
     private gl: WebGL2RenderingContext;
     private prevCursorPos: [number, number] = [0, 0];
@@ -189,18 +193,18 @@ export class useRender {
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
         this.setupCanvasListeners();
-    }
-   
-    private setupCanvasListeners() {
+      }
+       
+      private setupCanvasListeners() {
         if (this.canvasRef.current) {
-            this.canvasRef.current.addEventListener("mouseenter", this.handleMouseEnter);
-            this.canvasRef.current.addEventListener("mouseleave", this.handleMouseLeave);
-            this.canvasRef.current.addEventListener("wheel", this.handleWheel);
-            this.canvasRef.current.addEventListener("mousemove", this.handleMouseMove);
-            this.canvasRef.current.addEventListener("mousedown", this.handleMouseDown);
-            this.canvasRef.current.addEventListener("mouseup", this.handleMouseUp);
+          this.canvasRef.current.addEventListener("mouseenter", this.handleMouseEnter);
+          this.canvasRef.current.addEventListener("mouseleave", this.handleMouseLeave);
+          this.canvasRef.current.addEventListener("wheel", this.handleWheel);
+          this.canvasRef.current.addEventListener("mousemove", this.handleMouseMove);
+          this.canvasRef.current.addEventListener("mousedown", this.handleMouseDown);
+          this.canvasRef.current.addEventListener("mouseup", this.handleMouseUp);
         }
-    }
+      }
    
     private handleMouseEnter = () => {
         this.mouseIn = true;
@@ -257,12 +261,26 @@ export class useRender {
    
     public framebufferSizeCallback(width: number, height: number): void {
         this.gl.viewport(0, 0, width, height);
+        this.render.clear();
+        const x: number = this.originalSizeX / width;
+        const y: number = this.originalSizeY / height;
+        if (this.screenW != width) {
+            const xOffset: number = ((width - this.screenW) / this.screenW) * x;
+            this.offset[0] -= xOffset;
+        }
+        if (this.screenH != height) {
+            const yOffset: number = ((width - this.screenH) / this.screenH) * y;
+            this.offset[1] += yOffset;
+        }
+
         this.screenW = width;
         this.screenH = height;
-        this.render.onResize();
+        
+        this.render.onResize(x, y, this.offset, this.yRatio);
+        this.render.render();
     }
    
-    private handleCanvasMovement(event: MouseEvent): void {
+    public handleCanvasMovement(event: MouseEvent): void {
         if (this.moveCanvas && this.canvasRef.current) {
             const deltaX = (event.clientX - this.prevCursorPos[0]) / this.screenW;
             const deltaY = (event.clientY - this.prevCursorPos[1]) / this.screenH;
@@ -288,20 +306,13 @@ export class useRender {
         }
     }
 
-    private updateMarkerPosition(marker: HTMLElement, x: number, y: number): void {
+    public updateMarkerPosition(marker: HTMLElement, x: number, y: number): void {
         if (marker) {
             marker.style.left = `${x}px`;
             marker.style.top = `${y}px`;
         }
     }
        
-   
-    public onResize(width: number, height: number): void {
-        this.gl.viewport(0, 0, width, height);
-        this.render.onResize();
-        this.screenW = width;
-        this.screenH = height;
-    }
    
     public cleanup() {
         const canvas = this.canvasRef.current;

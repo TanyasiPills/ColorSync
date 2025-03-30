@@ -39,8 +39,3 @@ export interface modalProp {
     show: boolean;
     onHide: () => void;
 }
-
-export interface colorData {
-    currentRGB: string;
-    colorPickedRGB: string;
-}

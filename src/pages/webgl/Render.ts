@@ -66,13 +66,15 @@ export class Render {
     private prevPos: [number, number];
     private prevPrevPos: [number, number];
     private canvasSize: [number, number];
+
     private color: [number, number, number];
-    
+    private sentBrushSize: number;
+    private sentOffset: [number, number];
 
     //Nézd át Matyi mit ad hozzá
 
     private drawing: Drawing | null;
-    private callBack: useRender | null;    
+    private callBack: useRender | null;
 
     public brushes: RenderData[] = [];
     public usersToMove: Map<number, UserMoveMessage> = new Map();
@@ -108,7 +110,23 @@ export class Render {
         this.prevPos = [0, 0];
         this.prevPrevPos = [0, 0];
         this.canvasSize = [1, 1];
-        this.color = [0, 0, 0];
+
+
+        const rgbString = localStorage.getItem("currentRGB");
+        if (rgbString) {
+            const matches = rgbString.match(/^rgb\((\d+), (\d+), (\d+)\)$/);
+            if (matches) {
+                this.color = [Number(matches[1]), Number(matches[2]), Number(matches[3])];
+            } else {
+                console.error("Invalid RGB format");
+                this.color = [0, 0, 0];
+            }
+        }
+        else {
+            this.color = [0, 0, 0];
+        }
+
+        localStorage.setItem("currentRGB", `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`);
     }
 
     setDrawData(canvasWIn: number, canvasHIn: number): void {
@@ -129,6 +147,12 @@ export class Render {
         this.initLayers(canvasData);
 
         this.inited = true;
+    }
+
+    setEmptyDrawData(): void {
+        this.sentBrushSize = this.cursorRadius;
+        this.sentOffset[0] = this.offset[0];
+        this.sentOffset[1] = this.offset[1];
     }
 
     initBrushes(): void {
@@ -214,7 +238,7 @@ export class Render {
         this.cursorRadius *= scale;
     }
 
-    onResize(x: number, y: number, offsetIn: Float32Array, yRatio: number): void {
+    onResize(x: number, y: number, offsetIn: [number, number], yRatio: number): void {
         this.cursorScale[0] = x;
         this.cursorScale[1] = y * yRatio;
         this.canvasRatio[0] = x * this.initialCanvasRatio[0];
@@ -275,7 +299,7 @@ export class Render {
                     this.prevPrevPos[1] = this.prevPos[1];
                     this.prevPos[0] = pos[0];
                     this.prevPos[1] = pos[1];
-                } break;                
+                } break;
 
                 case 1: { // erase
                     // Implementation needed
@@ -294,12 +318,16 @@ export class Render {
 
     }
 
-    draw(data: RenderData): void {
-        // Implement drawing logic
+    clear(): void {
+        this.gl.clearColor(0.188, 0.188, 0.313, 0);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     }
 
-    clear(): void {
-        // Implement clearing logic
+    draw(data: RenderData): void {
+        data.va.bind();
+        data.shader.bind();
+        data.texture.bind();
+        this.gl.drawElements(this.gl.TRIANGLES, data.ib.getCount(), this.gl.UNSIGNED_INT, 0);
     }
 
     render(): void {
@@ -307,68 +335,92 @@ export class Render {
     }
 
     renderLayers(): void {
-        // Implement layer rendering logic
+        for (let item of this.layers) {
+            const layer: Layer = this.nodes.get(item) as Layer;
+            if (layer.visible) {
+                this.draw(layer.data);
+            }
+        }
     }
 
     renderCursor(): void {
-        // Implement cursor rendering logic
+        let now: [number, number];
+        if (this.callBack) {
+            now = this.callBack.cursorPosition();
+        }
+        else {
+            now = [0, 0]
+        }
+        this.drawing?.brushToPosition(this.cursor, this.cursorRadius, this.identityRatio, this.identityOffset, this.cursorScale, now);
+        this.draw(this.cursor);
     }
 
-
-    setColor(color: Float32Array): void {
-        // Implement color setting logic
-    }
 
     renderDrawMessage(drawMessage: DrawMessage): void {
-        // Implement rendering logic for draw messages
-    }
+        try {
+            const node = this.nodes.get(this.currentNode);
+            if (node instanceof Layer) {
+                const layer = node.data;
+                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, layer.fbo);
+                this.gl.viewport(0, 0, this.canvasSize[0], this.canvasSize[1]);
+                this.cursor.shader.setUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
+                const offsetReceive: [number, number] = drawMessage.offset;
+                const canvasRatioReceive: [number, number] = drawMessage.ratio;
+                const offset: [number, number]  = offsetReceive;
+                const radius: number = drawMessage.size;
+                for (let index = 0; index < array.length; index++) {
+                    const element = array[index];
+                    
+                }
+            }
+        }
 
     sendDraw(): void {
-        // Implement sending draw data
-    }
-
-    sendLayerRename(name: string, location: number): void {
-        // Implement renaming layer logic
-    }
-
-    getParent(id: number): number {
-        for (const foldrIndex of this.folders) {
-            Folder
+            // Implement sending draw data
         }
-        return -1;
-    }
 
-    createLayer(parent: number): number {
-        return -1;
-    }
+        sendLayerRename(name: string, location: number): void {
+            // Implement renaming layer logic
+        }
 
-    createFolder(parent: number): number {
-        return -1;
-    }
+        getParent(id: number): number {
+            for (const foldrIndex of this.folders) {
+                Folder
+            }
+            return -1;
+        }
 
-    removeLayer(index: number): void {
-        // Implement removing layer logic
-    }
+        createLayer(parent: number): number {
+            return -1;
+        }
 
-    removeFolder(index: number): void {
-        // Implement removing folder logic
-    }
+        createFolder(parent: number): number {
+            return -1;
+        }
 
-    changeBrush(index: number): void {
-        // Implement brush change logic
-    }
+        removeLayer(index: number): void {
+            // Implement removing layer logic
+        }
 
-    setOnline(value: boolean): void {
-        this.online = value;
-    }
+        removeFolder(index: number): void {
+            // Implement removing folder logic
+        }
 
-    getOnline(): boolean {
-        return this.online;
-    }
+        changeBrush(index: number): void {
+            // Implement brush change logic
+        }
 
-    processTasks(): void {
-        let task: DrawMessage | null;
-        while ((task = this.taskQueue.pop()) !== null) {
+        setOnline(value: boolean): void {
+            this.online = value;
+        }
+
+        getOnline(): boolean {
+            return this.online;
+        }
+
+        processTasks(): void {
+            let task: DrawMessage | null;
+            while((task = this.taskQueue.pop()) !== null) {
             this.renderDrawMessage(task);
         }
     }
