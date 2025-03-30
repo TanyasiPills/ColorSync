@@ -296,6 +296,7 @@ void SocialMedia::MainPage(float& width, float& height)
 
     }
 
+    Lss::Top(2 * Lss::VH);
     for (Post& post : posts)
     {
         if (!post.allLoaded) {
@@ -307,7 +308,7 @@ void SocialMedia::MainPage(float& width, float& height)
         std::string id = std::to_string(post.id);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
         Lss::SetColor(ContainerBackground, Background);
-        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered | Rounded, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered | Rounded | Bordering, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         Lss::SetColor(ContainerBackground, ContainerBackground);
         ImGui::PopStyleVar();
         if (post.needChange) {
@@ -315,44 +316,64 @@ void SocialMedia::MainPage(float& width, float& height)
             needChange = true;
         }
 
-        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded | Bordering);
 
         ImGui::SameLine();
         Lss::Top(2 * Lss::VH);
         Lss::Text(users[post.userId].username, 4 * Lss::VH);
 
         Lss::Left(3.5f * Lss::VH);
-        Lss::Text(post.text, 4 * Lss::VH);
+        Lss::Text(post.text, 3 * Lss::VH);
 
         float good = validWidth * 0.9f;
         ImVec2 faki(good, good * post.ratio);
-        Lss::Image(post.image, faki, Centered);
 
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-        Lss::Left(3.5f * Lss::VH);
-        for (const auto& tags : post.tags)
-        {
-            Lss::SetFontSize(3 * Lss::VH);
-            Lss::SetColor(ContainerBackground, Background);
-            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
-            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
-            Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+        if (post.image != -1) {
+            Lss::Child("imageFor" + id, faki, true, Bordering | Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            ImGui::SetCursorPos(ImVec2(0, 0));
+            Lss::Image(post.image, faki, Centered);
             Lss::End();
             ImGui::EndChild();
-            Lss::SetColor(ContainerBackground, ContainerBackground);
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        Lss::LeftTop(3.5f * Lss::VH, 0.5f*Lss::VH);
+        float commentMax = validWidth - 7 * Lss::VH;
+        float commentSize = 0.0f;
+        for (const auto& tags : post.tags)
+        {
+            Lss::SetFontSize(2.5f * Lss::VH);
+            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+            if (tagWidth + commentSize > commentMax) {
+                ImGui::NewLine();
+                Lss::Left(3.5f * Lss::VH);
+                commentSize = 0.0f;
+            }
+            commentSize += tagWidth;
+            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+                Lss::Text("#" + tags, 2.5f * Lss::VH, Centered);
+                Lss::End();
+            ImGui::EndChild();
             ImGui::SameLine();
         }
         ImGui::NewLine();
         ImGui::PopStyleVar();
 
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Separator(2);
+
         static bool likeHovered = false;
         static bool commentHovered = false;
 
+        float widthForButtons = ImGui::GetContentRegionAvail().x;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
         bool contains = (runtime.liked.find(post.id) != runtime.liked.end());
         if (post.likeHovered) Lss::SetColor(ContainerBackground, HeavyHighlight);
-        else Lss::SetColor(ContainerBackground, LowHighlight);
-        Lss::Child("##LikeButton"+std::to_string(post.id), ImVec2(validWidth / 2, 6 * Lss::VH));
+        else Lss::SetColor(ContainerBackground, Background);
+        Lss::Child("##LikeButton"+std::to_string(post.id), ImVec2(widthForButtons / 2, 6 * Lss::VH), false, Trans);
             Lss::Top(Lss::VH);
             if(contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH),Centered);
             else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
@@ -360,7 +381,6 @@ void SocialMedia::MainPage(float& width, float& height)
             Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
             Lss::End();
         ImGui::EndChild();
-        Lss::SetColor(ContainerBackground, ContainerBackground);
         post.likeHovered = ImGui::IsItemHovered();
         if (ImGui::IsItemClicked()) {
             if (contains) {
@@ -381,8 +401,8 @@ void SocialMedia::MainPage(float& width, float& height)
         ImGui::SameLine();
 
         if (post.commentHovered) Lss::SetColor(ContainerBackground, HeavyHighlight);
-        else Lss::SetColor(ContainerBackground, LowHighlight);
-        Lss::Child("commentButton"+std::to_string(post.id), ImVec2(validWidth / 2, 6 * Lss::VH));
+        else Lss::SetColor(ContainerBackground, Background);
+        Lss::Child("commentButton"+std::to_string(post.id), ImVec2(widthForButtons / 2, 6 * Lss::VH));
             Lss::Top(Lss::VH);
             Lss::Image(commentTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
         Lss::End();
@@ -393,9 +413,12 @@ void SocialMedia::MainPage(float& width, float& height)
             post.openComments = !post.openComments;
             post.needChange = true;
         }
+        ImGui::PopStyleVar();
+        ImGui::Dummy(ImVec2(0.0f, Lss::VH));
+
         if (post.openComments) {
             static char text[256];
-            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(validWidth, 4 * Lss::VH), Centered, ImGuiInputTextFlags_EnterReturnsTrue))
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Comment something :3"))
             {
                 nlohmann::json jsonData;
                 jsonData["postId"] = post.id;
@@ -465,10 +488,11 @@ void SocialMedia::MainPage(float& width, float& height)
             post.size = endY - startY;
             post.needChange = false;
         }
+
         Lss::End();
         ImGui::EndChild();
 
-        Lss::Top(4 * Lss::VH);
+        Lss::Top(2 * Lss::VH);
         Lss::End();
     }
     ImGui::EndChild();

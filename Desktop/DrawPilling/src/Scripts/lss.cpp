@@ -112,6 +112,9 @@ void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWind
 	if (flags & Bordering) {
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, Lss::VH / 6);
 	}
+	if (flags & Trans) {
+		ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, colorArray[Transparent]);
+	}
 	if(size.x == 0 && size.y == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
 	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
 	if (flags & Rounded) {
@@ -119,6 +122,9 @@ void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWind
 	}
 	if (flags & Bordering) {
 		ImGui::PopStyleVar();
+	}
+	if (flags & Trans) {
+		ImGui::PopStyleColor();
 	}
 }
 
@@ -174,6 +180,7 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) 
 	if (size.x == -1) size = ImGui::GetContentRegionAvail();
 	if (flags & Centered) Center(size.x);
 	if (flags & SameLine) ImGui::SameLine();
+
 	if (flags & Rounded) {
 		ImVec2 p_min = ImGui::GetCursorScreenPos();
 		ImVec2 p_max = ImVec2(p_min.x + size.x, p_min.y + size.y);
@@ -301,7 +308,6 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 	}
 	return isOpen;
 }
-
 
 void Lss::Separator(float thickness, float width, int color, int flags) {
 	if (flags & Centered) Center(width);
