@@ -1,40 +1,37 @@
-import Cookies from 'universal-cookie';
-import { useState } from 'react';
-import { SignInAndUp } from '../pages/modals/SignIn&Up';
-import { Posting } from '../pages/modals/Posting';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navbar, Nav, Dropdown } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import '../css/SideNavbar.css';
 
-export function SideNavbar() {
-  const cookies = new Cookies();
-  const thisUser = cookies.get("AccessToken");
-  const [isSignUp, setIsSignUp] = useState<boolean>(false);
-  const [show, setShow] = useState<boolean>(false);
-  const [showPost, setShowPost] = useState<boolean>(false);
-  const navigate = useNavigate();
-
-  function signOut() {    
-    cookies.remove("AccessToken");
-    window.location.reload();
-  }
+const SideNavbar: React.FC<{ onToggleSidebar: () => void; isSidebarOpen: boolean }> = ({ onToggleSidebar, isSidebarOpen }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <div className="sidebar navbar-custom d-flex flex-column align-items-center py-4">
-      <h3 className="costumButtons" id="homeButton" onClick={() => navigate('/CMS')}>Home</h3>
-      <h3 className="costumButtons" id="searchButton" onClick={() => navigate('/CMS/SRC')}>Search</h3>
-      {thisUser ? (
-        <h3 className="costumButtons" id="postButton" tabIndex={0} onClick={() => setShowPost(true)}>Post</h3>
-      ) : (
-        <>
-          <h3 className="costumButtons" onClick={() => { setIsSignUp(false); setShow(true); }}>Sign In</h3>
-          <h3 className="costumButtons" onClick={() => { setIsSignUp(true); setShow(true); }}>Sign Up</h3>
-        </>
-      )}
-      {thisUser && (
-        <h3 className="costumButtons" onClick={signOut}>Sign out</h3>
-      )}
-
-      <SignInAndUp show={show} onHide={() => setShow(false)} defaultToSignUp={isSignUp} />
-      <Posting show={showPost} onHide={() => setShowPost(false)} />
+    <div id="side-navbar" className={`sidebar ${isSidebarOpen ? '' : 'collapsed'}`}>
+      <Navbar expand="lg" bg="dark" variant="dark" className="h-100">
+        <Navbar.Brand href="#">ColorSync</Navbar.Brand>
+        <Navbar.Toggle aria-controls="responsive-navbar-nav" onClick={onToggleSidebar} />
+        <Navbar.Collapse id="responsive-navbar-nav">
+          <Nav className="flex-column">
+            <Nav.Link as={Link} to="/">Home</Nav.Link>
+            <Nav.Link as={Link} to="/Draw">Draw</Nav.Link>
+            <Nav.Link as={Link} to="/Download">Download</Nav.Link>
+            <Nav.Link as={Link} to="/CMS">Social Media</Nav.Link>
+            <Dropdown show={isDropdownOpen} onToggle={() => setIsDropdownOpen(!isDropdownOpen)}>
+              <Dropdown.Toggle id="dropdown-basic">
+                Dropdown
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item href="#">Action</Dropdown.Item>
+                <Dropdown.Item href="#">Another action</Dropdown.Item>
+                <Dropdown.Item href="#">Something else</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </Nav>
+        </Navbar.Collapse>
+      </Navbar>
     </div>
   );
-}
+};
+
+export default SideNavbar;

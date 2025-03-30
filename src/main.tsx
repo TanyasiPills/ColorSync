@@ -1,47 +1,50 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './css/Index.css';
-import App from './App';
-import WebGLCanvas from './pages/webgl/WebGLCanvas';
 import Home from './pages/Home';
+import WebGLCanvas from './pages/webgl/WebGLCanvas';
+import App from './App';
+import SideNavbar from './components/SideNavbar_components';
 import { SocialMedia } from './pages/SocialMedia';
+import { Search } from 'react-bootstrap-icons';
 import { Profile } from './pages/Profile';
-import { Search } from './pages/Search';
-import { TopNavbar } from './components/TopNavbar_components';
-import { SideNavbar } from './components/SideNavbar_components';
+import RightSidebar from './components/RightSideBar_components';
 
-function Layout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
-  const isDrawingPage = location.pathname === '/Draw';
-  return (
-    <>
-      {isDrawingPage ? <TopNavbar /> : <SideNavbar />}
-      {children}
-    </>
-  );
-}
 
-function MainApp() {
+const MainLayout: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <BrowserRouter>
-      <Layout>
+    <div className="overall-layout">
+      <SideNavbar onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+      <div className={`content-area ${isSidebarOpen ? '' : 'collapsed'}`}>
+        <button onClick={toggleSidebar} className="toggle-sidebar-button">
+          {isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+        </button>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/Draw" element={<WebGLCanvas />} />
           <Route path="/Download" element={<App />} />
           <Route path="/CMS" element={<SocialMedia />} />
           <Route path="/CMS/SRC" element={<Search />} />
-          <Route path="/Profile" element={<Profile own />} />
+          <Route path="/Profile" element={<Profile own/>} />
           <Route path="/Profile/:id" element={<Profile />} />
         </Routes>
-      </Layout>
-    </BrowserRouter>
+      </div>
+      {isSidebarOpen && <RightSidebar />}
+    </div>
   );
-}
+};
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <MainApp />
-  </StrictMode>
+const MainApp: React.FC = () => (
+  <Router>
+    <MainLayout />
+  </Router>
 );
+
+ReactDOM.render(<MainApp />, document.getElementById('root'));

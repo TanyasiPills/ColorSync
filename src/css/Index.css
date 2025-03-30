@@ -14,10 +14,8 @@
 
 #root {
   height: 100vh;
-  
   background-color: var(--backgroundColor);
 }
-
 
 
 html,
@@ -25,6 +23,27 @@ body {
   height: 100vh;
   overflow-y: clip;
   color: var(--textCol);
+}
+
+.overall-layout {
+  display: flex;
+  height: 100%;
+  flex-direction: row;
+}
+
+.content-area {
+  flex: 1;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .overall-layout {
+    flex-direction: column;
+  }
+
+  .content-area {
+    padding: 10px;
+  }
 }
 
 ul {
