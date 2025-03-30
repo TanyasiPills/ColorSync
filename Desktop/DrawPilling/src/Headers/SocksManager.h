@@ -13,17 +13,16 @@ enum Type {
 	Draw = 0,
 	AddNode = 1,
 	RenameNode = 2,
-	Undo = 3,
-	Redo = 4,
-	Delete = 5,
-	Move = 6
+	DeleteNode = 3,
+	PlayerLeave = 4,
+	PlayerJoin = 5,
 };
 
 class SManager {
 private:
 public:
 	static void SetRenderer(NewRenderer& renderer);
-	static void Connect(const char* ip, std::string token, std::map<std::string, std::string> room);
+	static void Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room);
 	static void Down();
 
 	static void OnMessage(sio::event& ev);
@@ -32,4 +31,14 @@ public:
 	static void OnAction(sio::event& ev);
 	static void SendAction(Message& data);
 
+	static void OnSystemMessage(sio::event& ev);
+
+	static void ProcessHistory();
+	static unsigned int* GetCanvasSize();
+	static void SetCanvasSize(unsigned int width, unsigned int height);
+
+	static std::vector<RoomUser>* GetUsers();
+	static void Kick(unsigned int id);
+	static bool AmIOwner();
+	static void SetMyOwnerState(bool in);
 };

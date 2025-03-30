@@ -20,14 +20,17 @@ float Lss::VH = 0;
 int prevType = -1;
 
 ImVec4 colorArray[] = {
-	ImVec4(0.149f, 0.149f, 0.345f, 1.0f),
-	ImVec4(0.122f, 0.122f, 0.298f, 1.0f),
-	ImVec4(0.208f, 0.208f, 0.353f, 1.0f),
-	ImVec4(0.286f, 0.282f, 0.451f, 1.0f),
+	ImVec4(0.0902f, 0.0902f, 0.2471f, 1.0f),
+	ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f),
+	ImVec4(0.0039f, 0.2039f, 0.2902f, 1.0f),
+	ImVec4(0.1373f, 0.1137f, 0.4196f, 1.0f),
 	ImVec4(0.478f, 0.455f, 0.651f, 1.0f),
 	ImVec4(0.647f, 0.627f, 0.831f, 1.0f),
-	ImVec4(0.0f, 0.0f, 0.0f, 0.0f)
+	ImVec4(0.0f, 0.0f, 0.0f, 0.0f),
+	ImVec4(0.1059f, 0.1059f, 0.2980f, 1.0f),
+	ImVec4(0.647f, 0.627f, 0.831f, 0.4f),
 };
+
 int regionArray[] = {
 	ImGuiCol_WindowBg,
 	ImGuiCol_ChildBg,
@@ -47,13 +50,15 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
 
 	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = colorArray[InputBg];
+	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = colorArray[Hint];
 
 
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	VH = (float)screenHeight / 100;
 	VW = (float)screenWidth / 100;
-	for (int x = VH; x < 10*(int)VH; x += VH)
+	for (int x = VH; x < 10*(int)VH; x += VH/2)
 	{
 		fonts.push_back(io.Fonts->AddFontFromFileTTF("Resources/fonts/Aptos.ttf", x));
 	}
@@ -84,7 +89,7 @@ void CenterWindow() {
 
 void Lss::SetFontSize(float size) {
 	haveFont = true;
-	int type = (size/VH)-1;
+	int type = (size/VH*2)-1;
 	if (prevType != type) {
 		if (type >= 0 && type < fonts.size()) {
 			ImGui::PushFont(fonts[type]);
@@ -101,8 +106,20 @@ void Lss::SetFontSize(float size) {
 
 void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
 	if (flags & Centered && size.x > 0) Center(size.x);
+	if (flags & Rounded) {
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+	}
+	if (flags & Bordering) {
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, Lss::VH / 6);
+	}
 	if(size.x == 0 && size.y == 0) ImGui::BeginChild(name.c_str(), ImVec2(0,0), border, windowFlags);
 	else ImGui::BeginChild(name.c_str(), size, border, windowFlags);
+	if (flags & Rounded) {
+		ImGui::PopStyleVar();
+	}
+	if (flags & Bordering) {
+		ImGui::PopStyleVar();
+	}
 }
 
 bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
@@ -117,18 +134,23 @@ bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 
 	if (rounded) {
 		originalRounding = ImGui::GetStyle().FrameRounding;
-		ImGui::GetStyle().FrameRounding = size.y/2;
+		ImGui::GetStyle().FrameRounding = size.y/4;
 	}
 	if (flags & Invisible) {
 		originalBtnBgColor = ImGui::GetStyle().Colors[ImGuiCol_Button];
 		ImGui::GetStyle().Colors[ImGuiCol_Button] = ImVec4(0, 0, 0, 0);
 	}
 
-	//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 500));
 	if (centered) Center(size.x);
-	//ImGui::PopStyleVar();
 	if (flags & SameLine) ImGui::SameLine();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	float originalPaddingY = style.FramePadding.y;
+	style.FramePadding.y -= 4.0f;
+
 	bool pressed = ImGui::Button(textIn.c_str(), size);
+
+	style.FramePadding.y = originalPaddingY;
 
 	if (rounded) ImGui::GetStyle().FrameRounding = originalRounding;
 	if (flags & Invisible) ImGui::GetStyle().Colors[ImGuiCol_Button] = originalBtnBgColor;
@@ -162,9 +184,10 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) 
 		ImGui::Image(texture, size, min, max);
 	}
 }
-bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags, int maxWidth) {
+
+bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size, int flags, int inputFlags, int maxWidth, std::string hint) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-	SetFontSize(size.y);
+	if(!(flags & MultiLine))SetFontSize(size.y/2);
 	if(maxWidth == 0) ImGui::SetNextItemWidth(size.x - (size.y));
 	else ImGui::SetNextItemWidth(-FLT_MIN);
 
@@ -175,17 +198,35 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	if (flags & Rounded) {
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		ImU32 bg_color = ImGui::GetColorU32(ImGuiCol_FrameBg);
-		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
+		if(flags & MultiLine)
+			draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 8);
+		else
+			draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 4);
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
+		if (flags & MultiLine)
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 8));
+		else
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
+
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
-		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
+
+		if (flags & MultiLine)
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 8), pos.y));
+		else
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.y / 2), pos.y));
 	}
 	if (flags & Trans) {
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
 	}
-
-	bool modified = ImGui::InputText(("##"+label).c_str(), buffer, buffer_size, inputFlags);
+	bool modified;
+	if (flags & MultiLine) {
+		size.x -= size.x * 0.05f;
+		ImGui::InputTextMultiline(("##" + label).c_str(), buffer, buffer_size, size, inputFlags);
+	}
+	else {
+		if (!hint.empty()) modified = ImGui::InputTextWithHint(("##" + label).c_str(), hint.c_str(), buffer, buffer_size, inputFlags);
+		else modified = ImGui::InputText(("##" + label).c_str(), buffer, buffer_size, inputFlags);
+	}
 
 	if (flags & Rounded) {
 		ImGui::PopStyleVar(1);
@@ -196,7 +237,6 @@ bool Lss::InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 
 	}
 	return modified;
 }
-
 bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int inputFlags) {
 	ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -210,7 +250,7 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int in
 	if (flags & Rounded) {
 		ImVec2 pos = ImGui::GetCursorScreenPos();
 		ImU32 bg_color = ImGui::GetColorU32(ImGuiCol_FrameBg);
-		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 2);
+		draw_list->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), bg_color, size.y / 4);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, (size.y - ImGui::GetTextLineHeight()) / 2));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, colorArray[Transparent]);
@@ -239,10 +279,25 @@ bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int window
 		if (flags & Centered) {
 			CenterWindow();
 		}
+		if (flags & Bordering) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH/6);
+		}
+		if (flags & Rounded) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		}
 	}
 	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
-	if (*open && flags & Trans) {
-		ImGui::PopStyleColor();
+	
+	if (*open) {
+		if (flags & Trans) {
+			ImGui::PopStyleColor();
+		}
+		if (flags & Bordering) {
+			ImGui::PopStyleVar();
+		}
+		if (flags & Rounded) {
+			ImGui::PopStyleVar();
+		}
 	}
 	return isOpen;
 }

@@ -2643,6 +2643,15 @@
     <Image Include="Resources\icons\penBrush.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\icons\crown.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\liked.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\notLiked.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />

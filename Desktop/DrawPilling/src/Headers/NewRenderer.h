@@ -42,6 +42,15 @@ struct CanvasData
 	float canvasY;
 };
 
+struct RoomUser {
+	int id;
+	std::string username;
+	bool admin = false;
+
+	RoomUser() = default;
+	RoomUser(const int idIn, const std::string nameIn, bool isOwner) : id(idIn), username(nameIn), admin(isOwner){}
+};
+
 struct Node {
 	std::string name;
 	bool visible = true;
@@ -50,12 +59,16 @@ struct Node {
 	int id;
 	int opacity = 100;
 
+	Node() = default;
+
 	Node(const std::string& nodeName, int idIn) : name(nodeName), id(idIn) {}
 	virtual ~Node() = default;
 };
 
 struct Layer : public Node {
 	RenderData data;
+
+	Layer() = default;
 
 	Layer(const std::string& layerName, int idIn, RenderData dataIn)
 		: Node(layerName, idIn), data(dataIn) {
@@ -65,6 +78,8 @@ struct Layer : public Node {
 struct Folder : public Node {
 	bool open = false;
 	std::vector<int> childrenIds;
+
+	Folder() = default;
 
 	Folder(const std::string& folderName, int idIn)
 		: Node(folderName, idIn) {
@@ -96,15 +111,16 @@ public:
 	std::vector<RenderData> brushes;
 	std::unordered_map<int, UserMoveMessage> usersToMove;
 	std::unordered_map<int, std::shared_ptr<Node>> nodes;
+	std::vector<int> layers;
 	std::vector<int> folders;
 
 	bool inited = false;
 
 	void Init(GLFWwindow* windowIn);
 	void InitBrushes();
-	void InitLayers(CanvasData* canvasData);
-
+	void InitNewCanvas();
 	void SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn);
+
 	void Draw(const RenderData& data);
 	void Clear();
 	void Render();
@@ -115,7 +131,7 @@ public:
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
 	void LoadPrevCursor(float* GlCursorPos);
-	void SetDrawData();
+	void SetDrawDataJa();
 	void SetColor(float* color);
 	void RenderDrawMessage(const DrawMessage& drawMessage);
 	void SendDraw();
@@ -131,6 +147,9 @@ public:
 
 	void SetOnline(bool value);
 	bool GetOnline();
+
+	unsigned int* GetCanvasSize();
+	void SetCanvasSize(unsigned int* sizes);
 
 	ThreadSafeQueue taskQueue;
 
@@ -150,5 +169,5 @@ public:
 		mainThreadCallback = callback;
 	}
 
-	void SwapView();
+	void SwapView(bool isOnline);
 };

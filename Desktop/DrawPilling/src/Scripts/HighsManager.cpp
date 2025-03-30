@@ -8,10 +8,13 @@ static auto& runtime = RuntimeData::getInstance();
 
 class SocialMedia;
 
+constexpr size_t MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
 	return size * nmemb;
 }
+
 size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) {
 	auto& buffer = *reinterpret_cast<std::vector<uint8_t>*>(userdata);
 	size_t totalSize = size * nmemb;
@@ -33,10 +36,11 @@ void HManager::InitUser()
 			if (result.contains("statusCode") && result["statusCode"] == 401) {
 				runtime.logedIn = false;
 			}
-			else if (result.contains("id") && result.contains("username")) {
+			else if (result.contains("id") && result.contains("username") && result.contains("email")) {
 
 				runtime.id = result["id"];
 				runtime.username = result["username"];
+				runtime.email = result["email"];
 
 				std::vector<uint8_t> imageData = ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
 
@@ -73,7 +77,7 @@ void HManager::Down()
 	curl_global_cleanup();
 }
 
-nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags)
+nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags, bool forcePost)
 {
 	CURL* curl = curl_easy_init();
 	if (!curl) {
@@ -110,11 +114,16 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 		curl_mime_name(part, "file");
 		curl_mime_filedata(part, path.c_str());
 	}
-
-	if (imageId > 0) {
+	else if (imageId > 0) {
 		part = curl_mime_addpart(mime);
 		curl_mime_name(part, "imageId");
 		curl_mime_data(part, std::to_string(imageId).c_str(), CURL_ZERO_TERMINATED);
+	}
+
+	if (forcePost) {
+		part = curl_mime_addpart(mime);
+		curl_mime_name(part, "forcePost");
+		curl_mime_data(part, "1", CURL_ZERO_TERMINATED);
 	}
 
 	if (!tags.empty()) {
@@ -147,6 +156,14 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	if (http_code != 200 && http_code != 201)
 	{
 		std::cerr << "Request failed with HTTP code: " << http_code << std::endl;
+		try {
+			nlohmann::json jsonResponse = nlohmann::json::parse(result);
+			std::cerr << "Error with request: " << jsonResponse.dump() << std::endl;
+		}
+		catch (...) {
+			std::cerr << "no body for error" << std::endl;
+		}
+
 		//return nlohmann::json::parse(result);
 		return nullptr;
 	}
@@ -172,7 +189,7 @@ nlohmann::json HManager::PostRequest(std::string text, std::string path, int ima
 	return nlohmann::json{};
 }
 
-nlohmann::json HManager::ImageUploadRequest(std::string path, int type) 
+nlohmann::json HManager::ImageUploadRequest(std::string path, int type, std::string visibility)
 {
 	std::string fileName = path.substr(path.find_last_of('\\') + 1);
 
@@ -182,7 +199,7 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 		return nlohmann::json{};
 	}
 	std::string url;
-	if(type == 0) url = "http://" + runtime.ip + ":3000/images";
+	if (type == 0) url = "http://" + runtime.ip + ":3000/images";
 	else url = "http://" + runtime.ip + ":3000/users/pfp";
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
@@ -200,7 +217,7 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 	curl_mime_name(part, "file");
 
 	curl_mime_filename(part, fileName.c_str());
-	
+
 	curl_mime_filedata(part, path.c_str());
 
 	if (fileName.find(".png") != std::string::npos) {
@@ -208,6 +225,12 @@ nlohmann::json HManager::ImageUploadRequest(std::string path, int type)
 	}
 	else if (fileName.find(".jpg") != std::string::npos || fileName.find(".jpeg") != std::string::npos) {
 		curl_mime_type(part, "image/jpeg");
+	}
+
+	if (!visibility.empty()) {
+		curl_mimepart* visibilityPart = curl_mime_addpart(mime);
+		curl_mime_name(visibilityPart, "visibility");
+		curl_mime_data(visibilityPart, visibility.c_str(), CURL_ZERO_TERMINATED);
 	}
 
 
@@ -346,20 +369,17 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	headers = curl_slist_append(headers, authHeader.c_str());
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+	curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1L);
+	curl_easy_setopt(curl, CURLOPT_DNS_CACHE_TIMEOUT, 60L);
+
 
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
-
-	curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 0L);
-	curl_easy_setopt(curl, CURLOPT_FORBID_REUSE, 0L);
-
-	curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 10L);
-	curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 5L);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);;
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
@@ -370,6 +390,10 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+	double totalTime;
+	curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
+	std::cout << "Total time: " << totalTime << " seconds" << std::endl;
 
 	curl_easy_cleanup(curl);
 	return imageData;

@@ -30,12 +30,15 @@ struct Post
 	bool openComments = false;
 	bool needChange = true;
 	bool liked = false;
+	bool likeHovered = false;
+	bool commentHovered = false;
 };
 
 struct User
 {
 	std::string username;
 	GLuint userImage = -1;
+	std::string bio;
 	bool pPicLoaded = false;
 };
 

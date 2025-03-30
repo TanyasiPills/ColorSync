@@ -19,6 +19,7 @@ public:
 
     std::string username = "";
     std::string password = "";
+    std::string email = "";
 
     bool logedIn = true;
     int id = -1;

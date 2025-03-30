@@ -12,6 +12,8 @@ class DrawUI
 private:
 
 public:
+    static void DrawMenu();
+
     static void ColorWindow(RenderData& cursor);
     static void SizeWindow(float& cursorRadius);
     static void BrushWindow(GLFWwindow* window);
@@ -20,18 +22,14 @@ public:
     static void LayerWindow();
     static void ChatWindow();
 
-    static void LoginWindow();
     static void InitWindow();
-
     static void InitData();
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
 
-    static std::string GetUsername();
-    static std::string GetToken();
-    static std::string GetIp();
 
     static void SetColor(float* colorIn);
-
     static void SetRenderer(NewRenderer& renderer);
+
+    static void DeleteChilds(int& index);
 };

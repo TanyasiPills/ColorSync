@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class MyTexture 
 {
@@ -14,7 +15,8 @@ public:
 	~MyTexture();
 
 	void Init(const std::string& path);
-	void Init(unsigned int& widthIn, unsigned int& heightIn, int transparent = 0);
+	void Init(unsigned int widthIn, unsigned int heightIn, int transparent = 0);
+	void Init(std::vector<unsigned char> data, unsigned int canvasWidth, unsigned int canvasHeight);
 
 	void Bind(unsigned int slot = 0) const;
 	void UnBind() const;

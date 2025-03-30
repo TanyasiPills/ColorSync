@@ -18,6 +18,7 @@ MyTexture fileTexture;
 const ImVec2 iconSize(50, 50);
 
 static bool showExplorer = true;
+bool fileAleardyExists = false;
 
 int counter = 0;
 
@@ -56,7 +57,7 @@ void LoadDrives() {
 bool HasSpecificExtension(const std::string& file, const std::string& ext) {
     size_t pos = file.find_last_of(".");
     if (pos == std::string::npos || pos == 0) return false;
-    if (file.find(" ") != std::string::npos) return false;
+    //if (file.find(" ") != std::string::npos) return false;
     return file.substr(pos) == ext;
 }
 
@@ -68,6 +69,10 @@ void Explorer::Init()
     LoadDrives();
 }
 
+bool Explorer::Exists()
+{
+    return fileAleardyExists;
+}
 bool IsFolderEmpty(const std::string& folderPath) {
     std::string searchPath = folderPath + "\\*"; 
     WIN32_FIND_DATA findData;
@@ -325,17 +330,15 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
         ImGui::SameLine();
         if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 4 * Lss::VH))
         {
-            std::string imagePrePath = currentPath +'\\' + fileName;
+            std::string imagePrePath = currentPath +'\\'+'\\' + fileName;
             if (ValidFormat(idForFormat, imagePrePath))
             {
                 DWORD fileAttrib = GetFileAttributes(imagePrePath.c_str());
                 if (fileAttrib != INVALID_FILE_ATTRIBUTES) {
-                    std::cout << "The path does exist: " << imagePrePath << std::endl;
-                    imagePath = imagePrePath;
+                    fileAleardyExists = true;
                 }
                 else {
-                    std::cout << "The path does not exist: " << imagePrePath << std::endl;
-                    imagePath = imagePrePath;
+                    fileAleardyExists = false;
                 }
                 imagePath = imagePrePath;
                 *creatorStuff = false;

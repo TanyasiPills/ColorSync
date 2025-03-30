@@ -27,13 +27,16 @@ struct DrawMessage : public Message {
 };
 
 struct NodeAddMessage : public Message {
-	std::string name;
 	int location;
 	int nodeType;
 };
 
 struct NodeRenameMessage : public Message {
 	std::string name;
+	int location;
+};
+
+struct NodeDeleteMessage : public Message {
 	int location;
 };
 

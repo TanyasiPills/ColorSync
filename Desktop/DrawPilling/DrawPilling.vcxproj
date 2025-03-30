@@ -1036,6 +1036,7 @@
   <ItemGroup>
     <Image Include="Resources\icons\airBrush.png" />
     <Image Include="Resources\icons\chalkBrush.png" />
+    <Image Include="Resources\icons\crown.png" />
     <Image Include="Resources\icons\cursorBrush.png" />
     <Image Include="Resources\icons\eyeClosed.png" />
     <Image Include="Resources\icons\eyesOpen.png" />
@@ -1044,6 +1045,8 @@
     <Image Include="Resources\icons\folderFull.png" />
     <Image Include="Resources\icons\folderLayer.png" />
     <Image Include="Resources\icons\layer.png" />
+    <Image Include="Resources\icons\liked.png" />
+    <Image Include="Resources\icons\notLiked.png" />
     <Image Include="Resources\icons\penBrush.png" />
     <Image Include="Resources\icons\waterBrush.png" />
     <Image Include="Resources\Textures\airBrush.png" />

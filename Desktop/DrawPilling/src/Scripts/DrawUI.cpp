@@ -4,6 +4,7 @@
 #include "RuntimeData.h"
 #include "FileExplorer.h"
 #include "CallBacks.h"
+#include "DataManager.h"
 #include "lss.h"
 #include <thread>
 
@@ -38,6 +39,9 @@ bool isOnline = false;
 
 bool itemHovered = false;
 
+bool usersGot = false;
+std::vector<RoomUser>* usersPtr;
+
 static std::vector<std::string> chatLog;
 
 static NewRenderer* renderer;
@@ -57,6 +61,8 @@ MyTexture chalk;
 
 MyTexture sizecursor;
 
+MyTexture adminCrown;
+
 MyTexture icons[5];
 
 std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
@@ -67,9 +73,10 @@ static const ImVec2 iconSize(50, 50);
 
 std::string savePath = "";
 
+float startPosY = 0.0f;
+
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
-	isOnline = renderer->GetOnline();
 	std::cout << "Is online: " << isOnline << std::endl;
 }
 
@@ -115,6 +122,10 @@ void DrawUI::InitData()
 	folderLayer.Init("Resources/icons/folderLayer.png");
 	layerLayer.Init("Resources/icons/layer.png");
 
+	adminCrown.Init("Resources/icons/crown.png");
+
+	isOnline = renderer->GetOnline();
+
 	InitBrushIcons();
 }
 
@@ -127,10 +138,60 @@ void DrawUI::SetColor(float* colorIn)
 	color[2] = colorIn[2];
 }
 
+void DrawUI::DrawMenu() {
+	Lss::SetFontSize(2 * Lss::VH);
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("New")) {
+				// Handle "New" action
+			}
+			if (ImGui::MenuItem("Open...")) {
+				// Handle "Open" action
+			}
+			if (ImGui::MenuItem("Save")) {
+				// Handle "Save" action
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit")) {
+				renderer->SwapView(isOnline);
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Edit")) {
+			if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+				// Handle Undo
+			}
+			if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+				// Handle Redo
+			}
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cut", "Ctrl+X")) {
+				// Handle Cut
+			}
+			if (ImGui::MenuItem("Copy", "Ctrl+C")) {
+				// Handle Copy
+			}
+			if (ImGui::MenuItem("Paste", "Ctrl+V")) {
+				// Handle Paste
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View")) {
+			bool showGrid = true;
+			ImGui::MenuItem("Show Grid", nullptr, &showGrid);
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
+}
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
-
-	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -225,27 +286,26 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 	for (RenderData brush : renderer->brushes)
 	{
-		bool isSelected = (index == selected);
-		if (ImGui::Selectable(("##"+std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-			if(!isSelected) renderer->ChangeBrush(index);
-			selected = index;
+		if (index <= 4) {
+			bool isSelected = (index == selected);
+			if (ImGui::Selectable(("##" + std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
+				if (!isSelected) renderer->ChangeBrush(index);
+				selected = index;
+			}
+			ImVec2 pos = ImGui::GetItemRectMin();
+			ImVec2 size = ImGui::GetItemRectSize();
+			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
+			ImGui::SetCursorScreenPos(cursorPos);
+
+			Lss::Image(icons[index].GetId(), iconSize);
+			Lss::SetFontSize(2 * Lss::VH);
+
+			std::string fileNameStuff = names[index];
+
+			float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
+			ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
+			Lss::Text(fileNameStuff, 2 * Lss::VH);
 		}
-		ImVec2 pos = ImGui::GetItemRectMin();
-		ImVec2 size = ImGui::GetItemRectSize();
-		ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
-		ImGui::SetCursorScreenPos(cursorPos);
-
-		Lss::Image(icons[index].GetId(), iconSize);
-		Lss::SetFontSize(2 * Lss::VH);
-
-		std::string fileNameStuff = names[index];
-		//if (file.size() > 10) fileNameStuff = file.substr(0, 10) + "...";
-		//else fileNameStuff = file;
-
-		float nameSize = ImGui::CalcTextSize(fileNameStuff.c_str()).x;
-		ImGui::SetCursorScreenPos(ImVec2(pos.x + (size.x / 2) - (nameSize / 2), ImGui::GetCursorScreenPos().y));
-		Lss::Text(fileNameStuff, 2 * Lss::VH);
-
 		index++;
 		ImGui::NextColumn();
 		Lss::End();
@@ -257,19 +317,45 @@ void DrawUI::ServerWindow()
 {
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 	ImVec2 windowSize = ImGui::GetWindowSize();
-
-
+	Lss::SetFontSize(2 * Lss::VH);
+	if (Lss::Button("Save", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
+	{
+		DataManager::SaveSyncData(savePath);
+	}
+	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
+	{
+		DataManager::LoadSyncData(savePath);
+	}
 
 	if (isOnline) {
-		
+		if (!usersGot) {
+			usersPtr = SManager::GetUsers();
+			usersGot = true;
+		}
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		for (RoomUser user : *usersPtr)
+		{
+			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
+				if (user.id == runtime.id) {
+					Lss::Text(user.username+" - ME", 4 * Lss::VH);
+				}
+				else Lss::Text(user.username, 4 * Lss::VH);
+				if (user.admin) Lss::Image(adminCrown.GetId(), ImVec2(4*Lss::VH, 4*Lss::VH),SameLine);
+				if (SManager::AmIOwner()) {
+					if (Lss::Button("Kick", ImVec2(4 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH))
+						SManager::Kick(user.id);
+				}
+				Lss::End();
+			ImGui::EndChild();
+		}
+		Lss::End();
 	}
 	else {
-		Lss::SetFontSize(2 * Lss::VH);
 		std::string text = "Wumpus is very sad :c";
 		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
 		ImGui::SetCursorPos(ImVec2(windowSize.x / 2 - textWidth / 2, windowSize.y / 2 - 2 * Lss::VH));
@@ -280,6 +366,7 @@ void DrawUI::ServerWindow()
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
+	Lss::End();
 	ImGui::End();
 
 	if (ServerWindowSize.x < 200) {
@@ -367,7 +454,13 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 				nody->name = editBuffer;
 				memset(editBuffer, 0, sizeof(editBuffer));
 				nody->editing = false;
-				renderer->SendLayerRename(nody->name, nody->id);
+				if (renderer->GetOnline() == true){
+					NodeRenameMessage renameMessage;
+					renameMessage.name = nody->name;
+					renameMessage.location = nody->id;
+					renameMessage.type = RenameNode;
+					SManager::SendAction(renameMessage);
+				}
 			}
 		}
 	}
@@ -406,7 +499,7 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	return ImGui::GetCursorPos();
 }
 
-void DeleteChilds(int& index)
+void DrawUI::DeleteChilds(int& index)
 {
 	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
 
@@ -439,36 +532,56 @@ void DrawUI::LayerWindow()
 	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
 	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
+		int parentToSend = 0;
 		if (selectedLayer == -1) {
 			int parent = 0;
 			renderer->CreateLayer(parent);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				parentToSend = selectedLayer;
 				renderer->CreateLayer(selectedLayer);
 			}
 			else {
 				int parent = renderer->GetParent(selectedLayer);
+				parentToSend = parent;
 				renderer->CreateLayer(parent);
 			}
+		}
+		if (renderer->GetOnline() == true) {
+			NodeAddMessage layerMessage;
+			layerMessage.location = parentToSend;
+			layerMessage.nodeType = 0;
+			layerMessage.type = AddNode;
+			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
 	}
 	if(ImGui::IsItemHovered()) itemHovered = true;
 	if (Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
 	{
+		int parentToSend = 0;
 		if (selectedLayer == -1) {
 			int parent = 0;
 			renderer->CreateFolder(parent);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
+				parentToSend = selectedLayer;
 				renderer->CreateFolder(selectedLayer);
 			}
 			else {
 				int parent = renderer->GetParent(selectedLayer);
+				parentToSend = selectedLayer;
 				renderer->CreateFolder(parent);
 			}
+		}
+		if (renderer->GetOnline() == true) {
+			NodeAddMessage layerMessage;
+			layerMessage.location = parentToSend;
+			layerMessage.nodeType = 1;
+			layerMessage.type = AddNode;
+			SManager::SendAction(layerMessage);
 		}
 		renderer->nextFreeNodeIndex++;
 	}
@@ -479,9 +592,16 @@ void DrawUI::LayerWindow()
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
 				DeleteChilds(selectedLayer);
 				renderer->RemoveFolder(selectedLayer);
+
 			}
 			else {
 				renderer->RemoveLayer(selectedLayer);
+			}
+			if (renderer->GetOnline() == true) {
+				NodeDeleteMessage deleteMessage;
+				deleteMessage.location = selectedLayer;
+				deleteMessage.type = DeleteNode;
+				SManager::SendAction(deleteMessage);
 			}
 		}
 	}
@@ -605,28 +725,45 @@ void DrawUI::InitWindow()
 			else if (wasOpen)
 			{
 				strcpy(locationText, Explorer::GetImagePath().c_str());
+				savePath = Explorer::GetImagePath();
 			}
 			
-
-
 			ImVec2 buttonSize = ImVec2(100, 20);
 			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
 			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
 			{
-				if (width > 0 && height > 0) {
-					unsigned int widthOut = width;
-					unsigned int heightOut = height;
-
-					renderer->SetDrawData(widthOut, heightOut);
+				if (Explorer::Exists())
+				{
+					DataManager::LoadSyncData(savePath);
 
 					canvasInitWindow = false;
 					inited = true;
+					std::cout << "heoooo" << std::endl;
 				}
+				else {
+					if (width > 0 && height > 0) {
+						unsigned int widthOut = width;
+						unsigned int heightOut = height;
+						renderer->SetDrawData(widthOut, heightOut);
+						renderer->InitNewCanvas();
+
+						canvasInitWindow = false;
+						inited = true;
+					}
+				}
+
 			}
 
 			Lss::End();
 			ImGui::EndPopup();
 		}
+	}
+	else if (!inited && isOnline)
+	{
+		unsigned int* sizes = SManager::GetCanvasSize();
+		renderer->SetDrawData(sizes[0], sizes[1]);
+		renderer->InitNewCanvas();
+		inited = true;
 	}
 }
 

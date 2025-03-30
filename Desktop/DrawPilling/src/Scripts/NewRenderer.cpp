@@ -28,8 +28,9 @@ bool GLLogCall(const char* function, const char* file, int line) {
 }
 
 GLFWwindow* window;
-std::vector<int> layers;
 RenderData cursor;
+
+CanvasData dataForCanvas;
 
 
 float cursorRadius = 0.01;
@@ -50,15 +51,6 @@ float sentBrushSize;
 
 bool online = false;
 
-bool FileExists(const char* filename) {
-	FILE* file = fopen(filename, "r");
-	if (file) {
-		fclose(file);
-		return true;
-	}
-	return false;
-}
-
 void NewRenderer::SetOnline(bool value){
 	online = value;
 }
@@ -78,12 +70,25 @@ int NewRenderer::GetParent(int& id)
 	}
 	return 0;
 }
+
+unsigned int* NewRenderer::GetCanvasSize()
+{
+	std::cout << "width: " << canvasSize[0] << ", height: " << canvasSize[1];
+
+	return canvasSize;
+}
+
+void NewRenderer::SetCanvasSize(unsigned int* sizes)
+{
+	canvasSize[0] = sizes[0];
+	canvasSize[1] = sizes[1];
+}
 int NewRenderer::CreateLayer(int& parent)
 {
 	int index = nextFreeNodeIndex;
 	layers.push_back(index);
 	RenderData createdLayer;
-	NewDraw::initLayer(createdLayer, canvasRatio[0], canvasRatio[1]);
+	NewDraw::initLayer(createdLayer);
 	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
@@ -154,31 +159,6 @@ void NewRenderer::InitBrushes()
 	cursor = brushes[0];
 }
 
-void NewRenderer::InitLayers(CanvasData* canvasData)
-{
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
-	folders.push_back(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, canvasData->data);
-	layers.push_back(nextFreeNodeIndex);
-	currentNode = nextFreeNodeIndex;
-	nextFreeNodeIndex++;
-	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
-
-	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Folder", nextFreeNodeIndex);
-	folders.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[0].get())->AddChild(nextFreeNodeIndex);
-	int folder = nextFreeNodeIndex;
-	nextFreeNodeIndex++;
-
-	RenderData layerTwo;
-	NewDraw::initLayer(layerTwo, canvasRatio[0], canvasRatio[1]);
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Not main", nextFreeNodeIndex, layerTwo);
-	layers.push_back(nextFreeNodeIndex);
-	dynamic_cast<Folder*>(nodes[folder].get())->AddChild(nextFreeNodeIndex);
-	nextFreeNodeIndex++;
-}
-
 void NewRenderer::ChangeBrush(int index)
 {
 	cursor = brushes[index];
@@ -191,16 +171,29 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 
 	InitBrushes();
 
-	CanvasData canvasData = NewDraw::initCanvas(canvasWidthIn, canvasHeightIn);
+	dataForCanvas = NewDraw::initCanvas(canvasSize[0], canvasSize[1], window);
 
-	initialCanvasRatio[0] = canvasData.canvasX;
-	initialCanvasRatio[1] = canvasData.canvasY;
-	canvasRatio[0] = canvasData.canvasX;
-	canvasRatio[1] = canvasData.canvasY;
-
-	InitLayers(&canvasData);
+	initialCanvasRatio[0] = dataForCanvas.canvasX;
+	initialCanvasRatio[1] = dataForCanvas.canvasY;
+	canvasRatio[0] = dataForCanvas.canvasX;
+	canvasRatio[1] = dataForCanvas.canvasY;
 
 	inited = true;
+}
+
+void NewRenderer::InitNewCanvas()
+{
+	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
+	folders.push_back(nextFreeNodeIndex);
+	nextFreeNodeIndex++;
+
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, dataForCanvas.data);
+	layers.push_back(nextFreeNodeIndex);
+	currentNode = nextFreeNodeIndex;
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
+
+	if (online) SManager::ProcessHistory();
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -374,7 +367,7 @@ void NewRenderer::SetColor(float* colorIn) {
 	color[2] = colorIn[2];
 }
 
-void NewRenderer::SetDrawData()
+void NewRenderer::SetDrawDataJa()
 {
 	sentBrushSize = cursorRadius;
 	sentOffset.x = offset[0];
@@ -464,6 +457,8 @@ void RenderImGui(bool& onUIIn)
 	ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
 
 	DrawUI::InitWindow();
+
+	DrawUI::DrawMenu();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius);
 	DrawUI::BrushWindow(window);
@@ -515,11 +510,13 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void NewRenderer::SwapView()
+void NewRenderer::SwapView(bool isOnline)
 {
 	isEditor = !isEditor;
-	if(isEditor) DrawUI::InitData();
-	std::cout << "swapped to editor: " << isEditor << std::endl;
+	if (isEditor) {
+		online = isOnline;
+		DrawUI::InitData();
+	}
 }
 
 

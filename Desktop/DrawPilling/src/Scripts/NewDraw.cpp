@@ -9,6 +9,9 @@ unsigned int canvasWidth = 0, canvasHeight = 0;
 GLuint floodFillShader;
 GLuint texture, activeBuffer, visitedBuffer;
 
+float xScale = 1;
+float yScale = 1;
+
 bool AreColorsEqual(const ImVec4& col1, const ImVec4& col2, float epsilon = 0.01f) {
 	return fabs(col1.x - col2.x) < epsilon &&
 		fabs(col1.y - col2.y) < epsilon &&
@@ -23,7 +26,7 @@ void fillPositions(float* positions, float xScale = 0.0, float yScale = 0.0, flo
 	positions[12] = (-xScale) + xPos; positions[13] = yScale + yPos; positions[14] = 0.0f; positions[15] = 1.0f;
 }
 
-void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0, int transparent = 0)
+void initData(RenderData& data, float* positions, const char* texture = nullptr, int shaderType = 0, int transparent = 0, std::vector<unsigned char> vectorOfTexture = {})
 {
 
 	if (!data.va) {
@@ -59,8 +62,12 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 
 	if (texture != nullptr)
 		data.texture->Init(texture);
-	else
-		data.texture->Init(canvasWidth, canvasHeight, transparent);
+	else {
+		if (vectorOfTexture.size() > 0) {
+			data.texture->Init(vectorOfTexture, canvasWidth, canvasHeight);
+		} else
+			data.texture->Init(canvasWidth, canvasHeight, transparent);
+	}
 
 	data.texture->Bind();
 	data.shader->SetUniform1i("u_Texture", 0);
@@ -71,26 +78,29 @@ void initData(RenderData& data, float* positions, const char* texture = nullptr,
 	data.texture->UnBind();
 }
 
-CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
+CanvasData NewDraw::initCanvas(unsigned int canvasWidthIn, unsigned int canvasHeightIn, GLFWwindow* window)
 {
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	float xMult = (float)height / (float)width;
+
 	CanvasData data;
 	canvasWidth = canvasWidthIn;
 	canvasHeight = canvasHeightIn;
 	float canvasRatio;
 	float positions[16];
-	float xScale = 1;
-	float yScale = 1;
 
-	if (canvasWidthIn >= canvasHeightIn) {
-		canvasRatio = float(canvasHeightIn) / float(canvasWidthIn);
-		xScale = 0.8f;
+	if (canvasWidth >= canvasHeight) {
+		canvasRatio = float(canvasHeight) / float(canvasWidth);
+		xScale = 0.8f * xMult;
 		yScale = canvasRatio * 0.8f;
 	}
 	else {
-		canvasRatio = float(canvasWidthIn) / float(canvasHeightIn);
-		xScale = canvasRatio * 0.8f;
+		canvasRatio = float(canvasWidth) / float(canvasHeight);
+		xScale = canvasRatio * 0.8f * xMult;
 		yScale = 0.8f;	
 	}
+
 	fillPositions(positions, xScale, yScale);
 	initData(data.data, positions, nullptr);
 
@@ -109,11 +119,11 @@ CanvasData NewDraw::initCanvas(unsigned int& canvasWidthIn, unsigned int& canvas
 }
 
 
-void NewDraw::initLayer(RenderData& data, float& xScale, float& yScale)
+void NewDraw::initLayer(RenderData& data, std::vector<unsigned char> textureData)
 {
 	float positions[16];
 	fillPositions(positions, xScale, yScale);
-	initData(data, positions, nullptr, 0, 1);
+	initData(data, positions, nullptr, 0, 1, textureData);
 
 	glGenFramebuffers(1, &data.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, data.fbo);

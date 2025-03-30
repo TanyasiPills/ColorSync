@@ -13,7 +13,9 @@ enum CSS {
 	Invisible = 1 << 1,
 	Rounded = 1 << 2,
 	Trans = 1 << 3,
-	SameLine = 1 << 4
+	SameLine = 1 << 4,
+	Bordering = 1 << 5,
+	MultiLine = 1 << 6
 };
 
 enum Colors {
@@ -23,7 +25,9 @@ enum Colors {
 	HeavyHighlight = 3,
 	Border = 4,
 	Font = 5,
-	Transparent = 6
+	Transparent = 6,
+	InputBg = 7,
+	Hint = 8
 };
 
 class Lss {
@@ -45,7 +49,8 @@ public:
 	static void Image(GLuint texture = 69, ImVec2 size = ImVec2(-1, -1), int flags = None, ImVec2 min = ImVec2(0,0), ImVec2 max = ImVec2(1,1));
 	static void Child(std::string name, ImVec2 size = ImVec2(0,0), bool border = true, 
 		int flags = None, ImGuiWindowFlags windowFlags = ImGuiWindowFlags_None);
-	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH), int flags = None, int inputFlags = ImGuiInputFlags_None, int maxWidth = 0);
+	static bool InputText(std::string label, char* buffer, size_t buffer_size, ImVec2 size = ImVec2(10*VH, 2*VH),
+		int flags = None, int inputFlags = ImGuiInputFlags_None, int maxWidth = 0, std::string hint = "");
 	static bool InputInt(std::string label, int* value, ImVec2 size = ImVec2(10 * VH, 2 * VH), int flags = None, int inputFlags = ImGuiInputFlags_None);
 	static bool Modal(std::string label, bool* open, ImVec2 size = ImVec2(0,0), int flags = 0, int windowFlags = 0);
 	static void Separator(float thickness = 1.0f, float width = 0.0f, int color = 4, int flags = 0);

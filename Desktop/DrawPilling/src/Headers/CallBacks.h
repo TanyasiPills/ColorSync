@@ -10,5 +10,5 @@ private:
 public:
 	static void Init(GLFWwindow* window, NewRenderer& rendererIn);
 	static float* GlCursorPosition();
-	static void EditorSwapCallBack();
+	static void EditorSwapCallBack(bool online = false);
 };
