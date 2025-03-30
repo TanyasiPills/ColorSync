@@ -199,6 +199,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch()
   update(@Req() req : any, @Body() updateUserDto: UpdateUserDto) {
+    console.log(updateUserDto);
     return this.userService.update(req.user.id, updateUserDto);
   }
 

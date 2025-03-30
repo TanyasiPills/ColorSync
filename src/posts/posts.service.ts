@@ -18,7 +18,7 @@ export class PostsService {
       const image = await this.db.image.findUnique({ where: { id: createPostDto.imageId, userId } });
       if (!image) throw new NotFoundException(`Image with id: ${createPostDto.imageId} not found`);
       if (image.visibility == 'private') {
-        if (createPostDto.forcePost) this.db.image.update({ where: { id: createPostDto.imageId }, data: { visibility: 'public' }});
+        if (createPostDto.forcePost) await this.db.image.update({ where: { id: createPostDto.imageId }, data: { visibility: 'public' }});
         else throw new ConflictException(`Image with id: ${createPostDto.imageId} is private`); 
       }
     }

@@ -22,7 +22,7 @@ export class ImagesController {
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({ description: 'The data of the image', type: ImageCreateType })
-  @ApiResponse({ status: 204, description: 'Image uploaded' })
+  @ApiResponse({ status: 200, description: 'Image uploaded', schema: { type: 'object', properties: { id: { type: 'number' } } } })
   @ApiResponse({ status: 401, description: 'Invalid token' })
 
   @UseGuards(JwtAuthGuard)
