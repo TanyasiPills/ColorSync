@@ -13,6 +13,7 @@
 #include "LoginRegister.h"
 #include "SocksManager.h"
 #include <mutex>
+#include <ctime>
 
 
 std::mutex postMutex;
@@ -67,6 +68,29 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
+
+std::string CalcTime(std::chrono::system_clock::time_point time)
+{
+    auto now = std::chrono::system_clock::now();
+    std::string outTime;
+    auto duration = std::chrono::duration_cast<std::chrono::minutes>(now - time);
+    if (duration.count() < 60) {
+        outTime = std::to_string(duration.count()) + " minutes ago";
+    }
+    else if (duration.count() < 24 * 60)
+        outTime = std::to_string(duration.count() / 60) + " horse ago";
+    else if (duration.count() <= 24 * 4 * 60) {
+        outTime = std::to_string(duration.count() / (24 * 60)) + " days ago";
+    }
+    else {
+        std::time_t tt = std::chrono::system_clock::to_time_t(time);
+        std::tm* gmt = std::localtime(&tt);
+        char buffer[50];
+        std::strftime(buffer, sizeof(buffer), "%B %d", gmt);
+        outTime = buffer;
+    }
+    return outTime;
+}
 
 std::unordered_map<GLuint, int> imageIndexes;
 
@@ -323,7 +347,15 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::Top(2 * Lss::VH);
         Lss::Text(users[post.userId].username, 4 * Lss::VH);
 
-        Lss::Left(3.5f * Lss::VH);
+        ImGui::SameLine();
+        Lss::SetFontSize(3 * Lss::VH);
+        std::string timeOut = CalcTime(post.time);
+        float sizeofDay = ImGui::CalcTextSize(timeOut.c_str()).x;
+        float availForDay = ImGui::GetContentRegionAvail().x;
+        Lss::LeftTop(availForDay - sizeofDay-Lss::VW,Lss::VH);
+        Lss::Text(timeOut, 3 * Lss::VH);
+
+        Lss::Left(4 * Lss::VH);
         Lss::Text(post.text, 3 * Lss::VH);
 
         float good = validWidth * 0.9f;
@@ -467,6 +499,14 @@ void SocialMedia::MainPage(float& width, float& height)
                     ImVec2 currentCursor = ImGui::GetCursorPos();
 
                     Lss::Text(users[comment.userId].username, 3.5f * Lss::VH);
+
+                    ImGui::SameLine();
+                    Lss::SetFontSize(2 * Lss::VH);
+                    std::string timeOut = CalcTime(comment.time);
+                    float sizeofDay = ImGui::CalcTextSize(timeOut.c_str()).x;
+                    float availForDay = ImGui::GetContentRegionAvail().x;
+                    Lss::LeftTop(availForDay - sizeofDay - Lss::VW, 0.5f*Lss::VH);
+                    Lss::Text(timeOut, 2 * Lss::VH);
 
                     currentCursor.x += Lss::VH;
                     currentCursor.y += 3 * Lss::VH;
@@ -1910,7 +1950,10 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
     std::tm tm = {};
     std::istringstream ss(timeData);
     ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-    return std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    std::time_t timeUtc = std::mktime(&tm);
+
+    std::time_t locTime = timeUtc + 3600;
+    return std::chrono::system_clock::from_time_t(locTime);
 }
 
 void SocialMedia::GetPosts() 

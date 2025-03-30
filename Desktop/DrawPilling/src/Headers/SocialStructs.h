@@ -2,6 +2,7 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <ctime>
 #include "GLEW/glew.h"
 
 struct Comment 
