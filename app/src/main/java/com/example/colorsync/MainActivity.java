@@ -10,6 +10,7 @@ import android.transition.TransitionManager;
 import android.view.MenuItem;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +18,10 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.OnLifecycleEvent;
+import androidx.navigation.NavBackStackEntry;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -39,12 +44,20 @@ public class MainActivity extends AppCompatActivity {
     public NavController navController;
     private NavHostFragment navHostFragment;
     private boolean navbarUIOnly;
+    private boolean openAddPost;
     public static APIService getApi() {
         return api;
     }
 
     public static MainActivity getInstance() {
         return instance;
+    }
+
+    public boolean getOpenAddPost() {
+        if (openAddPost) {
+            openAddPost = false;
+            return true;
+        } else return false;
     }
 
     @SuppressLint("CheckResult")
@@ -66,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
         instance = this;
         navbarUIOnly = false;
+        openAddPost = false;
 
         constraintLayout = findViewById(R.id.main);
 
@@ -80,24 +94,19 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             int destination = item.getItemId();
-            if (destination == R.id.nav_draw) login();
-            else navigateTo(destination);
-            return true;
+            return navigateTo(destination);
         });
 
         navController.addOnDestinationChangedListener((navController1, navDestination, bundle) -> {
             MenuItem nav_home = navbar.getMenu().getItem(1);
             int destination = navDestination.getId();
             if (destination == R.id.loginFragment) {
-                if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
                 currentPage = R.id.loginFragment;
             }
             else if (destination == R.id.homeFragment) {
-                if (currentPage != R.id.nav_home) nav_home.setIcon(R.drawable.add);
                 currentPage = R.id.nav_home;
             }
             else if (destination == R.id.profileFragment) {
-                if (currentPage == R.id.nav_home) nav_home.setIcon(R.drawable.home);
                 currentPage = R.id.nav_profile;
             }
             if (currentPage != R.id.loginFragment) {
@@ -153,17 +162,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void navigateTo(int destination) {
+    private boolean navigateTo(int destination) {
         if (destination == R.id.nav_home) {
-            if (currentPage == R.id.nav_home) {
-                if (navHostFragment != null) {
-                    Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
-                    if (currentFragment instanceof HomeFragment) {
-                        HomeFragment homeFragment = (HomeFragment) currentFragment;
-                        homeFragment.addPost();
-                    }
-                }
-            } else if (currentPage == R.id.loginFragment) {
+            if (currentPage == R.id.loginFragment) {
                 navigatePop(R.id.homeFragment, R.id.action_loginFragment_to_homeFragment);
             } else if (currentPage == R.id.nav_profile) {
                 navigatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
@@ -174,6 +175,21 @@ public class MainActivity extends AppCompatActivity {
             } else if (currentPage == R.id.loginFragment) {
                 navigatePop(R.id.profileFragment, R.id.action_loginFragment_to_profileFragment);
             }
+        } else if (destination == R.id.nav_add) {
+            if (currentPage == R.id.nav_home) {
+                if (navHostFragment != null) {
+                    Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+                    if (currentFragment instanceof HomeFragment) {
+                        HomeFragment homeFragment = (HomeFragment) currentFragment;
+                        homeFragment.addPost();
+                    }
+                }
+                return false;
+            } else if (currentPage == R.id.nav_profile) {
+                openAddPost = true;
+                navigatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
+                return false;
+            }
         } else if (destination == R.id.loginFragment) {
             if (currentPage == R.id.nav_home) {
                 navController.navigate(R.id.action_homeFragment_to_loginFragment);
@@ -181,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 navController.navigate(R.id.action_profileFragment_to_loginFragment);
             }}
         }
+        return true;
     }
 
     private void login() {

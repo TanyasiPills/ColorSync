@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.colorsync.DataTypes.GlideUtils;
 import com.example.colorsync.DataTypes.IdType;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.User;
@@ -70,6 +71,14 @@ public class ProfileFragment extends Fragment {
     private ImageSelectionGrid uploadAdapter;
     private CheckBox uploadCheckbox;
     private Button uploadButton;
+    private ImageButton uploadClose;
+    private TextView uploadText;
+    public TextView uploadPublicText;
+    ConstraintSet closed;
+    ConstraintSet closedMain;
+    ConstraintSet open;
+    ConstraintSet openMain;
+    private boolean isPfp;
 
     private Uri selected;
 
@@ -122,13 +131,17 @@ public class ProfileFragment extends Fragment {
         mainConstraint = view.findViewById(R.id.profileConstraint);
         uploadCheckbox = view.findViewById(R.id.uploadCheckbox);
         uploadButton = view.findViewById(R.id.uploadButton);
+        uploadClose = view.findViewById(R.id.uploadCancel);
+        uploadText = view.findViewById(R.id.uploadText);
+        uploadPublicText = view.findViewById(R.id.uploadPublicText);
 
         isUploadOpen = false;
         isLoadingUris = false;
+        isPfp = false;
         items = new ArrayList<>();
         uris = new ArrayList<>();
 
-        adapter = new ImageGridAdapter(items);
+        adapter = new ImageGridAdapter(items, 40);
         imagesContainer.setAdapter(adapter);
         imagesContainer.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
@@ -137,8 +150,19 @@ public class ProfileFragment extends Fragment {
         uploadImages.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
         uploadOpenButton.setOnClickListener(v -> {
-            if (isUploadOpen) upload();
-            else uploadOpen();
+            uploadOpen(false);
+        });
+
+        uploadClose.setOnClickListener(v -> {
+            uploadOpen(false);
+        });
+
+        uploadButton.setOnClickListener(v -> {
+            upload();
+        });
+
+        profilePicture.setOnClickListener(v -> {
+            uploadOpen(true);
         });
 
         uploadImages.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -162,6 +186,38 @@ public class ProfileFragment extends Fragment {
         if (loaded) load();
         else loaded = true;
 
+        closed = new ConstraintSet();
+        closed.clone(uploadConstraint);
+        open = new ConstraintSet();
+        open.clone(uploadConstraint);
+
+        open.setVisibility(R.id.uploadText, View.VISIBLE);
+        open.setVisibility(R.id.uploadImages, View.VISIBLE);
+        open.setVisibility(R.id.uploadPublicText, View.VISIBLE);
+        open.setVisibility(R.id.uploadCheckbox, View.VISIBLE);
+        open.setVisibility(R.id.uploadCancel, View.VISIBLE);
+        open.setVisibility(R.id.uploadOpenButton, View.GONE);
+        open.setVisibility(R.id.uploadButton, View.VISIBLE);
+
+        closed.setVisibility(R.id.uploadText, View.GONE);
+        closed.setVisibility(R.id.uploadImages, View.GONE);
+        closed.setVisibility(R.id.uploadPublicText, View.GONE);
+        closed.setVisibility(R.id.uploadCheckbox, View.GONE);
+        closed.setVisibility(R.id.uploadCancel, View.GONE);
+        closed.setVisibility(R.id.uploadOpenButton, View.VISIBLE);
+        closed.setVisibility(R.id.uploadButton, View.GONE);
+
+        closedMain = new ConstraintSet();
+        closedMain.clone(mainConstraint);
+        openMain = new ConstraintSet();
+        openMain.clone(mainConstraint);
+
+        openMain.connect(R.id.uploadCardView, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+        openMain.connect(R.id.uploadCardView, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+
+        closedMain.clear(R.id.uploadCardView, ConstraintSet.TOP);
+        closedMain.clear(R.id.uploadCardView, ConstraintSet.START);
+
         return view;
     }
 
@@ -180,37 +236,71 @@ public class ProfileFragment extends Fragment {
             file = FileUtils.getFileFromUri(getContext(), selected);
         } catch (IOException e) {
             new android.app.AlertDialog.Builder(getContext())
-                    .setTitle("Failed to upload image")
+                    .setTitle("Failed to open image")
+                    .setMessage(e.getMessage())
                     .setPositiveButton("OK", null)
                     .show();
             throw new RuntimeException(e);
         }
         RequestBody fileRequest = RequestBody.create(MediaType.parse("image/*"), file);
         MultipartBody.Part fileBody = MultipartBody.Part.createFormData("file", file.getName(), fileRequest);
-        RequestBody visibilityRequest = RequestBody.create(MediaType.parse("text/plain"), "public");
-        MainActivity.getApi().uploadImage(UserManager.getBearer(), fileBody, visibilityRequest).enqueue(new Callback<IdType>() {
-            @Override
-            public void onResponse(Call<IdType> call, Response<IdType> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(requireContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
-                    loadImages();
-                    uploadOpen();
-                } else new AlertDialog.Builder(requireContext())
-                        .setTitle("Failed to upload image")
-                        .setMessage(response.message())
-                        .setPositiveButton("OK", null)
-                        .show();
-            }
 
-            @Override
-            public void onFailure(Call<IdType> call, Throwable throwable) {
-                new AlertDialog.Builder(requireContext())
-                        .setTitle("Failed to upload image")
-                        .setMessage(throwable.getMessage())
-                        .setPositiveButton("OK", null)
-                        .show();
-            }
-        });
+        if (isPfp) {
+            MainActivity.getApi().uploadPfp(UserManager.getBearer(), fileBody).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        uploadOpen(false);
+                        Glide.with(view)
+                                .load(APIInstance.BASE_URL + "users/" + user.getId() + "/pfp")
+                                .signature(GlideUtils.changeSignature())
+                                .into(profilePicture);
+                    } else new AlertDialog.Builder(getContext())
+                            .setTitle("Failed to change profile picture")
+                            .setMessage(response.message())
+                            .setPositiveButton("Ok", null)
+                            .show();
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable throwable) {
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("Failed to change profile picture")
+                            .setMessage(throwable.getMessage())
+                            .setPositiveButton("Ok", null)
+                            .show();
+                }
+            });
+        } else {
+            String visibility;
+            if (uploadCheckbox.isChecked()) visibility = "public";
+            else visibility = "private";
+            RequestBody visibilityRequest = RequestBody.create(MediaType.parse("text/plain"), visibility);
+
+            MainActivity.getApi().uploadImage(UserManager.getBearer(), fileBody, visibilityRequest).enqueue(new Callback<IdType>() {
+                @Override
+                public void onResponse(Call<IdType> call, Response<IdType> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Toast.makeText(requireContext(), "Image uploaded", Toast.LENGTH_SHORT).show();
+                        loadImages();
+                        uploadOpen(false);
+                    } else new AlertDialog.Builder(requireContext())
+                            .setTitle("Failed to upload image")
+                            .setMessage(response.message())
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
+
+                @Override
+                public void onFailure(Call<IdType> call, Throwable throwable) {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Failed to upload image")
+                            .setMessage(throwable.getMessage())
+                            .setPositiveButton("OK", null)
+                            .show();
+                }
+            });
+        }
     }
 
     private void load() {
@@ -221,6 +311,7 @@ public class ProfileFragment extends Fragment {
         username.setText(user.getUsername());
         Glide.with(view)
                 .load(APIInstance.BASE_URL + "users/" + user.getId() + "/pfp")
+                .signature(GlideUtils.getSignature())
                 .into(profilePicture);
 
         if (user.getProfile_description() != null) description.setText(user.getProfile_description());
@@ -238,9 +329,10 @@ public class ProfileFragment extends Fragment {
                     items.clear();
                     items.addAll(response.body());
                     adapter.notifyDataSetChanged();
-                    if (items.isEmpty()) view.findViewById(R.id.imagesCardView).setVisibility(View.GONE);
+                    if (items.isEmpty()) view.findViewById(R.id.noImagesFound).setVisibility(View.VISIBLE);
+                    else view.findViewById(R.id.noImagesFound).setVisibility(View.GONE);
                 } else if (response.code() == 404) {
-                    //TODO: no profile images
+                    view.findViewById(R.id.noImagesFound).setVisibility(View.VISIBLE);
                 }
                 else {
                     new AlertDialog.Builder(requireContext())
@@ -262,37 +354,23 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void uploadOpen() {
+    private void uploadOpen(boolean pfp) {
         isUploadOpen = !isUploadOpen;
         if (isUploadOpen && uris.isEmpty()) loadMoreUris();
-        ConstraintSet closed = new ConstraintSet();
-        closed.clone(uploadConstraint);
-        ConstraintSet open = new ConstraintSet();
-        open.clone(uploadConstraint);
 
-        open.setVisibility(R.id.uploadText, View.VISIBLE);
-        open.setVisibility(R.id.uploadImages, View.VISIBLE);
-        open.setVisibility(R.id.uploadPublicText, View.VISIBLE);
-        open.setVisibility(R.id.uploadCheckbox, View.VISIBLE);
-        open.setVisibility(R.id.uploadCancel, View.VISIBLE);
-        open.setVisibility(R.id.uploadOpenButton, View.VISIBLE);
-
-        closed.setVisibility(R.id.uploadText, View.GONE);
-        closed.setVisibility(R.id.uploadImages, View.GONE);
-        closed.setVisibility(R.id.uploadPublicText, View.GONE);
-        closed.setVisibility(R.id.uploadCheckbox, View.GONE);
-
-        ConstraintSet closedMain = new ConstraintSet();
-        closedMain.clone(mainConstraint);
-        ConstraintSet openMain = new ConstraintSet();
-        openMain.clone(mainConstraint);
-
-        openMain.connect(R.id.uploadCardView, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-        openMain.connect(R.id.uploadCardView, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-
-        closedMain.clear(R.id.uploadCardView, ConstraintSet.TOP);
-        closedMain.clear(R.id.uploadCardView, ConstraintSet.START);
-
+        if (pfp && !isPfp) {
+            open.setVisibility(R.id.uploadPublicText, View.GONE);
+            open.setVisibility(R.id.uploadCheckbox, View.GONE);
+            uploadText.setText(R.string.changePfpText);
+            uploadButton.setText(R.string.changeText);
+            isPfp = true;
+        } else if (isPfp) {
+            open.setVisibility(R.id.uploadPublicText, View.VISIBLE);
+            open.setVisibility(R.id.uploadCheckbox, View.VISIBLE);
+            uploadText.setText(R.string.uploadText);
+            uploadButton.setText(R.string.uploadButtonText);
+            isPfp = false;
+        }
 
         Transition transition = new ChangeBounds()
                 .setDuration(250)
@@ -319,6 +397,8 @@ public class ProfileFragment extends Fragment {
                 closed.applyTo(uploadConstraint);
                 closedMain.applyTo(mainConstraint);
                 uploadAdapter.deselect();
+                uploadImages.scrollToPosition(0);
+                uploadCheckbox.setChecked(false);
             }
         });
     }
@@ -326,8 +406,6 @@ public class ProfileFragment extends Fragment {
     public void loadMoreUris() {
         if (isLoadingUris) return;
         isLoadingUris = true;
-
-        Toast.makeText(requireContext(), "Loading uris...", Toast.LENGTH_SHORT).show();
 
         Uri collection;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

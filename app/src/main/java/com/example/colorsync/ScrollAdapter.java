@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.colorsync.DataTypes.GlideUtils;
 import com.example.colorsync.DataTypes.Post;
 
 import java.time.LocalDateTime;
@@ -240,6 +241,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             Glide.with(itemView)
                     .load(String.format(Locale.getDefault(), "%susers/%d/pfp", APIInstance.BASE_URL, post.getUser().getId()))
+                    .signature(GlideUtils.getSignature())
                     .into(profilePicture);
             if (post.getImageId() != null)
                 Glide.with(itemView)

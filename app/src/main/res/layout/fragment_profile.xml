@@ -14,7 +14,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/profilePicture"
-        android:contentDescription="@string/profile_pictureDescription"/>
+        android:contentDescription="@string/profile_pictureDescription"
+        android:stateListAnimator="@animator/click_grow"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -37,21 +38,45 @@
         app:layout_constraintVertical_bias="0"
         android:layout_marginEnd="10dp"
         />
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/imagesCardView"
         app:layout_constraintTop_toBottomOf="@id/profilePicture"
-        app:layout_constraintEnd_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0"
+        app:layout_constrainedHeight="true"
         android:layout_marginTop="50dp"
         app:contentPadding="15dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/noImagesFound"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="30dp"
+            tools:ignore="UseCompoundDrawables"
+            android:visibility="gone">
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/image_not_found"
+                app:tint="@color/text"
+                android:contentDescription="@string/no_imagesCD"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/noImagesText"
+                android:textSize="25sp"/>
+        </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/imagesContainer" />
     </androidx.cardview.widget.CardView>
-
 
     <androidx.cardview.widget.CardView
         android:layout_width="0dp"
@@ -104,10 +129,21 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/uploadImages"
+                app:layout_constraintBottom_toTopOf="@id/uploadBottomSpacing"
                 android:text="@string/uploadButtonText"
                 android:visibility="gone"
                 android:textSize="20sp"
-                android:backgroundTint="@color/bgSecondary"/>
+                android:textColor="@color/text"
+                android:backgroundTint="@color/bgSmallHighlight"
+                android:layout_margin="10dp" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:id="@+id/uploadBottomSpacing"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <ImageButton
                 android:layout_width="50dp"

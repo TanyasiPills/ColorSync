@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -23,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.provider.MediaStore;
 import android.transition.ChangeBounds;
@@ -37,12 +37,14 @@ import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.example.colorsync.DataTypes.GlideUtils;
 import com.example.colorsync.DataTypes.ImageData;
 import com.example.colorsync.DataTypes.Post;
 import com.example.colorsync.DataTypes.PostCreate;
@@ -52,7 +54,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import okhttp3.MediaType;
@@ -71,6 +72,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
     private Context context;
     private View view;
+    private SwipeRefreshLayout swipeLayout;
 
     private ImageSelectionGrid post_adapter;
     private final List<ImageData> post_userImages;
@@ -106,6 +108,13 @@ public class HomeFragment extends Fragment {
         selectedImage = null;
         selectedImageId = null;
         upload = true;
+    }
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (MainActivity.getInstance().getOpenAddPost()) addPost();
     }
 
     @Override
@@ -145,6 +154,18 @@ public class HomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_home, container, false);
         context = view.getContext();
+
+        swipeLayout = view.findViewById(R.id.swipeLayout);
+        swipeLayout.setOnRefreshListener(() -> {
+            int size = posts.size();
+            posts.clear();
+            adapter.notifyItemRangeRemoved(0, size);
+            likes.clear();
+            offset = 0;
+            GlideUtils.changeSignature();
+            loadMorePosts();
+            getLikes();
+        });
 
         recyclerView = view.findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -345,7 +366,9 @@ public class HomeFragment extends Fragment {
                                     .setMessage("You are trying to post a private image, do you want to make it public?")
                                     .setNegativeButton("No", null)
                                     .setPositiveButton("Yes", (dialogInterface, i) -> {
-                                        MainActivity.getApi().createPost(UserManager.getBearer(), new PostCreate(text, selectedImageId, post_tagsList).forcePost()).enqueue(new Callback<Post>() {
+                                        PostCreate post = new PostCreate(text, selectedImageId, post_tagsList).forcePost();
+                                        Toast.makeText(context, "post: " + post.forcePost, Toast.LENGTH_SHORT).show();
+                                        MainActivity.getApi().createPost(UserManager.getBearer(), post).enqueue(new Callback<Post>() {
                                             @Override
                                             public void onResponse(@NonNull Call<Post> call, @NonNull Response<Post> response) {
                                                 if (response.isSuccessful() && response.body() != null) {
@@ -393,6 +416,14 @@ public class HomeFragment extends Fragment {
             selectedImageId = null;
             post_adapter.deselect();
         });
+
+        loadMorePosts();
+        getLikes();
+
+        return view;
+    }
+
+    private void getLikes() {
         MainActivity.getApi().getLikes(UserManager.getBearer()).enqueue(new Callback<List<Integer>>() {
             @Override
             public void onResponse(@NonNull Call<List<Integer>> call, @NonNull Response<List<Integer>> response) {
@@ -407,10 +438,8 @@ public class HomeFragment extends Fragment {
 
             }
         });
-        loadMorePosts();
-
-        return view;
     }
+
 
     private void likePosts(List<Post> posts) {
         if (likes.isEmpty()) return;
@@ -623,6 +652,7 @@ public class HomeFragment extends Fragment {
                     likePosts(data.data);
                     adapter.notifyItemRangeInserted(start, data.data.size());
                     isLoading = false;
+                    swipeLayout.setRefreshing(false);
                 } else {
                     new AlertDialog.Builder(context)
                             .setTitle("Error")

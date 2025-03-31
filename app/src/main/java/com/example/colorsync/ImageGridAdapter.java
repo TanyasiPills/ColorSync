@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,21 +32,26 @@ import java.util.List;
 
 public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.ImageViewHolder> {
     private List<ImageData> items;
-    public ImageGridAdapter(List<ImageData> items) {
+    private int padding;
+    public ImageGridAdapter(List<ImageData> items, int padding) {
         this.items = items;
+        this.padding = padding;
     }
 
     public static class ImageViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
         public ImageData item;
 
-        public ImageViewHolder(View itemView) {
+        public ImageViewHolder(View itemView, int padding) {
             super(itemView);
             imageView = itemView.findViewById(R.id.image);
+            setImageSize(padding);
+        }
+
+        public void setImageSize(int padding) {
             ViewGroup.LayoutParams layoutParams = imageView.getLayoutParams();
             int size = (int) ((imageView.getContext().getResources().getDisplayMetrics().widthPixels / 2.0) -
-                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, imageView.getContext().getResources().getDisplayMetrics()));
-
+                    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, padding, imageView.getContext().getResources().getDisplayMetrics()));
             layoutParams.width = size;
             layoutParams.height = size;
             imageView.setLayoutParams(layoutParams);
@@ -86,7 +92,7 @@ public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.Ima
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.image_item, parent, false);
-        return new ImageViewHolder(itemView);
+        return new ImageViewHolder(itemView, padding);
     }
 
     @Override

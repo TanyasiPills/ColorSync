@@ -29,4 +29,9 @@
     <string name="uploadText">Upload a image</string>
     <string name="publicText">Public</string>
     <string name="uploadButtonText">Upload</string>
+    <string name="noImagesText">No images here 😞</string>
+    <string name="no_imagesCD">No images</string>
+    <string name="changePfpText">Change profile picture</string>
+    <string name="changeText">Change</string>
+    <string name="addButtonDescription">Create post</string>
 </resources>

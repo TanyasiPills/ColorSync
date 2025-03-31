@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.colorsync.DataTypes.Comment;
 import com.example.colorsync.DataTypes.CreateComment;
+import com.example.colorsync.DataTypes.GlideUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -117,6 +118,7 @@ public class CommentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             username.setText(UserManager.user.getUsername());
             Glide.with(itemView)
                     .load(String.format(Locale.getDefault(), "%susers/%d/pfp", APIInstance.BASE_URL, UserManager.user.getId()))
+                    .signature(GlideUtils.getSignature())
                     .into(profilePicture);
         }
     }

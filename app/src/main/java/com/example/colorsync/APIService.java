@@ -29,7 +29,6 @@ import retrofit2.http.Query;
 public interface APIService {
     @GET("posts")
     Call<PostResponse> getAllPost(@Header("Authorization") String token, @Query("offset") int offset);
-
     @Multipart
     @POST("posts")
     Call<Post> createPostWithFile(
@@ -38,10 +37,8 @@ public interface APIService {
             @Part("text") RequestBody text,
             @Part("tags[]") List<RequestBody> tags
     );
-
     @POST("posts")
     Call<Post> createPost(@Header("Authorization") String token, @Body PostCreate postCreate);
-
     @POST("posts/like/{id}")
     Call<Void> likePost(@Header("Authorization") String token, @Path("id") int postId);
 
@@ -52,10 +49,8 @@ public interface APIService {
 
     @POST("users/login")
     Call<UserWIthToken> login(@Body LoginRequest loginRequest);
-
     @POST("users")
     Call<UserWIthToken> register(@Body RegisterRequest loginRequest);
-
     @GET("users")
     Call<User> getUser(@Header("Authorization") String token);
     @GET("users/{id}")
@@ -63,10 +58,16 @@ public interface APIService {
     @GET("users/likes")
     Call<List<Integer>> getLikes(@Header("Authorization") String token);
 
+    @Multipart
+    @POST("users/pfp")
+    Call<Void> uploadPfp(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part file
+    );
+
 
     @GET("images/user/{id}")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token, @Path("id") int id);
-
     @GET("images")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token);
 
