@@ -54,6 +54,8 @@ int searchMode = 0;
 int selectedUser = -1;
 bool needImages = true;
 
+static bool openStuff = false;
+
 MyTexture imageToPostTexture;
 GLuint imageToPost = 0;
 
@@ -292,7 +294,7 @@ void SocialMedia::LoadProfile(int id)
 
 void SocialMedia::MainPage(float& width, float& height)
 {
-    static bool openStuff = false;
+
     static bool wasCreated = false;
     static bool created = false;
 
@@ -1864,6 +1866,14 @@ void SocialMedia::LeftSide(float position, float width, float height)
     ImGui::Separator();
 
     Lss::Top(2 * Lss::VH);
+
+    if (runtime.logedIn) {
+        if (Lss::Button("Post", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            openStuff = true;
+        }
+        Lss::Top(1 * Lss::VH);
+    }
+
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
         else {

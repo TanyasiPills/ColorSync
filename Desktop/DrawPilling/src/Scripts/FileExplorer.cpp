@@ -4,7 +4,18 @@
 #include "HighsManager.h"
 #include <vector>
 
-const char* formats[] = {"all", ".jpg", ".png", "All recognized - jpg/png", ".sync"};
+struct FolderSave {
+    std::string name;
+    std::string path;
+
+    FolderSave(std::string nameIn, std::string pathIn) 
+        : name(nameIn), path(pathIn){}
+};
+
+std::vector<FolderSave> favorites;
+std::vector<FolderSave> recent;
+
+const char* formats[] = {".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
 GLuint folder;
@@ -20,12 +31,13 @@ const ImVec2 iconSize(50, 50);
 static bool showExplorer = true;
 bool fileAleardyExists = false;
 
-int counter = 0;
+int counter = 2;
 
 std::vector<std::string> driveList;
 std::vector<const char*> items;
 
 std::string imagePath = "";
+static char tempPath[200] = "";
 
 std::string Explorer::GetImagePath()
 {
@@ -96,7 +108,6 @@ bool IsFolderEmpty(const std::string& folderPath) {
 
 void SearchBar()
 {
-    static char tempPath[200] = "";
     static const char* currentItem = items[0];
     Lss::Text("Path: ", 4 * Lss::VH);
     ImGui::SameLine();
@@ -119,7 +130,10 @@ void SearchBar()
         ImGui::EndCombo();
     }
     ImGui::SameLine();
-    if (Lss::InputText("#actualPath", tempPath, sizeof(tempPath), ImVec2(20 * Lss::VW, 4 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue))
+
+    float widthAvail = ImGui::GetContentRegionAvail().x;
+
+    if (Lss::InputText("#actualPath", tempPath, sizeof(tempPath), ImVec2(widthAvail-2*Lss::VW, 8 * Lss::VH), None, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         std::string newPath(tempPath);
         std::replace(newPath.begin(), newPath.end(), '/', '\\');
@@ -130,22 +144,31 @@ void SearchBar()
             std::strcpy(tempPath, newPath.c_str());
         }
     }
+    ImGui::SameLine();
+    if (Lss::Button("Fav", ImVec2(6 * Lss::VW, 4.7f * Lss::VH),4*Lss::VH)) {
+        if (currentPath.size() > 3)
+        {
+            size_t lastSlash = currentPath.find_last_of("\\/");
+            std::string lastFolder = currentPath.substr(lastSlash + 1);
+            favorites.emplace_back(lastFolder, currentPath);
+        }
+    }
 }
 
 bool ValidFormat(int& currentId, std::string& newPath) 
 {
     switch (currentId)
     {
-    case 1:
+    case 0:
         if (!HasSpecificExtension(newPath, ".jpg")) return false;
         break;
-    case 2:
+    case 1:
         if (!HasSpecificExtension(newPath, ".png")) return false;
         break;
-    case 3:
+    case 2:
         if (!(HasSpecificExtension(newPath, ".jpg") || HasSpecificExtension(newPath, ".png"))) return false;
         break;
-    case 4:
+    case 3:
         if (!HasSpecificExtension(newPath, ".sync")) return false;
         break;
     default:
@@ -158,16 +181,33 @@ void SideBar(float& childHeight)
 {
     Lss::Child("sideBar", ImVec2(10 * Lss::VW, childHeight));
         Lss::Left(0.5f * Lss::VW);
-        Lss::Text("Favorites", 3 * Lss::VH);
+        Lss::Text("Favorites", 2.5f * Lss::VH);
         Lss::Left(0.5f * Lss::VW);
         Lss::SetColor(ContainerBackground, Background);
         Lss::Child("favs", ImVec2(9 * Lss::VW, childHeight / 2 - 4 * Lss::VH));
+            for (auto& child : favorites) {
+                float valid = ImGui::GetContentRegionAvail().x;
+                if (Lss::Button(child.name, ImVec2(valid, 2 * Lss::VH), 1.5f * Lss::VH, Invisible | Rounded)) {
+                    currentPath = child.path;
+                    std::string vmiPath = currentPath.substr(4);
+                    strcpy(tempPath, vmiPath.c_str());
+                }
+                Lss::End();
+            }
         ImGui::EndChild();
-        Lss::Top(0.25 * Lss::VH);
-        Lss::Left(0.5f * Lss::VW);
-        Lss::Text("Recent folders", 3 * Lss::VH);
+        Lss::LeftTop(0.5f * Lss::VW, 0.25f * Lss::VH);
+        Lss::Text("Recent folders", 2.5f * Lss::VH);
         Lss::Left(0.5f * Lss::VW);
         Lss::Child("recents", ImVec2(9 * Lss::VW, childHeight / 2 - 4 * Lss::VH));
+            for (auto& child : recent) {
+                float valid = ImGui::GetContentRegionAvail().x;
+                if (Lss::Button(child.name, ImVec2(valid, 2 * Lss::VH), 1.5f * Lss::VH, Invisible | Rounded)) {
+                    currentPath = child.path;
+                    std::string vmiPath = currentPath.substr(4);
+                    strcpy(tempPath, vmiPath.c_str());
+                }
+                Lss::End();
+            }
         ImGui::EndChild();
         Lss::SetColor(ContainerBackground, ContainerBackground);
         Lss::End();
@@ -176,7 +216,7 @@ void SideBar(float& childHeight)
 
 void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
     Lss::SetFontSize(1 * Lss::VH);
-    if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered))
+    if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
         bool isHovered = false;
         static const char* currentFormat = formats[0];
@@ -193,11 +233,12 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
         Lss::Child("view", ImVec2(48.75f * Lss::VW, childHeight));
         ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 
+        Lss::Left(Lss::VH);
         Lss::Text("Directories & Files:", 4 * Lss::VH);
 
         Lss::SetColor(ContainerBackground, Background);
         Lss::Left(Lss::VW);
-        Lss::Child("#explorerView", ImVec2(46.75f * Lss::VW, childHeight - 10.5f * Lss::VH));
+        Lss::Child("#explorerView", ImVec2(46.75f * Lss::VW, childHeight - 11.5f * Lss::VH));
         Lss::Top(Lss::VH);
         ImGui::Columns(7, nullptr, false);
 
@@ -223,6 +264,14 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
             {
                 std::cout << "Changed path to: " << backPath << std::endl;
                 currentPath = backPath;
+                if (backPath.size() > 3)
+                {
+                    std::string vmiPath = backPath.substr(4);
+                    strcpy(tempPath, vmiPath.c_str());
+                }
+                else {
+                    strcpy(tempPath, "");
+                }
                 selectedFile.clear();
             }
             Lss::End();
@@ -281,6 +330,8 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
             if (isSelected && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && isDirectory)
             {
                 std::cout << "Changed path to: " << newPath << std::endl;
+                std::string vmiPath = newPath.substr(4);
+                strcpy(tempPath, vmiPath.c_str());
                 currentPath = newPath;
                 selectedFile.clear();
             }
@@ -301,13 +352,13 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
         Lss::Left(Lss::VW);
         Lss::Text("File:", 4 * Lss::VH);
         ImGui::SameLine();
-        if (Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(30 * Lss::VW, 4 * Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
+        if (Lss::InputText("##FileName", fileName, sizeof(fileName), ImVec2(30 * Lss::VW, 6 * Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
         {
             std::cout << currentPath + fileName << std::endl;
 
         }
         ImGui::SameLine();
-        Lss::SetFontSize(4 * Lss::VH);
+        Lss::SetFontSize(3 * Lss::VH);
         ImGui::SetNextItemWidth(10 * Lss::VW);
         int numFormats = sizeof(formats) / sizeof(formats[0]);
         bool formatChange = ImGui::BeginCombo("##format", currentFormat, ImGuiComboFlags_NoArrowButton);
@@ -328,7 +379,7 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
             ImGui::EndCombo();
         }
         ImGui::SameLine();
-        if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 4 * Lss::VH))
+        if (Lss::Button("Select", ImVec2(5 * Lss::VW, 4 * Lss::VH), 3 * Lss::VH))
         {
             std::string imagePrePath = currentPath +'\\'+'\\' + fileName;
             if (ValidFormat(idForFormat, imagePrePath))
@@ -340,11 +391,18 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
                 else {
                     fileAleardyExists = false;
                 }
+
+                if (currentPath.size() > 3) {
+                    size_t lastSlash = currentPath.find_last_of("\\/");
+                    std::string lastFolder = currentPath.substr(lastSlash + 1);
+                    recent.emplace_back(lastFolder, currentPath);
+                }
+
                 imagePath = imagePrePath;
                 *creatorStuff = false;
             }
         }
-
+        Lss::Top(Lss::VH);
         Lss::End();
         ImGui::EndChild();
 
