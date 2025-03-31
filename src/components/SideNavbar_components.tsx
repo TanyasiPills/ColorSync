@@ -1,28 +1,28 @@
-import React, { useState } from 'react'
-import { X } from 'react-bootstrap-icons'
-import Cookies from 'universal-cookie'
-import '../css/SideNavbar.css'
-import { LeftNavbarProps } from '../types'
-import { SignInAndUp } from '../pages/modals/SignIn&Up'
+import React, { useState } from 'react';
+import { List } from 'react-bootstrap-icons';
+import Cookies from 'universal-cookie';
+import '../css/SideNavbar.css';
+import { LeftNavbarProps } from '../types';
+import { SignInAndUp } from '../pages/modals/SignIn&Up';
 
 const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) => {
-  const cookies = new Cookies()
-  const thisUser = cookies.get("AccessToken")
-  const [isSignUp, setIsSignUp] = useState<boolean>(false)
-  const [show, setShow] = useState<boolean>(false)
+  const cookies = new Cookies();
+  const thisUser = cookies.get("AccessToken");
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [show, setShow] = useState<boolean>(false);
 
   function signOut() {
-    cookies.remove("AccessToken")
-    window.location.reload()
+    cookies.remove("AccessToken");
+    window.location.reload();
   }
 
   return (
     <div className={`sidebar left ${isOpen ? 'open' : 'closed'}`}>
       {closable && isOpen && (
-        <button className="closebtn" onClick={onClose}>&times;</button>
+        <List/>
       )}
       {closable && !isOpen && (
-        <X className="sidebar-handle" onClick={onClose} size={18} style={{ cursor: "pointer" }} />
+        <List className="sidebar-handle" onClick={onClose} size={18} style={{ cursor: "pointer" }} />
       )}
       <div className="sidebar-header">
         <h2>ColorSync</h2>
@@ -34,27 +34,24 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
         <a href="/Profile" className="sidebar-link">Profile</a>
       </nav>
       <div className="account-section">
-        {thisUser ? (
-          <div className="account-dropdown">
-            <div className="account-title">Account</div>
-            <ul>
-              <li><a href="/Profile" className="sidebar-link">Profile</a></li>
-              <li onClick={signOut} className="sidebar-link">Sign Out</li>
-            </ul>
-          </div>
-        ) : (
-          <div className="account-dropdown">
-            <div className="account-title">Account</div>
-            <ul>
-              <li onClick={() => { setIsSignUp(false); setShow(true) }} className="sidebar-link">Sign In</li>
-              <li onClick={() => { setIsSignUp(true); setShow(true) }} className="sidebar-link">Sign Up</li>
-            </ul>
-          </div>
-        )}
+        <details className="account-dropdown">
+          <summary className="account-title">Account</summary>
+          {thisUser ? (
+            <div>
+              <p><a href="/Profile" className="sidebar-link">Profile</a></p>
+              <p onClick={signOut} className="sidebar-link">Sign Out</p>
+            </div>
+          ) : (
+            <div>
+              <p onClick={() => { setIsSignUp(false); setShow(true); }} className="sidebar-link">Sign In</p>
+              <p onClick={() => { setIsSignUp(true); setShow(true); }} className="sidebar-link">Sign Up</p>
+            </div>
+          )}
+        </details>
       </div>
       <SignInAndUp show={show} onHide={() => setShow(false)} defaultToSignUp={isSignUp} />
     </div>
-  )
-}
+  );
+};
 
-export default SideNavbar
+export default SideNavbar;

@@ -16,7 +16,7 @@
   width: 0;
 }
 
-.sidebar-link {
+.sidebar-link, .account-section {
   display: block;
   text-align: left;
   color: var(--textCol);
