@@ -25,6 +25,10 @@ body {
   color: var(--textCol);
 }
 
+.content {
+  padding: 0.5%;
+}
+
 .overall-layout {
   display: flex;
   height: 100%;

@@ -1,4 +1,4 @@
-#left {
+/*#left {
     background-color: var(--divCol);
     border-right: 2px solid var(--borderCol);
     align-items: center;
@@ -12,12 +12,12 @@
 
 #middle {
     background-color: var(--divCol);
-}
+}*/
 
 #feed {
     background-color: var(--backgroundColor);
     height: 100%;
-    width: 70% !important;
+    width: 100% !important;
     align-self: center;
     overflow-y: scroll;
     scroll-behavior: smooth;

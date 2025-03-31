@@ -1,81 +1,56 @@
-/* Sidebar styles */
 .sidebar {
-    width: 15%;
-    background-color: var(--divCol) !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    transition: width 0.3s;
-    z-index: 1000;
-  }
-  
-  .sidebar.collapsed {
-    width: 0;
-  }
-  
-  /* Content area styles */
-  .content-area {
-    margin-left: 6.25%; /* Approximately 16px */
-    transition: margin-left 0.3s;
-  }
-  
-  .content-area.collapsed {
-    margin-left: 0;
-  }
-  
-  /* Toggle button styles */
-  .toggle-sidebar-button {
-    position: absolute;
-    top: 1.25%; /* Approximately 4px */
-    left: 1.25%; /* Approximately 4px */
-    z-index: 1001;
-    background: none;
-    border: none;
-    font-size: 100%; /* Adjusts size based on parent font size */
-    color: #fff;
-  }
-  
-  /* Navbar custom styles */
-  .navbar-custom {
-    background-color: var(--divCol);
-    border-bottom: 0.15rem solid var(--borderCol);
-  }
-  
-  .navbar-brand {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: transparent !important;
-    background: linear-gradient(90deg, #8A2BE2, #b000c7, #2665ec, #FF1493);
-    -webkit-background-clip: text;
-    background-clip: text;
-    transition: transform 0.3s ease-in-out;
-  }
-  
-  .navbar-brand:hover {
-    transform: scale(1.1);
-  }
-  
-  .navbar-nav .nav-link {
-    color: var(--textCol);
-    font-size: 1.1rem;
-    margin-right: 1rem;
-  }
-  
-  .navbar-nav .nav-link:hover {
-    background-color: var(--lowHighlight);
-  }
-  
-  .dropdown-menu {
-    background-color: var(--divCol);
-    border: none;
-  }
-  
-  .dropdown-item {
-    color: var(--textCol);
-  }
-  
-  .dropdown-item:hover {
-    background-color: var(--lowHighlight);
-  }
-  
+  left: 0;
+  height: calc(100%);
+  width: 25%;
+  padding-top: 5%;
+  background-color: var(--divCol);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.5s ease;
+  overflow: hidden;
+}
+
+.sidebar.closed {
+  width: 0;
+}
+
+.sidebar-link {
+  display: block;
+  text-align: left;
+  color: var(--textCol);
+  font-size: large;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar-link:hover {
+  background-color: var(--lowHighlight);
+}
+
+.sidebar-handle {
+  position: absolute;
+  top: 50%;
+  width: 2rem;
+  height: 2rem;
+  background-color: var(--divCol);
+  border: 2px solid var(--borderCol);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: right 0.7s ease;
+}
+
+.sidebar-handle:hover {
+  right: -2rem;
+}
+
+.sidebar.right {
+  border-left: 2px solid var(--borderCol);
+}
+
+.sidebar.left {
+  border-right: 2px solid var(--borderCol);
+}

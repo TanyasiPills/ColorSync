@@ -1,7 +1,7 @@
 function App() {
 
     return (
-        <>
+        <div className="content">
             <h1 className="title">ColorSync</h1>
             <p className="title">a way to solve my relationship</p>
             <br />
@@ -21,7 +21,7 @@ function App() {
                 <p>Join the fun! <a href="/Download">Download <strong>ColorSync</strong></a> today and start creating with your crew. 🚀✨</p>
 
             </div>
-        </>
+        </div>
     )
 }
 

@@ -3,10 +3,8 @@ import '../css/SideNavbar.css';
 
 const RightSidebar: React.FC = () => {
   return (
-    <div className="empty-sidebar">
-      {/* Right sidebar content */}
+    <div className="sidebar right">
     </div>
   );
 };
-
 export default RightSidebar;

@@ -39,3 +39,9 @@ export interface modalProp {
     show: boolean;
     onHide: () => void;
 }
+
+export interface LeftNavbarProps {
+  isOpen: boolean;
+  onClose?: () => void;
+  closable: boolean;
+}

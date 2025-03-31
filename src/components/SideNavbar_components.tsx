@@ -1,37 +1,60 @@
-import React, { useState } from 'react';
-import { Navbar, Nav, Dropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import '../css/SideNavbar.css';
+import React, { useState } from 'react'
+import { X } from 'react-bootstrap-icons'
+import Cookies from 'universal-cookie'
+import '../css/SideNavbar.css'
+import { LeftNavbarProps } from '../types'
+import { SignInAndUp } from '../pages/modals/SignIn&Up'
 
-const SideNavbar: React.FC<{ onToggleSidebar: () => void; isSidebarOpen: boolean }> = ({ onToggleSidebar, isSidebarOpen }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) => {
+  const cookies = new Cookies()
+  const thisUser = cookies.get("AccessToken")
+  const [isSignUp, setIsSignUp] = useState<boolean>(false)
+  const [show, setShow] = useState<boolean>(false)
+
+  function signOut() {
+    cookies.remove("AccessToken")
+    window.location.reload()
+  }
 
   return (
-    <div id="side-navbar" className={`sidebar ${isSidebarOpen ? '' : 'collapsed'}`}>
-      <Navbar expand="lg" bg="dark" variant="dark" className="h-100">
-        <Navbar.Brand href="#">ColorSync</Navbar.Brand>
-        <Navbar.Toggle aria-controls="responsive-navbar-nav" onClick={onToggleSidebar} />
-        <Navbar.Collapse id="responsive-navbar-nav">
-          <Nav className="flex-column">
-            <Nav.Link as={Link} to="/">Home</Nav.Link>
-            <Nav.Link as={Link} to="/Draw">Draw</Nav.Link>
-            <Nav.Link as={Link} to="/Download">Download</Nav.Link>
-            <Nav.Link as={Link} to="/CMS">Social Media</Nav.Link>
-            <Dropdown show={isDropdownOpen} onToggle={() => setIsDropdownOpen(!isDropdownOpen)}>
-              <Dropdown.Toggle id="dropdown-basic">
-                Dropdown
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item href="#">Action</Dropdown.Item>
-                <Dropdown.Item href="#">Another action</Dropdown.Item>
-                <Dropdown.Item href="#">Something else</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </Nav>
-        </Navbar.Collapse>
-      </Navbar>
+    <div className={`sidebar left ${isOpen ? 'open' : 'closed'}`}>
+      {closable && isOpen && (
+        <button className="closebtn" onClick={onClose}>&times;</button>
+      )}
+      {closable && !isOpen && (
+        <X className="sidebar-handle" onClick={onClose} size={18} style={{ cursor: "pointer" }} />
+      )}
+      <div className="sidebar-header">
+        <h2>ColorSync</h2>
+      </div>
+      <nav>
+        <a href="/" className="sidebar-link">Home</a>
+        <a href="/Draw" className="sidebar-link">Draw Online</a>
+        <a href="/CMS" className="sidebar-link">Colourful Media Synced</a>
+        <a href="/Profile" className="sidebar-link">Profile</a>
+      </nav>
+      <div className="account-section">
+        {thisUser ? (
+          <div className="account-dropdown">
+            <div className="account-title">Account</div>
+            <ul>
+              <li><a href="/Profile" className="sidebar-link">Profile</a></li>
+              <li onClick={signOut} className="sidebar-link">Sign Out</li>
+            </ul>
+          </div>
+        ) : (
+          <div className="account-dropdown">
+            <div className="account-title">Account</div>
+            <ul>
+              <li onClick={() => { setIsSignUp(false); setShow(true) }} className="sidebar-link">Sign In</li>
+              <li onClick={() => { setIsSignUp(true); setShow(true) }} className="sidebar-link">Sign Up</li>
+            </ul>
+          </div>
+        )}
+      </div>
+      <SignInAndUp show={show} onHide={() => setShow(false)} defaultToSignUp={isSignUp} />
     </div>
-  );
-};
+  )
+}
 
-export default SideNavbar;
+export default SideNavbar
