@@ -51,6 +51,7 @@ export class PostsController {
   @HttpCode(201)
   @Post()
   async create(@Body() createPostDto: CreatePostDto, @Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    console.log(createPostDto);
     let uploaded = false;
     if (file) {
       const image = await this.imageService.create({visibility: 'public'}, file, req.user.id, true);

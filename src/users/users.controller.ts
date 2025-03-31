@@ -61,7 +61,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({description: 'Profile picture to upload', type: FileType})
-  @ApiResponse({status: 200, description: 'Profile picture uploaded'})
+  @ApiResponse({status: 204, description: 'Profile picture uploaded'})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @Post('pfp')

@@ -40,7 +40,7 @@ export class CreatePostDto {
       if (isString(value)) {
         if (value == "1") return true;
         else return JSON.parse(value);
-      }
+      } else return value;
     } catch {
       return value
   }})
