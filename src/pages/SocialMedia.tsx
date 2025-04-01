@@ -42,28 +42,28 @@ export function SocialMedia() {
     loading = false
   }
 
+  const fetchLikes = async () => {
+    try {
+      const result = await fetch(`${backendIp}/users/likes`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer " + cookies.get("AccessToken").access_token
+        }
+      })
+      if (result.ok) {
+        const json = await result.json()
+        setLikedPosts(json)
+      } else {
+        console.log(await result.text())
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   useEffect(() => {
     fetchPosts()
-
-    const fetchLikes = async () => {
-      try {
-        const result = await fetch(`${backendIp}/users/likes`, {
-          method: "GET",
-          headers: {
-            "Accept": "application/json",
-            "Authorization": "Bearer " + cookies.get("AccessToken").access_token
-          }
-        })
-        if (result.ok) {
-          const json = await result.json()
-          setLikedPosts(json)
-        } else {
-          console.log(await result.text())
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
 
     fetchLikes()
 
@@ -190,86 +190,111 @@ export function SocialMedia() {
 
 
   return (
-    <Container fluid className="vh-100 d-flex flex-column">
-      <Row className="flex-grow-1 w-100 h-100">
-        <div id="feed">
-          <Posting show={show} onHide={() => setShow(false)} />
-          {post.length > 0 ? post.map((post) => (
-            <Card className="mb- post-card" key={post.id}>
-              <Card.Body>
-                <Row className="align-items-center">
-                  <Col xs="auto" className="text-center">
-                    <img src={`${backendIp}/users/${post.user.id}/pfp`} alt="Profile" className="profile-img" data-id={post.user.id} key={post.id} onClick={takeToProfile} />
-                  </Col>
-                  <Col>
-                    <h5 className="profile-name" key={post.id} data-id={post.user.id} onClick={takeToProfile}>{post.user.username}</h5>
-                  </Col>
-                  <Col xs="auto">
-                    <p>{generateDatabaseDateTime(post.date)}</p>
-                  </Col>
-                </Row>
-              </Card.Body>
-              {post.imageId && <Card.Img variant="top" className="postImg" src={`${backendIp}/images/${post.imageId}`} alt="Post Image" />}
-              <div className="tagsConatiner">
-                {post.tags.length > 0 && post.tags.map((tag) => (
-                  <div className="tags">#{tag}</div>
-                ))}
-              </div>
-              <Card.Body>
-                <Card.Text>{post.text}</Card.Text>
-              </Card.Body>
-              <div className="d-flex align-items-center">
-                <span
-                  className="like-text d-flex align-items-center me-2"
-                  onClick={(event: any) => handleLike(event.target, post.id)}>
-                  {likedPosts && likedPosts.includes(post.id) ? "❤️" : "🤍"}
-                  <span className="ms-3">{post.likes}</span>
-                </span>
-                {thisUser && (
-                  <InputGroup className="mb-3 d-flex align-items-center">
-                    <FormControl
-                      placeholder="Add a comment..."
-                      aria-label="New comment"
-                      aria-describedby="comment-button"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)} />
-                    <Button
-                      variant="outline-secondary"
-                      id="comment-button"
-                      onClick={(event) => handleSubmit(event as any, post.id)}>
-                      Submit
-                    </Button>
-                  </InputGroup>
-                )}
-              </div>
-              {post.comments.length > 0 && (
-                <details className="mt-2">
-                  <summary className="summary">Comments</summary>
-                  {post.comments.map((comment) => (
-                    <div key={comment.id} className="comment-container p-2">
-                      <Row className="align-items-center">
-                        <Col xs="auto">
-                          <img
-                            className="profile-img"
-                            src={`${backendIp}/users/${comment.user.id}/pfp`}
-                            data-id={comment.user.id}
-                            onClick={takeToProfile}
-                          />
-                        </Col>
-                        <Col>
-                          <h6 data-id={comment.user.id} onClick={takeToProfile}>{comment.user.username}</h6>
-                          <p className="mb-1">{comment.text}</p>
-                          <p className="small">{generateDatabaseDateTime(comment.date)}</p>
-                        </Col>
-                      </Row>
-                    </div>
-                  ))}
-                </details>
-              )}
-            </Card>
-          )) : post.length == 0 ? <h1>There's no post at this time</h1> : <Spinner animation="border" size="sm" />}
+    <div id="feed" className="container-fluid">
+  <Posting show={show} onHide={() => setShow(false)} />
+  {post.length > 0 ? (
+    post.map((post) => (
+      <div className="card mb-4 p-3" key={post.id}>
+        <div className="d-flex align-items-center mb-2">
+          <img
+            src={backendIp + "/users/" + post.user.id + "/pfp"}
+            alt="Profile"
+            className="profile-img rounded-circle"
+            data-id={post.user.id}
+            onClick={takeToProfile}
+          />
+          <h5
+            className="profile-name ms-2 mb-0"
+            data-id={post.user.id}
+            onClick={takeToProfile}
+          >
+            {post.user.username}
+          </h5>
+          <p className="post-time ms-auto text-muted small">
+            {generateDatabaseDateTime(post.date)}
+          </p>
         </div>
-      </Row>
-    </Container>
+        {post.imageId && (
+          <img
+            className="post-img img-fluid rounded"
+            src={backendIp + "/images/" + post.imageId}
+            alt="Post Image"
+          />
+        )}
+        <div className="tags-container mt-2">
+          {post.tags.length > 0 &&
+            post.tags.map((tag) => (
+              <div className="badge bg-secondary me-1 mb-1" key={tag}>
+                #{tag}
+              </div>
+            ))}
+        </div>
+        <p className="post-text mt-2">{post.text}</p>
+        <div className="post-footer d-flex justify-content-between align-items-center mt-3">
+          <span
+            className="like-button d-flex align-items-center"
+            onClick={(event: any) => handleLike(event.target, post.id)}
+          >
+            {likedPosts.includes(post.id) ? "❤️" : "🤍"}
+            <span className="like-count ms-2">{post.likes}</span>
+          </span>
+          {thisUser && (
+            <form
+              className="comment-form d-flex w-75 mt-2"
+              onSubmit={(e) => handleSubmit(e, post.id)}
+            >
+              <input
+                type="text"
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="form-control me-2"
+              />
+              <button type="submit" className="btn btn-primary">
+                Submit
+              </button>
+            </form>
+          )}
+        </div>
+        {post.comments.length > 0 && (
+          <details className="comments-section mt-3">
+            <summary className="comments-summary fs-5">
+              Comments
+            </summary>
+            {post.comments.map((comment) => (
+              <div key={comment.id} className="comment d-flex align-items-start mt-2">
+                <img
+                  className="comment-profile-img rounded-circle me-2"
+                  src={backendIp + "/users/" + comment.user.id + "/pfp"}
+                  alt="Profile"
+                  data-id={comment.user.id}
+                  onClick={takeToProfile}
+                />
+                <div className="comment-content flex-grow-1">
+                  <h6
+                    className="comment-username fs-6 mb-1"
+                    data-id={comment.user.id}
+                    onClick={takeToProfile}
+                  >
+                    {comment.user.username}
+                  </h6>
+                  <p className="comment-text fs-6">{comment.text}</p>
+                  <p className="comment-time text-muted small">
+                    {generateDatabaseDateTime(comment.date)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </details>
+        )}
+      </div>
+    ))
+  ) : post.length === 0 ? (
+    <h1>No posts available at this time.</h1>
+  ) : (
+    <div className="loading-spinner">Loading...</div>
+  )}
+</div>
+
   );
 }

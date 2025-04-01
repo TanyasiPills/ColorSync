@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader } from 'react-bootstrap';
 import Cookies from 'universal-cookie';
 import { backendIp } from '../../constants';
@@ -10,6 +10,24 @@ export const SignInAndUp: React.FC<modalProp & { defaultToSignUp: boolean }> = (
   const [isSignUp, setIsSignUp] = useState(defaultToSignUp);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  let timeout: ReturnType<typeof setTimeout>;
+
+  useEffect(() => {
+    if (!show) {
+      setIsSubmitting(false);
+      setError('');
+    }
+  }, [show]);
+
+  useEffect(() => {
+    if (isSubmitting) {
+      timeout = setTimeout(() => {
+        setError('You need to connect to backend');
+        setIsSubmitting(false);
+      }, 30000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isSubmitting]);
 
   if (cookie.get("AccessToken")) {
     onHide();
@@ -34,6 +52,8 @@ export const SignInAndUp: React.FC<modalProp & { defaultToSignUp: boolean }> = (
         body: JSON.stringify(body)
       });
 
+      clearTimeout(timeout);
+
       if (!res.ok) {
         const errorData = await res.json();
         setError(errorData.message || (isSignUp ? 'Failed to Sign Up' : 'Failed to Sign In'));
@@ -51,11 +71,14 @@ export const SignInAndUp: React.FC<modalProp & { defaultToSignUp: boolean }> = (
     }
   };
 
+
   return (
     <Modal show={show} onHide={onHide} centered>
       <ModalHeader closeButton>
-        <h2>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
-        <p>{isSignUp ? 'Create a new account' : 'Please enter your credentials to log in'}</p>
+        <div className="modal-header-content">
+          <h2>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
+          <p>{isSignUp ? 'Create a new account' : 'Please enter your credentials to log in'}</p>
+        </div>
       </ModalHeader>
       <ModalBody>
         <Form onSubmit={handleSubmit}>

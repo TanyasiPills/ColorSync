@@ -10,6 +10,7 @@ import { SocialMedia } from './pages/SocialMedia'
 import { Search } from 'react-bootstrap-icons'
 import { Profile } from './pages/Profile'
 import RightSidebar from './components/RightSidebar_components'
+import { Test } from './pages/Test'
 
 const MainLayout: React.FC = () => {
   const location = useLocation()
@@ -18,7 +19,6 @@ const MainLayout: React.FC = () => {
   const [closable, setClosable] = useState(false)
 
   useEffect(() => {
-    // On the '/draw' page (case-insensitive) we want the sidebar to be closable
     if (location.pathname.toLowerCase() === '/draw') {
       setClosable(true)
     } else {
@@ -35,7 +35,6 @@ const MainLayout: React.FC = () => {
   }, [])
 
   const toggleLeftNavbar = () => {
-    // Allow toggling if on mobile or if the page is marked as closable (/Draw)
     if (isMobile || closable) {
       setIsSidebarOpen(!isSidebarOpen)
     }
@@ -60,9 +59,10 @@ const MainLayout: React.FC = () => {
           <Route path="/Draw" element={<WebGLCanvas />} />
           <Route path="/Download" element={<App />} />
           <Route path="/CMS" element={<SocialMedia />} />
-          <Route path="/CMS/SRC" element={<Search />} />
+          <Route path="/SRC" element={<Search />} />
           <Route path="/Profile" element={<Profile own />} />
           <Route path="/Profile/:id" element={<Profile />} />
+          <Route path="/Test" element={<Test />} />
         </Routes>
       </div>
       {(!isMobile && !closable) && <RightSidebar />}
