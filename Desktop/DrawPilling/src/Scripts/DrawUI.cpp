@@ -149,6 +149,7 @@ void DrawUI::DrawMenu() {
 				canvasInitWindow = true;
 				inited = false;
 				selected = 0;
+				renderer->tool = 0;
 			}
 			if (ImGui::MenuItem("Open...")) {
 				// Handle "Open" action
