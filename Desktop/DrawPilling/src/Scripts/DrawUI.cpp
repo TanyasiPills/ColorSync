@@ -55,6 +55,7 @@ MyTexture layerLayer;
 
 MyTexture cursor;
 MyTexture pen;
+MyTexture eraser;
 MyTexture water;
 MyTexture air;
 MyTexture chalk;
@@ -63,9 +64,9 @@ MyTexture sizecursor;
 
 MyTexture adminCrown;
 
-MyTexture icons[5];
+MyTexture icons[6];
 
-std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
+std::string names[6] = { "Cursor", "Pen Brush", "Eraser", "Air Brush", "Water Brush", "Chalk Brush"};
 
 static int selected = -1;
 static int selectedSize = -1;
@@ -86,19 +87,21 @@ void InitBrushIcons()
 	cursor.Init("Resources/icons/cursorBrush.png");
 	icons[0] = cursor;
 
-	
 	pen.Init("Resources/icons/penBrush.png");
 	icons[1] = pen;
+
+	eraser.Init("Resources/icons/eraser.png");
+	icons[2] = eraser;
 	
 	air.Init("Resources/icons/airBrush.png");
-	icons[2] = air;
+	icons[3] = air;
 
 	water.Init("Resources/icons/waterBrush.png");
-	icons[3] = water;
+	icons[4] = water;
 
 	
 	chalk.Init("Resources/icons/chalkBrush.png");
-	icons[4] = chalk;
+	icons[5] = chalk;
 
 	sizecursor.Init("Resources/Textures/penBrush.png");
 }
@@ -143,7 +146,9 @@ void DrawUI::DrawMenu() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New")) {
-				// Handle "New" action
+				canvasInitWindow = true;
+				inited = false;
+				selected = 0;
 			}
 			if (ImGui::MenuItem("Open...")) {
 				// Handle "Open" action
@@ -222,7 +227,6 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-	std::cout << scale<<"; "<< cursorRadius << std::endl;
 		float sliderVal = cursorRadius * scale * 100;
 		sliderVal -= 1.0f;
 		sliderVal *= 2.0f;
@@ -234,7 +238,6 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 		
 		cursorRadius = sliderVal / 100.0f / scale;
 
-		std::cout << cursorRadius << std::endl;
 		ImGui::Columns(3, nullptr, false);
 
 		for (int i = 1; i < 10; i++)
@@ -276,7 +279,7 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 	}
 }
 
-void DrawUI::BrushWindow(GLFWwindow* window) 
+void DrawUI::BrushWindow(GLFWwindow* window, RenderData& cursor) 
 {
 	glfwGetWindowSize(window, &windowSizeX, &windowSizeY);
 	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y + SizeWindowSize.y), ImGuiCond_Always);
@@ -290,12 +293,16 @@ void DrawUI::BrushWindow(GLFWwindow* window)
 
 	for (RenderData brush : renderer->brushes)
 	{
-		if (index <= 4) {
+		if (index <= 5) {
 			bool isSelected = (index == selected);
 			if (ImGui::Selectable(("##" + std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-				if (!isSelected) renderer->ChangeBrush(index);
-				selected = index;
+				if (!isSelected) {
+					renderer->ChangeBrush(index);
+					selected = index;
+					renderer->tool = index;
+				}
 			}
+
 			ImVec2 pos = ImGui::GetItemRectMin();
 			ImVec2 size = ImGui::GetItemRectSize();
 			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
@@ -742,7 +749,6 @@ void DrawUI::InitWindow()
 
 					canvasInitWindow = false;
 					inited = true;
-					std::cout << "heoooo" << std::endl;
 				}
 				else {
 					if (width > 0 && height > 0) {

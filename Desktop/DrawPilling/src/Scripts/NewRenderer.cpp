@@ -137,6 +137,8 @@ void NewRenderer::Init(GLFWwindow* windowIn)
 
 void NewRenderer::InitBrushes()
 {
+	brushes.clear();
+
 	RenderData cursorBrush;
 	NewDraw::InitBrush(cursorBrush, cursorRadius, "Resources/Textures/cursor.png");
 	brushes.push_back(cursorBrush);
@@ -144,6 +146,10 @@ void NewRenderer::InitBrushes()
 	RenderData penBrush;
 	NewDraw::InitBrush(penBrush, cursorRadius);
 	brushes.push_back(penBrush);
+
+	RenderData eraseBrush;
+	NewDraw::InitBrush(eraseBrush, cursorRadius, "Resources/Textures/erase.png");
+	brushes.push_back(eraseBrush);
 
 	RenderData airBrush;
 	NewDraw::InitBrush(airBrush, cursorRadius, "Resources/Textures/airBrush.png");
@@ -184,6 +190,11 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 
 void NewRenderer::InitNewCanvas()
 {
+	nodes.clear();
+	folders.clear();
+	layers.clear();
+	nextFreeNodeIndex = 0;
+
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
 	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
@@ -259,14 +270,24 @@ void NewRenderer::RenderCursorToCanvas()
 		float* pos = Callback::GlCursorPosition();
 		switch (tool)
 		{
-		case 0: { // draw
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5: { // draw
+			if (tool == 2) {
+				cursor = brushes[1];
+				cursor.shader->Bind();
+				cursor.shader->SetUniform4f("Kolor", 0.0f, 0.0f, 0.0f, 0.0f);
+				glBlendFunc(GL_ONE, GL_ZERO);
+			}
 			float dx = pos[0] - prevPos[0];
 			float dy = pos[1] - prevPos[1];
 			dx *= canvasSize[0];
 			dy *= canvasSize[1];
 			float distance = std::sqrt(dx * dx + dy * dy);
 
-			int num_samples = 1+distance/(cursorRadius*1000);
+			int num_samples = 1 + distance / (cursorRadius * 100);
 
 			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
 			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
@@ -287,12 +308,18 @@ void NewRenderer::RenderCursorToCanvas()
 			prevPrevPos[1] = prevPos[1];
 			prevPos[0] = pos[0];
 			prevPos[1] = pos[1];
+			if (tool == 2) {
+				cursor.shader->SetUniform4f("Kolor", color[0], color[1], color[2], 1.0f);
+				cursor = brushes[2];
+				cursor.shader->Bind();
+				glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			}
 		} break;
-		case 1: { // fill
+		case 6: { // fill
 			ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
 			NewDraw::Fill(layerPtr, pos[0], pos[1], colorIn);
 		} break;
-		case 2: { // colorpicker[0]
+		case 201: { // colorpicker[0]
 			int pixelX = static_cast<int>((pos[0]) / canvasRatio[0] * canvasSize[0]);
 			int pixelY = static_cast<int>((pos[1]) / canvasRatio[1] * canvasSize[0]);
 
@@ -315,31 +342,6 @@ void NewRenderer::RenderCursorToCanvas()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			DrawUI::SetColor(color);
-		} break;
-		case 3: { 
-			float dx = pos[0] - prevPos[0];
-			float dy = pos[1] - prevPos[1];
-			dx *= canvasSize[0];
-			dy *= canvasSize[1];
-			float distance = std::sqrt(dx * dx + dy * dy);
-
-			int num_samples = 1 + distance / (cursorRadius * 1000);
-
-			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
-			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
-
-			for (int i = 0; i < num_samples; ++i) {
-				float t = static_cast<float>(i) / num_samples;
-
-				float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
-				float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
-
-				float tmp[2] = { vx, vy };
-
-				cursor.shader->SetUniform4f("Kolor", 0.0f, 0.0f, 0.0f, 0.0f);
-				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
-				Draw(cursor);
-			}
 		} break;
 		default:
 			break;
@@ -485,7 +487,7 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::DrawMenu();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius, zoomRatio);
-	DrawUI::BrushWindow(window);
+	DrawUI::BrushWindow(window, cursor);
 	DrawUI::ServerWindow();
 	DrawUI::LayerWindow();
 	DrawUI::ChatWindow();
