@@ -93,6 +93,7 @@ int NewRenderer::CreateLayer(int& parent)
 	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	NewDraw::MoveCanvas(createdLayer, canvasRatio, offset);
 	return index;
 }
 int NewRenderer::CreateFolder(int& parent)
