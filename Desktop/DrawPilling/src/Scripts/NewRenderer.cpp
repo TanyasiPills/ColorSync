@@ -467,16 +467,16 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 
 void NewRenderer::RenderLayers()
 {
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	for (int item : layers) {
 		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
 		if (layer.visible) {
+			layer.data.shader->Bind();
+			layer.data.shader->SetUniform1f("opacity", layer.opacity / 100.0f);
 			Draw(layer.data);
 		}
 	}
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	glBlendEquation(GL_FUNC_ADD);
 }
 
 void NewRenderer::RenderCursor()

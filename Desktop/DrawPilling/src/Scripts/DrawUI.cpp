@@ -633,6 +633,11 @@ void DrawUI::LayerWindow()
 			}
 		}
 	}
+	if (selectedLayer > -1) {
+		ImGui::SameLine();
+		ImGui::SliderInt("Opacity", &renderer->nodes[selectedLayer].get()->opacity, 0, 100);
+	}
+
 	if (ImGui::IsItemHovered()) itemHovered = true;
 	Lss::Top(Lss::VH);
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
