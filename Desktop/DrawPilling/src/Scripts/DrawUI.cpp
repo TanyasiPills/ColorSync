@@ -194,12 +194,14 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextWindowPos(ImVec2(0, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
-	if(renderer->inited)cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	if(renderer->inited)cursor.shader->SetUniform4f("Kolor", color[0], color[1], color[2], 1.0f);
 	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
@@ -212,7 +214,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	}
 }
 
-void DrawUI::SizeWindow(float& cursorRadius)
+void DrawUI::SizeWindow(float& cursorRadius, float scale)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
 
@@ -220,17 +222,19 @@ void DrawUI::SizeWindow(float& cursorRadius)
 
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
 
-		int sliderVal = cursorRadius * 100;
-		sliderVal -= 1;
-		sliderVal *= 2;
-		if (sliderVal == 0) sliderVal = 1;
-		ImGui::SliderInt("##Scale", &sliderVal, 1, 16);
-		if (sliderVal == 1) sliderVal = 0;
-		sliderVal /= 2;
-		sliderVal += 1;
+	std::cout << scale<<"; "<< cursorRadius << std::endl;
+		float sliderVal = cursorRadius * scale * 100;
+		sliderVal -= 1.0f;
+		sliderVal *= 2.0f;
+		if (sliderVal == 0.0f) sliderVal = 1.0f;
+		ImGui::SliderInt("##Scale", (int*)&sliderVal, 1, 16);
+		if (sliderVal == 1.0f) sliderVal = 0.0f;
+		sliderVal /= 2.0f;
+		sliderVal += 1.0f;
 		
-		cursorRadius = float(sliderVal) / 100.0f;
+		cursorRadius = sliderVal / 100.0f / scale;
 
+		std::cout << cursorRadius << std::endl;
 		ImGui::Columns(3, nullptr, false);
 
 		for (int i = 1; i < 10; i++)
@@ -721,7 +725,7 @@ void DrawUI::InitWindow()
 				openExplorer = true;
 				wasOpen = true;
 			}
-			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 4);
+			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 3);
 			else if (wasOpen)
 			{
 				strcpy(locationText, Explorer::GetImagePath().c_str());

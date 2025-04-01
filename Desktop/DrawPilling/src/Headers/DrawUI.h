@@ -15,7 +15,7 @@ public:
     static void DrawMenu();
 
     static void ColorWindow(RenderData& cursor);
-    static void SizeWindow(float& cursorRadius);
+    static void SizeWindow(float& cursorRadius, float scale = 1.0f);
     static void BrushWindow(GLFWwindow* window);
 
     static void ServerWindow();

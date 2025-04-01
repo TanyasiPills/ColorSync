@@ -34,6 +34,7 @@ CanvasData dataForCanvas;
 
 
 float cursorRadius = 0.01;
+float zoomRatio = 1.0f;
 float initialCanvasRatio[2] = { 1.0f,1.0f };
 float canvasRatio[2] = {1,1};
 float identityRatio[2] = {1,1};
@@ -220,6 +221,7 @@ void NewRenderer::Zoom(static float scale, static float* offsetIn)
 	}
 
 	cursorRadius *= scale;
+	zoomRatio *= scale;
 }
 
 void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
@@ -314,8 +316,30 @@ void NewRenderer::RenderCursorToCanvas()
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			DrawUI::SetColor(color);
 		} break;
-		case 3: { // erase
+		case 3: { 
+			float dx = pos[0] - prevPos[0];
+			float dy = pos[1] - prevPos[1];
+			dx *= canvasSize[0];
+			dy *= canvasSize[1];
+			float distance = std::sqrt(dx * dx + dy * dy);
 
+			int num_samples = 1 + distance / (cursorRadius * 1000);
+
+			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
+			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
+
+			for (int i = 0; i < num_samples; ++i) {
+				float t = static_cast<float>(i) / num_samples;
+
+				float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
+				float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
+
+				float tmp[2] = { vx, vy };
+
+				cursor.shader->SetUniform4f("Kolor", 0.0f, 0.0f, 0.0f, 0.0f);
+				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
+				Draw(cursor);
+			}
 		} break;
 		default:
 			break;
@@ -460,7 +484,7 @@ void RenderImGui(bool& onUIIn)
 
 	DrawUI::DrawMenu();
 	DrawUI::ColorWindow(cursor);
-	DrawUI::SizeWindow(cursorRadius);
+	DrawUI::SizeWindow(cursorRadius, zoomRatio);
 	DrawUI::BrushWindow(window);
 	DrawUI::ServerWindow();
 	DrawUI::LayerWindow();
@@ -475,12 +499,6 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	/*
-	GLFWwindow* backup_current_context = glfwGetCurrentContext();
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-	glfwMakeContextCurrent(backup_current_context);
-	*/
 }
 
 void RenderMenu()

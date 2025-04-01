@@ -22,10 +22,11 @@ layout(location = 0) out vec4 color;
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
 
-uniform vec3 Kolor;
+uniform vec4 Kolor;
 
 void main() {
 	vec4 texColor = texture(u_Texture, v_TexCoord);
 	if (texColor.a < 0.01) discard;
-	color = texColor * vec4(Kolor, texColor.a);
+	texColor.rgb *= texColor.a;
+	color = texColor * Kolor;
 }

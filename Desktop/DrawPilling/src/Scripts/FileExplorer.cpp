@@ -31,7 +31,7 @@ const ImVec2 iconSize(50, 50);
 static bool showExplorer = true;
 bool fileAleardyExists = false;
 
-int counter = 2;
+
 
 std::vector<std::string> driveList;
 std::vector<const char*> items;
@@ -219,7 +219,7 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
         bool isHovered = false;
-        static const char* currentFormat = formats[0];
+        static const char* currentFormat = formats[2];
         static int currentId = 0;
         static char fileName[200];
 
