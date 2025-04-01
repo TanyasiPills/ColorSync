@@ -198,7 +198,7 @@ void DrawUI::DrawMenu() {
 void DrawUI::ColorWindow(RenderData& cursor)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, startPosY), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
+	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y-startPosY));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -222,12 +222,13 @@ void DrawUI::ColorWindow(RenderData& cursor)
 
 void DrawUI::SizeWindow(float& cursorRadius, float scale)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y+startPosY), ImGuiCond_Always);
 
 	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
+		ImGui::PopStyleVar();
 		float sliderVal = cursorRadius * scale * 100;
 		sliderVal -= 1.0f;
 		sliderVal *= 2.0f;
@@ -286,8 +287,9 @@ void DrawUI::BrushWindow(GLFWwindow* window, RenderData& cursor)
 	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y + SizeWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
+	ImGui::PopStyleVar();
 	ImGui::Columns(2, nullptr, false);
 	int index = 0;
 
@@ -332,9 +334,12 @@ void DrawUI::ServerWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	Lss::SetFontSize(2 * Lss::VH);
+	/*
 	if (Lss::Button("Save", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
 	{
 		DataManager::SaveSyncData(savePath);
@@ -342,7 +347,7 @@ void DrawUI::ServerWindow()
 	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
 	{
 		DataManager::LoadSyncData(savePath);
-	}
+	}*/
 
 	if (isOnline) {
 		if (!usersGot) {
@@ -539,8 +544,9 @@ void DrawUI::LayerWindow()
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	itemHovered = false;
-
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
 	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
@@ -647,7 +653,10 @@ void DrawUI::ChatWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
 	float heightOfChat = windowSizeY - (LayerWindowPos.y + LayerWindowSize.y);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 
 	ImGui::BeginChild("ChatLog", ImVec2(0, heightOfChat-4.8f*Lss::VH), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
