@@ -199,11 +199,19 @@ void NewRenderer::InitNewCanvas()
 	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
 
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, dataForCanvas.data);
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("BackGround", nextFreeNodeIndex, dataForCanvas.data);
 	layers.push_back(nextFreeNodeIndex);
 	currentNode = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
+
+	int index = nextFreeNodeIndex;
+	layers.push_back(index);
+	RenderData createdLayer;
+	NewDraw::initLayer(createdLayer);
+	nodes[index] = std::make_unique<Layer>("Main", index, createdLayer);
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(index);
 
 	if (online) SManager::ProcessHistory();
 }
@@ -264,6 +272,7 @@ void NewRenderer::RenderCursorToCanvas()
 	if (recieving) return;
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
 		RenderData& layer = layerPtr->data;
+		if (layers[0] == currentNode) return;
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
