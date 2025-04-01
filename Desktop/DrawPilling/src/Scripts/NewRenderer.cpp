@@ -274,6 +274,7 @@ void NewRenderer::RenderCursorToCanvas()
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
 		RenderData& layer = layerPtr->data;
 		if (layers[0] == currentNode) return;
+
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
@@ -466,12 +467,16 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 
 void NewRenderer::RenderLayers()
 {
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
 	for (int item : layers) {
 		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
 		if (layer.visible) {
 			Draw(layer.data);
 		}
 	}
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
 }
 
 void NewRenderer::RenderCursor()

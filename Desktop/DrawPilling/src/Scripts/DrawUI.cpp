@@ -201,7 +201,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y-startPosY));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
-	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar |  ImGuiWindowFlags_NoResize);
 	ImGui::PopStyleVar();
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
@@ -218,6 +218,16 @@ void DrawUI::ColorWindow(RenderData& cursor)
 		leftSize = 200;
 		std::cout << leftSize << std::endl;
 	}
+	/*
+	ImVec2 windowSize = ImGui::GetIO().DisplaySize;  // Get the screen size
+	ImVec2 windowPos((windowSize.x - (20 * Lss::VH)) / 2, (windowSize.y - (20 * Lss::VH)) / 2); // Calculate the center
+
+	ImGui::SetNextWindowPos(windowPos);  // Set the window position
+	ImGui::SetNextWindowSize(ImVec2(20 * Lss::VH, 20 * Lss::VH));  // Set the window size
+	ImGui::Begin("test", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+		Lss::Button("Semmi sus", ImVec2(10 * Lss::VH, 3 * Lss::VH), 2 * Lss::VH, Centered | Rounded);
+	ImGui::End();
+	*/
 }
 
 void DrawUI::SizeWindow(float& cursorRadius, float scale)
@@ -227,7 +237,7 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
-	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 		ImGui::PopStyleVar();
 		float sliderVal = cursorRadius * scale * 100;
 		sliderVal -= 1.0f;
@@ -288,7 +298,7 @@ void DrawUI::BrushWindow(GLFWwindow* window, RenderData& cursor)
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
-	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 	ImGui::PopStyleVar();
 	ImGui::Columns(2, nullptr, false);
 	int index = 0;
@@ -332,7 +342,7 @@ void DrawUI::ServerWindow()
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, startPosY), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
+	ImGui::SetNextWindowSize(ImVec2(rightSize, ServerWindowSize.y));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
@@ -540,7 +550,7 @@ void DrawUI::DeleteChilds(int& index)
 
 void DrawUI::LayerWindow()
 {
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y+startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	itemHovered = false;
