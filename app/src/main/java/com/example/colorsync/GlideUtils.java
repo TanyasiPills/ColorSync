@@ -1,4 +1,4 @@
-package com.example.colorsync.DataTypes;
+package com.example.colorsync;
 
 import com.bumptech.glide.signature.ObjectKey;
 

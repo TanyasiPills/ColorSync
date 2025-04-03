@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.Adapter;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -20,8 +20,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.colorsync.DataTypes.GlideUtils;
-import com.example.colorsync.DataTypes.Post;
+import com.example.colorsync.APIInstance;
+import com.example.colorsync.GlideUtils;
+import com.example.colorsync.DataType.Post;
+import com.example.colorsync.MainActivity;
+import com.example.colorsync.R;
+import com.example.colorsync.UserManager;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

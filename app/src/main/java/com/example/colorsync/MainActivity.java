@@ -10,7 +10,6 @@ import android.transition.TransitionManager;
 import android.view.MenuItem;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,14 +17,11 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
-import androidx.lifecycle.OnLifecycleEvent;
-import androidx.navigation.NavBackStackEntry;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.example.colorsync.DataTypes.User;
+import com.example.colorsync.DataType.User;
+import com.example.colorsync.Fragment.HomeFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Objects;
@@ -200,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void login() {
+    public void login() {
         navigateTo(R.id.loginFragment);
     }
 

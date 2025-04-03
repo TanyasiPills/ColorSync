@@ -1,4 +1,4 @@
-package com.example.colorsync.DataTypes;
+package com.example.colorsync.DataType;
 
 public class Comment {
     private int id;

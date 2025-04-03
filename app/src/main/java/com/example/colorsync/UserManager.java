@@ -8,10 +8,11 @@ import androidx.datastore.preferences.core.PreferencesKeys;
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder;
 import androidx.datastore.rxjava3.RxDataStore;
 
-import com.example.colorsync.DataTypes.User;
+import com.example.colorsync.DataType.User;
 
 import java.util.Objects;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
@@ -52,5 +53,17 @@ public class UserManager {
         return getInstance(context).data()
                 .map(preferences -> preferences.get(TOKEN_KEY))
                 .filter(Objects::nonNull);
+    }
+
+    public static Completable logout(Context context) {
+        return getInstance(context).updateDataAsync(preferences -> {
+            MutablePreferences mutablePreferences = preferences.toMutablePreferences();
+            mutablePreferences.remove(TOKEN_KEY); // Remove token from storage
+            return Single.just(mutablePreferences);
+        }).ignoreElement()
+                .doOnComplete(() -> {
+                    token = null;
+                    user = null;
+                });
     }
 }

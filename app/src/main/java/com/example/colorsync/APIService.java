@@ -1,16 +1,16 @@
 package com.example.colorsync;
 
-import com.example.colorsync.DataTypes.Comment;
-import com.example.colorsync.DataTypes.CreateComment;
-import com.example.colorsync.DataTypes.IdType;
-import com.example.colorsync.DataTypes.ImageData;
-import com.example.colorsync.DataTypes.LoginRequest;
-import com.example.colorsync.DataTypes.Post;
-import com.example.colorsync.DataTypes.PostCreate;
-import com.example.colorsync.DataTypes.PostResponse;
-import com.example.colorsync.DataTypes.RegisterRequest;
-import com.example.colorsync.DataTypes.User;
-import com.example.colorsync.DataTypes.UserWIthToken;
+import com.example.colorsync.DataType.Comment;
+import com.example.colorsync.DataType.CreateComment;
+import com.example.colorsync.DataType.IdType;
+import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.DataType.LoginRequest;
+import com.example.colorsync.DataType.Post;
+import com.example.colorsync.DataType.PostCreate;
+import com.example.colorsync.DataType.PostResponse;
+import com.example.colorsync.DataType.RegisterRequest;
+import com.example.colorsync.DataType.User;
+import com.example.colorsync.DataType.UserWIthToken;
 
 import java.util.List;
 
@@ -29,6 +29,10 @@ import retrofit2.http.Query;
 public interface APIService {
     @GET("posts")
     Call<PostResponse> getAllPost(@Header("Authorization") String token, @Query("offset") int offset);
+
+    @GET("posts/search")
+    Call<PostResponse> searchPosts(@Header("Authorization") String token, @Query("q") String query, @Query("tags") List<String> tags, @Query("offset") int offset, @Query("imageOnly") boolean imageOnly);
+
     @Multipart
     @POST("posts")
     Call<Post> createPostWithFile(

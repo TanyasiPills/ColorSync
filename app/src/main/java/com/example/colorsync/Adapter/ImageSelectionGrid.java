@@ -1,20 +1,20 @@
-package com.example.colorsync;
+package com.example.colorsync.Adapter;
 
 import android.net.Uri;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.colorsync.DataTypes.ImageData;
+import com.example.colorsync.APIInstance;
+import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.R;
 
 import java.util.List;
 import java.util.function.Function;

@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.Fragment;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -31,10 +31,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.colorsync.DataTypes.GlideUtils;
-import com.example.colorsync.DataTypes.IdType;
-import com.example.colorsync.DataTypes.ImageData;
-import com.example.colorsync.DataTypes.User;
+import com.example.colorsync.APIInstance;
+import com.example.colorsync.Adapter.ImageGridAdapter;
+import com.example.colorsync.Adapter.ImageSelectionGrid;
+import com.example.colorsync.DataType.IdType;
+import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.DataType.User;
+import com.example.colorsync.FileUtils;
+import com.example.colorsync.GlideUtils;
+import com.example.colorsync.MainActivity;
+import com.example.colorsync.R;
+import com.example.colorsync.UserManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -54,6 +62,7 @@ public class ProfileFragment extends Fragment {
     private View view;
     private ImageView profilePicture;
     private TextView username;
+    private ImageButton logout;
     private TextView description;
     private RecyclerView imagesContainer;
     private List<ImageData> items;
@@ -118,6 +127,7 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {super.onCreate(savedInstanceState); }
 
+    @SuppressLint("CheckResult")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
@@ -134,6 +144,7 @@ public class ProfileFragment extends Fragment {
         uploadClose = view.findViewById(R.id.uploadCancel);
         uploadText = view.findViewById(R.id.uploadText);
         uploadPublicText = view.findViewById(R.id.uploadPublicText);
+        logout = view.findViewById(R.id.logout);
 
         isUploadOpen = false;
         isLoadingUris = false;
@@ -148,6 +159,19 @@ public class ProfileFragment extends Fragment {
         uploadAdapter = new ImageSelectionGrid(uris, null, this::uriClickHandler, null, 50);
         uploadImages.setAdapter(uploadAdapter);
         uploadImages.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+
+        logout.setOnClickListener(v -> {
+            UserManager.logout(getContext())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            () -> MainActivity.getInstance().login(),
+                            throwable -> new AlertDialog.Builder(getContext())
+                                    .setTitle("Failed to logout")
+                                    .setMessage(throwable.getMessage())
+                                    .setPositiveButton("Ok", null)
+                                    .show()
+                    );
+        });
 
         uploadOpenButton.setOnClickListener(v -> {
             uploadOpen(false);

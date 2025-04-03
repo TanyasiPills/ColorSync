@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.Adapter;
 
 import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
@@ -9,6 +9,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.colorsync.R;
 
 import java.util.ArrayList;
 

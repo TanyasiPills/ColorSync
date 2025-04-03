@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ProfileFragment"
+    tools:context=".Fragment.ProfileFragment"
     android:padding="10dp"
     android:id="@+id/profileConstraint">
 
@@ -20,11 +20,25 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/username"
         app:layout_constraintTop_toTopOf="@id/profilePicture"
         app:layout_constraintStart_toEndOf="@id/profilePicture"
         android:layout_marginStart="10dp"
-        android:textSize="30sp"
-        android:id="@+id/username"/>
+        android:textSize="25sp" />
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/logout"
+        app:layout_constraintTop_toTopOf="@id/username"
+        app:layout_constraintBottom_toBottomOf="@id/username"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@null"
+        android:src="@drawable/logout"
+        app:tint="@color/red"
+        android:scaleType="fitCenter"
+        android:stateListAnimator="@animator/click_grow"
+        android:contentDescription="@string/logoutCD" />
 
 
     <TextView
@@ -35,9 +49,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/username"
         app:layout_constraintBottom_toTopOf="@id/imagesCardView"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintVertical_bias="0"
-        android:layout_marginEnd="10dp"
-        />
+        android:layout_marginEnd="10dp" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"

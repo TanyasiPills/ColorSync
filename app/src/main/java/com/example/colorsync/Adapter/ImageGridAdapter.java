@@ -1,18 +1,11 @@
-package com.example.colorsync;
+package com.example.colorsync.Adapter;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,7 +19,10 @@ import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.example.colorsync.DataTypes.ImageData;
+import com.example.colorsync.APIInstance;
+import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.R;
+import com.example.colorsync.UserManager;
 
 import java.util.List;
 

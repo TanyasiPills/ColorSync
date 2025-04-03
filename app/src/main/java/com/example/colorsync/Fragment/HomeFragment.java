@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.Fragment;
 
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -28,6 +29,7 @@ import android.provider.MediaStore;
 import android.transition.ChangeBounds;
 import android.transition.Transition;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,11 +46,19 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.example.colorsync.DataTypes.GlideUtils;
-import com.example.colorsync.DataTypes.ImageData;
-import com.example.colorsync.DataTypes.Post;
-import com.example.colorsync.DataTypes.PostCreate;
-import com.example.colorsync.DataTypes.PostResponse;
+import com.example.colorsync.APIInstance;
+import com.example.colorsync.Adapter.ImageSelectionGrid;
+import com.example.colorsync.Adapter.ScrollAdapter;
+import com.example.colorsync.Adapter.TagAdapter;
+import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.DataType.Post;
+import com.example.colorsync.DataType.PostCreate;
+import com.example.colorsync.DataType.PostResponse;
+import com.example.colorsync.FileUtils;
+import com.example.colorsync.GlideUtils;
+import com.example.colorsync.MainActivity;
+import com.example.colorsync.R;
+import com.example.colorsync.UserManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +72,9 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HomeFragment extends Fragment {
     private boolean isLoading;
@@ -94,6 +107,8 @@ public class HomeFragment extends Fragment {
     private Cursor cursor;
     private boolean isLoadingUris;
     private boolean upload;
+    private SearchView search;
+    private String queryText;
 
 
     public HomeFragment() {
@@ -108,6 +123,7 @@ public class HomeFragment extends Fragment {
         selectedImage = null;
         selectedImageId = null;
         upload = true;
+        queryText = "";
     }
 
 
@@ -156,16 +172,8 @@ public class HomeFragment extends Fragment {
         context = view.getContext();
 
         swipeLayout = view.findViewById(R.id.swipeLayout);
-        swipeLayout.setOnRefreshListener(() -> {
-            int size = posts.size();
-            posts.clear();
-            adapter.notifyItemRangeRemoved(0, size);
-            likes.clear();
-            offset = 0;
-            GlideUtils.changeSignature();
-            loadMorePosts();
-            getLikes();
-        });
+        swipeLayout.setOnRefreshListener(this::reloadPosts);
+        search = view.findViewById(R.id.search);
 
         recyclerView = view.findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -219,6 +227,33 @@ public class HomeFragment extends Fragment {
                         loadMoreUris();
                     }
                 }
+            }
+        });
+
+        EditText searchEditText = search.findViewById(androidx.appcompat.R.id.search_src_text);
+        searchEditText.setTextColor(getResources().getColor(R.color.text));
+        searchEditText.setBackgroundResource(R.drawable.rounded_background);
+
+        search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (!queryText.equals(query)) {
+                    queryText = query;
+                    reloadPosts();
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        search.setOnQueryTextFocusChangeListener((view, hasFocus) -> {
+            if (!hasFocus && !queryText.isEmpty() && search.getQuery().toString().isEmpty()) {
+                queryText = "";
+                reloadPosts();
             }
         });
 
@@ -502,7 +537,6 @@ public class HomeFragment extends Fragment {
         return null;
     }
 
-
     public void loadMoreUris() {
         post_images.setVisibility(View.VISIBLE);
         if (isLoadingUris) return;
@@ -636,16 +670,46 @@ public class HomeFragment extends Fragment {
         }
     }
 
+    private void reloadPosts() {
+        int size = posts.size();
+        posts.clear();
+        adapter.notifyItemRangeRemoved(0, size);
+        likes.clear();
+        offset = 0;
+        GlideUtils.changeSignature();
+        loadMorePosts();
+        getLikes();
+    }
+
     private void loadMorePosts() {
         if (isLoading) return;
         isLoading = true;
+        
+        String text = "";
+        List<String> tags = new ArrayList<>();
 
-        MainActivity.getApi().getAllPost(UserManager.getBearer(), offset).enqueue(new Callback<PostResponse>() {
+        if (!queryText.isEmpty()) {
+            Pattern pattern = Pattern.compile("#\\w+");
+            Matcher matcher = pattern.matcher(queryText);
+
+            while (matcher.find()) {
+                tags.add(matcher.group());
+            }
+
+            text = queryText.replaceAll("#\\w+\\s?", "");
+            text = text.replaceAll("\\s+", " ").trim();
+        }
+
+        MainActivity.getApi().searchPosts(UserManager.getBearer(), text, tags, offset, false).enqueue(new Callback<PostResponse>() {
             @Override
             public void onResponse(@NonNull Call<PostResponse> call, @NonNull Response<PostResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     PostResponse data = response.body();
-                    if (data.offset == null) return;
+                    if (data.offset == null) {
+                        swipeLayout.setRefreshing(false);
+                        isLoading = false;
+                        return;
+                    }
                     int start = posts.size();
                     posts.addAll(data.data);
                     offset = data.offset;

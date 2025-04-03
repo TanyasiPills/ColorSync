@@ -9,4 +9,5 @@
 
     <color name="bgAlpha">#801F1F4C</color>
     <color name="bgSecondaryHighlight">#505080</color>
+    <color name="red">#dd1010</color>
 </resources>

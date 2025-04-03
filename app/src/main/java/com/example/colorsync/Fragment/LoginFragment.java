@@ -1,4 +1,4 @@
-package com.example.colorsync;
+package com.example.colorsync.Fragment;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -21,11 +21,15 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
-import com.example.colorsync.DataTypes.LoginRequest;
-import com.example.colorsync.DataTypes.RegisterRequest;
-import com.example.colorsync.DataTypes.User;
-import com.example.colorsync.DataTypes.UserWIthToken;
+import com.example.colorsync.DataType.LoginRequest;
+import com.example.colorsync.DataType.RegisterRequest;
+import com.example.colorsync.DataType.User;
+import com.example.colorsync.DataType.UserWIthToken;
+import com.example.colorsync.MainActivity;
+import com.example.colorsync.R;
+import com.example.colorsync.UserManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Objects;

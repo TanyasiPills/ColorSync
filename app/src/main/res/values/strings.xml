@@ -34,4 +34,5 @@
     <string name="changePfpText">Change profile picture</string>
     <string name="changeText">Change</string>
     <string name="addButtonDescription">Create post</string>
+    <string name="logoutCD">logout button</string>
 </resources>
