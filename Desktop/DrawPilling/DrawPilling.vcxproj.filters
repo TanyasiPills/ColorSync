@@ -2652,6 +2652,9 @@
     <Image Include="Resources\icons\notLiked.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\Textures\erase.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />

@@ -7,6 +7,7 @@
 #include "DataManager.h"
 #include "lss.h"
 #include <thread>
+#include <random>
 
 //Left side
 ImVec2 ColorWindowSize(100, 300);
@@ -60,13 +61,31 @@ MyTexture water;
 MyTexture air;
 MyTexture chalk;
 
+MyTexture playerCursor;
+
 MyTexture sizecursor;
 
 MyTexture adminCrown;
 
 MyTexture icons[6];
 
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_int_distribution<int> dist(0, 6);
+
 std::string names[6] = { "Cursor", "Pen Brush", "Eraser", "Air Brush", "Water Brush", "Chalk Brush"};
+
+ImVec4 userColors[] = {
+	ImVec4(0.2588f, 0.5294f, 0.9608f, 1.0f),
+	ImVec4(0.1373f, 0.8353f, 0.8588f, 1.0f),
+	ImVec4(0.1373f, 0.8588f, 0.2471f, 1.0f),
+	ImVec4(0.9059f, 0.9804f, 0.2549f, 1.0f),
+	ImVec4(0.8745f, 0.1725f, 0.9098f, 1.0f),
+	ImVec4(0.8196f, 0.0157f, 0.0157f, 1.0f),
+	ImVec4(1.0f, 0.6667f, 0.0f, 1.0f)
+};
+
+static int userColor;
 
 static int selected = -1;
 static int selectedSize = -1;
@@ -84,6 +103,8 @@ void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 void InitBrushIcons()
 {
 	
+	playerCursor.Init("Resources/Textures/user.png");
+
 	cursor.Init("Resources/icons/cursorBrush.png");
 	icons[0] = cursor;
 
@@ -108,6 +129,7 @@ void InitBrushIcons()
 
 void DrawUI::InitData()
 {
+	userColor = dist(gen);
 	if (runtime.ip[0] == '\0') {
 		std::cerr << "No ip in appdata" << std::endl;
 	}
@@ -193,6 +215,29 @@ void DrawUI::DrawMenu() {
 		ImGui::EndMainMenuBar();
 	}
 	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
+}
+
+void DrawUI::PlayerVisualization() {
+	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+	bool open = true;
+	Lss::SetFontSize(2 * Lss::VH);
+	ImVec2 textSize = ImGui::CalcTextSize(runtime.username.c_str());
+	ImVec2 size = ImVec2(textSize.x, textSize.y+4*Lss::VH);
+	ImGui::SetNextWindowSize(size);
+	float* pos = Callback::GlCursorPosition();
+	pos[0] = (pos[0] + 1.0f) / 2;
+	pos[1] = (pos[1] + 1.0f) / 2;
+	ImVec2 realPos = ImVec2(windowSize.x * pos[0],windowSize.y - (windowSize.y * pos[1]));
+	ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2),realPos.y - (size.y / 3)));
+	ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+		Lss::Top(0.25f * Lss::VH);
+		Lss::Image(playerCursor.GetId(), ImVec2(2*Lss::VH, 2*Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[userColor]);
+		ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[userColor];
+		Lss::Text(runtime.username, 1.5f*Lss::VH, Centered);
+		Lss::SetColor(Font, Font);
+		Lss::End();
+	ImGui::End();
+	Lss::End();
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)

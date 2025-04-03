@@ -175,7 +175,7 @@ void Lss::Text(std::string textIn, float size, int flags) {
 	ImGui::Text(textIn.c_str());
 }
 
-void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) {
+void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max, ImVec4 colorTint) {
 	if (texture == -1) return;
 	if (size.x == -1) size = ImGui::GetContentRegionAvail();
 	if (flags & Centered) Center(size.x);
@@ -188,7 +188,8 @@ void Lss::Image(GLuint texture, ImVec2 size, int flags, ImVec2 min, ImVec2 max) 
 		ImGui::Dummy(size);
 	}
 	else {
-		ImGui::Image(texture, size, min, max);
+		if(colorTint.w != 0) ImGui::Image(texture, size, min, max, colorTint);
+		else ImGui::Image(texture, size, min, max);
 	}
 }
 

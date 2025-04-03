@@ -155,6 +155,7 @@ void SocialMedia::SearchStuff(const char* searchText)
             postImageRelation[imageData["id"]].imageId = imageData["imageId"];
         }
         for (const auto& pair : postImageRelation) {
+            std::cout << "loading image" << std::endl;
             std::thread(&SocialMedia::LoadImageJa, pair.second.imageId, 5, pair.first).detach();
         }
         searchOffset = result["offset"];

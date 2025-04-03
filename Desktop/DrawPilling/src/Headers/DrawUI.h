@@ -26,7 +26,7 @@ public:
     static void InitData();
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
-
+    static void PlayerVisualization();
 
     static void SetColor(float* colorIn);
     static void SetRenderer(NewRenderer& renderer);

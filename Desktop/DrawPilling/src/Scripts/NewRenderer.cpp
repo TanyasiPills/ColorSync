@@ -500,6 +500,7 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::InitWindow();
 
 	DrawUI::DrawMenu();
+	DrawUI::PlayerVisualization();
 	DrawUI::ColorWindow(cursor);
 	DrawUI::SizeWindow(cursorRadius, zoomRatio);
 	DrawUI::BrushWindow(window, cursor);
