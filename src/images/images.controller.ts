@@ -1,14 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException, Query } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
-import { ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { basename, extname, join, resolve } from 'path';
+import { ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ImageCreateType, ImageType } from 'src/api.dto';
-import { existsSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { OptionalAuthGuard } from 'src/auth/optional.guard';
+import * as sharp from 'sharp';
 
 @Controller('images')
 export class ImagesController {
@@ -104,20 +105,58 @@ export class ImagesController {
   @ApiResponse({ status: 404, description: "Image not found" })
   @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the image" })
+  @ApiQuery({ name: "maxSize", description: "The maximum size of the image (default=1920)", required: false, type: Number, example: 1920 })
 
   @UseGuards(OptionalAuthGuard)
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any, @Res() res: any) {
+  async findOne(@Param('id', ParseIntPipe) id: number, @Req() req: any, @Res() res: any, @Query('maxSize') maxSize: string) {
     let userId = -1;
     if (req.user) userId = req.user.id
     const path = await this.imageService.findOne(id, userId);
     if (!path) {
       throw new NotFoundException('Image not found');
     }
-    if (existsSync(path)) res.sendFile(path);
-    else {
+    if (!existsSync(path)){
       console.error("Image file with id: " + id + " doesn't exist");
       throw new NotFoundException("This image file seems to be missing, put up some flyers");
+    }
+
+    const image = sharp(path);
+    const { width, height, format } = await image.metadata();
+
+    const filename = basename(path);
+    const defaultMaxSize = 1920;
+    let maxSizeInt = parseInt(maxSize);
+    if (isNaN(maxSizeInt) || maxSizeInt <= 0) {
+      maxSizeInt = defaultMaxSize;
+    }
+    
+    let cachedPath;
+    if (maxSizeInt == defaultMaxSize) {
+      const cacheFolder = join(__dirname, '..', '..', 'uploads', 'cache');
+      if (!existsSync(cacheFolder)) {
+        mkdirSync(cacheFolder, { recursive: true });
+      }
+      
+      cachedPath = join(cacheFolder, filename);
+
+      if (existsSync(cachedPath)) {
+        return res.sendFile(cachedPath);
+      }
+    }
+
+    if (width > maxSizeInt || height > maxSizeInt) {
+      const aspectRatio = width / height;
+      const newWidth = width > height ? maxSizeInt : Math.floor(maxSizeInt * aspectRatio);
+      const newHeight = height > width ? maxSizeInt : Math.floor(maxSizeInt / aspectRatio);
+      image.resize(newWidth, newHeight);
+    }
+    if (maxSizeInt == defaultMaxSize) {
+      await image.toFile(cachedPath);
+      return res.sendFile(cachedPath);
+    } else {
+      res.type("image/" + format);
+      image.pipe(res);
     }
   }
 
@@ -135,7 +174,7 @@ export class ImagesController {
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    const response = await this.imageService.remove(id, req.user.id);
+    await this.imageService.remove(id, req.user.id);
   }
 
   /**

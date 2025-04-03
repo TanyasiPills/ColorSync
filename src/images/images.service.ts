@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { CreateImageDto } from './dto/create-image.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Visibility } from '@prisma/client';
-import { unlinkSync } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
 
 @Injectable()
@@ -58,8 +58,8 @@ export class ImagesService {
       const image = await this.db.image.findUniqueOrThrow({ where: { id, userId }, select: { posts: true, path: true } });
       if (image.posts && image.posts.length > 0) throw new UnauthorizedException("You can't delete a image included in a post")
       await this.db.image.delete({ where: { id, userId } });
-      unlinkSync(`uploads/${image.path}`);
-      return true;
+      if (existsSync(`uploads/${image.path}`)) unlinkSync(`uploads/${image.path}`);
+      if (`uploads/cache/${image.path}`) unlinkSync(`uploads/cache/${image.path}`);
     } catch {
       throw new NotFoundException(`Image with id: ${id} not found that user: ${userId} can delete`);
     }

@@ -10,6 +10,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ImagesService } from 'src/images/images.service';
 import { OptionalAuthGuard } from 'src/auth/optional.guard';
+import { query } from 'express';
 
 @Controller('posts')
 export class PostsController {
