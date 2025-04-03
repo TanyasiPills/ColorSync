@@ -1,9 +1,9 @@
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col } from 'react-bootstrap';
-import { modalProp } from "../types";
+import { modalProp } from "../../types";
 import { useState } from 'react';
-import "../css/Modal.css";
+import "../../css/Modal.css";
 import Cookies from 'universal-cookie';
-import { backendIp } from '../constants';
+import { backendIp } from '../../constants';
 
 
 export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {

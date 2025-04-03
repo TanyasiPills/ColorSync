@@ -5,7 +5,7 @@ import { Container, Row, Col, Spinner, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import { useParams } from "react-router-dom";
 import { image, user } from "../types"
-import { ProfileEdit } from "./ProfileEdit";
+import { ProfileEdit } from "./modals/ProfileEdit";
 import { PostingToProfile } from "./modals/PostingToProfile";
 
 

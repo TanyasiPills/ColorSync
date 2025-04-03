@@ -5,12 +5,14 @@ import '../css/SideNavbar.css';
 import { LeftNavbarProps } from '../types';
 import { SignInAndUp } from '../pages/modals/SignIn&Up';
 import { useLocation } from 'react-router-dom';
+import { Posting } from '../pages/modals/Posting';
 
 const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) => {
   const cookies = new Cookies();
   const thisUser = cookies.get("AccessToken");
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
+  const [showPosting, setShowPosting] = useState<boolean>(false);
   const [canPost, setCanPost] = useState<boolean>(false);
   const location = useLocation()
 
@@ -28,12 +30,9 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
     }, [location]);
 
   return (
-    <div className={`sidebar left ${isOpen ? 'open' : 'closed'}`}>
+    <div className={`sidebar left ${isOpen ? 'open' : 'closed'}`}>      
       {closable && isOpen && (
-        <List/>
-      )}
-      {closable && !isOpen && (
-        <List className="sidebar-handle" onClick={onClose} size={18} style={{ cursor: "pointer" }} />
+        <List className="sidebar-handle" onClick={onClose} size={18} />
       )}
       <div className="sidebar-header">
         <h2>ColorSync</h2>
@@ -42,7 +41,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
         <a href="/" className="sidebar-link">Home</a>
         <a href="/Draw" className="sidebar-link">Draw Online</a>
         <a href="/CMS" className="sidebar-link">Colourful Media Synced</a>
-        {canPost? <a></a> : null}
+        {canPost? <p onClick={() => setShowPosting(true)} className="sidebar-link">Post</p> : null}
         <a href="/SRC" className="sidebar-link">Search</a>
       </nav>
       <div className="account-section">
@@ -62,6 +61,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
         </details>
       </div>
       <SignInAndUp show={show} onHide={() => setShow(false)} defaultToSignUp={isSignUp} />
+      <Posting show={showPosting} onHide={() => setShowPosting(false)} />
     </div>
   );
 };

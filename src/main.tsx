@@ -13,47 +13,41 @@ import RightSidebar from './components/RightSidebar_components'
 import { Test } from './pages/Test'
 
 const MainLayout: React.FC = () => {
-  const location = useLocation()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [closable, setClosable] = useState(false)
+  const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [closable, setClosable] = useState(false);
 
   useEffect(() => {
     if (location.pathname.toLowerCase() === '/draw') {
-      setClosable(true)
+      setClosable(true);
     } else {
-      setClosable(false)
+      setClosable(false);
     }
-  }, [location])
+  }, [location]);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleLeftNavbar = () => {
     if (isMobile || closable) {
-      setIsSidebarOpen(!isSidebarOpen)
+      setIsSidebarOpen(!isSidebarOpen);
     }
-  }
+  };
 
   return (
     <div className="overall-layout">
-      <SideNavbar 
-        isOpen={(isMobile || closable) ? isSidebarOpen : true} 
-        onClose={toggleLeftNavbar} 
-        closable={isMobile || closable} 
+      <SideNavbar
+        isOpen={(isMobile || closable) ? isSidebarOpen : true}
+        onClose={toggleLeftNavbar}
+        closable={isMobile || closable}
       />
-      <div 
-        className="main-content" 
-        style={{ 
-          marginLeft: (isMobile || closable) ? (isSidebarOpen ? '15%' : '0%') : '15%', 
-          marginRight: (!isMobile && !closable) ? '15%' : '0%' 
-        }}
-      >
+      <div className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/Draw" element={<WebGLCanvas />} />
@@ -64,10 +58,10 @@ const MainLayout: React.FC = () => {
           <Route path="/Profile/:id" element={<Profile />} />
           <Route path="/Test" element={<Test />} />
         </Routes>
-      </div>
+      </div>      
       {(!isMobile && !closable) && <RightSidebar />}
     </div>
-  )
+  );
 }
 
 const MainApp: React.FC = () => (

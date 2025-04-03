@@ -86,13 +86,12 @@ export function Test() {
     return (
         <Container className="scroll-container">
             <Row>
-                {post.map((item) => (
-                    <Col key={item.id} md={4} sm={6} xs={12} className="mb-4">
+                {post.map((post) => (
+                    <Col key={post.id} md={4} sm={6} xs={12} className="mb-4">
                         <Card className="data-card">
-                            <Card.Img variant="top" src={item.} alt={item.title} className="card-img" />
+                            <Card.Img variant="top" src={backendIp + "/users/" + post.user.id + "/pfp"} alt={post.user.username} className="card-img" />
                             <Card.Body>
-                                <Card.Title>{item.title}</Card.Title>
-                                <Card.Text>{item.description}</Card.Text>
+                                <Card.Title>{post.text}</Card.Title>
                             </Card.Body>
                         </Card>
                     </Col>

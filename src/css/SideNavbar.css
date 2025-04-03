@@ -1,16 +1,12 @@
 .sidebar {
-  left: 0;
   height: 100%;
-  width: 25%;
+  width: 15%;
   padding-top: 2%;
   padding-left: 0.5%;
-  background-color: var(--divCol);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  background-color: var(--divCol);  
   transition: width 0.5s ease;
-  overflow: hidden;
+  flex: 0 0 15%;
+  min-width: 200px;
 }
 
 .sidebar-header {
@@ -27,11 +23,17 @@
   width: 0;
 }
 
+.sidebar.open{
+  width: 15%;
+}
+
 .sidebar-link, .account-section {
   display: block;
   text-align: left;
-  color: var(--textCol);
   font-size: large;
+  padding: 0;
+  margin: 0;
+  text-decoration: none;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
@@ -45,7 +47,7 @@
   top: 50%;
   width: 2rem;
   height: 2rem;
-  background-color: var(--divCol);
+  background-color: transparent;
   border: 2px solid var(--borderCol);
   border-radius: 50%;
   display: flex;
@@ -53,16 +55,22 @@
   justify-content: center;
   cursor: pointer;
   transition: right 0.7s ease;
+  visibility: visible;
 }
 
 .sidebar-handle:hover {
-  right: -2rem;
+  background-color: var(--lowHighlight);
 }
 
 .sidebar.right {
   border-left: 2px solid var(--borderCol);
+  margin-left: auto;
 }
 
 .sidebar.left {
   border-right: 2px solid var(--borderCol);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
