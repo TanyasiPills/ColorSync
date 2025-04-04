@@ -211,6 +211,7 @@ public class MainActivity extends AppCompatActivity {
     public void setFullScreenOff() {
         setFullScreen(false);
     }
+
     private void setFullScreen(boolean fullScreen) {
         hideKeyboard();
         ConstraintSet off = new ConstraintSet();

@@ -475,7 +475,6 @@ public class HomeFragment extends Fragment {
         });
     }
 
-
     private void likePosts(List<Post> posts) {
         if (likes.isEmpty()) return;
         for (Post post : posts) {
@@ -693,7 +692,7 @@ public class HomeFragment extends Fragment {
             Matcher matcher = pattern.matcher(queryText);
 
             while (matcher.find()) {
-                tags.add(matcher.group());
+                tags.add(matcher.group().substring(1));
             }
 
             text = queryText.replaceAll("#\\w+\\s?", "");
