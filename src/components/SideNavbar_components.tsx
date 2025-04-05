@@ -22,7 +22,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
   }
 
    useEffect(() => {
-      if (location.pathname.toLocaleUpperCase() === '/CMS') {
+      if (location.pathname.toLocaleUpperCase() === '/') {
         setCanPost(true)
       } else {
         setCanPost(false)
@@ -38,11 +38,11 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
         <h2>ColorSync</h2>
       </div>
       <nav>
-        <a href="/" className="sidebar-link">Home</a>
+        <a href="/" className="sidebar-link">Socail Media</a>
         <a href="/Draw" className="sidebar-link">Draw Online</a>
-        <a href="/CMS" className="sidebar-link">Colourful Media Synced</a>
         {canPost? <p onClick={() => setShowPosting(true)} className="sidebar-link">Post</p> : null}
-        <a href="/SRC" className="sidebar-link">Search</a>
+        <a href="/Search" className="sidebar-link">Search</a>
+        <a href="/About" className="sidebar-link">About</a>
       </nav>
       <div className="account-section">
         <details className="account-dropdown">

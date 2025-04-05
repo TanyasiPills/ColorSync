@@ -49,11 +49,11 @@ const MainLayout: React.FC = () => {
       />
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<SocialMedia />} />
           <Route path="/Draw" element={<WebGLCanvas />} />
           <Route path="/Download" element={<App />} />
-          <Route path="/CMS" element={<SocialMedia />} />
-          <Route path="/SRC" element={<Search />} />
+          <Route path="/About" element={<Home />} />
+          <Route path="/Search" element={<Search />} />
           <Route path="/Profile" element={<Profile own />} />
           <Route path="/Profile/:id" element={<Profile />} />
           <Route path="/Test" element={<Test />} />

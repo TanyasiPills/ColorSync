@@ -211,7 +211,7 @@ export function SocialMedia() {
                   </Col>
                 </Row>
               </Card.Body>
-              {post.imageId && <Card.Img variant="top" className="postImg" src={backendIp +"/images/" + post.imageId} alt="Post Image" />}
+              {post.imageId && <img className="postImg" src={backendIp +"/images/" + post.imageId} alt="Post Image" />}
               <div className="tagsContainer">
                 {post.tags.length > 0 && post.tags.map((tag) => (
                   <div className="tags">#{tag}</div>
@@ -259,7 +259,7 @@ export function SocialMedia() {
                           />
                         </Col>
                         <Col>
-                          <h6 data-id={comment.user.id} onClick={takeToProfile}>{comment.user.username}</h6>
+                          <h6 data-id={comment.user.id} onClick={takeToProfile} className="date-text">{comment.user.username}</h6>
                           <p className="mb-1">{comment.text}</p>
                           <p className="small">{generateDatabaseDateTime(comment.date)}</p>
                         </Col>

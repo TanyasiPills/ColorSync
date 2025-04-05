@@ -1,0 +1,88 @@
+/* Global box-sizing for consistency */
+* {
+  box-sizing: border-box;
+}
+
+/* Container for the feed; adjust margins as needed */
+#feed {
+  width: 90%;
+  margin: 20px auto;
+}
+
+/* Gallery item container */
+.responsive {
+  padding: 0 6px;
+  float: left;
+  width: 24.99999%;
+}
+
+/* Media queries for responsiveness */
+@media only screen and (max-width: 700px) {
+  .responsive {
+    width: 49.99999%;
+    margin: 6px 0;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .responsive {
+    width: 100%;
+  }
+}
+
+/* Clear floats */
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Gallery card style */
+.gallery {
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+/* Hover effect on gallery */
+.gallery:hover {
+  border: 1px solid #777;
+}
+
+/* Header within the card */
+.post-header {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+/* Profile image style */
+#primg {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+/* Username and date styling */
+.username {
+  font-weight: bold;
+}
+.date {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Post image styling */
+.gallery img.post-image {
+  width: 100%;
+  height: auto;
+  padding: 2%;
+}
+
+/* Description/text within the card */
+.desc {
+  padding: 15px;
+  text-align: center;
+}
