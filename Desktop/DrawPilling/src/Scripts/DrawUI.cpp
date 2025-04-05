@@ -455,6 +455,24 @@ void DrawUI::ServerWindow()
 	}
 }
 
+void ChangeOpacityChild(int& index)
+{
+	if (Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get())) {
+		std::vector<int> childrenCopy = foldy->childrenIds;
+
+		for (int child : childrenCopy)
+		{
+			if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+			if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+			{
+				ChangeOpacityChild(child);
+			}
+			renderer->nodes[child]->opacity = foldy->opacity;
+		}
+	}
+}
+
 void ChangeVisibilityChild(int& index)
 {
 	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
@@ -689,6 +707,7 @@ void DrawUI::LayerWindow()
 	if (selectedLayer > -1) {
 		ImGui::SameLine();
 		ImGui::SliderInt("Opacity", &renderer->nodes[selectedLayer].get()->opacity, 0, 100);
+		ChangeOpacityChild(selectedLayer);
 	}
 
 	if (ImGui::IsItemHovered()) itemHovered = true;
