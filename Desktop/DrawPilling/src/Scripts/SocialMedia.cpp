@@ -169,7 +169,7 @@ void SocialMedia::GetPostForSearch(const int& postId)
         std::cerr << "search request failed" << std::endl;
     }
     else {
-        Post searchedPost;
+
 		std::cout << "1" << std::endl;
         searchedPost.id = result["id"];
         std::cout << "id: " << searchedPost.id << std::endl;
@@ -195,8 +195,11 @@ void SocialMedia::GetPostForSearch(const int& postId)
             }
         }
         std::cout << "5" << std::endl;
+        int commentCount = 0;
+        std::cout << "Before inserting, size: " << searchedPost.comments.size() << std::endl;
         if (!result["comments"].empty()) {
             for (const auto& comment : result["comments"]) {
+                commentCount++;
                 Comment newComment;
                 
                 newComment.id = comment["id"];
@@ -2036,7 +2039,11 @@ void SocialMedia::LoadDependencies(Post& post, int index)
     LoadImageJa(post.userId, 2);
     try {
         std::unique_lock<std::mutex> lock(postMutex);
-        std::vector<Comment> commentsHere = post.comments;
+        std::vector<Comment> commentsHere;
+        std::cout << post.comments.size() << std::endl;
+        for (Comment& comment : post.comments) {
+            commentsHere.push_back(comment);
+        }
         lock.unlock();
         for (Comment comment : commentsHere) {
             LoadImageJa(comment.userId, 2);
