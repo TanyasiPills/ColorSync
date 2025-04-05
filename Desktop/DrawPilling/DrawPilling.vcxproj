@@ -1054,6 +1054,7 @@
     <Image Include="Resources\Textures\erase.png" />
     <Image Include="Resources\Textures\penBrush.png" />
     <Image Include="Resources\Textures\cursor.png" />
+    <Image Include="Resources\Textures\user.png" />
     <Image Include="Resources\Textures\waterBrush.png" />
   </ItemGroup>
   <ItemGroup>

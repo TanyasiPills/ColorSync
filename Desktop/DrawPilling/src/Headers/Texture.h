@@ -21,6 +21,8 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void UnBind() const;
 
+	void TransparencyCorrection();
+
 	unsigned int GetId() const;
 
 	inline int GetWidht() const { return width; }

@@ -102,29 +102,35 @@ void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 
 void InitBrushIcons()
 {
-	
 	playerCursor.Init("Resources/Textures/user.png");
+	playerCursor.TransparencyCorrection();
 
 	cursor.Init("Resources/icons/cursorBrush.png");
+	cursor.TransparencyCorrection();
 	icons[0] = cursor;
 
 	pen.Init("Resources/icons/penBrush.png");
+	pen.TransparencyCorrection();
 	icons[1] = pen;
 
 	eraser.Init("Resources/icons/eraser.png");
+	eraser.TransparencyCorrection();
 	icons[2] = eraser;
 	
 	air.Init("Resources/icons/airBrush.png");
+	air.TransparencyCorrection();
 	icons[3] = air;
 
 	water.Init("Resources/icons/waterBrush.png");
+	water.TransparencyCorrection();
 	icons[4] = water;
 
-	
 	chalk.Init("Resources/icons/chalkBrush.png");
+	chalk.TransparencyCorrection();
 	icons[5] = chalk;
 
 	sizecursor.Init("Resources/Textures/penBrush.png");
+	sizecursor.TransparencyCorrection();
 }
 
 void DrawUI::InitData()
@@ -218,6 +224,7 @@ void DrawUI::DrawMenu() {
 }
 
 void DrawUI::PlayerVisualization() {
+	/*
 	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
 	bool open = true;
 	Lss::SetFontSize(2 * Lss::VH);
@@ -238,6 +245,7 @@ void DrawUI::PlayerVisualization() {
 		Lss::End();
 	ImGui::End();
 	Lss::End();
+	*/
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
