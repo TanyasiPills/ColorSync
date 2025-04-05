@@ -62,12 +62,13 @@ public class ProfileFragment extends Fragment {
     private View view;
     private ImageView profilePicture;
     private TextView username;
-    private ImageButton logout;
+    private ImageButton settings;
     private TextView description;
     private RecyclerView imagesContainer;
     private List<ImageData> items;
     private ImageGridAdapter adapter;
-    private boolean loaded = false;
+    private boolean loaded;
+    private boolean own;
 
     private ConstraintLayout mainConstraint;
     private ImageButton uploadOpenButton;
@@ -92,14 +93,26 @@ public class ProfileFragment extends Fragment {
     private Uri selected;
 
 
-    public ProfileFragment() {
-        this(0);
-    }
+    public ProfileFragment() {}
 
-    public ProfileFragment(int id) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {super.onCreate(savedInstanceState); }
+
+    @SuppressLint("CheckResult")
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        loaded = false;
+
+        Bundle arguments = getArguments();
+        int id = 0;
+        if (arguments != null) {
+            id = arguments.getInt("id", 0);
+        }
         if (id < 1) {
             id = UserManager.user.getId();
         }
+        own = id == UserManager.user.getId();
+
         MainActivity.getApi().getUserById(id).enqueue(new Callback<User>() {
             @Override
             public void onResponse(@NonNull Call<User> call, @NonNull Response<User> response) {
@@ -123,13 +136,8 @@ public class ProfileFragment extends Fragment {
                         .show();
             }
         });
-    }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {super.onCreate(savedInstanceState); }
 
-    @SuppressLint("CheckResult")
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         view = inflater.inflate(R.layout.fragment_profile, container, false);
         imagesContainer = view.findViewById(R.id.imagesContainer);
         username = view.findViewById(R.id.username);
@@ -144,7 +152,7 @@ public class ProfileFragment extends Fragment {
         uploadClose = view.findViewById(R.id.uploadCancel);
         uploadText = view.findViewById(R.id.uploadText);
         uploadPublicText = view.findViewById(R.id.uploadPublicText);
-        logout = view.findViewById(R.id.logout);
+        settings = view.findViewById(R.id.settings);
 
         isUploadOpen = false;
         isLoadingUris = false;
@@ -160,17 +168,8 @@ public class ProfileFragment extends Fragment {
         uploadImages.setAdapter(uploadAdapter);
         uploadImages.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        logout.setOnClickListener(v -> {
-            UserManager.logout(getContext())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            () -> MainActivity.getInstance().login(),
-                            throwable -> new AlertDialog.Builder(getContext())
-                                    .setTitle("Failed to logout")
-                                    .setMessage(throwable.getMessage())
-                                    .setPositiveButton("Ok", null)
-                                    .show()
-                    );
+        settings.setOnClickListener(v -> {
+            MainActivity.getInstance().goToSettings();
         });
 
         uploadOpenButton.setOnClickListener(v -> {
@@ -207,8 +206,11 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        if (loaded) load();
-        else loaded = true;
+        if (!own) {
+            uploadOpenButton.setVisibility(View.GONE);
+            settings.setVisibility(View.GONE);
+        }
+
 
         closed = new ConstraintSet();
         closed.clone(uploadConstraint);
@@ -242,6 +244,7 @@ public class ProfileFragment extends Fragment {
         closedMain.clear(R.id.uploadCardView, ConstraintSet.TOP);
         closedMain.clear(R.id.uploadCardView, ConstraintSet.START);
 
+        load();
         return view;
     }
 

@@ -29,16 +29,16 @@
     <ImageButton
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:id="@+id/logout"
+        android:id="@+id/settings"
         app:layout_constraintTop_toTopOf="@id/username"
         app:layout_constraintBottom_toBottomOf="@id/username"
         app:layout_constraintEnd_toEndOf="parent"
         android:background="@null"
-        android:src="@drawable/logout"
-        app:tint="@color/red"
+        android:src="@drawable/settings"
+        app:tint="@color/text"
         android:scaleType="fitCenter"
         android:stateListAnimator="@animator/click_grow"
-        android:contentDescription="@string/logoutCD" />
+        android:contentDescription="@string/settingsCD" />
 
 
     <TextView

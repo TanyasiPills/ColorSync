@@ -243,6 +243,10 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             if (post.isLiked()) likeButton.setImageResource(R.drawable.heart);
             else likeButton.setImageResource(R.drawable.heart_empty);
 
+            profilePicture.setOnClickListener(view -> {
+                MainActivity.getInstance().goToProfile(post.getUser().getId());
+            });
+
             Glide.with(itemView)
                     .load(String.format(Locale.getDefault(), "%susers/%d/pfp", APIInstance.BASE_URL, post.getUser().getId()))
                     .signature(GlideUtils.getSignature())

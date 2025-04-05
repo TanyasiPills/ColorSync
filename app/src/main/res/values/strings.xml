@@ -35,4 +35,11 @@
     <string name="changeText">Change</string>
     <string name="addButtonDescription">Create post</string>
     <string name="logoutCD">logout button</string>
+    <string name="settingsCD">settings button</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="profilePictureText">Profile Picture:</string>
+    <string name="usernameText">Username:</string>
+    <string name="descriptionText">Description:</string>
+    <string name="back_buttonCD">back button</string>
 </resources>
