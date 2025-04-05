@@ -3,17 +3,149 @@
   box-sizing: border-box;
 }
 
-/* Container for the feed; adjust margins as needed */
+/* Container for the feed */
 #feed {
-  width: 90%;
+  width: 60%;
   margin: 20px auto;
 }
 
-/* Gallery item container */
-.responsive {
-  padding: 0 6px;
-  float: left;
-  width: 24.99999%;
+/* Post container */
+.post {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: var(--divCol);
+  border-bottom: 2px solid var(--borderCol);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  position: relative;
+  object-fit: fill;
+  max-height: 100%;
+}
+
+/*post header*/
+.post-header {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.profile-img {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.username {
+  font-weight: bold;
+  color: var(--textCol);
+  margin-right: auto;
+}
+
+.date {
+  font-size: 0.85rem;
+  color: var(--textCol);
+  margin-left: auto;
+}
+
+.post-header-bottom{
+  width: 70%;
+}
+
+/* Post image */
+.post-image-wrapper{
+  width: 100%;
+  max-height: fit-content;
+  position: relative;
+}
+
+.post-image {
+  width: 100%;
+  object-fit: contain;
+  padding: 2%;
+}
+
+/* Description within the card */
+.desc {
+  margin: 2%;
+  padding: 1%;
+  text-align: justify;
+}
+
+/* Comments section */
+.details-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding: 0 10px;
+}
+
+/* When the comments section is open */
+details[open] .details-wrapper {
+  display: flow-root;
+}
+
+details summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px;
+  font-weight: bold;
+  color: var(--textCol);
+}
+
+/* Comment container */
+.comment-section {
+  margin-top: 10px;
+}
+
+.comments-toggle {
+  cursor: pointer;
+}
+
+.comments-container {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: transparent;
+  border: 1px solid var(--borderCol);
+  border-radius: 5px;
+}
+
+.sticky-input {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.comments-list {
+  max-height: calc(100% - 50px);
+  overflow-y: auto;
+
+}
+
+.comment-container {
+  display: flex;
+  align-items: start;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+/* Mobile view adjustments */
+@media only screen and (max-width: 500px) {
+  .post-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .details-wrapper {
+    max-height: 200px;
+  }
 }
 
 /* Media queries for responsiveness */
@@ -28,61 +160,4 @@
   .responsive {
     width: 100%;
   }
-}
-
-/* Clear floats */
-.clearfix:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* Gallery card style */
-.gallery {
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-}
-
-/* Hover effect on gallery */
-.gallery:hover {
-  border: 1px solid #777;
-}
-
-/* Header within the card */
-.post-header {
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-}
-
-/* Profile image style */
-#primg {
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
-}
-
-/* Username and date styling */
-.username {
-  font-weight: bold;
-}
-.date {
-  margin-left: auto;
-  font-size: 0.85rem;
-  color: #888;
-}
-
-/* Post image styling */
-.gallery img.post-image {
-  width: 100%;
-  height: auto;
-  padding: 2%;
-}
-
-/* Description/text within the card */
-.desc {
-  padding: 15px;
-  text-align: center;
 }
