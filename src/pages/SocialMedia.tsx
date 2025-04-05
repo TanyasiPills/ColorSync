@@ -1,277 +1,318 @@
 import { useEffect, useState } from "react";
-import "../css/SocialMedia.css";
-import { Container, Row, Col, Card, Spinner, InputGroup, FormControl, Button } from 'react-bootstrap';
 import { backendIp } from "../constants";
-import { comment, post } from "../types"
-import { Posting } from "./modals/Posting";
 import Cookies from "universal-cookie";
+import { comment, post } from "../types";
+import "../css/SocialMedia.css";
+import { Button, Col, FormControl, InputGroup, Row } from "react-bootstrap";
+import { Chat, Heart, HeartFill } from "react-bootstrap-icons";
 
 export function SocialMedia() {
+    const [post, setPost] = useState<post[]>([])
+    const [show, setShow] = useState(false)
+    const [newComment, setNewComment] = useState("")
+    const [likedPosts, setLikedPosts] = useState<number[]>([])
+    let loading: boolean = false;
+    let offset: number | null = 0;
 
-  const [post, setPost] = useState<post[]>([])
-  const [show, setShow] = useState(false)
-  const [newComment, setNewComment] = useState("")
-  const [likedPosts, setLikedPosts] = useState<number[]>([])
-  let loading: boolean = false;
-  let offset: number | null = 0;
-
-  const cookies = new Cookies()
-  const thisUser = cookies.get("AccessToken")
-
-  const fetchPosts = async () => {
-    if (loading) return;
-    loading = true;
-    try {
-      const result = await fetch(`${backendIp}/posts?offset=${offset}`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-        }
-      })
-      if (result.ok) {
-        const json = await result.json()
-        setPost(prev => [...prev, ...json.data])
-
-        offset = json.offset;
-      } else {
-        console.log(await result.text())
-      }
-    } catch (error) {
-      console.error(error)
-    }
-    loading = false
-  }
-
-  const fetchLikes = async () => {
-    try {
-      const result = await fetch(`${backendIp}/users/likes`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Authorization": "Bearer " + cookies.get("AccessToken").access_token
-        }
-      })
-      if (result.ok) {
-        const json = await result.json()
-        setLikedPosts(json)
-      } else {
-        console.log(await result.text())
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  useEffect(() => {
-    fetchPosts()
-
-    fetchLikes()
-
-    const handleScroll = () => {
-      const feed = document.getElementById("feed");
-      if (!feed) return;
-      const bottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 500;
-      if (bottom && !loading) {
-        if (offset != null) fetchPosts();
-      }
-    }
-
-    let feed = document.getElementById("feed");
-    if (feed) {
-      feed.addEventListener("scroll", handleScroll);
-    }
-
-  }, [])
-
-  function generateDatabaseDateTime(date: Date | string) {
-    const formattedDate = new Date(date);
-    const p = new Intl.DateTimeFormat('en', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).formatToParts(formattedDate).reduce((acc: any, part) => {
-      acc[part.type] = part.value;
-      return acc;
-    }, {});
-    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
-  }
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, postId: number) => {
-    event.preventDefault();
     const cookies = new Cookies();
+    const thisUser = cookies.get("AccessToken");
 
-    try {
-      const res = await fetch(backendIp + '/comments', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          "Authorization": "Bearer " + cookies.get("AccessToken").access_token
-        },
-        body: JSON.stringify({
-          postId: postId,
-          text: newComment
-        })
-      });
+    const fetchPosts = async () => {
+        if (loading) return;
+        loading = true;
+        try {
+            const result = await fetch(backendIp + "/posts?offset=" + offset, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                }
+            })
+            if (result.ok) {
+                const json = await result.json()
+                setPost(prev => [...prev, ...json.data])
 
-      if (!res.ok) {
-        return;
-      }
-
-      const json = await res.json()
-
-      const addComment: comment = {
-        id: json.id,
-        text: newComment,
-        date: new Date(),
-        user: { id: thisUser.id, username: thisUser.username },
-      };
-
-      setNewComment("");
-
-      setPost((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? { ...post, comments: [...post.comments, addComment] }
-            : post
-        )
-      );
-
-    } catch (err: any) {
-      console.log(err);
-    }
-  };
-
-  const handleLike = async (target: HTMLElement, postId: number) => {
-    const cookies = new Cookies();
-    const accessToken = cookies.get("AccessToken")?.access_token;
-    if (!accessToken) return
-    try {
-      const res = await fetch(backendIp + '/posts/like/' + postId, {
-        method: 'POST',
-        headers: {
-          "Authorization": "Bearer " + accessToken
-        },
-        body: JSON.stringify({
-          id: postId
-        })
-      });
-
-      if (!res.ok) {
-        return;
-      }
-      const numberSpan = target.children[0];
-      try {
-        if (numberSpan) {
-          let number = parseInt(numberSpan.innerHTML);
-          if (likedPosts.includes(postId)) number--;
-          else number++;
-          numberSpan.innerHTML = number.toString();
+                offset = json.offset;
+            } else {
+                console.log(await result.text())
+            }
+        } catch (error) {
+            console.error(error)
         }
-      } catch { }
-      setLikedPosts((prevLikedPosts) => {
-        if (prevLikedPosts.includes(postId)) {
-          return prevLikedPosts.filter((id) => id !== postId);
+        loading = false
+    }
+
+    const fetchLikes = async () => {
+        try {
+            const result = await fetch(`${backendIp}/users/likes`, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + cookies.get("AccessToken").access_token
+                }
+            })
+            if (result.ok) {
+                const json = await result.json()
+                setLikedPosts(json)
+            } else {
+                console.log(await result.text())
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        fetchPosts()
+
+        fetchLikes()
+
+        const handleScroll = () => {
+            const feed = document.getElementById("feed");
+            if (!feed) return;
+            const bottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 500;
+            if (bottom && !loading) {
+                if (offset != null) fetchPosts();
+            }
+        }
+
+        let feed = document.getElementById("feed");
+        if (feed) {
+            feed.addEventListener("scroll", handleScroll);
+        }
+
+    }, [])
+
+    function generateDatabaseDateTime(date: Date | string) {
+        const now = new Date();
+        const formattedDate = new Date(date);
+        let outTime: string = "";
+
+        const diffInMilliseconds = now.getTime() - formattedDate.getTime();
+        const diffInMinutes = Math.floor(diffInMilliseconds / 60000);
+
+        if (diffInMinutes < 60) {
+            outTime = diffInMinutes + " minutes ago";
+        } else if (diffInMinutes < 60 * 24) {
+            const hours = Math.floor(diffInMinutes / 60);
+            outTime = hours + " hours ago";
+        } else if (diffInMinutes < 60 * 24 * 4) {
+            const days = Math.floor(diffInMinutes / (60 * 24));
+            outTime = days + " days ago";
+        } else if (diffInMinutes > 60 * 24 * 365){
+            const myDate: Intl.DateTimeFormatOptions = {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            };
+            outTime = formattedDate.toLocaleDateString("en-US", myDate);
         } else {
-          return [...prevLikedPosts, postId];
+            const myDate: Intl.DateTimeFormatOptions = {
+                month: "long",
+                day: "numeric"
+            };
+            outTime = formattedDate.toLocaleDateString("en-US", myDate);
         }
-      });
-    } catch (err: any) {
-      console.log(err);
+    
+        return outTime;
     }
-  };
 
-  function takeToProfile(event: React.MouseEvent<HTMLImageElement | HTMLHeadingElement>) {
-    const key: string = event.currentTarget.dataset.id || '';
-    if (key) {
-      window.location.href = `/Profile/${key}`;
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, postId: number) => {
+        event.preventDefault();
+        const cookies = new Cookies();
+
+        try {
+            const res = await fetch(backendIp + '/comments', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    "Authorization": "Bearer " + cookies.get("AccessToken").access_token
+                },
+                body: JSON.stringify({
+                    postId: postId,
+                    text: newComment
+                })
+            });
+
+            if (!res.ok) {
+                return;
+            }
+
+            const json = await res.json()
+
+            const addComment: comment = {
+                id: json.id,
+                text: newComment,
+                date: new Date(),
+                user: { id: thisUser.id, username: thisUser.username },
+            };
+
+            setNewComment("");
+
+            setPost((prevPosts) =>
+                prevPosts.map((post) =>
+                    post.id === postId
+                        ? { ...post, comments: [...post.comments, addComment] }
+                        : post
+                )
+            );
+
+        } catch (err: any) {
+            console.log(err);
+        }
+    };
+
+    const handleLike = async (target: HTMLElement, postId: number) => {
+        const cookies = new Cookies();
+        const accessToken = cookies.get("AccessToken")?.access_token;
+        if (!accessToken) return
+        try {
+            const res = await fetch(backendIp + '/posts/like/' + postId, {
+                method: 'POST',
+                headers: {
+                    "Authorization": "Bearer " + accessToken
+                },
+                body: JSON.stringify({
+                    id: postId
+                })
+            });
+
+            if (!res.ok) {
+                return;
+            }
+            const numberSpan = target.children[0];
+            try {
+                if (numberSpan) {
+                    let number = parseInt(numberSpan.innerHTML);
+                    if (likedPosts.includes(postId)) number--;
+                    else number++;
+                    numberSpan.innerHTML = number.toString();
+                }
+            } catch { }
+            setLikedPosts((prevLikedPosts) => {
+                if (prevLikedPosts.includes(postId)) {
+                    return prevLikedPosts.filter((id) => id !== postId);
+                } else {
+                    return [...prevLikedPosts, postId];
+                }
+            });
+        } catch (err: any) {
+            console.log(err);
+        }
+    };
+
+    function takeToProfile(event: React.MouseEvent<HTMLImageElement | HTMLHeadingElement>) {
+        const key: string = event.currentTarget.dataset.id || '';
+        if (key) {
+            window.location.href = `/Profile/${key}`;
+        }
     }
-  }
 
-
-  return (
-    <Container fluid className="vh-100 d-flex flex-column">
-      <Row className="flex-grow-1 w-100 h-100">
+    return (
         <div id="feed">
-          <Posting show={show} onHide={() => setShow(false)} />
-          {post.length > 0 ? post.map((post) => (
-            <Card className="mb-post-card" key={post.id}>
-              <Card.Body>
-                <Row className="align-items-center">
-                  <Col xs="auto" className="text-center">
-                    <img src={backendIp +"/users/" + post.user.id + "/pfp"} alt="Profile" className="profile-img" data-id={post.user.id} key={post.id} onClick={takeToProfile} />
-                  </Col>
-                  <Col>
-                    <h5 className="profile-name" key={post.id} data-id={post.user.id} onClick={takeToProfile}>{post.user.username}</h5>
-                  </Col>
-                  <Col xs="auto" className="date-text">
-                    <p>{generateDatabaseDateTime(post.date)}</p>
-                  </Col>
-                </Row>
-              </Card.Body>
-              {post.imageId && <img className="postImg" src={backendIp +"/images/" + post.imageId} alt="Post Image" />}
-              <div className="tagsContainer">
-                {post.tags.length > 0 && post.tags.map((tag) => (
-                  <div className="tags">#{tag}</div>
-                ))}
-              </div>
-              <Card.Body>
-                <Card.Text>{post.text}</Card.Text>
-              </Card.Body>
-              <div className="d-flex align-items-center">
-                <span
-                  className="like-text d-flex align-items-center me-2"
-                  onClick={(event: any) => handleLike(event.target, post.id)}>
-                  {likedPosts && likedPosts.includes(post.id) ? "❤️" : "🤍"}
-                  <span className="ms-3">{post.likes}</span>
-                </span>
-                {thisUser && (
-                  <InputGroup className="mb-3 d-flex align-items-center">
-                    <FormControl
-                      placeholder="Add a comment..."
-                      aria-label="New comment"
-                      aria-describedby="comment-button"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)} />
-                    <Button
-                      variant="outline-secondary"
-                      id="comment-button"
-                      onClick={(event) => handleSubmit(event as any, post.id)}>
-                      Submit
-                    </Button>
-                  </InputGroup>
-                )}
-              </div>
-              {post.comments.length > 0 && (
-                <details className="mt-2">
-                  <summary className="summary">Comments</summary>
-                  {post.comments.map((comment) => (
-                    <div key={comment.id} className="comment-container p-2">
-                      <Row className="align-items-center">
-                        <Col xs="auto">
-                          <img
+            {post.map((post) => (
+                <div className="post">
+                    <div className="post-header">
+                        <img
+                            src={backendIp + "/users/" + post.user.id + "/pfp"}
+                            alt="profile"
                             className="profile-img"
-                            src={backendIp +"/users/" +comment.user.id + "/pfp"}
-                          data-id={comment.user.id}
-                          onClick={takeToProfile}
-                          />
-                        </Col>
-                        <Col>
-                          <h6 data-id={comment.user.id} onClick={takeToProfile} className="date-text">{comment.user.username}</h6>
-                          <p className="mb-1">{comment.text}</p>
-                          <p className="small">{generateDatabaseDateTime(comment.date)}</p>
-                        </Col>
-                      </Row>
+                        />
+                        <span className="username">{post.user.username}</span>
+                        <span className="date">
+                            {generateDatabaseDateTime(post.date)}
+                        </span>
+                        <hr className="post-header-bottom" />
                     </div>
-                  ))}
-                </details>
-              )}
-            </Card>
-          )) : post.length == 0 ? <h1>There's no post at this time</h1> : <Spinner animation="border" size="sm" />}
+
+                    {post.imageId && (
+                        <div className="post-image-wrapper">
+                            <img
+                                src={backendIp + "/images/" + post.imageId}
+                                alt="post"
+                                className="post-image"
+                            />
+                        </div>
+                    )}
+
+                    <div className="desc">{post.text}</div>
+
+                    {post.tags && <div className="all-tags">{post.tags.map((tag) => (<div className="tags">#{tag}</div>))}</div>}
+
+                    <div className="likes-and-comments-section d-flex align-items-center">
+                        <span
+                            className="like-text d-flex align-items-center me-3"
+                            onClick={(event: React.MouseEvent<HTMLSpanElement>) =>
+                                handleLike(event.currentTarget, post.id)
+                            }
+                        >
+                            {likedPosts && likedPosts.includes(post.id) ? <HeartFill className="like-icon" /> : <Heart className="like-icon" />}
+                            <span className="ms-3">{post.likes}</span>
+                        </span>
+
+                        <span
+                            className="comment-text d-flex align-items-center"
+                            onClick={() => setShow((prevShow) => !prevShow)}
+                        >
+                            <Chat className="comment-icon" />
+                        </span>
+                    </div>
+
+                    <div className="comment-section">
+                        {show && post.comments.length > 0 && (
+                            <div className="comments-container">
+                                <div className="sticky-input">
+                                    {thisUser && (
+                                        <InputGroup className="mb-3 d-flex align-items-center">
+                                            <FormControl
+                                                placeholder="Add a comment..."
+                                                aria-label="New comment"
+                                                aria-describedby="comment-button"
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                            />
+                                            <Button
+                                                variant="outline-secondary"
+                                                id="comment-button"
+                                                onClick={(event) => handleSubmit(event as any, post.id)}
+                                            >
+                                                Submit
+                                            </Button>
+                                        </InputGroup>
+                                    )}
+                                </div>
+
+                                <div className="comments-list">
+                                    {post.comments.map((comment) => (
+                                        <div key={comment.id} className="comment-container p-2">
+                                            <Row className="align-items-center">
+                                                <Col xs="auto">
+                                                    <img
+                                                        className="profile-img"
+                                                        src={backendIp + "/users/" + comment.user.id + "/pfp"}
+                                                        data-id={comment.user.id}
+                                                        onClick={takeToProfile}
+                                                    />
+                                                </Col>
+                                                <Col>
+                                                    <h6
+                                                        data-id={comment.user.id}
+                                                        onClick={takeToProfile}
+                                                        className="date-text"
+                                                    >
+                                                        {comment.user.username}
+                                                    </h6>
+                                                    <p className="mb-1">{comment.text}</p>
+                                                    <p className="small">{generateDatabaseDateTime(comment.date)}</p>
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            ))}
         </div>
-      </Row>
-    </Container>
-  );
+    );
 }

@@ -22,7 +22,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
   }
 
    useEffect(() => {
-      if (location.pathname.toLocaleUpperCase() === '/') {
+      if (location.pathname.toLocaleUpperCase() === '/' && thisUser) {
         setCanPost(true)
       } else {
         setCanPost(false)
