@@ -34,6 +34,7 @@ CanvasData dataForCanvas;
 
 
 float cursorRadius = 0.01;
+float zoomRatio = 1.0f;
 float initialCanvasRatio[2] = { 1.0f,1.0f };
 float canvasRatio[2] = {1,1};
 float identityRatio[2] = {1,1};
@@ -92,6 +93,7 @@ int NewRenderer::CreateLayer(int& parent)
 	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	NewDraw::MoveCanvas(createdLayer, canvasRatio, offset);
 	return index;
 }
 int NewRenderer::CreateFolder(int& parent)
@@ -136,6 +138,8 @@ void NewRenderer::Init(GLFWwindow* windowIn)
 
 void NewRenderer::InitBrushes()
 {
+	brushes.clear();
+
 	RenderData cursorBrush;
 	NewDraw::InitBrush(cursorBrush, cursorRadius, "Resources/Textures/cursor.png");
 	brushes.push_back(cursorBrush);
@@ -143,6 +147,10 @@ void NewRenderer::InitBrushes()
 	RenderData penBrush;
 	NewDraw::InitBrush(penBrush, cursorRadius);
 	brushes.push_back(penBrush);
+
+	RenderData eraseBrush;
+	NewDraw::InitBrush(eraseBrush, cursorRadius, "Resources/Textures/erase.png");
+	brushes.push_back(eraseBrush);
 
 	RenderData airBrush;
 	NewDraw::InitBrush(airBrush, cursorRadius, "Resources/Textures/airBrush.png");
@@ -183,15 +191,28 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 
 void NewRenderer::InitNewCanvas()
 {
+	nodes.clear();
+	folders.clear();
+	layers.clear();
+	nextFreeNodeIndex = 0;
+
 	nodes[nextFreeNodeIndex] = std::make_unique<Folder>("Root", nextFreeNodeIndex);
 	folders.push_back(nextFreeNodeIndex);
 	nextFreeNodeIndex++;
 
-	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("Main", nextFreeNodeIndex, dataForCanvas.data);
+	nodes[nextFreeNodeIndex] = std::make_unique<Layer>("BackGround", nextFreeNodeIndex, dataForCanvas.data);
 	layers.push_back(nextFreeNodeIndex);
 	currentNode = nextFreeNodeIndex;
 	nextFreeNodeIndex++;
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(currentNode);
+
+	int index = nextFreeNodeIndex;
+	layers.push_back(index);
+	RenderData createdLayer;
+	NewDraw::initLayer(createdLayer);
+	nodes[index] = std::make_unique<Layer>("Main", index, createdLayer);
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[0].get())->AddChild(index);
 
 	if (online) SManager::ProcessHistory();
 }
@@ -220,6 +241,7 @@ void NewRenderer::Zoom(static float scale, static float* offsetIn)
 	}
 
 	cursorRadius *= scale;
+	zoomRatio *= scale;
 }
 
 void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
@@ -251,20 +273,32 @@ void NewRenderer::RenderCursorToCanvas()
 	if (recieving) return;
 	if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
 		RenderData& layer = layerPtr->data;
+		if (layers[0] == currentNode) return;
+
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
 		float* pos = Callback::GlCursorPosition();
 		switch (tool)
 		{
-		case 0: { // draw
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5: { // draw
+			if (tool == 2) {
+				cursor = brushes[1];
+				cursor.shader->Bind();
+				cursor.shader->SetUniform4f("Kolor", 0.0f, 0.0f, 0.0f, 0.0f);
+				glBlendFunc(GL_ONE, GL_ZERO);
+			}
 			float dx = pos[0] - prevPos[0];
 			float dy = pos[1] - prevPos[1];
 			dx *= canvasSize[0];
 			dy *= canvasSize[1];
 			float distance = std::sqrt(dx * dx + dy * dy);
 
-			int num_samples = 1+distance/(cursorRadius*1000);
+			int num_samples = 1 + distance / (cursorRadius * 100);
 
 			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
 			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
@@ -285,12 +319,18 @@ void NewRenderer::RenderCursorToCanvas()
 			prevPrevPos[1] = prevPos[1];
 			prevPos[0] = pos[0];
 			prevPos[1] = pos[1];
+			if (tool == 2) {
+				cursor.shader->SetUniform4f("Kolor", color[0], color[1], color[2], 1.0f);
+				cursor = brushes[2];
+				cursor.shader->Bind();
+				glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			}
 		} break;
-		case 1: { // fill
+		case 6: { // fill
 			ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
 			NewDraw::Fill(layerPtr, pos[0], pos[1], colorIn);
 		} break;
-		case 2: { // colorpicker[0]
+		case 201: { // colorpicker[0]
 			int pixelX = static_cast<int>((pos[0]) / canvasRatio[0] * canvasSize[0]);
 			int pixelY = static_cast<int>((pos[1]) / canvasRatio[1] * canvasSize[0]);
 
@@ -313,9 +353,6 @@ void NewRenderer::RenderCursorToCanvas()
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			DrawUI::SetColor(color);
-		} break;
-		case 3: { // erase
-
 		} break;
 		default:
 			break;
@@ -430,12 +467,16 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 
 void NewRenderer::RenderLayers()
 {
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	for (int item : layers) {
 		Layer layer = *dynamic_cast<Layer*>(nodes[item].get());
 		if (layer.visible) {
+			layer.data.shader->Bind();
+			layer.data.shader->SetUniform1f("opacity", layer.opacity / 100.0f);
 			Draw(layer.data);
 		}
 	}
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void NewRenderer::RenderCursor()
@@ -459,9 +500,10 @@ void RenderImGui(bool& onUIIn)
 	DrawUI::InitWindow();
 
 	DrawUI::DrawMenu();
+	DrawUI::PlayerVisualization();
 	DrawUI::ColorWindow(cursor);
-	DrawUI::SizeWindow(cursorRadius);
-	DrawUI::BrushWindow(window);
+	DrawUI::SizeWindow(cursorRadius, zoomRatio);
+	DrawUI::BrushWindow(window, cursor);
 	DrawUI::ServerWindow();
 	DrawUI::LayerWindow();
 	DrawUI::ChatWindow();
@@ -475,12 +517,6 @@ void RenderImGui(bool& onUIIn)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-	/*
-	GLFWwindow* backup_current_context = glfwGetCurrentContext();
-	ImGui::UpdatePlatformWindows();
-	ImGui::RenderPlatformWindowsDefault();
-	glfwMakeContextCurrent(backup_current_context);
-	*/
 }
 
 void RenderMenu()

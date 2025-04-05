@@ -15,8 +15,8 @@ public:
     static void DrawMenu();
 
     static void ColorWindow(RenderData& cursor);
-    static void SizeWindow(float& cursorRadius);
-    static void BrushWindow(GLFWwindow* window);
+    static void SizeWindow(float& cursorRadius, float scale = 1.0f);
+    static void BrushWindow(GLFWwindow* window, RenderData& cursor);
 
     static void ServerWindow();
     static void LayerWindow();
@@ -26,7 +26,7 @@ public:
     static void InitData();
 
     static void GetMsg(std::map<std::string, std::string> messageObject);
-
+    static void PlayerVisualization();
 
     static void SetColor(float* colorIn);
     static void SetRenderer(NewRenderer& renderer);

@@ -7,6 +7,7 @@
 #include "DataManager.h"
 #include "lss.h"
 #include <thread>
+#include <random>
 
 //Left side
 ImVec2 ColorWindowSize(100, 300);
@@ -55,17 +56,36 @@ MyTexture layerLayer;
 
 MyTexture cursor;
 MyTexture pen;
+MyTexture eraser;
 MyTexture water;
 MyTexture air;
 MyTexture chalk;
+
+MyTexture playerCursor;
 
 MyTexture sizecursor;
 
 MyTexture adminCrown;
 
-MyTexture icons[5];
+MyTexture icons[6];
 
-std::string names[5] = { "Cursor", "Pen Brush", "Air Brush", "Water Brush", "Chalk Brush"};
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_int_distribution<int> dist(0, 6);
+
+std::string names[6] = { "Cursor", "Pen Brush", "Eraser", "Air Brush", "Water Brush", "Chalk Brush"};
+
+ImVec4 userColors[] = {
+	ImVec4(0.2588f, 0.5294f, 0.9608f, 1.0f),
+	ImVec4(0.1373f, 0.8353f, 0.8588f, 1.0f),
+	ImVec4(0.1373f, 0.8588f, 0.2471f, 1.0f),
+	ImVec4(0.9059f, 0.9804f, 0.2549f, 1.0f),
+	ImVec4(0.8745f, 0.1725f, 0.9098f, 1.0f),
+	ImVec4(0.8196f, 0.0157f, 0.0157f, 1.0f),
+	ImVec4(1.0f, 0.6667f, 0.0f, 1.0f)
+};
+
+static int userColor;
 
 static int selected = -1;
 static int selectedSize = -1;
@@ -82,29 +102,40 @@ void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 
 void InitBrushIcons()
 {
-	
+	playerCursor.Init("Resources/Textures/user.png");
+	playerCursor.TransparencyCorrection();
+
 	cursor.Init("Resources/icons/cursorBrush.png");
+	cursor.TransparencyCorrection();
 	icons[0] = cursor;
 
-	
 	pen.Init("Resources/icons/penBrush.png");
+	pen.TransparencyCorrection();
 	icons[1] = pen;
+
+	eraser.Init("Resources/icons/eraser.png");
+	eraser.TransparencyCorrection();
+	icons[2] = eraser;
 	
 	air.Init("Resources/icons/airBrush.png");
-	icons[2] = air;
+	air.TransparencyCorrection();
+	icons[3] = air;
 
 	water.Init("Resources/icons/waterBrush.png");
-	icons[3] = water;
+	water.TransparencyCorrection();
+	icons[4] = water;
 
-	
 	chalk.Init("Resources/icons/chalkBrush.png");
-	icons[4] = chalk;
+	chalk.TransparencyCorrection();
+	icons[5] = chalk;
 
 	sizecursor.Init("Resources/Textures/penBrush.png");
+	sizecursor.TransparencyCorrection();
 }
 
 void DrawUI::InitData()
 {
+	userColor = dist(gen);
 	if (runtime.ip[0] == '\0') {
 		std::cerr << "No ip in appdata" << std::endl;
 	}
@@ -143,7 +174,10 @@ void DrawUI::DrawMenu() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New")) {
-				// Handle "New" action
+				canvasInitWindow = true;
+				inited = false;
+				selected = 0;
+				renderer->tool = 0;
 			}
 			if (ImGui::MenuItem("Open...")) {
 				// Handle "Open" action
@@ -189,17 +223,44 @@ void DrawUI::DrawMenu() {
 	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
 }
 
+void DrawUI::PlayerVisualization() {
+	/*
+	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+	bool open = true;
+	Lss::SetFontSize(2 * Lss::VH);
+	ImVec2 textSize = ImGui::CalcTextSize(runtime.username.c_str());
+	ImVec2 size = ImVec2(textSize.x, textSize.y+4*Lss::VH);
+	ImGui::SetNextWindowSize(size);
+	float* pos = Callback::GlCursorPosition();
+	pos[0] = (pos[0] + 1.0f) / 2;
+	pos[1] = (pos[1] + 1.0f) / 2;
+	ImVec2 realPos = ImVec2(windowSize.x * pos[0],windowSize.y - (windowSize.y * pos[1]));
+	ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2),realPos.y - (size.y / 3)));
+	ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+		Lss::Top(0.25f * Lss::VH);
+		Lss::Image(playerCursor.GetId(), ImVec2(2*Lss::VH, 2*Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[userColor]);
+		ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[userColor];
+		Lss::Text(runtime.username, 1.5f*Lss::VH, Centered);
+		Lss::SetColor(Font, Font);
+		Lss::End();
+	ImGui::End();
+	Lss::End();
+	*/
+}
+
 void DrawUI::ColorWindow(RenderData& cursor)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, startPosY), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y));
+	ImGui::SetNextWindowSize(ImVec2(leftSize, SizeWindowPos.y-startPosY));
 
-	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar | ((ColorWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
+	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar |  ImGuiWindowFlags_NoResize);
+	ImGui::PopStyleVar();
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
-	if(renderer->inited)cursor.shader->SetUniform3f("Kolor", color[0], color[1], color[2]);
+	if(renderer->inited)cursor.shader->SetUniform4f("Kolor", color[0], color[1], color[2], 1.0f);
 	renderer->SetColor(color);
 
 	ColorWindowSize = ImGui::GetWindowSize();
@@ -210,26 +271,37 @@ void DrawUI::ColorWindow(RenderData& cursor)
 		leftSize = 200;
 		std::cout << leftSize << std::endl;
 	}
+	/*
+	ImVec2 windowSize = ImGui::GetIO().DisplaySize;  // Get the screen size
+	ImVec2 windowPos((windowSize.x - (20 * Lss::VH)) / 2, (windowSize.y - (20 * Lss::VH)) / 2); // Calculate the center
+
+	ImGui::SetNextWindowPos(windowPos);  // Set the window position
+	ImGui::SetNextWindowSize(ImVec2(20 * Lss::VH, 20 * Lss::VH));  // Set the window size
+	ImGui::Begin("test", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+		Lss::Button("Semmi sus", ImVec2(10 * Lss::VH, 3 * Lss::VH), 2 * Lss::VH, Centered | Rounded);
+	ImGui::End();
+	*/
 }
 
-void DrawUI::SizeWindow(float& cursorRadius)
+void DrawUI::SizeWindow(float& cursorRadius, float scale)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, ColorWindowSize.y+startPosY), ImGuiCond_Always);
 
 	ImGui::SetNextWindowSize(ImVec2(leftSize, BrushWindowPos.y - SizeWindowPos.y));
 
-	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ((SizeWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
-		int sliderVal = cursorRadius * 100;
-		sliderVal -= 1;
-		sliderVal *= 2;
-		if (sliderVal == 0) sliderVal = 1;
-		ImGui::SliderInt("##Scale", &sliderVal, 1, 16);
-		if (sliderVal == 1) sliderVal = 0;
-		sliderVal /= 2;
-		sliderVal += 1;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
+	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+		ImGui::PopStyleVar();
+		float sliderVal = cursorRadius * scale * 100;
+		sliderVal -= 1.0f;
+		sliderVal *= 2.0f;
+		if (sliderVal == 0.0f) sliderVal = 1.0f;
+		ImGui::SliderInt("##Scale", (int*)&sliderVal, 1, 16);
+		if (sliderVal == 1.0f) sliderVal = 0.0f;
+		sliderVal /= 2.0f;
+		sliderVal += 1.0f;
 		
-		cursorRadius = float(sliderVal) / 100.0f;
+		cursorRadius = sliderVal / 100.0f / scale;
 
 		ImGui::Columns(3, nullptr, false);
 
@@ -272,26 +344,31 @@ void DrawUI::SizeWindow(float& cursorRadius)
 	}
 }
 
-void DrawUI::BrushWindow(GLFWwindow* window) 
+void DrawUI::BrushWindow(GLFWwindow* window, RenderData& cursor) 
 {
 	glfwGetWindowSize(window, &windowSizeX, &windowSizeY);
 	ImGui::SetNextWindowPos(ImVec2(0, SizeWindowPos.y + SizeWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(leftSize, windowSizeY - (SizeWindowPos.y + SizeWindowSize.y)));
 
-	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ((BrushWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
-
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
+	ImGui::Begin("Brushes", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+	ImGui::PopStyleVar();
 	ImGui::Columns(2, nullptr, false);
 	int index = 0;
 
 
 	for (RenderData brush : renderer->brushes)
 	{
-		if (index <= 4) {
+		if (index <= 5) {
 			bool isSelected = (index == selected);
 			if (ImGui::Selectable(("##" + std::to_string(index)).c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-				if (!isSelected) renderer->ChangeBrush(index);
-				selected = index;
+				if (!isSelected) {
+					renderer->ChangeBrush(index);
+					selected = index;
+					renderer->tool = index;
+				}
 			}
+
 			ImVec2 pos = ImGui::GetItemRectMin();
 			ImVec2 size = ImGui::GetItemRectSize();
 			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
@@ -318,11 +395,14 @@ void DrawUI::ServerWindow()
 	rightSize = (((rightSize) > (rightMinSize)) ? (rightSize) : (rightMinSize));
 
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, startPosY), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowPos.y));
+	ImGui::SetNextWindowSize(ImVec2(rightSize, ServerWindowSize.y));
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Lobby", nullptr, ImGuiWindowFlags_NoTitleBar | ((ServerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	Lss::SetFontSize(2 * Lss::VH);
+	/*
 	if (Lss::Button("Save", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
 	{
 		DataManager::SaveSyncData(savePath);
@@ -330,7 +410,7 @@ void DrawUI::ServerWindow()
 	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
 	{
 		DataManager::LoadSyncData(savePath);
-	}
+	}*/
 
 	if (isOnline) {
 		if (!usersGot) {
@@ -372,6 +452,24 @@ void DrawUI::ServerWindow()
 	if (ServerWindowSize.x < 200) {
 		rightSize = 200;
 		std::cout << leftSize << std::endl;
+	}
+}
+
+void ChangeOpacityChild(int& index)
+{
+	if (Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get())) {
+		std::vector<int> childrenCopy = foldy->childrenIds;
+
+		for (int child : childrenCopy)
+		{
+			if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+			if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+			{
+				ChangeOpacityChild(child);
+			}
+			renderer->nodes[child]->opacity = foldy->opacity;
+		}
 	}
 }
 
@@ -523,12 +621,13 @@ void DrawUI::DeleteChilds(int& index)
 
 void DrawUI::LayerWindow()
 {
-	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y+startPosY), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
 
 	itemHovered = false;
-
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Layer", nullptr, ImGuiWindowFlags_NoTitleBar | ((LayerWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
 	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
@@ -605,6 +704,12 @@ void DrawUI::LayerWindow()
 			}
 		}
 	}
+	if (selectedLayer > -1) {
+		ImGui::SameLine();
+		ImGui::SliderInt("Opacity", &renderer->nodes[selectedLayer].get()->opacity, 0, 100);
+		ChangeOpacityChild(selectedLayer);
+	}
+
 	if (ImGui::IsItemHovered()) itemHovered = true;
 	Lss::Top(Lss::VH);
 	ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
@@ -635,7 +740,10 @@ void DrawUI::ChatWindow()
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, LayerWindowPos.y + LayerWindowSize.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(rightSize, windowSizeY - (LayerWindowPos.y + LayerWindowSize.y)));
 	float heightOfChat = windowSizeY - (LayerWindowPos.y + LayerWindowSize.y);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Chat", nullptr, ImGuiWindowFlags_NoTitleBar | ((ChatWindowSize.x < 200) ? ImGuiWindowFlags_NoResize : ImGuiWindowFlags_None));
+	ImGui::PopStyleVar();
 
 	ImGui::BeginChild("ChatLog", ImVec2(0, heightOfChat-4.8f*Lss::VH), false, ImGuiWindowFlags_HorizontalScrollbar);
 	for (const auto& message : chatLog)
@@ -721,7 +829,7 @@ void DrawUI::InitWindow()
 				openExplorer = true;
 				wasOpen = true;
 			}
-			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 4);
+			if(openExplorer) Explorer::FileExplorerUI(&openExplorer, 3);
 			else if (wasOpen)
 			{
 				strcpy(locationText, Explorer::GetImagePath().c_str());
@@ -738,7 +846,6 @@ void DrawUI::InitWindow()
 
 					canvasInitWindow = false;
 					inited = true;
-					std::cout << "heoooo" << std::endl;
 				}
 				else {
 					if (width > 0 && height > 0) {

@@ -13,6 +13,7 @@
 #include "LoginRegister.h"
 #include "SocksManager.h"
 #include <mutex>
+#include <ctime>
 
 
 std::mutex postMutex;
@@ -53,6 +54,8 @@ int searchMode = 0;
 int selectedUser = -1;
 bool needImages = true;
 
+static bool openStuff = false;
+
 MyTexture imageToPostTexture;
 GLuint imageToPost = 0;
 
@@ -67,6 +70,29 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
+
+std::string CalcTime(std::chrono::system_clock::time_point time)
+{
+    auto now = std::chrono::system_clock::now();
+    std::string outTime;
+    auto duration = std::chrono::duration_cast<std::chrono::minutes>(now - time);
+    if (duration.count() < 60) {
+        outTime = std::to_string(duration.count()) + " minutes ago";
+    }
+    else if (duration.count() < 24 * 60)
+        outTime = std::to_string(duration.count() / 60) + " horse ago";
+    else if (duration.count() <= 24 * 4 * 60) {
+        outTime = std::to_string(duration.count() / (24 * 60)) + " days ago";
+    }
+    else {
+        std::time_t tt = std::chrono::system_clock::to_time_t(time);
+        std::tm* gmt = std::localtime(&tt);
+        char buffer[50];
+        std::strftime(buffer, sizeof(buffer), "%B %d", gmt);
+        outTime = buffer;
+    }
+    return outTime;
+}
 
 std::unordered_map<GLuint, int> imageIndexes;
 
@@ -129,6 +155,7 @@ void SocialMedia::SearchStuff(const char* searchText)
             postImageRelation[imageData["id"]].imageId = imageData["imageId"];
         }
         for (const auto& pair : postImageRelation) {
+            std::cout << "loading image" << std::endl;
             std::thread(&SocialMedia::LoadImageJa, pair.second.imageId, 5, pair.first).detach();
         }
         searchOffset = result["offset"];
@@ -268,7 +295,7 @@ void SocialMedia::LoadProfile(int id)
 
 void SocialMedia::MainPage(float& width, float& height)
 {
-    static bool openStuff = false;
+
     static bool wasCreated = false;
     static bool created = false;
 
@@ -296,6 +323,7 @@ void SocialMedia::MainPage(float& width, float& height)
 
     }
 
+    Lss::Top(2 * Lss::VH);
     for (Post& post : posts)
     {
         if (!post.allLoaded) {
@@ -307,7 +335,7 @@ void SocialMedia::MainPage(float& width, float& height)
         std::string id = std::to_string(post.id);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
         Lss::SetColor(ContainerBackground, Background);
-        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered | Rounded, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        Lss::Child("##" + id, ImVec2(validWidth, post.size), true, Centered | Rounded | Bordering, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         Lss::SetColor(ContainerBackground, ContainerBackground);
         ImGui::PopStyleVar();
         if (post.needChange) {
@@ -315,44 +343,72 @@ void SocialMedia::MainPage(float& width, float& height)
             needChange = true;
         }
 
-        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded);
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Image(users[post.userId].userImage, ImVec2(8 * Lss::VH, 8 * Lss::VH), Rounded | Bordering);
 
         ImGui::SameLine();
         Lss::Top(2 * Lss::VH);
         Lss::Text(users[post.userId].username, 4 * Lss::VH);
 
-        Lss::Left(3.5f * Lss::VH);
-        Lss::Text(post.text, 4 * Lss::VH);
+        ImGui::SameLine();
+        Lss::SetFontSize(3 * Lss::VH);
+        std::string timeOut = CalcTime(post.time);
+        float sizeofDay = ImGui::CalcTextSize(timeOut.c_str()).x;
+        float availForDay = ImGui::GetContentRegionAvail().x;
+        Lss::LeftTop(availForDay - sizeofDay-Lss::VW,Lss::VH);
+        Lss::Text(timeOut, 3 * Lss::VH);
+
+        Lss::Left(4 * Lss::VH);
+        Lss::Text(post.text, 3 * Lss::VH);
 
         float good = validWidth * 0.9f;
         ImVec2 faki(good, good * post.ratio);
-        Lss::Image(post.image, faki, Centered);
 
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-        Lss::Left(3.5f * Lss::VH);
-        for (const auto& tags : post.tags)
-        {
-            Lss::SetFontSize(3 * Lss::VH);
-            Lss::SetColor(ContainerBackground, Background);
-            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
-            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
-            Lss::Text("#" + tags, 3 * Lss::VH, Centered);
+        if (post.image != -1) {
+            Lss::Child("imageFor" + id, faki, true, Bordering | Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            ImGui::SetCursorPos(ImVec2(0, 0));
+            Lss::Image(post.image, faki, Centered);
             Lss::End();
             ImGui::EndChild();
-            Lss::SetColor(ContainerBackground, ContainerBackground);
+        }
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        Lss::LeftTop(3.5f * Lss::VH, 0.5f*Lss::VH);
+        float commentMax = validWidth - 7 * Lss::VH;
+        float commentSize = 0.0f;
+        for (const auto& tags : post.tags)
+        {
+            Lss::SetFontSize(2.5f * Lss::VH);
+            float tagWidth = ImGui::CalcTextSize(("#" + tags).c_str()).x + Lss::VW;
+            if (tagWidth + commentSize > commentMax) {
+                ImGui::NewLine();
+                Lss::Left(3.5f * Lss::VH);
+                commentSize = 0.0f;
+            }
+            commentSize += tagWidth;
+            Lss::Child("##" + tags, ImVec2(tagWidth, 3 * Lss::VH), true);
+                Lss::Text("#" + tags, 2.5f * Lss::VH, Centered);
+                Lss::End();
+            ImGui::EndChild();
             ImGui::SameLine();
         }
         ImGui::NewLine();
         ImGui::PopStyleVar();
 
+        Lss::Top(0.5f * Lss::VH);
+        Lss::Separator(2);
+
         static bool likeHovered = false;
         static bool commentHovered = false;
 
+        float widthForButtons = ImGui::GetContentRegionAvail().x;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
         bool contains = (runtime.liked.find(post.id) != runtime.liked.end());
         if (post.likeHovered) Lss::SetColor(ContainerBackground, HeavyHighlight);
-        else Lss::SetColor(ContainerBackground, LowHighlight);
-        Lss::Child("##LikeButton"+std::to_string(post.id), ImVec2(validWidth / 2, 6 * Lss::VH));
+        else Lss::SetColor(ContainerBackground, Background);
+        Lss::Child("##LikeButton"+std::to_string(post.id), ImVec2(widthForButtons / 2, 6 * Lss::VH), false, Trans);
             Lss::Top(Lss::VH);
             if(contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH),Centered);
             else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
@@ -360,7 +416,6 @@ void SocialMedia::MainPage(float& width, float& height)
             Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
             Lss::End();
         ImGui::EndChild();
-        Lss::SetColor(ContainerBackground, ContainerBackground);
         post.likeHovered = ImGui::IsItemHovered();
         if (ImGui::IsItemClicked()) {
             if (contains) {
@@ -381,8 +436,8 @@ void SocialMedia::MainPage(float& width, float& height)
         ImGui::SameLine();
 
         if (post.commentHovered) Lss::SetColor(ContainerBackground, HeavyHighlight);
-        else Lss::SetColor(ContainerBackground, LowHighlight);
-        Lss::Child("commentButton"+std::to_string(post.id), ImVec2(validWidth / 2, 6 * Lss::VH));
+        else Lss::SetColor(ContainerBackground, Background);
+        Lss::Child("commentButton"+std::to_string(post.id), ImVec2(widthForButtons / 2, 6 * Lss::VH));
             Lss::Top(Lss::VH);
             Lss::Image(commentTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
         Lss::End();
@@ -393,9 +448,12 @@ void SocialMedia::MainPage(float& width, float& height)
             post.openComments = !post.openComments;
             post.needChange = true;
         }
+        ImGui::PopStyleVar();
+        ImGui::Dummy(ImVec2(0.0f, Lss::VH));
+
         if (post.openComments) {
             static char text[256];
-            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(validWidth, 4 * Lss::VH), Centered, ImGuiInputTextFlags_EnterReturnsTrue))
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Comment something :3"))
             {
                 nlohmann::json jsonData;
                 jsonData["postId"] = post.id;
@@ -408,39 +466,55 @@ void SocialMedia::MainPage(float& width, float& height)
                     myComment.text = text;
                     myComment.id = result["id"];
                     myComment.userId = runtime.id;
-                    post.comments.emplace_back(myComment);
+                    post.comments.push_back(myComment);
+                    post.needChange = true;
                 }
             }
         }
         
         if (post.openComments) {
+            Lss::Text("Comments", 3 * Lss::VH);
             if (!post.comments.empty()) {
                 ImVec2 commentChildSize;
                 if (post.comments.size() == 1) {
                     commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
                 }
                 else commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 20 * Lss::VH);
-                ImGui::BeginChild("CommentsRegion", commentChildSize, true, ImGuiWindowFlags_NoScrollbar);
 
-                for (Comment& comment : post.comments)
+                Lss::SetColor(ContainerBackground, Background);
+                Lss::Child("CommentsRegion", commentChildSize, false, Centered, ImGuiWindowFlags_NoScrollbar);
+
+                for (auto it = post.comments.rbegin(); it != post.comments.rend(); ++it)
                 {
+                    Comment& comment = *it;
                     if (!users[comment.userId].pPicLoaded) continue;
 
-                    Lss::SetColor(ContainerBackground, Background);
+                    Lss::SetColor(ContainerBackground, LowHighlight);
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
 
                     std::string name = std::to_string(comment.id);
-                    Lss::Child(name, ImVec2(0, 11 * Lss::VH));
+                    Lss::Child(name, ImVec2(0, 8.5 * Lss::VH));
 
                     Lss::LeftTop(Lss::VH, Lss::VH);
                     Lss::Image(users[comment.userId].userImage, ImVec2(6 * Lss::VH, 6 * Lss::VH), Rounded);
 
                     ImGui::SameLine();
-                    Lss::Top(Lss::VH);
-                    Lss::Text(users[comment.userId].username, 4 * Lss::VH);
+                    ImVec2 currentCursor = ImGui::GetCursorPos();
 
-                    Lss::Left(7 * Lss::VH);
-                    Lss::Text(comment.text, 3 * Lss::VH);
+                    Lss::Text(users[comment.userId].username, 3.5f * Lss::VH);
+
+                    ImGui::SameLine();
+                    Lss::SetFontSize(2 * Lss::VH);
+                    std::string timeOut = CalcTime(comment.time);
+                    float sizeofDay = ImGui::CalcTextSize(timeOut.c_str()).x;
+                    float availForDay = ImGui::GetContentRegionAvail().x;
+                    Lss::LeftTop(availForDay - sizeofDay - Lss::VW, 0.5f*Lss::VH);
+                    Lss::Text(timeOut, 2 * Lss::VH);
+
+                    currentCursor.x += Lss::VH;
+                    currentCursor.y += 3 * Lss::VH;
+                    ImGui::SetCursorPos(currentCursor);
+                    Lss::Text(comment.text, 2.5f * Lss::VH);
 
                     Lss::End();
 
@@ -449,8 +523,10 @@ void SocialMedia::MainPage(float& width, float& height)
                     ImGui::PopStyleVar(1);
                     Lss::SetColor(ContainerBackground, ContainerBackground);
 
-                    if (post.comments[post.comments.size() - 1].id != comment.id) {
-                        Lss::Top(Lss::VH);
+                    Lss::Top(0.25f*Lss::VH);
+                    if (post.comments[0].id != comment.id) {
+                        Lss::Separator();
+                        Lss::Top(0.25f * Lss::VH);
                     }
                 }
 
@@ -465,10 +541,11 @@ void SocialMedia::MainPage(float& width, float& height)
             post.size = endY - startY;
             post.needChange = false;
         }
+
         Lss::End();
         ImGui::EndChild();
 
-        Lss::Top(4 * Lss::VH);
+        Lss::Top(2 * Lss::VH);
         Lss::End();
     }
     ImGui::EndChild();
@@ -1790,6 +1867,14 @@ void SocialMedia::LeftSide(float position, float width, float height)
     ImGui::Separator();
 
     Lss::Top(2 * Lss::VH);
+
+    if (runtime.logedIn) {
+        if (Lss::Button("Post", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+            openStuff = true;
+        }
+        Lss::Top(1 * Lss::VH);
+    }
+
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
         else {
@@ -1876,7 +1961,10 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
     std::tm tm = {};
     std::istringstream ss(timeData);
     ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-    return std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    std::time_t timeUtc = std::mktime(&tm);
+
+    std::time_t locTime = timeUtc + 3600;
+    return std::chrono::system_clock::from_time_t(locTime);
 }
 
 void SocialMedia::GetPosts() 
