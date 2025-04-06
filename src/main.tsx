@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import './css/Index.css'
-import Home from './pages/Home'
+import About from './pages/About'
 import WebGLCanvas from './pages/webgl/WebGLCanvas'
 import App from './App'
 import SideNavbar from './components/SideNavbar_components'
@@ -52,7 +52,7 @@ const MainLayout: React.FC = () => {
           <Route path="/" element={<SocialMedia />} />
           <Route path="/Draw" element={<WebGLCanvas />} />
           <Route path="/Download" element={<App />} />
-          <Route path="/About" element={<Home />} />
+          <Route path="/About" element={<About />} />
           <Route path="/Search" element={<Search />} />
           <Route path="/Profile" element={<Profile own />} />
           <Route path="/Profile/:id" element={<Profile />} />

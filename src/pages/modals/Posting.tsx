@@ -1,7 +1,7 @@
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col, ListGroup } from 'react-bootstrap';
 import { X } from "react-bootstrap-icons";
-import { modalProp } from "../../types";
-import { useState } from 'react';
+import { modalProp, image } from "../../types";
+import { useEffect, useState } from 'react';
 import "../../css/Modal.css";
 import Cookies from 'universal-cookie';
 import { ExistingImage } from './ExistingImage';
@@ -16,9 +16,12 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<number | undefined>(undefined);
+  const [newImage, setNewImage] = useState<File | null>(null);
   const [showExistingImageModal, setShowExistingImageModal] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [text, setText] = useState("");
+  const isSelectedImgPriv: boolean = false;
+
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && text.trim() !== "") {
@@ -77,6 +80,21 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setNewImage(file);
+
+    if (file) {
+      setSelectedImage(undefined);
+    }
+  };
+
+  const handleExistingImageSelection = (imageId: number) => {
+    setSelectedImage(imageId);
+
+    setNewImage(null);
+  };
+
   return (
     <>
       <Modal show={show} onHide={onHide} centered>
@@ -103,17 +121,17 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
                 type="text"
                 placeholder="tags"
                 name='nemKuldom'
+                value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
-              
+
               <ListGroup className="mt-3" horizontal id='tagsList'>
                 {tags.map((tag, index) => (
                   <ListGroup.Item key={index} className='tagsList' onClick={() => deleteTag(index)}>
                     #{tag}
                     <X
                       size={18}
-                      className="text-danger"
                       style={{ cursor: "pointer" }}
                       onClick={() => deleteTag(index)}
                     />
@@ -131,6 +149,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
                       name="file"
                       id="file"
                       className='costum-input'
+                      onChange={handleFileChange}
                     />
                   </Form.Group>
                 </Col>
@@ -158,6 +177,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
         onHide={() => setShowExistingImageModal(false)}
         onSelectImage={(imageId) => {
           setSelectedImage(imageId);
+          handleExistingImageSelection;
           setShowExistingImageModal(false);
         }}
       />

@@ -8,7 +8,7 @@ import { Chat, Heart, HeartFill } from "react-bootstrap-icons";
 
 export function SocialMedia() {
     const [post, setPost] = useState<post[]>([])
-    const [show, setShow] = useState(false)
+    const [visibleCommentPosts, setVisibleCommentPosts] = useState<number[]>([])
     const [newComment, setNewComment] = useState("")
     const [likedPosts, setLikedPosts] = useState<number[]>([])
     let loading: boolean = false;
@@ -61,6 +61,8 @@ export function SocialMedia() {
         }
     }
 
+
+
     useEffect(() => {
         fetchPosts()
 
@@ -98,7 +100,7 @@ export function SocialMedia() {
         } else if (diffInMinutes < 60 * 24 * 4) {
             const days = Math.floor(diffInMinutes / (60 * 24));
             outTime = days + " days ago";
-        } else if (diffInMinutes > 60 * 24 * 365){
+        } else if (diffInMinutes > 60 * 24 * 365) {
             const myDate: Intl.DateTimeFormatOptions = {
                 year: "numeric",
                 month: "long",
@@ -112,7 +114,7 @@ export function SocialMedia() {
             };
             outTime = formattedDate.toLocaleDateString("en-US", myDate);
         }
-    
+
         return outTime;
     }
 
@@ -195,6 +197,13 @@ export function SocialMedia() {
                     return [...prevLikedPosts, postId];
                 }
             });
+            setPost((prevPosts) =>
+                prevPosts.map((post) =>
+                    post.id === postId
+                        ? { ...post, likes: post.likes + (likedPosts.includes(postId) ? -1 : 1) }
+                        : post
+                )
+            );
         } catch (err: any) {
             console.log(err);
         }
@@ -203,7 +212,7 @@ export function SocialMedia() {
     function takeToProfile(event: React.MouseEvent<HTMLImageElement | HTMLHeadingElement>) {
         const key: string = event.currentTarget.dataset.id || '';
         if (key) {
-            window.location.href = `/Profile/${key}`;
+            window.location.href = "/Profile/" + key;
         }
     }
 
@@ -216,13 +225,18 @@ export function SocialMedia() {
                             src={backendIp + "/users/" + post.user.id + "/pfp"}
                             alt="profile"
                             className="profile-img"
+                            data-id={post.user.id}
+                            onClick={takeToProfile}
                         />
-                        <span className="username">{post.user.username}</span>
+                        <span className="username"
+                            data-id={post.user.id}
+                            onClick={takeToProfile}
+                        >{post.user.username}</span>
                         <span className="date">
                             {generateDatabaseDateTime(post.date)}
                         </span>
-                        <hr className="post-header-bottom" />
                     </div>
+                    <hr className="post-header-bottom" />
 
                     {post.imageId && (
                         <div className="post-image-wrapper">
@@ -251,14 +265,20 @@ export function SocialMedia() {
 
                         <span
                             className="comment-text d-flex align-items-center"
-                            onClick={() => setShow((prevShow) => !prevShow)}
+                            onClick={() => {
+                                setVisibleCommentPosts((prevVisible) =>
+                                    prevVisible.includes(post.id)
+                                        ? prevVisible.filter(id => id !== post.id)
+                                        : [...prevVisible, post.id]
+                                );
+                            }}
                         >
                             <Chat className="comment-icon" />
                         </span>
                     </div>
 
                     <div className="comment-section">
-                        {show && post.comments.length > 0 && (
+                        {visibleCommentPosts.includes(post.id) && (
                             <div className="comments-container">
                                 <div className="sticky-input">
                                     {thisUser && (
@@ -282,31 +302,35 @@ export function SocialMedia() {
                                 </div>
 
                                 <div className="comments-list">
-                                    {post.comments.map((comment) => (
-                                        <div key={comment.id} className="comment-container p-2">
-                                            <Row className="align-items-center">
-                                                <Col xs="auto">
-                                                    <img
-                                                        className="profile-img"
-                                                        src={backendIp + "/users/" + comment.user.id + "/pfp"}
-                                                        data-id={comment.user.id}
-                                                        onClick={takeToProfile}
-                                                    />
-                                                </Col>
-                                                <Col>
-                                                    <h6
-                                                        data-id={comment.user.id}
-                                                        onClick={takeToProfile}
-                                                        className="date-text"
-                                                    >
-                                                        {comment.user.username}
-                                                    </h6>
-                                                    <p className="mb-1">{comment.text}</p>
-                                                    <p className="small">{generateDatabaseDateTime(comment.date)}</p>
-                                                </Col>
-                                            </Row>
-                                        </div>
-                                    ))}
+                                    {post.comments.length > 0 ?
+                                        post.comments.map((comment) => (
+                                            <div key={comment.id} className="comment-container p-2">
+                                                <Row className="align-items-center">
+                                                    <Col xs="auto">
+                                                        <img
+                                                            className="profile-img"
+                                                            src={backendIp + "/users/" + comment.user.id + "/pfp"}
+                                                            data-id={comment.user.id}
+                                                            onClick={takeToProfile}
+                                                        />
+                                                    </Col>
+                                                    <Col>
+                                                        <h6
+                                                            data-id={comment.user.id}
+                                                            key={post.id}
+                                                            className="date-text"
+                                                        >
+                                                            {comment.user.username}
+                                                        </h6>
+                                                        <p className="mb-1">{comment.text}</p>
+                                                        <p className="small">{generateDatabaseDateTime(comment.date)}</p>
+                                                    </Col>
+                                                </Row>
+                                            </div>
+                                        )) :
+                                        (
+                                            thisUser ? <p className="fst-italic ps-3">Be the first to comment.</p> : <p className="fst-italic ps-3">No comments as of this time.</p>
+                                        )}
                                 </div>
                             </div>
                         )}

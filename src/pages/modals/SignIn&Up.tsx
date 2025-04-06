@@ -7,12 +7,18 @@ import '../../css/Modal.css';
 
 export const SignInAndUp: React.FC<modalProp & { defaultToSignUp: boolean }> = ({ show, onHide, defaultToSignUp }) => {
   const cookie = new Cookies();
-  const [isSignUp, setIsSignUp] = useState(defaultToSignUp);
+  const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   let timeout: ReturnType<typeof setTimeout>;
 
   useEffect(() => {
+    if (defaultToSignUp) {
+      setIsSignUp(true);
+    }
+    else {
+      setIsSignUp(false);
+    }
     if (!show) {
       setIsSubmitting(false);
       setError('');

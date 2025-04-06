@@ -10,9 +10,6 @@ export interface post {
 }
 
 export interface comment {
-    /**
-     * kommnet vagy wiki
-     */
     id: number;
     text: string;
     date: Date;

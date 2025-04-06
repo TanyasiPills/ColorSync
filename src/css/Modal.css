@@ -30,19 +30,58 @@ input[type="file"]::file-selector-button {
     border-radius: 4px;
     cursor: pointer;
 }
+
 .custom-input {
-    background-color: var(--backgroundColor); 
-    color: var(--textCol);             
-    border: 1px solid var(--borderCol);  
+    background-color: var(--backgroundColor);
+    color: var(--textCol);
+    border: 1px solid var(--borderCol);
     border-radius: 4px;
     padding: 8px;
-  }
+}
 
 #tagsList .tagsList {
     background-color: var(--backgroundColor);
     color: var(--textCol);
+    margin-right: 1%;
+    border-radius: 20px;
+}
+
+#tagsList .tagsList:last-child {
+    margin-right: 0;
 }
 
 .tagsList:hover {
     background-color: var(--highlight);
+}
+
+#drawings {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.image-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.drawing-img {
+    transition: opacity 0.3s ease; 
+  }
+
+.drawing-img {
+    height: 400px;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
+.drawing-img:hover {
+    opacity: 1;
+}
+
+.drawing-img:not(:hover) {
+    opacity: 0.6;
   }

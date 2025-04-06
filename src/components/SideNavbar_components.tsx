@@ -49,7 +49,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
           <summary className="account-title">Account</summary>
           {thisUser ? (
             <div>
-              <p><a href="/Profile" className="sidebar-link">Profile</a></p>
+              <a href="/Profile" className="sidebar-link">Profile</a>
               <p onClick={signOut} className="sidebar-link">Sign Out</p>
             </div>
           ) : (
