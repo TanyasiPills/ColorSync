@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import { image, user } from "../types"
 import { ProfileEdit } from "./modals/ProfileEdit";
 import { PostingToProfile } from "./modals/PostingToProfile";
+import { EnlargedImage } from "./modals/EnlargedImage";
 
 
 export function Profile({ own = false }: { own?: boolean }) {
@@ -25,6 +26,9 @@ export function Profile({ own = false }: { own?: boolean }) {
   const [imageURL, setImageURL] = useState<string[]>();
   const [show, setShow] = useState(false);
   const [imgShow, setImgShow] = useState(false);
+  const [enlargeShow, setEnlargeShow] = useState(false);
+  const [enlargeId, setEnlargeId] = useState<number | null>(null);
+
 
   async function loadUsers() {
     const header: any = {};
@@ -64,20 +68,29 @@ export function Profile({ own = false }: { own?: boolean }) {
       <Row id='profilData' className="w-100" style={{ flex: '1' }}>
         <Col xs={6} id="mainData">
           <div className="d-flex align-items-center">
-            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => {if(own) setShow(true)}}/>
-            <h3 id="userName" onClick={() => {if(own) setShow(true)}}>{user.username}</h3>
+            <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => { if (own) setShow(true) }} />
+            <h3 id="userName" onClick={() => { if (own) setShow(true) }}>{user.username}</h3>
           </div>
           <ProfileEdit show={show} onHide={() => setShow(false)} />
         </Col>
         <Col xs={6}>
-          {own? <Button onClick={() => setImgShow(true)}>Add new Image!</Button> : null}
+          {own ? <Button onClick={() => setImgShow(true)}>Add new Image!</Button> : null}
           <PostingToProfile show={imgShow} onHide={() => setImgShow(false)} />
         </Col>
       </Row>
-      <Row id="drawings" className="w-100" style={{  }}>
+      <Row id="myImages" className="gx-0 gy-0 w-100">
         {imageURL && imageURL.map((e, index) => (
-          <Col id="col" key={index} xs={12} sm={6} md={4} lg={4} className="d-flex justify-content">
-            <img src={e} className="drawing-img" />
+          <Col id="col" key={index} xs={4} className="myImages-wrapper">
+            <div className="square-box">
+              <img src={e} className="myImages-img"
+                onClick={() => {
+                  if (images) {
+                    setEnlargeId(images[index].id);
+                    setEnlargeShow(true);
+                  }
+                }} />
+                <EnlargedImage show={enlargeShow} onHide={() => setEnlargeShow(false)} imageId={enlargeId ?? 0} />
+            </div>
           </Col>
         ))}
       </Row>

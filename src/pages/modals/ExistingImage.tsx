@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import { backendIp } from "../../constants";
 import "../../css/Modal.css";
-import { image, modalProp } from "../../types";
+import { image, modalProp, visibility } from "../../types";
 
 interface ExistingImageProps extends modalProp {
-    onSelectImage: (imageId: number) => void;
+    onSelectImage: (imageId: number, visibility: visibility | undefined) => void;
 }
 
 export const ExistingImage: React.FC<ExistingImageProps> = ({ show, onHide, onSelectImage }) => {
@@ -21,14 +21,14 @@ export const ExistingImage: React.FC<ExistingImageProps> = ({ show, onHide, onSe
         const header: any = {
             "Authorization": "Bearer " + thisUser.access_token
         };
-        
+
         try {
             const imageResult = await fetch(backendIp + '/images/user/' + thisUser.id, { method: "GET", headers: header });
-            
+
             if (imageResult.ok) {
                 const imageResultJson: image[] = await imageResult.json();
                 setImages(imageResultJson);
-                
+
                 const promises = imageResultJson.map((e) =>
                     fetch(backendIp + '/images/' + e.id, { method: "GET", headers: header })
                         .then((res) => {
@@ -40,7 +40,7 @@ export const ExistingImage: React.FC<ExistingImageProps> = ({ show, onHide, onSe
                         })
                         .then((blob) => URL.createObjectURL(blob))
                 );
-                
+
                 const imageURLs = await Promise.all(promises);
                 setImageURL(imageURLs);
             } else {
@@ -59,11 +59,11 @@ export const ExistingImage: React.FC<ExistingImageProps> = ({ show, onHide, onSe
         <Modal show={show} onHide={onHide} centered>
             <h3 className="text-center mt-3">Images</h3>
             <div id="drawings">
-                {imageURL && imageURL.map((imgURL) => (
-                    <div key={imgURL} className="image-item">
+                {images && imageURL && images.map((img, i) => (
+                    <div key={img.id} className="image-item">
                         <img
-                            src={imgURL}
-                            onClick={() => onSelectImage(2)}
+                            src={imageURL[i]}
+                            onClick={() => onSelectImage(img.id, img.visibility)}
                             className="drawing-img"
                         />
                     </div>

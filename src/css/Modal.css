@@ -15,6 +15,7 @@
 .modal-body {
     background-color: var(--divCol);
     color: var(--textCol);
+    min-width: fit-content;
 }
 
 .modal-footer {
@@ -69,8 +70,8 @@ input[type="file"]::file-selector-button {
 
 
 .drawing-img {
-    transition: opacity 0.3s ease; 
-  }
+    transition: opacity 0.3s ease;
+}
 
 .drawing-img {
     height: 400px;
@@ -84,4 +85,4 @@ input[type="file"]::file-selector-button {
 
 .drawing-img:not(:hover) {
     opacity: 0.6;
-  }
+}

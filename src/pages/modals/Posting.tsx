@@ -1,6 +1,6 @@
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col, ListGroup } from 'react-bootstrap';
 import { X } from "react-bootstrap-icons";
-import { modalProp, image } from "../../types";
+import { modalProp, visibility } from "../../types";
 import { useEffect, useState } from 'react';
 import "../../css/Modal.css";
 import Cookies from 'universal-cookie';
@@ -20,7 +20,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
   const [showExistingImageModal, setShowExistingImageModal] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [text, setText] = useState("");
-  const isSelectedImgPriv: boolean = false;
+  const [selectedImageVisibility, setSelectedImageVisibility] = useState<visibility | undefined>();
 
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -49,13 +49,19 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
       sendingData.append(`tags[${index}]`, tag);
     });
     sendingData.append("text", data.get("text")!);
-    const file = data.get("file");
-    if (file && (file instanceof File) && file.size > 0) {
-      sendingData.append("file", file);
+    
+    if (newImage) {
+      sendingData.append("file", newImage);
     }
+
     if (selectedImage) {
       sendingData.append("imageId", selectedImage.toString());
     }
+
+    if (selectedImageVisibility === visibility.private) {
+      sendingData.append("forcePost", "true");
+    }
+
     try {
       const res = await fetch(backendIp + '/posts', {
         method: 'POST',
@@ -175,8 +181,9 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
       <ExistingImage
         show={showExistingImageModal}
         onHide={() => setShowExistingImageModal(false)}
-        onSelectImage={(imageId) => {
+        onSelectImage={(imageId, imageVisibility) => {
           setSelectedImage(imageId);
+          setSelectedImageVisibility(imageVisibility); 
           handleExistingImageSelection;
           setShowExistingImageModal(false);
         }}

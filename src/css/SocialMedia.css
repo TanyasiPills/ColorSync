@@ -1,9 +1,9 @@
 /* Container for the feed */
 #feed {
-  width: 60%;
+  width: 70% !important;
+  min-width: 70%;
+  min-height: 1px;
   margin: 20px auto;
-  align-self: center;
-  background-color: transparent;
   scroll-behavior: smooth;
   overflow-y: auto;
   display: flex;
@@ -13,7 +13,10 @@
   font-size: larger;
   gap: 20px;
   padding-bottom: 50px;
-  margin: 0 auto;
+}
+
+.error {
+  align-self: center;
 }
 
 /* Post container */

@@ -218,7 +218,7 @@ export function SocialMedia() {
 
     return (
         <div id="feed">
-            {post.map((post) => (
+            {post.length > 0 ? post.map((post) => (
                 <div className="post">
                     <div className="post-header">
                         <img
@@ -336,7 +336,7 @@ export function SocialMedia() {
                         )}
                     </div>
                 </div>
-            ))}
+            )): <h1 className="error" style={{width:"100%"}}>No posts at this time</h1>}
         </div>
     );
 }
