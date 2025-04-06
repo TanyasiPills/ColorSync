@@ -121,21 +121,22 @@ void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std
         else {
             if (!text.empty()) text += " ";
             text += word;
+            tags.push_back(word);
         }
     }
 }
 
 void SocialMedia::SearchStuff(const char* searchText, int type)
 {
+    bool end = false;
     std::string text;
     std::vector<std::string> tags;
     ParseSearchText(searchText, tags, text);
-
     if (type == 1) {
-        while (postImageRelation.size() < 21) {
+        while (postImageRelation.size() < 21 && !end) {
             std::string searchTerm = "posts/search?";
             searchTerm += "q=" + text;
-            searched += "&offset=" + searchOffset;
+            searchTerm += "&offset=" + std::to_string(searchOffset);
             for (const auto& tag : tags) {
                 searchTerm += "&tags=" + tag;
             }
@@ -151,10 +152,12 @@ void SocialMedia::SearchStuff(const char* searchText, int type)
                 for (const auto& pair : postImageRelation) {
                     std::thread(&SocialMedia::LoadImageJa, pair.second.imageId, 5, pair.first).detach();
                 }
-
-                searchOffset = result["offset"];
+                if (result["offset"].is_null()) end = true;
+                else searchOffset = result["offset"];
             }
         }
+        searchOffset = 0;
+        std::cout << "finished" << std::endl;
     }
     else if (type == 2)
     {
@@ -181,9 +184,7 @@ void SocialMedia::GetPostForSearch(const int& postId)
         std::cerr << "search request failed" << std::endl;
     }
     else {
-
         searchedPost.id = result["id"];
-        std::cout << "id: " << searchedPost.id << std::endl;
         searchedPost.userId = result["user"]["id"];
         searchedPost.text = result["text"];
         searchedPost.time = ParsePostTime(result["date"]);
@@ -203,7 +204,6 @@ void SocialMedia::GetPostForSearch(const int& postId)
             }
         }
         int commentCount = 0;
-        std::cout << "Before inserting, size: " << searchedPost.comments.size() << std::endl;
         if (!result["comments"].empty()) {
             for (const auto& comment : result["comments"]) {
                 commentCount++;
@@ -1397,13 +1397,9 @@ void SocialMedia::SearchPage(float& width, float& height)
         bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
         Lss::Left(3*Lss::VH);
-        if (Lss::Button("SR", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH)) {
 
-        }
-        if (Lss::Button("PF", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
-        {
+        static int searchRequestMode = 1;
 
-        }
         static bool search = true;
         static int count = 0;
         static bool searching = true;
@@ -1411,27 +1407,40 @@ void SocialMedia::SearchPage(float& width, float& height)
         static bool searchingUsers = false;
         static bool searchingPost = false;
 
-        if (hihi || search) {
-            if (hihi) {
-                searching = true;
-                searchedUser.clear();
-                images.clear();
-                postImageRelation.clear();
-            }
-            if (search) {
-                Lss::Top(10 * Lss::VH);
-                std::string searchtext = "Searching";
-                for (size_t i = 100; i < count; i += 100)searchtext += ".";
-                Lss::Text(searchtext, 4 * Lss::VH, Centered);
-                count++;
-                if (count >= 401) {
-                    count = 0;
-                }
-                if (images.size() > 0 || searchedUser.size() > 0) search = false;
-            }
+        if (Lss::Button("SR", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH)) {
+            searchRequestMode = 1;
+            hihi = true;
         }
+        if (Lss::Button("PF", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+        {
+            searchRequestMode = 2;
+            std::cout << "mode: " << searchRequestMode << std::endl;
+            hihi = true;
+
+        }
+
+        if (hihi) {
+            searching = true;
+            searchedUser.clear();
+            images.clear();
+            postImageRelation.clear();
+        }
+
+        if (search) {
+            Lss::Top(10 * Lss::VH);
+            std::string searchtext = "Searching";
+            for (size_t i = 100; i < count; i += 100)searchtext += ".";
+            Lss::Text(searchtext, 4 * Lss::VH, Centered);
+            count++;
+            if (count >= 401) {
+                count = 0;
+            }
+            if (images.size() > 0 || searchedUser.size() > 0) search = false;
+        }
+
         if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
-            std::thread(&SocialMedia::SearchStuff, searchText).detach();
+            std::cout << "mode: " << searchRequestMode << std::endl;
+            std::thread(&SocialMedia::SearchStuff, searchText, searchRequestMode).detach();
             searching = false;
         }
         if (searchedUser.size() > 0)
@@ -2195,7 +2204,6 @@ void SocialMedia::LoadDependencies(Post& post, int index)
     try {
         std::unique_lock<std::mutex> lock(postMutex);
         std::vector<Comment> commentsHere;
-        std::cout << post.comments.size() << std::endl;
         for (Comment& comment : post.comments) {
             commentsHere.push_back(comment);
         }
@@ -2228,14 +2236,14 @@ void SocialMedia::LoadImageJa(int dataId, int type, int postId)
             }
         } break;
     case 5: {
-        auto start = std::chrono::high_resolution_clock::now();
+        //auto start = std::chrono::high_resolution_clock::now();
         imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
         dataId = postId;
 
-        auto end = std::chrono::high_resolution_clock::now(); // End timing
-        std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
+        //auto end = std::chrono::high_resolution_clock::now(); // End timing
+        //std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
 
-        std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+        //std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
         } break;
     default:
         break;
