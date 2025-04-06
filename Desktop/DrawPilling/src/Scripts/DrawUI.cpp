@@ -170,6 +170,11 @@ void DrawUI::SetColor(float* colorIn)
 }
 
 void DrawUI::DrawMenu() {
+	static bool openExplorer = false;
+	static bool wasOpen = false;
+	static bool needFileOpen = false;
+	static bool needFileSave = false;
+
 	Lss::SetFontSize(2 * Lss::VH);
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -180,16 +185,31 @@ void DrawUI::DrawMenu() {
 				renderer->tool = 0;
 			}
 			if (ImGui::MenuItem("Open...")) {
-				// Handle "Open" action
+				if(!isOnline){
+					openExplorer = true;
+					wasOpen = true;
+					needFileOpen = true;
+				}
 			}
 			if (ImGui::MenuItem("Save")) {
-				// Handle "Save" action
+				if (savePath.empty()) {
+					openExplorer = true;
+					wasOpen = true;
+					needFileSave = true;
+				}
+				else DataManager::SaveSyncData(savePath);
 			}
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit")) {
 				renderer->SwapView(isOnline);
 			}
 			ImGui::EndMenu();
+		}
+
+		if (openExplorer) Explorer::FileExplorerUI(&openExplorer, 3);
+		else if (wasOpen)
+		{
+			savePath = Explorer::GetImagePath();
 		}
 
 		if (ImGui::BeginMenu("Edit")) {
@@ -797,7 +817,6 @@ void DrawUI::InitWindow()
 			ImGui::SameLine();
 			Lss::Left(4.4f * Lss::VW);
 			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH));
-
 
 			ImGui::NewLine();
 

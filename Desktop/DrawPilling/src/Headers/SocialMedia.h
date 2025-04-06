@@ -40,7 +40,7 @@ public:
 	static void MainPage(float& width, float& height);
 	static void SettingsPage();
 	static void SearchPage(float& width, float& height);
-	static void SearchStuff(const char* searchText);
+	static void SearchStuff(const char* searchText, int type);
 	static void GetPostForSearch(const int& postId);
 	static void RoomPage(float& width, float& height);
 
