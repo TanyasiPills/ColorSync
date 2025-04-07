@@ -207,7 +207,7 @@ void SManager::SendPositionMessage(Position cursorPos)
 
     msg->get_map()["position"] = positionArray;
 
-    h.socket()->emit("action", msg);
+    h.socket()->emit("mouse", msg);
 }
 
 void SManager::OnSystemMessage(sio::event& ev)

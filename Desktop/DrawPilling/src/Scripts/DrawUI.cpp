@@ -8,6 +8,7 @@
 #include "lss.h"
 #include <thread>
 #include <random>
+#include <memory>
 
 //Left side
 ImVec2 ColorWindowSize(100, 300);
@@ -43,7 +44,7 @@ bool itemHovered = false;
 bool usersGot = false;
 std::vector<RoomUser>* usersPtr;
 
-std::unordered_map<int, UserPos>* DrawUI::userPositions = nullptr;
+std::unique_ptr<std::unordered_map<int, UserPos>> DrawUI::userPositions = std::make_unique<std::unordered_map<int, UserPos>>();
 
 static std::vector<std::string> chatLog;
 
@@ -250,13 +251,13 @@ void DrawUI::PlayerVisualization() {
 	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
 	bool open = true;
 	Lss::SetFontSize(2 * Lss::VH);
-
+	if (userPositions == nullptr) return;
 	for (auto& pair : *userPositions) {
 		UserPos posy = pair.second;
 		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
 		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
 		ImGui::SetNextWindowSize(size);
-		float* pos = Callback::GlCursorPosition();
+		double* pos = Callback::GlCursorPosition();
 		pos[0] = (pos[0] + 1.0f) / 2;
 		pos[1] = (pos[1] + 1.0f) / 2;
 		ImVec2 realPos = ImVec2(windowSize.x * pos[0], windowSize.y - (windowSize.y * pos[1]));
