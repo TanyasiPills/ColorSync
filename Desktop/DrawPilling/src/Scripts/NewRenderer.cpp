@@ -441,7 +441,7 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
-			double preves[2] = { 0.0, 0.0 };
+			double preves[2] = { drawMessage.positions[0].x, drawMessage.positions[0].y };
 			LoadPrevCursor(preves);
 
 			messageCursor = brushes[drawMessage.brush];

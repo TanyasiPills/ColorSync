@@ -256,17 +256,15 @@ void DrawUI::PlayerVisualization() {
 		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
 		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
 		ImGui::SetNextWindowSize(size);
-		double* pos = Callback::GlCursorPosition();
-		std::cout << pos[0] << "; " << pos[1] << std::endl;
-		pos[0] = (pos[0] + 1.0f) / 2;
-		pos[1] = (pos[1] + 1.0f) / 2;
-		ImVec2 realPos = ImVec2(windowSize.x * pos[0], windowSize.y - (windowSize.y * pos[1]));
+		posy.pos.x = (posy.pos.x + 1.0f) / 2;
+		posy.pos.y = (posy.pos.y + 1.0f) / 2;
+		ImVec2 realPos = ImVec2(windowSize.x * posy.pos.x, windowSize.y - (windowSize.y * posy.pos.y));
 		ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2), realPos.y - (size.y / 3)));
 		ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
 			Lss::Top(0.25f * Lss::VH);
 			Lss::Image(playerCursor.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[posy.color]);
 			ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[posy.color];
-			Lss::Text(runtime.username, 1.5f * Lss::VH, Centered);
+			Lss::Text(posy.name, 1.5f * Lss::VH, Centered);
 			Lss::SetColor(Font, Font);
 			Lss::End();
 		ImGui::End();
@@ -436,15 +434,15 @@ void DrawUI::ServerWindow()
 	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
 	{
 		DataManager::LoadSyncData(savePath);
-	}*/
-
+	}
+	*/
 	if (isOnline) {
 		if (!usersGot) {
 			usersPtr = SManager::GetUsers();
 			usersGot = true;
 		}
 		ImVec2 avail = ImGui::GetContentRegionAvail();
-		int sizeofarray = usersPtr->size();
+		int sizeofarray = DrawUI::userPositions->size();
 		std::cout << sizeofarray << std::endl;
 		for (RoomUser user : *usersPtr)
 		{
@@ -461,7 +459,7 @@ void DrawUI::ServerWindow()
 				Lss::End();
 			ImGui::EndChild();
 
-			if (user.id == runtime.id) return;
+			if (user.id == runtime.id) continue;
 
 			if (userPositions->find(user.id) == userPositions->end()) {
 				UserPos pos;
@@ -474,6 +472,7 @@ void DrawUI::ServerWindow()
 		}
 		Lss::End();
 	}
+	
 	else {
 		std::string text = "Wumpus is very sad :c";
 		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
@@ -485,9 +484,10 @@ void DrawUI::ServerWindow()
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
+
 	Lss::End();
 	ImGui::End();
-
+	
 	if (ServerWindowSize.x < 200) {
 		rightSize = 200;
 	}

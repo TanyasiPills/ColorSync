@@ -246,7 +246,6 @@ void SManager::OnSystemMessage(sio::event& ev)
                 
                 users.emplace_back(userId, username, (userId == admin));
             }
-
             history = dataIn->get_map()["history"]->get_vector();
 
             std::cout << dataIn->get_map()["width"]->get_int() << std::endl;
