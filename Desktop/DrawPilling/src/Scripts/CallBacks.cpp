@@ -74,7 +74,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 
 			case GLFW_RELEASE:
 				mouseDown = false;
-				renderer->SendDraw();
+				if(renderer->GetOnline() && renderer->layers[0] != renderer->currentNode)renderer->SendDraw();
 				break;
 		}
 	}

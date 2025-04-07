@@ -81,7 +81,6 @@ void SManager::Connect(std::string ip, std::map<std::string, std::string> header
     std::map<std::string, std::string> headers;
     headers["token"] = header["token"];
     headers["password"] = header["password"];
-    std::cout << room["width"] << std::endl;
     h.connect(connectionIp, room, headers);
 }
 
@@ -129,7 +128,6 @@ void ProcessAction(sio::object_message::ptr dataIn)
             drawMessage.cursorScale[2] = curSca["z"]->get_double();
 
             rendererSocks->ExecuteMainThreadTask(drawMessage);
-            //rendererSocks->RenderDrawMessage(drawMessage);
         }
         catch (...) {
             std::cerr << "Error recieving DrawMessage" << std::endl;
@@ -223,8 +221,11 @@ void SManager::OnSystemMessage(sio::event& ev)
 
             history = dataIn->get_map()["history"]->get_vector();
 
+            std::cout << dataIn->get_map()["width"]->get_int() << std::endl;
+
             canvasSizes[0] = dataIn->get_map()["width"]->get_int();
             canvasSizes[1] = dataIn->get_map()["height"]->get_int();
+            DrawUI::canInit = true;
         } break;
     default:
         break;

@@ -333,6 +333,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 				else {
 					nlohmann::json jsonResponse = nlohmann::json::parse(result);
 					if (!jsonResponse.empty()) {
+						//std::cout << jsonResponse.dump(4) << std::endl;
 						return jsonResponse;
 					}
 					else {

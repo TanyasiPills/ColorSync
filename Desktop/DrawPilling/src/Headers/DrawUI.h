@@ -12,6 +12,8 @@ class DrawUI
 private:
 
 public:
+    static bool canInit;
+
     static void DrawMenu();
 
     static void ColorWindow(RenderData& cursor);

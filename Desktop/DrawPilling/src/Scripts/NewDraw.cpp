@@ -127,7 +127,15 @@ void NewDraw::initLayer(RenderData& data, std::vector<unsigned char> textureData
 
 	glGenFramebuffers(1, &data.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, data.fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.texture->GetId(), 0);
+
+	std::cout << "Texture id:" << data.texture->GetId() << std::endl;
+	std::cout << "Texture width:" << data.texture->GetWidht() << std::endl;
+	if (data.texture != nullptr) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.texture->GetId(), 0);
+	}
+	else {
+		std::cerr << "Error: texture is nullptr!" << std::endl;
+	}
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cerr << "Framebuffer not complete!" << std::endl;
 	}

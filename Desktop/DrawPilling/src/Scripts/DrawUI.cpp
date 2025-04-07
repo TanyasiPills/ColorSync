@@ -75,6 +75,8 @@ std::uniform_int_distribution<int> dist(0, 6);
 
 std::string names[6] = { "Cursor", "Pen Brush", "Eraser", "Air Brush", "Water Brush", "Chalk Brush"};
 
+bool DrawUI::canInit = false;
+
 ImVec4 userColors[] = {
 	ImVec4(0.2588f, 0.5294f, 0.9608f, 1.0f),
 	ImVec4(0.1373f, 0.8353f, 0.8588f, 1.0f),
@@ -884,9 +886,10 @@ void DrawUI::InitWindow()
 			ImGui::EndPopup();
 		}
 	}
-	else if (!inited && isOnline)
+	else if (!inited && isOnline && canInit)
 	{
 		unsigned int* sizes = SManager::GetCanvasSize();
+		std::cout << "Sizes:" << sizes[0] << "; " << sizes[1] << std::endl;
 		renderer->SetDrawData(sizes[0], sizes[1]);
 		renderer->InitNewCanvas();
 		inited = true;

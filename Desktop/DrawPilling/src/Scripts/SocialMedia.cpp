@@ -1,4 +1,5 @@
 #include "SocialMedia.h"
+#include "DrawUI.h"
 #include <iostream>
 #include <thread>
 #include <map>
@@ -1391,12 +1392,6 @@ void SocialMedia::SettingsPage()
 void SocialMedia::SearchPage(float& width, float& height)
 {
     if (searchMode == 0) {
-        ImVec2 valid = ImGui::GetContentRegionAvail();
-        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
-        static char searchText[128] = "";
-        bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
-        ImGui::SameLine();
-        Lss::Left(3*Lss::VH);
 
         static int searchRequestMode = 1;
 
@@ -1406,6 +1401,15 @@ void SocialMedia::SearchPage(float& width, float& height)
 
         static bool searchingUsers = false;
         static bool searchingPost = false;
+
+
+        ImVec2 valid = ImGui::GetContentRegionAvail();
+        Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+        static char searchText[128] = "";
+        bool hihi = Lss::InputText("faku", searchText, sizeof(searchText), ImVec2(50 * Lss::VH, 5.0f * Lss::VH), Rounded | Centered, ImGuiInputTextFlags_EnterReturnsTrue);
+        if (hihi) searchRequestMode = 1;
+        ImGui::SameLine();
+        Lss::Left(3*Lss::VH);
 
         if (Lss::Button("SR", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH)) {
             searchRequestMode = 1;
@@ -1438,6 +1442,10 @@ void SocialMedia::SearchPage(float& width, float& height)
             if (images.size() > 0 || searchedUser.size() > 0) search = false;
         }
 
+        Lss::Top(Lss::VH);
+        Lss::Separator(2.0f, 0.0f, 4);
+        Lss::Top(Lss::VH);
+
         if (images.size() <= 0 && searchedUser.size() <= 0 && searching) {
             std::cout << "mode: " << searchRequestMode << std::endl;
             std::thread(&SocialMedia::SearchStuff, searchText, searchRequestMode).detach();
@@ -1469,9 +1477,6 @@ void SocialMedia::SearchPage(float& width, float& height)
             Lss::End();
             ImGui::EndChild();
         }
-        Lss::Top(Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4);
-        Lss::Top(Lss::VH);
         if (images.size() > 0)
         {
             std::array<float, 3> yPos = { 0.0f, 0.0f, 0.0f };
@@ -1852,9 +1857,6 @@ void SocialMedia::RoomPage(float& width, float& height)
         Lss::Left(7.85f * Lss::VW);
         Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
 
-
-
-
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
         if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
@@ -1872,6 +1874,7 @@ void SocialMedia::RoomPage(float& width, float& height)
             roomyUsers->emplace_back(runtime.id, runtime.username, true);
             SManager::SetMyOwnerState(true);
             SManager::Connect(runtime.ip.c_str(), header, room);
+            DrawUI::canInit = true;
             Callback::EditorSwapCallBack(true);
         }
 
@@ -2003,6 +2006,8 @@ void SocialMedia::MainFeed(float position, float width, float height)
     default:
         break;
     }
+
+    if (!needRooms && mode != 4) needRooms = true;
     
     LoginRegister::Login(loginWindow);
 
