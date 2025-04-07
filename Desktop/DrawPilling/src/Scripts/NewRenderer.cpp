@@ -166,6 +166,8 @@ void NewRenderer::InitBrushes()
 	NewDraw::InitBrush(charCoalBrush, cursorRadius, "Resources/Textures/charCoalBrush.png");
 	brushes.push_back(charCoalBrush);
 
+	NewDraw::InitBrush(messageCursor, cursorRadius);
+
 	cursor = brushes[0];
 }
 
@@ -188,8 +190,6 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	initialCanvasRatio[1] = dataForCanvas.canvasY;
 	canvasRatio[0] = dataForCanvas.canvasX;
 	canvasRatio[1] = dataForCanvas.canvasY;
-
-	inited = true;
 }
 
 void NewRenderer::InitNewCanvas()
@@ -218,6 +218,8 @@ void NewRenderer::InitNewCanvas()
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(index);
 
 	if (online) SManager::ProcessHistory();
+
+	inited = true;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -430,9 +432,9 @@ void NewRenderer::Draw(const RenderData& data)
 void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 {
 	try {
-		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[currentNode].get())) {
+		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get())) {
 			RenderData& layer = layerPtr->data;
-			if (layers[0] == currentNode) return;
+			if (layers[0] == drawMessage.layer) return;
 
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
@@ -643,9 +645,9 @@ void NewRenderer::Render()
 		if (inited) {
 			RenderLayers();
 			RenderCursor();
+			if(DrawUI::canInit) ProcessTasks();
 		}
 		RenderImGui(onUI);
-		ProcessTasks();
 	}
 	else {
 		SocialMedia::ProcessThreads();

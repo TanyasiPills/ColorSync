@@ -109,7 +109,6 @@ void ProcessAction(sio::object_message::ptr dataIn)
             }
 
             std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
-            std::cout << colors["r"]->get_double() << std::endl;
             drawMessage.color[0] = colors["r"]->get_double();
             drawMessage.color[1] = colors["g"]->get_double();
             drawMessage.color[2] = colors["b"]->get_double();
