@@ -1824,7 +1824,7 @@ void SocialMedia::RoomPage(float& width, float& height)
         ImGui::GetStyle().FramePadding = def;
 
         ImGui::SetCursorPosX(0);
-        Lss::Top(0.2f * Lss::VH);
+        Lss::Top(Lss::VH);
         Lss::Separator(1.0f, 20 * Lss::VW, 4);
 
         Lss::Top(2*Lss::VH);

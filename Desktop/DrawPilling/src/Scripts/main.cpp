@@ -26,7 +26,8 @@ int main()
         {
             ImGui_ImplGlfw_Sleep(10);
         }
-
-        renderer.Render();
+        else {
+            renderer.Render();
+        }
     }
 }

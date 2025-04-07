@@ -443,7 +443,6 @@ void DrawUI::ServerWindow()
 		}
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		int sizeofarray = DrawUI::userPositions->size();
-		std::cout << sizeofarray << std::endl;
 		for (RoomUser user : *usersPtr)
 		{
 			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
@@ -824,45 +823,72 @@ void DrawUI::ChatWindow()
 void DrawUI::InitWindow()
 {
 	if (!inited && !isOnline) {
-		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
 		{
-			Lss::Text("Create a Sync", 2 * Lss::VH);
-			Lss::Separator();
 
+			ImVec2 valid = ImGui::GetContentRegionAvail();
+
+			ImVec2 def = ImGui::GetStyle().FramePadding;
+			ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
+
+			Lss::SetColor(ContainerBackground, LowHighlight);
+			Lss::Child("##Lobbyheader", ImVec2(valid.x, 7 * Lss::VH), false, Rounded);
+			Lss::LeftTop(Lss::VW, Lss::VH);
+			Lss::Text("Create a sync", 5 * Lss::VH);
+			Lss::End();
+			ImGui::EndChild();
+			Lss::SetColor(ContainerBackground, ContainerBackground);
+			ImGui::GetStyle().FramePadding = def;
+
+			ImGui::SetCursorPosX(0);
+			Lss::Top(0.2f*Lss::VH);
+			Lss::Separator(1.0f, 20 * Lss::VW);
+
+			Lss::Top(Lss::VH);
 			static char nameText[128] = "";
 
 			Lss::Text("Name: ", 3 * Lss::VH);
 			ImGui::SameLine();
-			Lss::Left(4.4f * Lss::VW);
-			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH));
+			Lss::Left(2*Lss::VW);
+			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH), Rounded, 0, 0, "Name for the file");
 
 			ImGui::NewLine();
 
 			static int width = 400;
 			static int height = 300;
 
+			float sizeForWidth = ImGui::CalcTextSize("Width(px): ").x;
+			float sizeForHeight = ImGui::CalcTextSize("Height(px): ").x;
+
 			Lss::Text("Canvas", 2 * Lss::VH);
 			Lss::Separator();
-			Lss::Text("Width (px): ", 3 * Lss::VH);
+
+			Lss::Left(Lss::VW);
+			Lss::Text("Width (px): ", 2.5f * Lss::VH);
 			ImGui::SameLine();
-			Lss::Left(8.2f * Lss::VW);
-			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
-			Lss::Text("Height (px): ", 3 * Lss::VH);
+			Lss::Left(sizeForHeight-sizeForWidth + 5.3f * Lss::VW);
+			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH), Rounded);
+			
+			Lss::LeftTop(Lss::VW, 0.5f*Lss::VH);
+			Lss::Text("Height (px): ", 2.5f * Lss::VH);
 			ImGui::SameLine();
-			Lss::Left(7.85f * Lss::VW);
-			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+			Lss::Left(5.2f * Lss::VW);
+			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH), Rounded);
 
 			static char locationText[256] = "";
 			static bool openExplorer = false;
 			static bool wasOpen = false;
 
+			Lss::Top(Lss::VH);
 			Lss::Text("Save Location", 2 * Lss::VH);
 			Lss::Separator();
 			Lss::SetFontSize(3 * Lss::VH);
 			float buttonTextSize = ImGui::CalcTextSize("...").x;
-			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH),0, ImGuiInputTextFlags_ReadOnly);
+			Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
+			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-3*Lss::VW, 3 * Lss::VH), Rounded, ImGuiInputTextFlags_ReadOnly);
 			ImGui::SameLine();
-			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) {
+			Lss::Left(0.8f*Lss::VW);
+			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3 * Lss::VH), 2.5f * Lss::VH, Rounded)) {
 				openExplorer = true;
 				wasOpen = true;
 			}
@@ -875,7 +901,7 @@ void DrawUI::InitWindow()
 			
 			ImVec2 buttonSize = ImVec2(100, 20);
 			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
-			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
 			{
 				if (Explorer::Exists())
 				{
