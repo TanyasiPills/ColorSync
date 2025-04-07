@@ -61,7 +61,7 @@ export const PostingToProfile: React.FC<modalProp> = ({ show, onHide }) => {
         <>
             <Modal show={show} onHide={onHide} centered>
                 <ModalHeader closeButton>
-                    <h2>Update your first private picture!</h2>
+                    <h2>Add to your portfolio</h2>
                 </ModalHeader>
                 <ModalBody>
                     <Form noValidate validated={validated} onSubmit={handleSubmit}>

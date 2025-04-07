@@ -20,6 +20,7 @@ export interface user {
     id: number;
     username: string;
     email: string;
+    profile_description: string;
 }
 
 export interface image {

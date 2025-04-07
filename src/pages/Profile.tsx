@@ -71,6 +71,9 @@ export function Profile({ own = false }: { own?: boolean }) {
             <img src={backendIp + "/users/" + user.id + "/pfp"} alt="profile picture" id="profilePic" onClick={() => { if (own) setShow(true) }} />
             <h3 id="userName" onClick={() => { if (own) setShow(true) }}>{user.username}</h3>
           </div>
+
+          <p className="bio">{user.profile_description}</p>
+          
           <ProfileEdit show={show} onHide={() => setShow(false)} />
         </Col>
         <Col xs={6}>
@@ -89,7 +92,7 @@ export function Profile({ own = false }: { own?: boolean }) {
                     setEnlargeShow(true);
                   }
                 }} />
-                <EnlargedImage show={enlargeShow} onHide={() => setEnlargeShow(false)} imageId={enlargeId ?? 0} />
+              <EnlargedImage show={enlargeShow} onHide={() => setEnlargeShow(false)} imageId={enlargeId ?? 0} />
             </div>
           </Col>
         ))}

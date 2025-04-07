@@ -45,7 +45,7 @@ export const EnlargedImage: React.FC<EnlargedImageProps> = ({ show, onHide, imag
     }, [imageId, thisUser.access_token]);
 
     return (
-        <Modal show={show} onHide={onHide} size="lg" centered>
+        <Modal show={show} onHide={onHide} size="lg" centered dialogClassName="transparent-modal">
             <Modal.Body className="d-flex justify-content-center p-0">
                 {imageURL && (
                     <img src={imageURL} alt="enlarged"

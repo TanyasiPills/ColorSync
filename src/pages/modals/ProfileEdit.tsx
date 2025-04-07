@@ -1,5 +1,5 @@
 import { Form, Button, Alert, Spinner, Modal, ModalBody, ModalHeader, Row, Col } from 'react-bootstrap';
-import { modalProp } from "../../types";
+import { modalProp, user } from "../../types";
 import { useState } from 'react';
 import "../../css/Modal.css";
 import Cookies from 'universal-cookie';
@@ -11,14 +11,32 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
     const [validated, setValidated] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [bioLength, setBioLength] = useState(0);
+    const [user, setUser] = useState<user>();
+
 
     const cookie = new Cookies();
     const thisUser = cookie.get("AccessToken");
 
     if (!thisUser) {
-     onHide();   
-     return
+        onHide();
+        return
     }
+
+    if (!user && thisUser) {
+        setUser(thisUser);
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setUser((prevUser) => {
+            if (prevUser) {
+                return { ...prevUser, [name]: value };
+            }
+            return prevUser;
+        });
+    };
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError('');
@@ -28,14 +46,19 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
         const data: FormData = new FormData(event.target as HTMLFormElement);
         const sendingData: any = {};
         const formDataFile: FormData = new FormData();
+
+        if (data.get("bio")) {
+            sendingData["profile_description"] = data.get("bio")!.toString();
+        }        
+
         if (data.get("username")) {
-            sendingData["username"] =  data.get("username")!.toString();
+            sendingData["username"] = data.get("username")!.toString();
         }
         if (data.get("email")) {
-            sendingData["email"] =  data.get("email")!.toString();
+            sendingData["email"] = data.get("email")!.toString();
         }
         if (data.get("password")) {
-            sendingData["password"] =  data.get("password")!.toString()
+            sendingData["password"] = data.get("password")!.toString()
         }
 
         console.log(sendingData);
@@ -93,6 +116,7 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
         <>
             <Modal show={show} onHide={onHide} centered>
                 <ModalHeader closeButton>
+                    <h2>Prodile edit</h2>
                 </ModalHeader>
                 <ModalBody>
                     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -117,7 +141,8 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
                                         placeholder='username'
                                         name='username'
                                         id='username'
-                                        value={thisUser.username}
+                                        value={user?.username}
+                                        onChange={handleChange}
                                     />
                                 </Form.Group>
                             </Col>
@@ -132,7 +157,8 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
                                         placeholder="email"
                                         name='email'
                                         id='email'
-                                        value={thisUser.email}
+                                        value={user?.email}
+                                        onChange={handleChange}
                                     />
                                 </Form.Group>
                             </Col>
@@ -146,6 +172,27 @@ export const ProfileEdit: React.FC<modalProp> = ({ show, onHide }) => {
                                         id='password'
                                     />
                                 </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label>Bio:</Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        name="bio"
+                                        className="custom-large-textarea"
+                                        maxLength={191}
+                                        rows={3}
+                                        placeholder="Write something about yourself..."
+                                        onInput={(e) => setBioLength((e.target as HTMLTextAreaElement).value.length)}                                        
+                                    />
+                                    <div className={`char-counter ${191 - bioLength <= 10 ? 'danger' : 191 - bioLength <= 50 ? 'warn' : ''}`}>
+                                        {191 - bioLength} characters left
+                                    </div>
+                                </Form.Group>
+
                             </Col>
                         </Row>
 
