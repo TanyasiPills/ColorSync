@@ -43,6 +43,8 @@ bool itemHovered = false;
 bool usersGot = false;
 std::vector<RoomUser>* usersPtr;
 
+std::unordered_map<int, UserPos>* DrawUI::userPositions = nullptr;
+
 static std::vector<std::string> chatLog;
 
 static NewRenderer* renderer;
@@ -137,7 +139,6 @@ void InitBrushIcons()
 
 void DrawUI::InitData()
 {
-	userColor = dist(gen);
 	if (runtime.ip[0] == '\0') {
 		std::cerr << "No ip in appdata" << std::endl;
 	}
@@ -246,28 +247,30 @@ void DrawUI::DrawMenu() {
 }
 
 void DrawUI::PlayerVisualization() {
-	/*
 	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
 	bool open = true;
 	Lss::SetFontSize(2 * Lss::VH);
-	ImVec2 textSize = ImGui::CalcTextSize(runtime.username.c_str());
-	ImVec2 size = ImVec2(textSize.x, textSize.y+4*Lss::VH);
-	ImGui::SetNextWindowSize(size);
-	float* pos = Callback::GlCursorPosition();
-	pos[0] = (pos[0] + 1.0f) / 2;
-	pos[1] = (pos[1] + 1.0f) / 2;
-	ImVec2 realPos = ImVec2(windowSize.x * pos[0],windowSize.y - (windowSize.y * pos[1]));
-	ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2),realPos.y - (size.y / 3)));
-	ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
-		Lss::Top(0.25f * Lss::VH);
-		Lss::Image(playerCursor.GetId(), ImVec2(2*Lss::VH, 2*Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[userColor]);
-		ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[userColor];
-		Lss::Text(runtime.username, 1.5f*Lss::VH, Centered);
-		Lss::SetColor(Font, Font);
+
+	for (auto& pair : *userPositions) {
+		UserPos posy = pair.second;
+		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
+		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
+		ImGui::SetNextWindowSize(size);
+		float* pos = Callback::GlCursorPosition();
+		pos[0] = (pos[0] + 1.0f) / 2;
+		pos[1] = (pos[1] + 1.0f) / 2;
+		ImVec2 realPos = ImVec2(windowSize.x * pos[0], windowSize.y - (windowSize.y * pos[1]));
+		ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2), realPos.y - (size.y / 3)));
+		ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+			Lss::Top(0.25f * Lss::VH);
+			Lss::Image(playerCursor.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[posy.color]);
+			ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[posy.color];
+			Lss::Text(runtime.username, 1.5f * Lss::VH, Centered);
+			Lss::SetColor(Font, Font);
+			Lss::End();
+		ImGui::End();
 		Lss::End();
-	ImGui::End();
-	Lss::End();
-	*/
+	}
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
@@ -454,6 +457,12 @@ void DrawUI::ServerWindow()
 				}
 				Lss::End();
 			ImGui::EndChild();
+			if (userPositions->find(user.id) == userPositions->end()) {
+				UserPos pos;
+				pos.color = dist(gen);
+				pos.name = user.username;
+				pos.pos = Position(0, -100);
+			}
 		}
 		Lss::End();
 	}

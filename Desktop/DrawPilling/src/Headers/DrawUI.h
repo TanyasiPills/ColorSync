@@ -13,6 +13,7 @@ private:
 
 public:
     static bool canInit;
+    static std::unordered_map<int, UserPos>* userPositions;
 
     static void DrawMenu();
 

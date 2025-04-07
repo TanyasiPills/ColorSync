@@ -26,6 +26,12 @@
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 #endif
 
+struct UserPos {
+	std::string name;
+	Position pos;
+	int color;
+};
+
 struct RenderData
 {
 	std::shared_ptr<VertexArray> va;
@@ -130,7 +136,7 @@ public:
 	void MoveLayers(static float* offset);
 	void Zoom(static float scale, static float* cursorPos);
 	void OnResize(float& x, float& y, float* offsetIn, float& yRatio);
-	void LoadPrevCursor(float* GlCursorPos);
+	void LoadPrevCursor(double* GlCursorPos);
 	void SetDrawDataJa();
 	void SetColor(float* color);
 	void RenderDrawMessage(const DrawMessage& drawMessage);

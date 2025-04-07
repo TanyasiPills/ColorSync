@@ -75,6 +75,8 @@ void SManager::Connect(std::string ip, std::map<std::string, std::string> header
         
         });
 
+    h.socket()->on("mouse", OnPositionMessage);
+
     h.socket()->on("message", OnMessage);
     h.socket()->on("action", OnAction);
 
@@ -179,6 +181,33 @@ void SManager::ProcessHistory()
         ProcessAction(data);
     }
     history.clear();
+}
+
+void SManager::OnPositionMessage(sio::event& ev) {
+    sio::object_message::ptr dataIn = ev.get_message();
+    int userId = dataIn->get_map()["userId"]->get_int();
+    Position userPos;
+    std::map<std::string, sio::message::ptr> posy = dataIn->get_map()["position"]->get_map();
+    userPos.x = posy["x"]->get_double();
+    userPos.y = posy["y"]->get_double();
+    auto& map = *DrawUI::userPositions;
+    UserPos& user = map.at(userId);
+    user.pos = userPos;
+}
+
+void SManager::SendPositionMessage(Position cursorPos)
+{
+    sio::message::ptr msg = sio::object_message::create();
+    sio::message::ptr positionArray = sio::array_message::create();
+
+    sio::message::ptr posObj = sio::object_message::create();
+    posObj->get_map()["x"] = sio::double_message::create(cursorPos.x);
+    posObj->get_map()["y"] = sio::double_message::create(cursorPos.y);
+    positionArray->get_vector().push_back(posObj);
+
+    msg->get_map()["position"] = positionArray;
+
+    h.socket()->emit("action", msg);
 }
 
 void SManager::OnSystemMessage(sio::event& ev)
