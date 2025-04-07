@@ -251,13 +251,13 @@ void DrawUI::PlayerVisualization() {
 	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
 	bool open = true;
 	Lss::SetFontSize(2 * Lss::VH);
-	if (userPositions == nullptr) return;
 	for (auto& pair : *userPositions) {
 		UserPos posy = pair.second;
 		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
 		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
 		ImGui::SetNextWindowSize(size);
 		double* pos = Callback::GlCursorPosition();
+		std::cout << pos[0] << "; " << pos[1] << std::endl;
 		pos[0] = (pos[0] + 1.0f) / 2;
 		pos[1] = (pos[1] + 1.0f) / 2;
 		ImVec2 realPos = ImVec2(windowSize.x * pos[0], windowSize.y - (windowSize.y * pos[1]));
@@ -444,6 +444,8 @@ void DrawUI::ServerWindow()
 			usersGot = true;
 		}
 		ImVec2 avail = ImGui::GetContentRegionAvail();
+		int sizeofarray = usersPtr->size();
+		std::cout << sizeofarray << std::endl;
 		for (RoomUser user : *usersPtr)
 		{
 			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
@@ -458,11 +460,16 @@ void DrawUI::ServerWindow()
 				}
 				Lss::End();
 			ImGui::EndChild();
+
+			if (user.id == runtime.id) return;
+
 			if (userPositions->find(user.id) == userPositions->end()) {
 				UserPos pos;
 				pos.color = dist(gen);
 				pos.name = user.username;
 				pos.pos = Position(0, -100);
+				auto& map = *DrawUI::userPositions;
+				map[user.id] = pos;
 			}
 		}
 		Lss::End();
@@ -483,7 +490,6 @@ void DrawUI::ServerWindow()
 
 	if (ServerWindowSize.x < 200) {
 		rightSize = 200;
-		std::cout << leftSize << std::endl;
 	}
 }
 

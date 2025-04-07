@@ -658,6 +658,8 @@ void NewRenderer::Render()
 				posy.x = pos[0];
 				posy.y = pos[1];
 				SManager::SendPositionMessage(posy);
+				currentPos[0] = pos[0];
+				currentPos[1] = pos[1];
 			}
 
 		}

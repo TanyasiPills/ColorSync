@@ -191,21 +191,21 @@ void SManager::OnPositionMessage(sio::event& ev) {
     userPos.x = posy["x"]->get_double();
     userPos.y = posy["y"]->get_double();
     auto& map = *DrawUI::userPositions;
-    UserPos& user = map.at(userId);
-    user.pos = userPos;
+    if (map.find(userId) != map.end()) {
+        UserPos& user = map.at(userId);
+        user.pos = userPos;
+    }
 }
 
 void SManager::SendPositionMessage(Position cursorPos)
 {
     sio::message::ptr msg = sio::object_message::create();
-    sio::message::ptr positionArray = sio::array_message::create();
 
     sio::message::ptr posObj = sio::object_message::create();
     posObj->get_map()["x"] = sio::double_message::create(cursorPos.x);
     posObj->get_map()["y"] = sio::double_message::create(cursorPos.y);
-    positionArray->get_vector().push_back(posObj);
 
-    msg->get_map()["position"] = positionArray;
+    msg->get_map()["position"] = posObj;
 
     h.socket()->emit("mouse", msg);
 }

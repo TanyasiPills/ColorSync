@@ -20,11 +20,7 @@
 std::mutex postMutex;
 
 std::vector<Room> friendRooms;
-std::vector<Room> rooms = {
-    {"Room A", "Alice", 10, 1, 0, false},
-    {"Room B", "Bob", 8, 2, 0, true},
-    {"Room C", "Charlie", 5, 3, 0, false}
-};
+std::vector<Room> rooms;
 std::vector<Post> SocialMedia::posts = {};
 std::unordered_map<int, User> users;
 std::unordered_map<int, GLuint> profilePics;
@@ -566,17 +562,6 @@ void SocialMedia::MainPage(float& width, float& height)
         viewport->WorkPos.y + viewport->WorkSize.y - 2 * Lss::VH),
         ImGuiCond_Always, ImVec2(0.5f, 1.0f));
 
-    Lss::Child("FixedButton", ImVec2(12 * Lss::VH, 5 * Lss::VH), false, Centered, ImGuiWindowFlags_NoDecoration |
-        ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
-
-        if (Lss::Button("Post", ImVec2(12 * Lss::VH, 5 * Lss::VH), 5 * Lss::VH, Rounded | Centered)) {
-            openStuff = true;
-        }
-
-        Lss::End();
-
-    ImGui::EndChild();
-
 	static float modalSize = 0.0f;
 	ImVec2 cursorAtCurrent = ImGui::GetCursorPos();
     ImGui::SetNextWindowPos(ImVec2(cursorAtCurrent.x, cursorAtCurrent.y - modalSize / 2));
@@ -820,7 +805,7 @@ void SocialMedia::MainPage(float& width, float& height)
 
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
-        if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+        if (Lss::Button("Post##postButton", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
         {
             std::string imagePath = Explorer::GetImagePath();
             nlohmann::json jsonData;
@@ -1822,44 +1807,77 @@ void SocialMedia::RoomPage(float& width, float& height)
         openCreate = true;
     }
 
-    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    if (Lss::Modal("Sup", &openCreate, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
     {
-        Lss::Text("Create a lobby", 2 * Lss::VH);
+        ImVec2 validSup = ImGui::GetContentRegionAvail();
+
+        ImVec2 def = ImGui::GetStyle().FramePadding;
+        ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
+
+        Lss::SetColor(ContainerBackground, LowHighlight);
+        Lss::Child("##Lobbyheader", ImVec2(validSup.x, 7 * Lss::VH), false, Rounded);
+        Lss::LeftTop(Lss::VW, Lss::VH);
+        Lss::Text("Create a room", 5 * Lss::VH);
+        Lss::End();
+        ImGui::EndChild();
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+        ImGui::GetStyle().FramePadding = def;
+
+        ImGui::SetCursorPosX(0);
+        Lss::Top(0.2f * Lss::VH);
+        Lss::Separator(1.0f, 20 * Lss::VW, 4);
+
+        Lss::Top(2*Lss::VH);
+        Lss::Text("Room", 2 * Lss::VH);
+        Lss::Separator();
+        Lss::Top(0.2f * Lss::VH);
 
         static char nameText[128] = "";
         static char passwordText[128] = "";
 
-        Lss::Text("Room name: ", 3 * Lss::VH);
-        ImGui::SameLine();
-        Lss::InputText("roomName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH), Trans);
-        Lss::LeftTop(7.8f * Lss::VW, -Lss::VH / 2);
-        Lss::Separator(1.0f, 10.2f * Lss::VW, 4);
+        Lss::SetFontSize(2.5f*Lss::VH);
+        float roomSize = ImGui::CalcTextSize("Room name: ").x;
+        float passSize = ImGui::CalcTextSize("Password: ").x;
 
-        Lss::Text("Password: ", 3 * Lss::VH);
+        Lss::Left(Lss::VH);
+        Lss::Text("Room name: ", 2.5f * Lss::VH);
         ImGui::SameLine();
-        Lss::InputText("roomPassword", passwordText, sizeof(passwordText), ImVec2(13.4 * Lss::VW, 3 * Lss::VH), Trans);
-        Lss::LeftTop(6.6f * Lss::VW, -Lss::VH / 2);
-        Lss::Separator(1.0f, 11.4 * Lss::VW, 4);
+        Lss::InputText("roomName", nameText, sizeof(nameText), ImVec2(10.75f * Lss::VW, 3 * Lss::VH), Rounded, 0, 0, "The room's name");
+
+        Lss::Left(Lss::VH);
+        Lss::Text("Password: ", 2.5f * Lss::VH);
+        ImGui::SameLine();
+        Lss::Left(roomSize - passSize);
+        Lss::InputText("roomPassword", passwordText, sizeof(passwordText), ImVec2(10.75f * Lss::VW, 3 * Lss::VH), Rounded, 0, 0, "The room's password");
 
         ImGui::NewLine();
 
-        static int width = 0;
-        static int height = 0;
-
         Lss::Text("Canvas", 2 * Lss::VH);
         Lss::Separator();
-        Lss::Text("Width (px): ", 3 * Lss::VH);
+        Lss::Top(0.2f * Lss::VH);
+
+        static int width = 1920;
+        static int height = 1080;
+
+        Lss::SetFontSize(2.5f * Lss::VH);
+        float heightSize = ImGui::CalcTextSize("Height (px): ").x;
+        float WidthSize = ImGui::CalcTextSize("Width (px): ").x;
+
+        Lss::Left(Lss::VH);
+        Lss::Text("Width (px): ", 2.5f * Lss::VH);
         ImGui::SameLine();
-        Lss::Left(8.2f * Lss::VW);
-        Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
-        Lss::Text("Height (px): ", 3 * Lss::VH);
+        Lss::Left(heightSize - WidthSize + 6.5f * Lss::VW);
+        Lss::InputInt("##canvasWidth", &width, ImVec2(5 * Lss::VW, 3 * Lss::VH), Rounded);
+
+        Lss::Left(Lss::VH);
+        Lss::Text("Height (px): ", 2.5f * Lss::VH);
         ImGui::SameLine();
-        Lss::Left(7.85f * Lss::VW);
-        Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+        Lss::Left(6.5f * Lss::VW);
+        Lss::InputInt("##canvasHeight", &height, ImVec2(5 * Lss::VW, 3 * Lss::VH), Rounded);
 
         ImVec2 buttonSize = ImVec2(100, 20);
         ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
-        if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+        if (Lss::Button("Create##createLobby", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
         {
             std::map<std::string, std::string> header;
             std::map<std::string, std::string> room;
@@ -1984,7 +2002,7 @@ void SocialMedia::MainFeed(float position, float width, float height)
     ImGui::GetStyle().WindowBorderSize = 0.0f;
     ImGui::SetNextWindowPos(ImVec2(position, 0));
     ImGui::SetNextWindowSize(ImVec2(width, height));
-    //Lss::SetColor(Background, ContainerBackground);
+    Lss::SetColor(Background, ContainerBackground);
     ImGui::Begin("Main Feed", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
     switch (mode)
     {
