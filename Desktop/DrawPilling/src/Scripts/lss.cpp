@@ -19,11 +19,6 @@ float Lss::VH = 0;
 
 int prevType = -1;
 
-
-
-
-
-
 ImVec4 colorArray[] = {
 	ImVec4(0.0902f, 0.0902f, 0.2471f, 1.0f),
 	ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f),
@@ -59,7 +54,6 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = colorArray[Hint];
 
 	ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] = ImVec4(0.2431f, 0.2431f, 0.5961f, 1.0f);
-
 
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;

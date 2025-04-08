@@ -29,17 +29,81 @@ void SetAppDataData(ApplicationData& data, std::string nameIn, std::string token
     SetStringValue(data.token, tokenIn.c_str(), sizeof(data.token));
     SetStringValue(data.ip, ipIn.c_str(), sizeof(data.ip));
     SetStringValue(data.passWord, passIn.c_str(), sizeof(data.passWord));
+    data.favs = *Explorer::GetFavorites();
+    data.recents = *Explorer::GetRecents();
 }
+
+void WriteFolder(std::ofstream& file, std::vector<FolderSave> folders) {
+    for (const auto& folder : folders) {
+        int folderNameSize = sizeof(folder.name);
+        int folderPathSize = sizeof(folder.path);
+        file.write(reinterpret_cast<const char*>(&folderNameSize), sizeof(folderNameSize));
+        file.write(reinterpret_cast<const char*>(&folderPathSize), sizeof(folderPathSize));
+
+        file.write(folder.name.c_str(), sizeof(folder.name.c_str()));
+        file.write(folder.path.c_str(), sizeof(folder.path.c_str()));
+    }
+}
+
 
 void SaveAppDataData(const ApplicationData& data, const std::string& filename) {
     std::ofstream file(filename, std::ios::binary);
-    if (file) file.write(reinterpret_cast<const char*>(&data), sizeof(data));
+    if (file) {
+        file.write(data.token, sizeof(data.token));
+        file.write(data.name, sizeof(data.name));
+        file.write(data.ip, sizeof(data.ip));
+        file.write(data.passWord, sizeof(data.passWord));
+
+        size_t recentsSize = data.recents.size();
+        file.write(reinterpret_cast<const char*>(&recentsSize), sizeof(recentsSize));
+        WriteFolder(file, data.recents);
+
+        size_t favsSize = data.favs.size();
+        file.write(reinterpret_cast<const char*>(&favsSize), sizeof(favsSize));
+        WriteFolder(file, data.favs);
+    }
+}
+
+void ReadFolder(std::ifstream& file, std::vector<FolderSave>& folders) {
+    size_t folderCount = 0;
+    file.read(reinterpret_cast<char*>(&folderCount), sizeof(folderCount));
+
+    folders.resize(folderCount);
+    for (auto& folder : folders) {
+        int folderNameSize = 0;
+        int folderPathSize = 0;
+
+        file.read(reinterpret_cast<char*>(&folderNameSize), sizeof(folderNameSize));
+        file.read(reinterpret_cast<char*>(&folderPathSize), sizeof(folderPathSize));
+
+        folder.name.resize(folderNameSize);
+        folder.path.resize(folderPathSize);
+
+        file.read(&folder.name[0], folderNameSize);
+        file.read(&folder.path[0], folderPathSize);
+    }
 }
 
 ApplicationData LoadAppDataData(const std::string& filename) {
     ApplicationData data;
     std::ifstream file(filename, std::ios::binary);
-    if (file) file.read(reinterpret_cast<char*>(&data), sizeof(data));
+
+    if (file) {
+        file.read(data.token, sizeof(data.token));
+        file.read(data.name, sizeof(data.name));
+        file.read(data.ip, sizeof(data.ip));
+        file.read(data.passWord, sizeof(data.passWord));
+
+        size_t recentsSize = 0;
+        file.read(reinterpret_cast<char*>(&recentsSize), sizeof(recentsSize));
+        data.recents.resize(recentsSize);
+        ReadFolder(file, data.recents);
+
+        size_t favsSize = 0;
+        file.read(reinterpret_cast<char*>(&favsSize), sizeof(favsSize));
+        data.favs.resize(favsSize);
+        ReadFolder(file, data.favs);
+    }
     else {
         data.name[0] = '\0';
         data.token[0] = '\0';
@@ -58,6 +122,9 @@ void DataManager::LoadAppData()
     runtime.username = appdata.name;
     runtime.token = appdata.token;
     runtime.password = appdata.passWord;
+
+    Explorer::SetFavorites(appdata.favs);
+    Explorer::SetRecents(appdata.recents);
 }
 
 void DataManager::SaveAppData()
@@ -211,7 +278,6 @@ void LoadSync(std::string path)
 
     int folderSize;
     syncFile.read(reinterpret_cast<char*>(&folderSize), sizeof(folderSize));
-    std::cout << "folderSize: " << folderSize << std::endl;
     sync.folders.resize(folderSize);
 
     for (auto& folder : sync.folders) {

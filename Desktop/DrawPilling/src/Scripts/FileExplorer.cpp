@@ -4,16 +4,23 @@
 #include "HighsManager.h"
 #include <vector>
 
-struct FolderSave {
-    std::string name;
-    std::string path;
-
-    FolderSave(std::string nameIn, std::string pathIn) 
-        : name(nameIn), path(pathIn){}
-};
-
 std::vector<FolderSave> favorites;
 std::vector<FolderSave> recent;
+
+std::vector<FolderSave>* Explorer::GetFavorites() {
+    return &favorites;
+}
+
+std::vector<FolderSave>* Explorer::GetRecents() {
+    return &recent;
+}
+
+void Explorer::SetFavorites(std::vector<FolderSave> fvs) {
+    favorites = fvs;
+}
+void Explorer::SetRecents(std::vector<FolderSave> rcnts) {
+    recent = rcnts;
+}
 
 const char* formats[] = {".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
@@ -216,11 +223,23 @@ void SideBar(float& childHeight)
 
 void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
     Lss::SetFontSize(1 * Lss::VH);
+
+    ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.1412f, 0.1412f, 0.3529f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.1412f, 0.1412f, 0.3529f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, ImVec4(0.1412f, 0.1412f, 0.3529f, 1.0f));
+    ImVec4 currentBgColor = ImGui::GetStyle().Colors[ImGuiCol_PopupBg];
+    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f);
+
     if (Lss::Modal("Explorer", &showExplorer, ImVec2(60 * Lss::VW, 40 * Lss::VW), Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
     {
         bool isHovered = false;
+        static bool set = false;
         static const char* currentFormat = formats[2];
-        static int currentId = 0;
+        if (idForFormat == 3 && !set) {
+            currentFormat = formats[3];
+            set = true;
+        }
+        static int currentId = idForFormat;
         static char fileName[200];
 
         SearchBar();
@@ -414,6 +433,9 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
         *creatorStuff = false;
         showExplorer = true;
     }
+
+    ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = currentBgColor;
+    ImGui::PopStyleColor(3);
 }
 
 std::vector<std::string> Explorer::GetFilesInDirectory(const std::string& directory) {

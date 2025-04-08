@@ -214,6 +214,10 @@ void DrawUI::DrawMenu() {
 		else if (wasOpen)
 		{
 			savePath = Explorer::GetImagePath();
+			if (Explorer::Exists()) {
+				DataManager::LoadSyncData(savePath);
+			}
+			wasOpen = false;
 		}
 
 		if (ImGui::BeginMenu("Edit")) {
@@ -241,9 +245,11 @@ void DrawUI::DrawMenu() {
 			ImGui::MenuItem("Show Grid", nullptr, &showGrid);
 			ImGui::EndMenu();
 		}
-
+		Lss::End();
 		ImGui::EndMainMenuBar();
 	}
+	Lss::End();
+
 	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
 }
 
@@ -823,7 +829,7 @@ void DrawUI::ChatWindow()
 void DrawUI::InitWindow()
 {
 	if (!inited && !isOnline) {
-		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
+		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
 		{
 
 			ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -845,14 +851,6 @@ void DrawUI::InitWindow()
 			Lss::Separator(1.0f, 20 * Lss::VW);
 
 			Lss::Top(Lss::VH);
-			static char nameText[128] = "";
-
-			Lss::Text("Name: ", 3 * Lss::VH);
-			ImGui::SameLine();
-			Lss::Left(2*Lss::VW);
-			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH), Rounded, 0, 0, "Name for the file");
-
-			ImGui::NewLine();
 
 			static int width = 400;
 			static int height = 300;
@@ -900,7 +898,7 @@ void DrawUI::InitWindow()
 			}
 			
 			ImVec2 buttonSize = ImVec2(100, 20);
-			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
+			ImGui::SetCursorPosY(33 * Lss::VH - buttonSize.y - 2 * Lss::VH);
 			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
 			{
 				if (savePath.size() > 3) {

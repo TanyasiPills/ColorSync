@@ -68,6 +68,8 @@ MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
 
+bool needError = true;
+
 std::string CalcTime(std::chrono::system_clock::time_point time)
 {
     auto now = std::chrono::system_clock::now();
@@ -1508,7 +1510,7 @@ void SocialMedia::SearchPage(float& width, float& height)
             static ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImVec2 pos = ImVec2(center.x - postWidth * 0.5f, center.y - postHeight * 0.5f);
             ImGui::SetNextWindowPos(pos, ImGuiCond_Appearing);
-
+            ImVec4 currentBgColor = ImGui::GetStyle().Colors[ImGuiCol_PopupBg];
             ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = ImVec4(0.0902f, 0.0902f, 0.2471f, 1.0f);
 
             if (!searchedPost.allLoaded) {
@@ -1762,6 +1764,7 @@ void SocialMedia::SearchPage(float& width, float& height)
                 Lss::End();
                 ImGui::EndPopup();
             }
+            ImGui::GetStyle().Colors[ImGuiCol_PopupBg] = currentBgColor;
         }
         Lss::End();
         ImGui::EndChild();
@@ -2169,7 +2172,10 @@ std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::stri
 void SocialMedia::GetPosts() 
 {
     if (runtime.ip[0] == '\0') {
-        std::cout << "runtimeIp not set\n";
+        if (needError) {
+            std::cout << "runtimeIp not set\n";
+            needError = false;
+        }
         init = true;
         return;
     }
