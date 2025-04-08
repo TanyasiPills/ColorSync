@@ -22,8 +22,8 @@ int prevType = -1;
 ImVec4 colorArray[] = {
 	ImVec4(0.0902f, 0.0902f, 0.2471f, 1.0f),
 	ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f),
-	ImVec4(0.0039f, 0.2039f, 0.2902f, 1.0f),
-	ImVec4(0.1373f, 0.1137f, 0.4196f, 1.0f),
+	ImVec4(0.1412f, 0.1412f, 0.3529f, 1.0f),
+	ImVec4(0.1843f, 0.1843f, 0.4353f, 1.0f),
 	ImVec4(0.478f, 0.455f, 0.651f, 1.0f),
 	ImVec4(0.647f, 0.627f, 0.831f, 1.0f),
 	ImVec4(0.0f, 0.0f, 0.0f, 0.0f),
@@ -53,6 +53,7 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = colorArray[InputBg];
 	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = colorArray[Hint];
 
+	ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] = ImVec4(0.2431f, 0.2431f, 0.5961f, 1.0f);
 
 	window = windowIn;
 	ImGuiIO& io = ImGui::GetIO(); (void)io;

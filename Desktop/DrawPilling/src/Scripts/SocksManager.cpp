@@ -75,13 +75,14 @@ void SManager::Connect(std::string ip, std::map<std::string, std::string> header
         
         });
 
+    h.socket()->on("mouse", OnPositionMessage);
+
     h.socket()->on("message", OnMessage);
     h.socket()->on("action", OnAction);
 
     std::map<std::string, std::string> headers;
     headers["token"] = header["token"];
     headers["password"] = header["password"];
-    std::cout << room["width"] << std::endl;
     h.connect(connectionIp, room, headers);
 }
 
@@ -110,7 +111,6 @@ void ProcessAction(sio::object_message::ptr dataIn)
             }
 
             std::map<std::string, sio::message::ptr> colors = data["color"]->get_map();
-            std::cout << colors["r"]->get_double() << std::endl;
             drawMessage.color[0] = colors["r"]->get_double();
             drawMessage.color[1] = colors["g"]->get_double();
             drawMessage.color[2] = colors["b"]->get_double();
@@ -129,7 +129,6 @@ void ProcessAction(sio::object_message::ptr dataIn)
             drawMessage.cursorScale[2] = curSca["z"]->get_double();
 
             rendererSocks->ExecuteMainThreadTask(drawMessage);
-            //rendererSocks->RenderDrawMessage(drawMessage);
         }
         catch (...) {
             std::cerr << "Error recieving DrawMessage" << std::endl;
@@ -184,6 +183,33 @@ void SManager::ProcessHistory()
     history.clear();
 }
 
+void SManager::OnPositionMessage(sio::event& ev) {
+    sio::object_message::ptr dataIn = ev.get_message();
+    int userId = dataIn->get_map()["userId"]->get_int();
+    Position userPos;
+    std::map<std::string, sio::message::ptr> posy = dataIn->get_map()["position"]->get_map();
+    userPos.x = posy["x"]->get_double();
+    userPos.y = posy["y"]->get_double();
+    auto& map = *DrawUI::userPositions;
+    if (map.find(userId) != map.end()) {
+        UserPos& user = map.at(userId);
+        user.pos = userPos;
+    }
+}
+
+void SManager::SendPositionMessage(Position cursorPos)
+{
+    sio::message::ptr msg = sio::object_message::create();
+
+    sio::message::ptr posObj = sio::object_message::create();
+    posObj->get_map()["x"] = sio::double_message::create(cursorPos.x);
+    posObj->get_map()["y"] = sio::double_message::create(cursorPos.y);
+
+    msg->get_map()["position"] = posObj;
+
+    h.socket()->emit("mouse", msg);
+}
+
 void SManager::OnSystemMessage(sio::event& ev)
 {
     std::cout << "[SYSTEM]: ";
@@ -220,11 +246,13 @@ void SManager::OnSystemMessage(sio::event& ev)
                 
                 users.emplace_back(userId, username, (userId == admin));
             }
-
             history = dataIn->get_map()["history"]->get_vector();
+
+            std::cout << dataIn->get_map()["width"]->get_int() << std::endl;
 
             canvasSizes[0] = dataIn->get_map()["width"]->get_int();
             canvasSizes[1] = dataIn->get_map()["height"]->get_int();
+            DrawUI::canInit = true;
         } break;
     default:
         break;

@@ -12,6 +12,9 @@ class DrawUI
 private:
 
 public:
+    static bool canInit;
+    static std::unique_ptr<std::unordered_map<int, UserPos>> userPositions;
+
     static void DrawMenu();
 
     static void ColorWindow(RenderData& cursor);

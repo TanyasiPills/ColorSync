@@ -9,6 +9,9 @@ MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0
 
 void MyTexture::Init(std::vector<unsigned char> data, unsigned int canvasWidth, unsigned int canvasHeight)
 {
+	width = canvasWidth;
+	height = canvasHeight;
+
 	glGenTextures(1, &TO);
 	glBindTexture(GL_TEXTURE_2D, TO);
 

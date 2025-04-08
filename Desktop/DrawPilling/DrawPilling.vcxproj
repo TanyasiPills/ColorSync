@@ -24,7 +24,7 @@
     <ProjectGuid>{e79e9251-e881-4bae-aa33-634b8ee9a0ff}</ProjectGuid>
     <RootNamespace>DrawPilling</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>ColorSyncDev</ProjectName>
+    <ProjectName>ColorSync</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

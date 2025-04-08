@@ -127,7 +127,13 @@ void NewDraw::initLayer(RenderData& data, std::vector<unsigned char> textureData
 
 	glGenFramebuffers(1, &data.fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, data.fbo);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.texture->GetId(), 0);
+
+	if (data.texture != nullptr) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.texture->GetId(), 0);
+	}
+	else {
+		std::cerr << "Error: texture is nullptr!" << std::endl;
+	}
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cerr << "Framebuffer not complete!" << std::endl;
 	}
@@ -146,7 +152,7 @@ void NewDraw::InitBrush(RenderData& data, float& radius, std::string texture)
 	}
 }
 
-void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, float* position, int debug) {
+void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, double* position, int debug) {
 	float positions[16];
 	float yMult = aspect[0] / aspect[1];
 	fillPositions(positions, radius / aspect[0] * scale[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);

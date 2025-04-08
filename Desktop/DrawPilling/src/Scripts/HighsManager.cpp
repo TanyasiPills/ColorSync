@@ -272,6 +272,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		std::cout << "URL: " << url << std::endl;
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 250L);
 
 
 		std::string result;
@@ -333,6 +334,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 				else {
 					nlohmann::json jsonResponse = nlohmann::json::parse(result);
 					if (!jsonResponse.empty()) {
+						//std::cout << jsonResponse.dump(4) << std::endl;
 						return jsonResponse;
 					}
 					else {
@@ -379,7 +381,7 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ImageWriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);;
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &imageData);
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
@@ -391,9 +393,28 @@ std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 	long http_code = 0;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+	/*
+	double downloadSpeed;
+	curl_easy_getinfo(curl, CURLINFO_SPEED_DOWNLOAD, &downloadSpeed);
+	std::cout << "Download Speed: " << downloadSpeed << " bytes per second" << std::endl;
+
+	double startTransferTime;
+	curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &startTransferTime);
+	std::cout << "Time to Start Transfer: " << startTransferTime << " seconds" << std::endl;
+
 	double totalTime;
 	curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
-	std::cout << "Total time: " << totalTime << " seconds" << std::endl;
+	std::cout << "Total Time: " << totalTime << " seconds" << std::endl;
+
+	double transferTime = totalTime - startTransferTime;
+	std::cout << "Transfer Time (Time to download the image): " << transferTime << " seconds" << std::endl;
+
+	double dnsTime, connectTime;
+	curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &dnsTime);
+	curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &connectTime);
+	std::cout << "DNS Lookup Time: " << dnsTime << " seconds" << std::endl;
+	std::cout << "Connection Time: " << connectTime << " seconds\n" << std::endl;
+	*/
 
 	curl_easy_cleanup(curl);
 	return imageData;

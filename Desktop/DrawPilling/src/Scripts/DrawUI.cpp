@@ -8,6 +8,7 @@
 #include "lss.h"
 #include <thread>
 #include <random>
+#include <memory>
 
 //Left side
 ImVec2 ColorWindowSize(100, 300);
@@ -43,6 +44,8 @@ bool itemHovered = false;
 bool usersGot = false;
 std::vector<RoomUser>* usersPtr;
 
+std::unique_ptr<std::unordered_map<int, UserPos>> DrawUI::userPositions = std::make_unique<std::unordered_map<int, UserPos>>();
+
 static std::vector<std::string> chatLog;
 
 static NewRenderer* renderer;
@@ -74,6 +77,8 @@ std::mt19937 gen(rd());
 std::uniform_int_distribution<int> dist(0, 6);
 
 std::string names[6] = { "Cursor", "Pen Brush", "Eraser", "Air Brush", "Water Brush", "Chalk Brush"};
+
+bool DrawUI::canInit = false;
 
 ImVec4 userColors[] = {
 	ImVec4(0.2588f, 0.5294f, 0.9608f, 1.0f),
@@ -135,7 +140,6 @@ void InitBrushIcons()
 
 void DrawUI::InitData()
 {
-	userColor = dist(gen);
 	if (runtime.ip[0] == '\0') {
 		std::cerr << "No ip in appdata" << std::endl;
 	}
@@ -170,6 +174,11 @@ void DrawUI::SetColor(float* colorIn)
 }
 
 void DrawUI::DrawMenu() {
+	static bool openExplorer = false;
+	static bool wasOpen = false;
+	static bool needFileOpen = false;
+	static bool needFileSave = false;
+
 	Lss::SetFontSize(2 * Lss::VH);
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -180,16 +189,35 @@ void DrawUI::DrawMenu() {
 				renderer->tool = 0;
 			}
 			if (ImGui::MenuItem("Open...")) {
-				// Handle "Open" action
+				if(!isOnline){
+					openExplorer = true;
+					wasOpen = true;
+					needFileOpen = true;
+				}
 			}
 			if (ImGui::MenuItem("Save")) {
-				// Handle "Save" action
+				if (savePath.empty()) {
+					openExplorer = true;
+					wasOpen = true;
+					needFileSave = true;
+				}
+				else DataManager::SaveSyncData(savePath);
 			}
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit")) {
 				renderer->SwapView(isOnline);
 			}
 			ImGui::EndMenu();
+		}
+
+		if (openExplorer) Explorer::FileExplorerUI(&openExplorer, 3);
+		else if (wasOpen)
+		{
+			savePath = Explorer::GetImagePath();
+			if (Explorer::Exists()) {
+				DataManager::LoadSyncData(savePath);
+			}
+			wasOpen = false;
 		}
 
 		if (ImGui::BeginMenu("Edit")) {
@@ -217,35 +245,37 @@ void DrawUI::DrawMenu() {
 			ImGui::MenuItem("Show Grid", nullptr, &showGrid);
 			ImGui::EndMenu();
 		}
-
+		Lss::End();
 		ImGui::EndMainMenuBar();
 	}
+	Lss::End();
+
 	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
 }
 
 void DrawUI::PlayerVisualization() {
-	/*
 	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
 	bool open = true;
 	Lss::SetFontSize(2 * Lss::VH);
-	ImVec2 textSize = ImGui::CalcTextSize(runtime.username.c_str());
-	ImVec2 size = ImVec2(textSize.x, textSize.y+4*Lss::VH);
-	ImGui::SetNextWindowSize(size);
-	float* pos = Callback::GlCursorPosition();
-	pos[0] = (pos[0] + 1.0f) / 2;
-	pos[1] = (pos[1] + 1.0f) / 2;
-	ImVec2 realPos = ImVec2(windowSize.x * pos[0],windowSize.y - (windowSize.y * pos[1]));
-	ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2),realPos.y - (size.y / 3)));
-	ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
-		Lss::Top(0.25f * Lss::VH);
-		Lss::Image(playerCursor.GetId(), ImVec2(2*Lss::VH, 2*Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[userColor]);
-		ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[userColor];
-		Lss::Text(runtime.username, 1.5f*Lss::VH, Centered);
-		Lss::SetColor(Font, Font);
+	for (auto& pair : *userPositions) {
+		UserPos posy = pair.second;
+		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
+		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
+		ImGui::SetNextWindowSize(size);
+		posy.pos.x = (posy.pos.x + 1.0f) / 2;
+		posy.pos.y = (posy.pos.y + 1.0f) / 2;
+		ImVec2 realPos = ImVec2(windowSize.x * posy.pos.x, windowSize.y - (windowSize.y * posy.pos.y));
+		ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2), realPos.y - (size.y / 3)));
+		ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+			Lss::Top(0.25f * Lss::VH);
+			Lss::Image(playerCursor.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[posy.color]);
+			ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[posy.color];
+			Lss::Text(posy.name, 1.5f * Lss::VH, Centered);
+			Lss::SetColor(Font, Font);
+			Lss::End();
+		ImGui::End();
 		Lss::End();
-	ImGui::End();
-	Lss::End();
-	*/
+	}
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
@@ -410,14 +440,15 @@ void DrawUI::ServerWindow()
 	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
 	{
 		DataManager::LoadSyncData(savePath);
-	}*/
-
+	}
+	*/
 	if (isOnline) {
 		if (!usersGot) {
 			usersPtr = SManager::GetUsers();
 			usersGot = true;
 		}
 		ImVec2 avail = ImGui::GetContentRegionAvail();
+		int sizeofarray = DrawUI::userPositions->size();
 		for (RoomUser user : *usersPtr)
 		{
 			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
@@ -432,9 +463,21 @@ void DrawUI::ServerWindow()
 				}
 				Lss::End();
 			ImGui::EndChild();
+
+			if (user.id == runtime.id) continue;
+
+			if (userPositions->find(user.id) == userPositions->end()) {
+				UserPos pos;
+				pos.color = dist(gen);
+				pos.name = user.username;
+				pos.pos = Position(0, -100);
+				auto& map = *DrawUI::userPositions;
+				map[user.id] = pos;
+			}
 		}
 		Lss::End();
 	}
+	
 	else {
 		std::string text = "Wumpus is very sad :c";
 		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
@@ -446,12 +489,12 @@ void DrawUI::ServerWindow()
 	ServerWindowSize = ImGui::GetWindowSize();
 	rightSize = ServerWindowSize.x;
 	ServerWindowPos = ImGui::GetWindowPos();
+
 	Lss::End();
 	ImGui::End();
-
+	
 	if (ServerWindowSize.x < 200) {
 		rightSize = 200;
-		std::cout << leftSize << std::endl;
 	}
 }
 
@@ -786,46 +829,64 @@ void DrawUI::ChatWindow()
 void DrawUI::InitWindow()
 {
 	if (!inited && !isOnline) {
-		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+		if (Lss::Modal("Canvas init", &canvasInitWindow, ImVec2(20 * Lss::VW, 35 * Lss::VH), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
 		{
-			Lss::Text("Create a Sync", 2 * Lss::VH);
-			Lss::Separator();
 
-			static char nameText[128] = "";
+			ImVec2 valid = ImGui::GetContentRegionAvail();
 
-			Lss::Text("Name: ", 3 * Lss::VH);
-			ImGui::SameLine();
-			Lss::Left(4.4f * Lss::VW);
-			Lss::InputText("projectName", nameText, sizeof(nameText), ImVec2(12 * Lss::VW, 3 * Lss::VH));
+			ImVec2 def = ImGui::GetStyle().FramePadding;
+			ImGui::GetStyle().FramePadding = ImVec2(0.0f, 0.0f);
 
+			Lss::SetColor(ContainerBackground, LowHighlight);
+			Lss::Child("##Lobbyheader", ImVec2(valid.x, 7 * Lss::VH), false, Rounded);
+			Lss::LeftTop(Lss::VW, Lss::VH);
+			Lss::Text("Create a sync", 5 * Lss::VH);
+			Lss::End();
+			ImGui::EndChild();
+			Lss::SetColor(ContainerBackground, ContainerBackground);
+			ImGui::GetStyle().FramePadding = def;
 
-			ImGui::NewLine();
+			ImGui::SetCursorPosX(0);
+			Lss::Top(0.2f*Lss::VH);
+			Lss::Separator(1.0f, 20 * Lss::VW);
+
+			Lss::Top(Lss::VH);
 
 			static int width = 400;
 			static int height = 300;
 
+			float sizeForWidth = ImGui::CalcTextSize("Width(px): ").x;
+			float sizeForHeight = ImGui::CalcTextSize("Height(px): ").x;
+
 			Lss::Text("Canvas", 2 * Lss::VH);
 			Lss::Separator();
-			Lss::Text("Width (px): ", 3 * Lss::VH);
+
+			Lss::Left(Lss::VW);
+			Lss::Text("Width (px): ", 2.5f * Lss::VH);
 			ImGui::SameLine();
-			Lss::Left(8.2f * Lss::VW);
-			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH));
-			Lss::Text("Height (px): ", 3 * Lss::VH);
+			Lss::Left(sizeForHeight-sizeForWidth + 5.3f * Lss::VW);
+			Lss::InputInt("##canvasWidth", &width, ImVec2(6 * Lss::VW, 3 * Lss::VH), Rounded);
+			
+			Lss::LeftTop(Lss::VW, 0.5f*Lss::VH);
+			Lss::Text("Height (px): ", 2.5f * Lss::VH);
 			ImGui::SameLine();
-			Lss::Left(7.85f * Lss::VW);
-			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH));
+			Lss::Left(5.2f * Lss::VW);
+			Lss::InputInt("##canvasHeight", &height, ImVec2(6 * Lss::VW, 3 * Lss::VH), Rounded);
 
 			static char locationText[256] = "";
 			static bool openExplorer = false;
 			static bool wasOpen = false;
 
+			Lss::Top(Lss::VH);
 			Lss::Text("Save Location", 2 * Lss::VH);
 			Lss::Separator();
 			Lss::SetFontSize(3 * Lss::VH);
 			float buttonTextSize = ImGui::CalcTextSize("...").x;
-			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-0.4f*Lss::VH, 3 * Lss::VH),0, ImGuiInputTextFlags_ReadOnly);
+			Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
+			Lss::InputText("saveLocation", locationText, sizeof(locationText), ImVec2(20*Lss::VW-buttonTextSize-3*Lss::VW, 3 * Lss::VH), Rounded, ImGuiInputTextFlags_ReadOnly);
 			ImGui::SameLine();
-			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3.3f * Lss::VH), 3 * Lss::VH)) {
+			Lss::Left(0.8f*Lss::VW);
+			if (Lss::Button("...", ImVec2(buttonTextSize + Lss::VH, 3 * Lss::VH), 2.5f * Lss::VH, Rounded)) {
 				openExplorer = true;
 				wasOpen = true;
 			}
@@ -837,37 +898,39 @@ void DrawUI::InitWindow()
 			}
 			
 			ImVec2 buttonSize = ImVec2(100, 20);
-			ImGui::SetCursorPosY(38 * Lss::VH - buttonSize.y - 2 * Lss::VH);
-			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered))
+			ImGui::SetCursorPosY(33 * Lss::VH - buttonSize.y - 2 * Lss::VH);
+			if (Lss::Button("Create##createCanvas", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Centered | Rounded))
 			{
-				if (Explorer::Exists())
-				{
-					DataManager::LoadSyncData(savePath);
-
-					canvasInitWindow = false;
-					inited = true;
-				}
-				else {
-					if (width > 0 && height > 0) {
-						unsigned int widthOut = width;
-						unsigned int heightOut = height;
-						renderer->SetDrawData(widthOut, heightOut);
-						renderer->InitNewCanvas();
+				if (savePath.size() > 3) {
+					if (Explorer::Exists())
+					{
+						DataManager::LoadSyncData(savePath);
 
 						canvasInitWindow = false;
 						inited = true;
 					}
-				}
+					else {
+						if (width > 0 && height > 0) {
+							unsigned int widthOut = width;
+							unsigned int heightOut = height;
+							renderer->SetDrawData(widthOut, heightOut);
+							renderer->InitNewCanvas();
 
+							canvasInitWindow = false;
+							inited = true;
+						}
+					}
+				}
 			}
 
 			Lss::End();
 			ImGui::EndPopup();
 		}
 	}
-	else if (!inited && isOnline)
+	else if (!inited && isOnline && canInit)
 	{
 		unsigned int* sizes = SManager::GetCanvasSize();
+		std::cout << "Sizes:" << sizes[0] << "; " << sizes[1] << std::endl;
 		renderer->SetDrawData(sizes[0], sizes[1]);
 		renderer->InitNewCanvas();
 		inited = true;

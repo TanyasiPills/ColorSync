@@ -9,6 +9,6 @@ private:
 	
 public:
 	static void Init(GLFWwindow* window, NewRenderer& rendererIn);
-	static float* GlCursorPosition();
+	static double* GlCursorPosition();
 	static void EditorSwapCallBack(bool online = false);
 };

@@ -29,6 +29,7 @@ bool GLLogCall(const char* function, const char* file, int line) {
 
 GLFWwindow* window;
 RenderData cursor;
+RenderData messageCursor;
 
 CanvasData dataForCanvas;
 
@@ -44,6 +45,9 @@ float identityOffset[2] = {0,0};
 float prevPos[2] = { 0,0 };
 float prevPrevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
+unsigned int currentBrush = 0;
+
+double currentPos[2] = { 0.0, 0.0};
 
 std::vector<Position> drawPositions;
 Position sentOffset;
@@ -164,12 +168,15 @@ void NewRenderer::InitBrushes()
 	NewDraw::InitBrush(charCoalBrush, cursorRadius, "Resources/Textures/charCoalBrush.png");
 	brushes.push_back(charCoalBrush);
 
+	NewDraw::InitBrush(messageCursor, cursorRadius);
+
 	cursor = brushes[0];
 }
 
 void NewRenderer::ChangeBrush(int index)
 {
 	cursor = brushes[index];
+	currentBrush = index;
 }
 
 void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
@@ -185,8 +192,6 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	initialCanvasRatio[1] = dataForCanvas.canvasY;
 	canvasRatio[0] = dataForCanvas.canvasX;
 	canvasRatio[1] = dataForCanvas.canvasY;
-
-	inited = true;
 }
 
 void NewRenderer::InitNewCanvas()
@@ -215,6 +220,8 @@ void NewRenderer::InitNewCanvas()
 	dynamic_cast<Folder*>(nodes[0].get())->AddChild(index);
 
 	if (online) SManager::ProcessHistory();
+
+	inited = true;
 }
 
 void NewRenderer::MoveLayers(static float* offsetIn)
@@ -259,7 +266,7 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 	}
 }
 
-void NewRenderer::LoadPrevCursor(float* prevIn)
+void NewRenderer::LoadPrevCursor(double* prevIn)
 {
 	prevPrevPos[0] = prevIn[0];
 	prevPrevPos[1] = prevIn[1];
@@ -278,7 +285,7 @@ void NewRenderer::RenderCursorToCanvas()
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
 
-		float* pos = Callback::GlCursorPosition();
+		double* pos = Callback::GlCursorPosition();
 		switch (tool)
 		{
 		case 1:
@@ -303,15 +310,15 @@ void NewRenderer::RenderCursorToCanvas()
 			float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos[0]);
 			float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos[1]);
 
+			drawPositions.push_back(Position(pos[0], pos[1]));
+
 			for (int i = 0; i < num_samples; ++i) {
 				float t = static_cast<float>(i) / num_samples;
 
 				float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
 				float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
 
-				//drawPositions.push_back(Position(vx, vy));
-
-				float tmp[2] = { vx, vy };
+				double tmp[2] = { vx, vy };
 				NewDraw::BrushToPosition(window, cursor, cursorRadius, canvasRatio, offset, cursorScale, tmp);
 				Draw(cursor);
 			}
@@ -374,10 +381,10 @@ void NewRenderer::SendDraw()
 	DrawMessage msg;
 	msg.type = 0;
 	msg.layer = currentNode;
-	msg.brush = 2;
-	msg.size = sentBrushSize;
+	msg.brush = currentBrush;
+	msg.size = cursorRadius;
 	msg.positions = drawPositions;
-	msg.offset = sentOffset;
+	msg.offset = Position(offset[0], offset[1]);
 	msg.color[0] = color[0];
 	msg.color[1] = color[1];
 	msg.color[2] = color[2];
@@ -426,37 +433,118 @@ void NewRenderer::Draw(const RenderData& data)
 
 void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 {
-	try{
-		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get()))
-		{
+	try {
+		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get())) {
 			RenderData& layer = layerPtr->data;
+			if (layers[0] == drawMessage.layer) return;
+
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
-			cursor.shader->SetUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
-			Position offs = drawMessage.offset;
-			Position canvRatio = drawMessage.ratio;
-			float offse[2] = { offs.x, offs.y };
-			float radius = drawMessage.size;
-			for (size_t i = 0; i < drawMessage.positions.size(); i++)
-			{
-				Position pos = drawMessage.positions[i];
-				float tmp[2] = { pos.x, pos.y };
-				float tmp2[2] = { canvRatio.x, canvRatio.y };
-				float tmp3[3] = { drawMessage.cursorScale[0], drawMessage.cursorScale[1], drawMessage.cursorScale[2] };
 
-				NewDraw::MoveCanvas(layer, tmp2, offse);
-				NewDraw::BrushToPosition(window, cursor, radius, tmp2, offse, tmp3, tmp,1);
-				Draw(cursor);
+			double preves[2] = { drawMessage.positions[0].x, drawMessage.positions[0].y };
+			LoadPrevCursor(preves);
+
+			messageCursor = brushes[drawMessage.brush];
+			tool = drawMessage.brush;
+			int posIndex = 0;
+			Position pos = drawMessage.positions[0];
+
+			switch (tool) {
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5: { // draw
+				if (tool == 2) {
+					messageCursor = brushes[1];
+					messageCursor.shader->Bind();
+					messageCursor.shader->SetUniform4f("Kolor", 0.0f, 0.0f, 0.0f, 0.0f);
+					glBlendFunc(GL_ONE, GL_ZERO);
+				}
+				else {
+					messageCursor.shader->Bind();
+					messageCursor.shader->SetUniform4f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2], 1.0f);
+				}
+				while (posIndex < drawMessage.positions.size()) {
+					pos = drawMessage.positions[posIndex++];
+
+					float messageOffset[2] = { drawMessage.offset.x, drawMessage.offset.y };
+					float messageCursorscale[3] = { drawMessage.cursorScale[0], drawMessage.cursorScale[1], drawMessage.cursorScale[2] };
+					float dx = pos.x - prevPos[0];
+					float dy = pos.y - prevPos[1];
+					dx *= canvasSize[0];
+					dy *= canvasSize[1];
+					float distance = std::sqrt(dx * dx + dy * dy);
+
+					float radius = drawMessage.size;
+
+					float messageCanvasRatio[2] = { drawMessage.ratio.x, drawMessage.ratio.y };
+
+					int num_samples = 1 + distance / (radius * 100);
+
+					float ctrlX = 2 * prevPos[0] - 0.5f * (prevPrevPos[0] + pos.x);
+					float ctrlY = 2 * prevPos[1] - 0.5f * (prevPrevPos[1] + pos.y);
+
+					for (int i = 0; i < num_samples; ++i) {
+						float t = static_cast<float>(i) / num_samples;
+
+						float vx = (1 - t) * (1 - t) * prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos.x;
+						float vy = (1 - t) * (1 - t) * prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos.y;
+
+						double tmp[2] = { vx, vy };
+						NewDraw::BrushToPosition(window, messageCursor, radius, messageCanvasRatio, messageOffset, messageCursorscale, tmp);
+						Draw(messageCursor);
+					}
+					prevPrevPos[0] = prevPos[0];
+					prevPrevPos[1] = prevPos[1];
+					prevPos[0] = pos.x;
+					prevPos[1] = pos.y;
+				}
+
+				if (tool == 2) {
+					messageCursor.shader->SetUniform4f("Kolor", color[0], color[1], color[2], 1.0f);
+					messageCursor = brushes[2];
+					messageCursor.shader->Bind();
+					glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				}
+			} break;
+			case 6: { // fill
+				ImVec4 colorIn(color[0], color[1], color[2], 1.0f);
+				NewDraw::Fill(layerPtr, pos.x, pos.y, colorIn);
+			} break;
+			case 201: { // colorpicker[0]
+				int pixelX = static_cast<int>((pos.x) / canvasRatio[0] * canvasSize[0]);
+				int pixelY = static_cast<int>((pos.y) / canvasRatio[1] * canvasSize[0]);
+
+				unsigned char pixelColor[4];
+				glReadPixels(pixelX, pixelY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixelColor);
+
+				ImVec4 pickedColor(pixelColor[0] / 255.0f,
+					pixelColor[1] / 255.0f,
+					pixelColor[2] / 255.0f,
+					pixelColor[3] / 255.0f);
+
+				color[0] = pickedColor.x;
+				color[1] = pickedColor.y;
+				color[2] = pickedColor.z;
+
+				unsigned char whiteColor[4] = { 255, 255, 255, 255 };
+
+				glRasterPos2i(pixelX, pixelY);
+				glDrawPixels(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, whiteColor);
+
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				DrawUI::SetColor(color);
+			} break;
+			default:
+				break;
 			}
+
 			layer.texture->Bind();
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			NewDraw::MoveCanvas(layer, canvasRatio, offset);
 			int width, height;
 			glfwGetFramebufferSize(window, &width, &height);
 			glViewport(0, 0, width, height);
-		}
-		else {
-			std::cerr << "sent layer not found" << std::endl;
 		}
 	}
 	catch (...){
@@ -481,7 +569,7 @@ void NewRenderer::RenderLayers()
 
 void NewRenderer::RenderCursor()
 {
-	float* now = Callback::GlCursorPosition();
+	double* now = Callback::GlCursorPosition();
 	NewDraw::BrushToPosition(window, cursor, cursorRadius, identityRatio, identityOffset, cursorScale, now);
 	Draw(cursor);
 
@@ -555,7 +643,6 @@ void NewRenderer::SwapView(bool isOnline)
 	}
 }
 
-
 void NewRenderer::Render()
 {
 	Clear();
@@ -563,6 +650,19 @@ void NewRenderer::Render()
 		if (inited) {
 			RenderLayers();
 			RenderCursor();
+			if(DrawUI::canInit) ProcessTasks();
+			double* pos = Callback::GlCursorPosition();
+
+			if (online) {
+				if (currentPos[0] != pos[0] || currentPos[1] != pos[1]) {
+					Position posy;
+					posy.x = pos[0];
+					posy.y = pos[1];
+					SManager::SendPositionMessage(posy);
+					currentPos[0] = pos[0];
+					currentPos[1] = pos[1];
+				}
+			}
 		}
 		RenderImGui(onUI);
 	}

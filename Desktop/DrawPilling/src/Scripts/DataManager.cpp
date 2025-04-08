@@ -29,17 +29,77 @@ void SetAppDataData(ApplicationData& data, std::string nameIn, std::string token
     SetStringValue(data.token, tokenIn.c_str(), sizeof(data.token));
     SetStringValue(data.ip, ipIn.c_str(), sizeof(data.ip));
     SetStringValue(data.passWord, passIn.c_str(), sizeof(data.passWord));
+    data.favs = *Explorer::GetFavorites();
+    data.recents = *Explorer::GetRecents();
 }
+
+void WriteFolder(std::ofstream& file, std::vector<FolderSave> folders) {
+    for (const auto& folder : folders) {
+        int folderNameSize = folder.name.size();
+        int folderPathSize = folder.path.size();
+        file.write(reinterpret_cast<const char*>(&folderNameSize), sizeof(folderNameSize));
+        file.write(reinterpret_cast<const char*>(&folderPathSize), sizeof(folderPathSize));
+
+        file.write(folder.name.c_str(), folderNameSize);
+        file.write(folder.path.c_str(), folderPathSize);
+    }
+}
+
 
 void SaveAppDataData(const ApplicationData& data, const std::string& filename) {
     std::ofstream file(filename, std::ios::binary);
-    if (file) file.write(reinterpret_cast<const char*>(&data), sizeof(data));
+    if (file) {
+        file.write(data.token, sizeof(data.token));
+        file.write(data.name, sizeof(data.name));
+        file.write(data.ip, sizeof(data.ip));
+        file.write(data.passWord, sizeof(data.passWord));
+
+        int recentsSize = data.recents.size();
+        file.write(reinterpret_cast<const char*>(&recentsSize), sizeof(recentsSize));
+        WriteFolder(file, data.recents);
+
+        int favsSize = data.favs.size();
+        file.write(reinterpret_cast<const char*>(&favsSize), sizeof(favsSize));
+        WriteFolder(file, data.favs);
+    }
+}
+
+void ReadFolder(std::ifstream& file, std::vector<FolderSave>& folders) {
+    for (auto& folder : folders) {
+        int folderNameSize = 0;
+        int folderPathSize = 0;
+
+        file.read(reinterpret_cast<char*>(&folderNameSize), sizeof(folderNameSize));
+        file.read(reinterpret_cast<char*>(&folderPathSize), sizeof(folderPathSize));
+
+        folder.name.resize(folderNameSize);
+        folder.path.resize(folderPathSize);
+
+        file.read(&folder.name[0], folderNameSize);
+        file.read(&folder.path[0], folderPathSize);
+    }
 }
 
 ApplicationData LoadAppDataData(const std::string& filename) {
     ApplicationData data;
     std::ifstream file(filename, std::ios::binary);
-    if (file) file.read(reinterpret_cast<char*>(&data), sizeof(data));
+
+    if (file) {
+        file.read(data.token, sizeof(data.token));
+        file.read(data.name, sizeof(data.name));
+        file.read(data.ip, sizeof(data.ip));
+        file.read(data.passWord, sizeof(data.passWord));
+
+        int recentsSize = 0;
+        file.read(reinterpret_cast<char*>(&recentsSize), sizeof(recentsSize));
+        data.recents.resize(recentsSize);
+        ReadFolder(file, data.recents);
+
+        int favsSize = 0;
+        file.read(reinterpret_cast<char*>(&favsSize), sizeof(favsSize));
+        data.favs.resize(favsSize);
+        ReadFolder(file, data.favs);
+    }
     else {
         data.name[0] = '\0';
         data.token[0] = '\0';
@@ -58,6 +118,9 @@ void DataManager::LoadAppData()
     runtime.username = appdata.name;
     runtime.token = appdata.token;
     runtime.password = appdata.passWord;
+
+    Explorer::SetFavorites(appdata.favs);
+    Explorer::SetRecents(appdata.recents);
 }
 
 void DataManager::SaveAppData()
@@ -211,7 +274,6 @@ void LoadSync(std::string path)
 
     int folderSize;
     syncFile.read(reinterpret_cast<char*>(&folderSize), sizeof(folderSize));
-    std::cout << "folderSize: " << folderSize << std::endl;
     sync.folders.resize(folderSize);
 
     for (auto& folder : sync.folders) {
@@ -241,6 +303,8 @@ void LoadSync(std::string path)
 void SetRenderData()
 {
     renderer->nodes.clear();
+    renderer->layers.clear();
+    renderer->folders.clear();
 
     unsigned int sizes[2] = {sync.canvasWidth, sync.canvasHeight};
     renderer->SetDrawData(sync.canvasWidth, sync.canvasHeight);
@@ -250,7 +314,7 @@ void SetRenderData()
     {
         RenderData layerData;
         NewDraw::initLayer(layerData, sync.layerTextures[index]);
-        renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name,layer.id,layerData);
+        renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name, layer.id,layerData);
         renderer->layers.push_back(layer.id);
         index++;
     }
@@ -281,4 +345,5 @@ void DataManager::LoadSyncData(std::string path)
 {
     LoadSync(path);
     SetRenderData();
+    renderer->inited = true;
 }

@@ -33,6 +33,9 @@ public:
 
 	static void OnSystemMessage(sio::event& ev);
 
+	static void OnPositionMessage(sio::event& ev);
+	static void SendPositionMessage(Position cursorPos);
+
 	static void ProcessHistory();
 	static unsigned int* GetCanvasSize();
 	static void SetCanvasSize(unsigned int width, unsigned int height);

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include "NewRenderer.h"
+#include "FileExplorer.h"
 
 struct Sync {
     unsigned int canvasWidth;
@@ -17,9 +18,11 @@ struct Sync {
 
 struct ApplicationData {
     char token[256];
-    char name[25];
+    char name[191];
     char ip[100];
     char passWord[1024];
+    std::vector<FolderSave> recents;
+    std::vector<FolderSave> favs;
 };
 
 class DataManager

@@ -5,7 +5,7 @@
 #include "ImGui/imgui_impl_opengl3.h"
 
 double prevCursorPos[2];
-float GlCursorPos[2];
+double GlCursorPos[2];
 NewRenderer* renderer;
 int screenWidth, screenHeight;
 static float offset[2];
@@ -74,7 +74,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 
 			case GLFW_RELEASE:
 				mouseDown = false;
-				renderer->SendDraw();
+				if(renderer->GetOnline() && renderer->layers[0] != renderer->currentNode)renderer->SendDraw();
 				break;
 		}
 	}
@@ -83,8 +83,8 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
 	ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
-	float x = xpos / screenWidth;
-	float y = (screenHeight - ypos) / screenHeight;
+	double x = xpos / screenWidth;
+	double y = (screenHeight - ypos) / screenHeight;
 	GlCursorPos[0] = x * 2 - 1;
 	GlCursorPos[1] = y * 2 - 1;
 
@@ -151,7 +151,7 @@ void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 	glfwSetWindowCloseCallback(window, onCloseCallback);
 }
 
-float* Callback::GlCursorPosition()
+double* Callback::GlCursorPosition()
 {
 	return GlCursorPos;
 }
