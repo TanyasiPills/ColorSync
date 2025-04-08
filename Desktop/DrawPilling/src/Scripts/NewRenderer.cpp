@@ -652,16 +652,17 @@ void NewRenderer::Render()
 			RenderCursor();
 			if(DrawUI::canInit) ProcessTasks();
 			double* pos = Callback::GlCursorPosition();
-			if (!online) return;
-			if (currentPos[0] != pos[0] || currentPos[1] != pos[1]) {
-				Position posy;
-				posy.x = pos[0];
-				posy.y = pos[1];
-				SManager::SendPositionMessage(posy);
-				currentPos[0] = pos[0];
-				currentPos[1] = pos[1];
-			}
 
+			if (online) {
+				if (currentPos[0] != pos[0] || currentPos[1] != pos[1]) {
+					Position posy;
+					posy.x = pos[0];
+					posy.y = pos[1];
+					SManager::SendPositionMessage(posy);
+					currentPos[0] = pos[0];
+					currentPos[1] = pos[1];
+				}
+			}
 		}
 		RenderImGui(onUI);
 	}

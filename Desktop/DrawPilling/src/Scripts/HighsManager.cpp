@@ -272,6 +272,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		std::cout << "URL: " << url << std::endl;
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 250L);
 
 
 		std::string result;

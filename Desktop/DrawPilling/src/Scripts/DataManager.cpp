@@ -241,6 +241,8 @@ void LoadSync(std::string path)
 void SetRenderData()
 {
     renderer->nodes.clear();
+    renderer->layers.clear();
+    renderer->folders.clear();
 
     unsigned int sizes[2] = {sync.canvasWidth, sync.canvasHeight};
     renderer->SetDrawData(sync.canvasWidth, sync.canvasHeight);
@@ -250,7 +252,7 @@ void SetRenderData()
     {
         RenderData layerData;
         NewDraw::initLayer(layerData, sync.layerTextures[index]);
-        renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name,layer.id,layerData);
+        renderer->nodes[layer.id] = std::make_unique<Layer>(layer.name, layer.id,layerData);
         renderer->layers.push_back(layer.id);
         index++;
     }
@@ -281,4 +283,5 @@ void DataManager::LoadSyncData(std::string path)
 {
     LoadSync(path);
     SetRenderData();
+    renderer->inited = true;
 }

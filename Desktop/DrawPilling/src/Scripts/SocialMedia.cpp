@@ -2048,10 +2048,12 @@ void SocialMedia::LeftSide(float position, float width, float height)
     if (Lss::Button("Editor", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
         Callback::EditorSwapCallBack();
     }
-    Lss::Top(1 * Lss::VH);
-    if (Lss::Button("Rooms", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
-        if (mode != 4) mode = 4;
-        else mode = 0;
+    if (runtime.logedIn) {
+        Lss::Top(1 * Lss::VH);
+        if (Lss::Button("Rooms", ImVec2(16 * Lss::VH, 6 * Lss::VH), 5 * Lss::VH, Invisible | Centered | Rounded)) {
+            if (mode != 4) mode = 4;
+            else mode = 0;
+        }
     }
     Lss::Top(2 * Lss::VH);
     ImGui::Separator();
@@ -2065,6 +2067,12 @@ void SocialMedia::LeftSide(float position, float width, float height)
         Lss::Top(1 * Lss::VH);
     }
 
+    Lss::Top(1 * Lss::VH);
+    if (Lss::Button("Explore", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
+        if (mode != 0) mode = 0;
+    }
+
+    Lss::Top(1 * Lss::VH);
     if (Lss::Button("Search", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 2) mode = 2;
         else {
@@ -2086,6 +2094,7 @@ void SocialMedia::LeftSide(float position, float width, float height)
         }
     }
     else {
+        Lss::Top(1 * Lss::VH);
         if (Lss::Button("Login", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
             loginWindow = true;
         }
