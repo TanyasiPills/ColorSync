@@ -49,7 +49,6 @@ public class LoginFragment extends Fragment {
     private Button registerButton;
     private ConstraintSet registerSet;
     private ConstraintSet loginSet;
-    private EditText password;
 
     public LoginFragment() { }
 
@@ -72,7 +71,6 @@ public class LoginFragment extends Fragment {
         loginChange = view.findViewById(R.id.loginChange);
         loginButton = view.findViewById(R.id.login);
         registerButton = view.findViewById(R.id.register);
-        password = view.findViewById(R.id.password);
 
         registerButton.setOnClickListener(e -> {
             String username = Objects.requireNonNull(usernameInput.getText()).toString();
@@ -94,7 +92,7 @@ public class LoginFragment extends Fragment {
                     }
 
                     if (response.isSuccessful() && response.body() != null) {
-                        UserManager.user = new User(response.body().id, response.body().username);
+                        UserManager.user = new User(response.body().id, response.body().username, response.body().email, null);
                         UserManager.token = response.body().access_token;
                         UserManager.saveToken(e.getContext(), UserManager.token);
                         MainActivity.getInstance().goToHome();
@@ -234,8 +232,9 @@ public class LoginFragment extends Fragment {
             });
         });
 
-        password.setOnEditorActionListener((textView, i, keyEvent) -> {
-            loginButton.performClick();
+        passwordInput.setOnEditorActionListener((textView, i, keyEvent) -> {
+            if (loginButton.getVisibility() == View.VISIBLE) loginButton.performClick();
+            else registerButton.performClick();
             return true;
         });
         return view;

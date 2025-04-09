@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.transition.ChangeBounds;
 import android.transition.TransitionManager;
-import android.view.MenuItem;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 
@@ -103,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 currentPage = destination;
             }
-            if (currentPage != R.id.loginFragment) {
+            if (currentPage != R.id.loginFragment && currentPage != R.id.settingsFragment) {
                 navbarUIOnly = true;
                 navbar.setSelectedItemId(currentPage);
             }
@@ -133,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
                                     @Override
                                     public void onFailure(Call<User> call, Throwable throwable) {
-                                        new AlertDialog.Builder(getBaseContext())
+                                        new AlertDialog.Builder(MainActivity.this)
                                                 .setTitle("Error loading user")
                                                 .setMessage(throwable.getMessage())
                                                 .setPositiveButton("OK", null)
@@ -166,6 +165,8 @@ public class MainActivity extends AppCompatActivity {
                 navigatePop(R.id.homeFragment, R.id.action_loginFragment_to_homeFragment);
             } else if (currentPage == R.id.nav_profile) {
                 navigatePop(R.id.homeFragment, R.id.action_profileFragment_to_homeFragment);
+            } else if (currentPage == R.id.settingsFragment) {
+                navigatePop(R.id.homeFragment, R.id.action_settingsFragment_to_homeFragment);
             }
         } else if (destination == R.id.nav_profile) {
             Bundle bundle = new Bundle();
@@ -200,9 +201,11 @@ public class MainActivity extends AppCompatActivity {
         } else if (destination == R.id.loginFragment) {
             if (currentPage == R.id.nav_home) {
                 navController.navigate(R.id.action_homeFragment_to_loginFragment);
-            } else if (currentPage == R.id.nav_profile) {{
+            } else if (currentPage == R.id.nav_profile) {
                 navController.navigate(R.id.action_profileFragment_to_loginFragment);
-            }}
+            } else if (currentPage == R.id.settingsFragment) {
+                navController.navigate(R.id.action_settingsFragment_to_loginFragment);
+            }
         }
         return true;
     }

@@ -4,8 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".SettingsFragment"
-    android:padding="10dp">
+    tools:context=".Fragment.SettingsFragment"
+    android:padding="10dp"
+    android:id="@+id/settingsLayout">
     
     <ImageButton
         android:layout_width="40dp"
@@ -43,6 +44,21 @@
         app:layout_constraintBottom_toBottomOf="@id/profilePicture"
         android:text="@string/profilePictureText"
         android:labelFor="@id/profilePicture"/>
+    
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/profilePictureUndo"
+        app:layout_constraintStart_toEndOf="@id/profilePicture"
+        app:layout_constraintTop_toTopOf="@id/profilePicture"
+        app:layout_constraintBottom_toBottomOf="@id/profilePicture"
+        android:background="@null"
+        android:src="@drawable/undo"
+        app:tint="@color/text"
+        android:scaleType="fitCenter"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/undoCD"
+        android:visibility="gone" />
 
     <ImageView
         android:layout_width="100dp"
@@ -51,7 +67,8 @@
         app:layout_constraintStart_toEndOf="@id/profilePictureText"
         app:layout_constraintTop_toBottomOf="@id/back"
         android:contentDescription="@string/profile_pictureDescription"
-        android:layout_marginStart="10dp"/>
+        android:layout_marginStart="10dp"
+        android:stateListAnimator="@animator/click_grow"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -63,6 +80,21 @@
         android:text="@string/usernameText"
         android:layout_marginEnd="10dp"
         android:labelFor="@id/username"/>
+
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/usernameUndo"
+        app:layout_constraintStart_toEndOf="@id/username"
+        app:layout_constraintTop_toTopOf="@id/username"
+        app:layout_constraintBottom_toBottomOf="@id/username"
+        android:background="@null"
+        android:src="@drawable/undo"
+        app:tint="@color/text"
+        android:scaleType="fitCenter"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/undoCD"
+        android:visibility="gone" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -101,5 +133,145 @@
         android:inputType="textMultiLine"
         android:textColor="@color/text"
         app:layout_constraintWidth_min="100dp"
-        app:layout_constraintWidth_max="200dp" />
+        app:layout_constraintWidth_max="200dp"
+        android:maxLines="4" />
+
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/descriptionUndo"
+        app:layout_constraintStart_toEndOf="@id/description"
+        app:layout_constraintTop_toTopOf="@id/description"
+        app:layout_constraintBottom_toBottomOf="@id/description"
+        android:background="@null"
+        android:src="@drawable/undo"
+        app:tint="@color/text"
+        android:scaleType="fitCenter"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/undoCD"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/emailText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/email"
+        app:layout_constraintBottom_toBottomOf="@id/email"
+        android:text="@string/emailText"
+        android:layout_marginEnd="10dp"
+        android:labelFor="@id/username" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/email"
+        app:layout_constraintStart_toStartOf="@id/profilePicture"
+        app:layout_constraintTop_toBottomOf="@id/description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        android:autofillHints="username"
+        android:inputType="textEmailAddress"
+        android:textColor="@color/text"
+        app:layout_constraintWidth_min="100dp"
+        app:layout_constraintWidth_max="200dp"
+        android:maxLines="4" />
+
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/emailUndo"
+        app:layout_constraintStart_toEndOf="@id/email"
+        app:layout_constraintTop_toTopOf="@id/email"
+        app:layout_constraintBottom_toBottomOf="@id/email"
+        android:background="@null"
+        android:src="@drawable/undo"
+        app:tint="@color/text"
+        android:scaleType="fitCenter"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/undoCD"
+        android:visibility="gone" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/change"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/email"
+        android:layout_marginTop="10dp"
+        android:text="@string/changeText"
+        android:backgroundTint="@color/bgSecondary"
+        android:textColor="@color/text"
+        android:stateListAnimator="@animator/click_grow"
+        android:visibility="gone"/>
+
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/imagesContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintWidth_percent="0.9"
+        android:visibility="gone">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/uploadConstraint">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/uploadText"
+                app:layout_constraintTop_toTopOf="@id/uploadCancel"
+                app:layout_constraintBottom_toBottomOf="@id/uploadCancel"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/uploadCancel"
+                app:layout_constraintHorizontal_bias="0"
+                android:text="@string/changePfpText"
+                android:textSize="20sp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"/>
+
+            <ImageButton
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:id="@+id/uploadCancel"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:src="@drawable/close"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                app:tint="@color/text"
+                android:stateListAnimator="@animator/click_grow"
+                android:contentDescription="@string/cancel_buttonCD"/>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:id="@+id/uploadBottomSpacing"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/uploadImages"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/uploadText"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="10dp"
+                app:layout_constraintHeight_max="400dp"
+                android:layout_marginTop="15dp"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

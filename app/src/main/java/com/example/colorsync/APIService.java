@@ -21,6 +21,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
@@ -61,13 +62,11 @@ public interface APIService {
     Call<User> getUserById(@Path("id") int id);
     @GET("users/likes")
     Call<List<Integer>> getLikes(@Header("Authorization") String token);
-
+    @PATCH("users")
+    Call<User> updateUser(@Header("Authorization") String token, @Body User user);
     @Multipart
     @POST("users/pfp")
-    Call<Void> uploadPfp(
-            @Header("Authorization") String token,
-            @Part MultipartBody.Part file
-    );
+    Call<Void> uploadPfp(@Header("Authorization") String token, @Part MultipartBody.Part file);
 
 
     @GET("images/user/{id}")

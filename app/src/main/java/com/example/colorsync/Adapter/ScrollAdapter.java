@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,10 +22,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.colorsync.APIInstance;
+import com.example.colorsync.DataType.Comment;
 import com.example.colorsync.GlideUtils;
 import com.example.colorsync.DataType.Post;
 import com.example.colorsync.MainActivity;
 import com.example.colorsync.R;
+import com.example.colorsync.SearchViewWithEmpty;
 import com.example.colorsync.UserManager;
 
 import java.time.LocalDateTime;
@@ -41,7 +44,6 @@ import retrofit2.Response;
 public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final List<Post> items;
     private final List<Integer> likes;
-
     public ScrollAdapter(List<Post> items, List<Integer> likes) {
         this.items = items;
         this.likes = likes;

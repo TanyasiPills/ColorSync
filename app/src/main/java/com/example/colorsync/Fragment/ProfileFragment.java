@@ -184,10 +184,6 @@ public class ProfileFragment extends Fragment {
             upload();
         });
 
-        profilePicture.setOnClickListener(v -> {
-            uploadOpen(true);
-        });
-
         uploadImages.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -267,7 +263,7 @@ public class ProfileFragment extends Fragment {
                     .setMessage(e.getMessage())
                     .setPositiveButton("OK", null)
                     .show();
-            throw new RuntimeException(e);
+            return;
         }
         RequestBody fileRequest = RequestBody.create(MediaType.parse("image/*"), file);
         MultipartBody.Part fileBody = MultipartBody.Part.createFormData("file", file.getName(), fileRequest);

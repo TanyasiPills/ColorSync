@@ -42,4 +42,6 @@
     <string name="usernameText">Username:</string>
     <string name="descriptionText">Description:</string>
     <string name="back_buttonCD">back button</string>
+    <string name="undoCD">undo button</string>
+    <string name="emailText">Email:</string>
 </resources>

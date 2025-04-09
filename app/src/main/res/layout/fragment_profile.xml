@@ -14,8 +14,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/profilePicture"
-        android:contentDescription="@string/profile_pictureDescription"
-        android:stateListAnimator="@animator/click_grow"/>
+        android:contentDescription="@string/profile_pictureDescription" />
 
     <TextView
         android:layout_width="wrap_content"
