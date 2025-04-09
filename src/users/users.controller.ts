@@ -1,4 +1,4 @@
-import { FileType, LoginBodyType, LoginResponseType, UserInfoEmailType, UserInfoType } from '../api.dto';
+import { FileType, LoginBodyType, LoginResponseType, UserInfoEmailType, UserInfoType, UserInfoDescriptionType, UserInfoDescEmailType } from '../api.dto';
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, HttpCode, HttpException, HttpStatus, ParseIntPipe, UploadedFile, UseInterceptors, Res, NotFoundException, Req, Query, BadRequestException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -174,10 +174,10 @@ export class UsersController {
   /**
    * Returns data about a specific user
    * @param id Id of the user
-   * @returns {UserInfoType} Infromation about the user
+   * @returns {UserInfoDescriptionType} Infromation about the user
    */
   @ApiParam({name: 'id', description: 'Id of the user'})
-  @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfoType})
+  @ApiResponse({status: 200, description: 'Returns the user data', type: UserInfoDescriptionType})
   @ApiResponse({status: 404, description: 'User not found'})
 
   @Get(':id')
@@ -193,13 +193,12 @@ export class UsersController {
    * @returns {UserInfoType} User information after the update
    */
   @ApiBearerAuth()
-  @ApiResponse({status: 200, description: 'Returns the updated user data', type: UserInfoType})
+  @ApiResponse({status: 200, description: 'Returns the updated user data', type: UserInfoDescEmailType})
   @ApiResponse({status: 401, description: 'Invalid token'})
 
   @UseGuards(JwtAuthGuard)
   @Patch()
   update(@Req() req : any, @Body() updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto);
     return this.userService.update(req.user.id, updateUserDto);
   }
 

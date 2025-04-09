@@ -178,8 +178,6 @@ export class DrawingWS
 
   @SubscribeMessage('action')
   handleAction(@ConnectedSocket() socket: Socket, @MessageBody('type') type: number, @MessageBody('data') data: any) {
-    console.log("action\ntype", type);
-    console.log("data", data);
     const [user, room] = getUserData(socket, this.connections);
     if (!user) return;
 

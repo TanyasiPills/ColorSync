@@ -78,11 +78,12 @@ export class PostsService {
     })));
     if (!result || result.length == 0) return { data: [], offset: null };
 
+    let length = result.length;
     if (!imageOnly) {
       result.map(e => e.tags = e.tags.map(e => e.name));
     }
     else result = result.filter(e => e.imageId);
-    return { data: result, offset: parsedOffset + result.length };
+    return { data: result, offset: parsedOffset + length };
   }
 
   async findByUser(id: number) {

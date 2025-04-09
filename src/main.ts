@@ -14,7 +14,7 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  app.useGlobalPipes(new ValidationPipe({transform: true}));
+  app.useGlobalPipes(new ValidationPipe({transform: true, whitelist: true}));
 
   const docConfig = new DocumentBuilder()
     .setTitle("ColorSync")

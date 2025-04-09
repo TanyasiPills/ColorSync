@@ -12,7 +12,7 @@ export class LoginBodyType {
   @MaxLength(24)
   @IsString()
   @ApiProperty({ type: 'string', description: 'The password of the user', example: 'secret password' })
-  password: string;
+password: string;
 }
 
 export class UserInfoType {
@@ -28,7 +28,19 @@ export class UserInfoType {
   username: string
 }
 
+export class UserInfoDescriptionType extends UserInfoType {
+  @IsString()
+  @ApiProperty({ type: 'string', description: 'The profile description of the user', example: 'Hello, I am Bob!' })
+  profile_description: string;
+}
+
 export class UserInfoEmailType extends UserInfoType {
+  @IsEmail()
+  @ApiProperty({type: 'string', description: 'The email of the user', example: 'bob@example.com'})
+  email: string;
+}
+
+export class UserInfoDescEmailType extends UserInfoDescriptionType {
   @IsEmail()
   @ApiProperty({type: 'string', description: 'The email of the user', example: 'bob@example.com'})
   email: string;

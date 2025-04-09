@@ -17,7 +17,7 @@ export class UsersService {
     if (updateUserDto.password) {
       updateUserDto.password = await hash(updateUserDto.password);
     }
-    return this.db.user.update({where: {id}, data: updateUserDto, select: {username: true, email: true}});
+    return this.db.user.update({where: {id}, data: updateUserDto, select: {id: true, username: true, email: true, profile_description: true}});
   }
 
   search(name: string) {
@@ -71,6 +71,6 @@ export class UsersService {
   }
 
   getLoggedIn(id: number) {
-    return this.db.user.findUnique({where: {id}, select: {id: true, username: true, email: true}});
+    return this.db.user.findUnique({where: {id}, select: {id: true, username: true, email: true, profile_description: true}});
   }
 }
