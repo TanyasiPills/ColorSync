@@ -5,18 +5,27 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.transition.ChangeBounds;
+import android.transition.Transition;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -67,8 +76,11 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         private Post post;
         private final TextView date;
         private final RecyclerView tags;
+        private final ConstraintLayout layout;
+        private boolean commentsOpen;
         public PostViewHolder(@NonNull View itemView, Context context, ViewGroup parent, ScrollAdapter adapter) {
             super(itemView);
+            layout = itemView.findViewById(R.id.parentLayout);
             username = itemView.findViewById(R.id.username);
             description = itemView.findViewById(R.id.description);
             profilePicture = itemView.findViewById(R.id.profile_picture);
@@ -81,6 +93,9 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             date = itemView.findViewById(R.id.date);
             tags = itemView.findViewById(R.id.tags);
             tags.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+            commentsOpen = false;
+
+            commentsView.getLayoutParams().height = 0;
 
             commentsView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
                 @Override
@@ -155,12 +170,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             });
 
             showCommentsContainer.setOnClickListener(v -> {
-                if (commentsView.getAdapter() == null) {
-                    commentsView.setLayoutManager(new LinearLayoutManager(context));
-                    commentsView.setAdapter(new CommentAdapter(post.getComments(), post.getId()));
-                }
                 if (commentsView.getVisibility() == View.GONE) {
-
                     commentsView.measure(
                             View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.AT_MOST),
                             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -169,11 +179,6 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     int targetHeight = commentsView.getMeasuredHeight();
                     int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
                     targetHeight = Math.min(targetHeight, maxHeight);
-
-                    commentsView.getLayoutParams().height = 0;
-                    commentsView.requestLayout();
-
-                    commentsView.setVisibility(View.VISIBLE);
 
                     ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
                     heightAnimator.addUpdateListener(animation -> {
@@ -185,6 +190,7 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     AnimatorSet animatorSet = new AnimatorSet();
                     animatorSet.playTogether(heightAnimator, rotationAnimator);
                     animatorSet.setDuration(500);
+                    commentsView.setVisibility(View.VISIBLE);
                     animatorSet.start();
                 } else {
                     int initialHeight = commentsView.getMeasuredHeight();
@@ -235,6 +241,9 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             commentsView.setAdapter(null);
             showComments.setRotation(0f);
+
+            commentsView.setLayoutManager(new LinearLayoutManager(showComments.getContext()));
+            commentsView.setAdapter(new CommentAdapter(post.getComments(), post.getId()));
 
             likeText.setText(String.valueOf(post.getLikes()));
             LocalDateTime localDate = post.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
