@@ -14,12 +14,13 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
     const [post, setPost] = useState<post | null>(null);
     const [newComment, setNewComment] = useState("");
     const [liked, setLiked] = useState(false);
+    const [showComments, setShowComments] = useState(true);
     const cookies = new Cookies();
     const thisUser = cookies.get("AccessToken");
 
     const fetchPost = async () => {
         try {
-            const result = await fetch(backendIp + "/posts/ " + postId, {
+            const result = await fetch(backendIp + "/posts/" + postId, {
                 headers: { "Accept": "application/json" }
             });
             if (result.ok) {
@@ -110,6 +111,7 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
         if (show) {
             fetchPost();
             fetchLike();
+            setShowComments(true);
         }
     }, [show, postId]);
 
@@ -135,7 +137,7 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
 
                         {post.imageId && (
                             <div className="post-image-wrapper text-center">
-                                <img className="post-image" src={backendIp + "/images/ " + post.imageId} />
+                                <img className="post-image" src={backendIp + "/images/" + post.imageId} />
                             </div>
                         )}
 
@@ -154,41 +156,48 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
                                 {liked ? <HeartFill className="like-icon" /> : <Heart className="like-icon" />}
                                 <span className="ms-2">{post.likes}</span>
                             </span>
+
+
+                            <Chat className="comment-icon" onClick={() => setShowComments(!showComments)} />
                         </div>
 
-                        <div className="sticky-input mb-3">
-                            <InputGroup>
-                                <FormControl
-                                    placeholder="Add a comment..."
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                />
-                                <Button variant="outline-secondary" onClick={handleSubmit}>Submit</Button>
-                            </InputGroup>
-                        </div>
-
-                        <div className="comments-list">
-                            {post.comments.length > 0 ? post.comments.map((c) => (
-                                <div key={c.id} className="comment-container p-2">
-                                    <Row className="align-items-center">
-                                        <Col xs="auto">
-                                            <img
-                                                className="profile-img"
-                                                src={backendIp + "/users/"  + c.user.id +"/pfp"}
-                                                onClick={() => takeToProfile(c.user.id)}
-                                            />
-                                        </Col>
-                                        <Col>
-                                            <h6 onClick={() => takeToProfile(c.user.id)}>{c.user.username}</h6>
-                                            <p className="mb-1">{c.text}</p>
-                                            <p className="small">{generateDatabaseDateTime(c.date)}</p>
-                                        </Col>
-                                    </Row>
+                        {showComments && (
+                            <>
+                                <div className="sticky-input mb-3">
+                                    <InputGroup>
+                                        <FormControl
+                                            placeholder="Add a comment..."
+                                            value={newComment}
+                                            onChange={(e) => setNewComment(e.target.value)}
+                                        />
+                                        <Button variant="outline-secondary" onClick={handleSubmit}>Submit</Button>
+                                    </InputGroup>
                                 </div>
-                            )) : (
-                                <p className="fst-italic ps-3">No comments yet.</p>
-                            )}
-                        </div>
+
+                                <div className="comments-list">
+                                    {post.comments.length > 0 ? post.comments.map((c) => (
+                                        <div key={c.id} className="comment-container p-2">
+                                            <Row className="align-items-center">
+                                                <Col xs="auto">
+                                                    <img
+                                                        className="profile-img"
+                                                        src={backendIp + "/users/" + c.user.id + "/pfp"}
+                                                        onClick={() => takeToProfile(c.user.id)}
+                                                    />
+                                                </Col>
+                                                <Col>
+                                                    <h6 onClick={() => takeToProfile(c.user.id)}>{c.user.username}</h6>
+                                                    <p className="mb-1">{c.text}</p>
+                                                    <p className="small">{generateDatabaseDateTime(c.date)}</p>
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                    )) : (
+                                        <p className="fst-italic ps-3">No comments yet.</p>
+                                    )}
+                                </div>
+                            </>
+                        )}
                     </>
                 )}
             </Modal.Body>
