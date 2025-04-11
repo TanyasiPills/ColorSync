@@ -1,6 +1,6 @@
 /* Container for the feed */
 #feed {
-  width: 70% !important;
+  width: 70%;
   min-width: 70%;
   min-height: 1px;
   margin: 20px auto;
@@ -51,7 +51,7 @@
   height: 40px;
   margin-right: 10px;
   cursor: pointer;
-}  
+}
 
 .username {
   font-weight: bold;
@@ -100,7 +100,7 @@
 
 /*tags*/
 
-.all-tags{
+.all-tags {
   margin-right: 2%;
   margin-bottom: 3%;
 }
@@ -151,6 +151,7 @@ details summary {
   gap: 4px;
   font-size: large;
   background-color: var(--divCol);
+  border-radius: 20px;
 }
 
 .like-icon,
@@ -187,29 +188,21 @@ details summary {
 }
 
 
-/* Mobile view adjustments */
-@media only screen and (max-width: 500px) {
-  .post-header {
-      flex-direction: column;
-      align-items: flex-start;
+@media only screen and (max-width: 600px) {
+  #feed {
+    width: 100%;
   }
 
-  .details-wrapper {
-      max-height: 200px;
+  .profile-img {
+    width: 20px;
+    height: 20px;
   }
-}
 
-/* Media queries for responsiveness */
-@media only screen and (max-width: 700px) {
-  .responsive {
-      width: 49.99999%;
-      margin: 6px 0;
-  }
-}
-
-@media only screen and (max-width: 500px) {
-  .responsive {
-      width: 100%;
+  .like-icon,
+  .comment-icon {
+    width: 15px;
+    height: 15px;
+    margin-left: 4px;
   }
 }
 
@@ -242,40 +235,19 @@ details summary {
   padding: 10px;
 }
 
-@media only screen and (max-width: 900px) {
-  #postsSection {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media only screen and (max-width: 600px) {
-  #postsSection {
-    grid-template-columns: 1fr;
-  }
-}
-
-.allImages {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: masonry;
-  gap: 5px;
+#postsSection {
   width: 100%;
-  padding: 10px;
-  margin-top: 20px;
+  margin: 0 auto;
+  padding: 20px;
   overflow-y: auto;
-  max-height: 80vh; 
+  max-height: 60vh;
+  columns: 300px;
 }
 
 .images {
   width: 100%;
-  height: auto;
+  margin-bottom: 1rem;
   cursor: pointer;
-}
-
-.images img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
 }
 
 #userSection {

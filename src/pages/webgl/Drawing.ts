@@ -2,24 +2,30 @@ import { RenderData } from "./Render";
 import { VertexBuffer } from "./VertexBuffer";
 import { VertexBufferLayout } from "./VertxBufferLayout";
 
-export class CanvasData{
+export class CanvasData {
     public data!: RenderData;
     public canvasX!: number;
     public canvasY!: number;
-    constructor(){
+    constructor() {
         this.data = new RenderData();
     }
 }
 
-export class Drawing{
+export class Drawing {
     private gl: WebGL2RenderingContext;
     private canvasW: number;
     private canvasH: number;
 
-    constructor(gl: WebGL2RenderingContext, canvasW: number, canvasH: number){
+    private xScale:number;
+    private yScale:number;
+
+    constructor(gl: WebGL2RenderingContext, canvasW: number, canvasH: number) {
         this.gl = gl;
         this.canvasW = canvasW;
         this.canvasH = canvasH;
+
+        this.xScale = 1;
+        this.yScale = 1;
     }
 
     fillPositions(positions: Float32Array, xScale: number = 0.0, yScale: number = 0.0, xPos: number = 0.0, yPos: number = 0.0): void {
@@ -29,7 +35,7 @@ export class Drawing{
         positions[12] = (-xScale) + xPos; positions[13] = yScale + yPos; positions[14] = 0.0; positions[15] = 1.0;
     }
 
-    initData(data: RenderData, positions: Float32Array, texture: string | null, shaderType: number = 0, transparent:number = 0): void{
+    initData(data: RenderData, positions: Float32Array, texture: string | null, shaderType: number = 0, transparent: number = 0): void {
         const indices: Uint32Array = new Uint32Array([0, 1, 2, 2, 3, 0]);
         const vb: VertexBuffer = new VertexBuffer(this.gl, positions)
         var layout: VertexBufferLayout = new VertexBufferLayout();
@@ -63,7 +69,7 @@ export class Drawing{
         data.texture.unbind();
     }
 
-    initCanvas(canvasWIn: number, canvasHIn: number){
+    initCanvas(canvasWIn: number, canvasHIn: number) {
         var data: CanvasData = new CanvasData();
         this.canvasW = canvasWIn;
         this.canvasH = canvasHIn;
@@ -95,33 +101,33 @@ export class Drawing{
         return data;
     }
 
-    initLayer(data: RenderData, xScale: number, yScale: number): void{
+    initLayer(data: RenderData, textureData: Uint8Array): void {
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, xScale, yScale);
         this.initData(data, positions, null);
     }
 
-    public initBrush(data: RenderData, radius: number, texture: string|null): void{
+    public initBrush(data: RenderData, radius: number, texture: string | null): void {
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, radius, radius);
         if (texture == null) {
             this.initData(data, positions, "Shaders/Textures/penBrush.png", 1);
-        } else{
+        } else {
             this.initData(data, positions, texture.toString(), 1);
         }
-        
+
     }
 
-    brushToPosition(cursor: RenderData, radius: number, aspect: [number, number], offset: [number, number], scale: [number, number, number], position: Float32Array): void {
+    brushToPosition(cursor: RenderData, radius: number, aspect: [number, number], offset: [number, number], scale: [number, number, number], position: [number, number]): void {
         const positions: Float32Array = new Float32Array(16);
         const yMult: number = aspect[0] / aspect[1];
-        this.fillPositions(positions, radius/aspect[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
+        this.fillPositions(positions, radius / aspect[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
         const vb: VertexBuffer = new VertexBuffer(this.gl, positions);
         cursor.va.setBuffer(vb);
         cursor.va.unbind();
     }
 
-    public moveCanvas(canvas: RenderData, size: Float32Array, offset: [number, number]): void{
+    public moveCanvas(canvas: RenderData, size: Float32Array, offset: [number, number]): void {
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, size[0], size[1], offset[0], offset[1]);
         const vb: VertexBuffer = new VertexBuffer(this.gl, positions);

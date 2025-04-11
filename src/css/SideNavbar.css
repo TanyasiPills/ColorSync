@@ -16,7 +16,7 @@
   background: linear-gradient(90deg, #8A2BE2, #b000c7, #2665ec, #FF1493);
   -webkit-background-clip: text;
   background-clip: text;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 2s ease-in-out;
 }
 
 .sidebar.closed {
@@ -29,6 +29,7 @@
   top: 0px;
   left: 0;
   position: fixed;
+  z-index: 100;
 }
 
 .sidebar.open{
@@ -53,8 +54,8 @@
 .sidebar-handle {
   position: absolute;
   top: 50%;
-  width: 2rem;
-  height: 2rem;
+  width: 10%;
+  aspect-ratio: 1 !important;
   background-color: transparent;
   border: 2px solid var(--borderCol);
   border-radius: 50%;
@@ -62,7 +63,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: right 0.7s ease;
   visibility: visible;
 }
 

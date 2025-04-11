@@ -1,10 +1,10 @@
 import { useRender, useColorWheel } from "./CallBack";
 import { CanvasData, Drawing } from "./Drawing";
 import { IndexBuffer } from "./IndexBuffer";
+import { DrawMessage, NodeRenameMessage, Position, UserMoveMessage } from "./Messages";
 import { Shader } from "./Shader";
 import { VertexArray } from "./Shaders/VertexArray ";
 import { Texture } from "./Texture";
-
 
 export class RenderData {
     va!: VertexArray;
@@ -50,12 +50,12 @@ export class Folder extends Node {
     }
 }
 
-
 export class Render {
     private gl: WebGL2RenderingContext;
     public cursor!: RenderData;
+    public dataForCanvas: CanvasData;
 
-
+    private zoomRatio: number;
     private cursorRadius: number;
     private initialCanvasRatio: [number, number];
     private canvasRatio: Float32Array;
@@ -66,12 +66,12 @@ export class Render {
     private prevPos: [number, number];
     private prevPrevPos: [number, number];
     private canvasSize: [number, number];
+    private currentBrush: number;
+    private currentPos: [number, number];
 
     private color: [number, number, number];
     private sentBrushSize: number;
     private sentOffset: [number, number];
-
-    //Nézd át Matyi mit ad hozzá
 
     private drawing: Drawing | null;
     private callBack: useRender | null;
@@ -83,7 +83,6 @@ export class Render {
     public currentNode: number = 0;
     public nextFreeNodeIndex: number = 0;
     public currentFolder: number = 0;
-    public isEditor: boolean = false;
     public tool: number = 0;
     public currentLayerToDrawOn: number = 0;
     public inited: boolean = false;
@@ -96,10 +95,12 @@ export class Render {
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
         this.cursor = new RenderData();
+        this.dataForCanvas = new CanvasData();
 
         this.drawing = null;
         this.callBack = null;
 
+        this.zoomRatio = 0;
         this.cursorRadius = 0.01;
         this.initialCanvasRatio = [1.0, 1.0];
         this.canvasRatio = new Float32Array([1.0, 1.0]);
@@ -110,7 +111,11 @@ export class Render {
         this.prevPos = [0, 0];
         this.prevPrevPos = [0, 0];
         this.canvasSize = [1, 1];
+        this.currentBrush = 0;
+        this.currentPos = [0, 0];
 
+        this.sentBrushSize = 0;
+        this.sentOffset = [0, 0];
 
         const rgbString = localStorage.getItem("currentRGB");
         if (rgbString) {
@@ -121,35 +126,31 @@ export class Render {
                 console.error("Invalid RGB format");
                 this.color = [0, 0, 0];
             }
-        }
-        else {
+        } else {
             this.color = [0, 0, 0];
         }
 
         localStorage.setItem("currentRGB", `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`);
     }
 
-    setDrawData(canvasWIn: number, canvasHIn: number): void {
-        this.canvasSize[0] = canvasWIn;
-        this.canvasSize[1] = canvasHIn;
+    setDrawData(canvasWidthIn: number, canvasHeightIn: number): void {
+        this.canvasSize[0] = canvasWidthIn;
+        this.canvasSize[1] = canvasHeightIn;
 
-        this.drawing = new Drawing(this.gl, canvasWIn, canvasHIn);
-        this.drawing.initBrush(this.cursor, this.cursorRadius, null);
+        this.initBrushes();
 
-        const canvasData: CanvasData = this.drawing.initCanvas(canvasWIn, canvasHIn);
+        const canvasData: CanvasData = this.drawing!.initCanvas(canvasWidthIn, canvasHeightIn);
 
         this.initialCanvasRatio[0] = canvasData.canvasX;
         this.initialCanvasRatio[1] = canvasData.canvasY;
 
         this.canvasRatio[0] = canvasData.canvasX;
         this.canvasRatio[1] = canvasData.canvasY;
-
-        this.initLayers(canvasData);
-
-        this.inited = true;
     }
 
-    setEmptyDrawData(): void {
+
+
+    setDrawDataJa() {
         this.sentBrushSize = this.cursorRadius;
         this.sentOffset[0] = this.offset[0];
         this.sentOffset[1] = this.offset[1];
@@ -179,7 +180,7 @@ export class Render {
         this.cursor = this.brushes[0];
     }
 
-    initLayers(canvasData: CanvasData): void {
+    /*initLayers(canvasData: CanvasData): void {
         this.nodes.set(this.nextFreeNodeIndex, new Folder("Root", this.nextFreeNodeIndex));
         this.folders.push(this.nextFreeNodeIndex);
         this.nextFreeNodeIndex++;
@@ -205,13 +206,102 @@ export class Render {
         this.layers.push(this.nextFreeNodeIndex);
         (this.nodes.get(folder) as Folder)?.addChild(this.nextFreeNodeIndex);
         this.nextFreeNodeIndex++;
+    }*/
+
+    createLayer(parent: number): number {
+        const index = this.nextFreeNodeIndex;
+
+        let createdLayer: RenderData = new RenderData();
+        this.drawing?.initLayer(createdLayer, this.canvasRatio[0], this.canvasRatio[1]);
+
+        const newLayer = new Layer("NewLayer" + (this.layers.length + 1), index, createdLayer);
+        this.nodes.set(index, newLayer);
+
+        this.layers.push(index);
+
+        this.nextFreeNodeIndex++;
+
+        const parentFolder = this.nodes.get(parent) as Folder;
+        parentFolder?.addChild(index);
+
+        this.drawing?.moveCanvas(createdLayer, this.canvasRatio, this.offset);
+
+        return index;
     }
 
-    /**
-     * rövid leírás
-     * 
-     * @param offsetIn leírás
-     */
+    createFolder(parent: number): number {
+        const index = this.nextFreeNodeIndex;
+
+        const newFolder = new Folder("Folder", index);
+        this.nodes.set(index, newFolder);
+
+        this.folders.push(index);
+
+        const parentFolder = this.nodes.get(parent) as Folder;
+        parentFolder?.addChild(index);
+
+        this.nextFreeNodeIndex++;
+
+        return index;
+    }
+
+    removeLayer(index: number): void {
+        const layerIndex = this.layers.indexOf(index);
+        if (layerIndex !== -1) {
+            this.layers.splice(layerIndex, 1);
+
+            this.nodes.delete(index);
+        }
+    }
+
+    removeFolder(index: number): void {
+        const folderIndex = this.folders.indexOf(index);
+        if (folderIndex !== -1) {
+            this.folders.splice(folderIndex, 1);
+
+            this.nodes.delete(index);
+        }
+    }
+
+    changeBrush(index: number): void {
+        this.cursor = this.brushes[index];
+        this.currentBrush = index;
+    }
+
+    initNewCanvas(): void {
+        this.nodes.clear();
+        this.folders.length = 0;
+        this.layers.length = 0;
+        this.nextFreeNodeIndex = 0;
+
+        this.nodes.set(this.nextFreeNodeIndex, new Folder("Root", this.nextFreeNodeIndex));
+        this.folders.push(this.nextFreeNodeIndex);
+        this.nextFreeNodeIndex++;
+
+        this.nodes.set(this.nextFreeNodeIndex, new Layer("BackGround", this.nextFreeNodeIndex, this.dataForCanvas.data));
+        this.layers.push(this.nextFreeNodeIndex);
+        this.currentNode = this.nextFreeNodeIndex;
+        this.nextFreeNodeIndex++;
+
+        (this.nodes.get(0) as Folder)?.addChild(this.currentNode);
+
+        const index = this.nextFreeNodeIndex;
+        this.layers.push(index);
+        const createdLayer = new RenderData();
+        this.drawing?.initLayer(createdLayer);
+        this.nodes.set(index, new Layer("Main", index, createdLayer));
+        this.nextFreeNodeIndex++;
+
+        (this.nodes.get(0) as Folder)?.addChild(index);
+
+        if (this.online) {
+            this.SManager?.processHistory();
+        }
+
+        this.inited = true;
+
+    }
+
     moveLayers(offsetIn: [number, number]): void {
         this.offset[0] = offsetIn[0];
         this.offset[1] = offsetIn[1];
@@ -236,6 +326,7 @@ export class Render {
         }
 
         this.cursorRadius *= scale;
+        this.zoomRatio *= scale;
     }
 
     onResize(x: number, y: number, offsetIn: [number, number], yRatio: number): void {
@@ -246,7 +337,6 @@ export class Render {
 
         this.offset[0] = offsetIn[0];
         this.offset[1] = offsetIn[1];
-
 
         for (let item of this.layers) {
             const layer: Layer = this.nodes.get(item) as Layer;
@@ -285,37 +375,52 @@ export class Render {
                     const ctrlX = 2 * this.prevPos[0] - 0.5 * (this.prevPrevPos[0] + pos[0]);
                     const ctrlY = 2 * this.prevPos[1] - 0.5 * (this.prevPrevPos[1] + pos[1]);
 
-                    for (let i = 0; i < numSamples; i++) {
-                        const t = i / numSamples;
-                        const vx = (1 - t) * (1 - t) * this.prevPrevPos[0] + 2 * (1 - t) * t * ctrlX + t * t * pos[0];
-                        const vy = (1 - t) * (1 - t) * this.prevPrevPos[1] + 2 * (1 - t) * t * ctrlY + t * t * pos[1];
-
-                        const tmp: [number, number] = [vx, vy];
-
-                        this.drawing?.brushToPosition(this.cursor, this.cursorRadius, this.canvasRatio, this.offset, this.cursorScale, tmp);
-                        this.draw(this.cursor);
-                    }
-                    this.prevPrevPos[0] = this.prevPos[0];
-                    this.prevPrevPos[1] = this.prevPos[1];
-                    this.prevPos[0] = pos[0];
-                    this.prevPos[1] = pos[1];
-                } break;
-
-                case 1: { // erase
-                    // Implementation needed
-                } break;
-
-                default:
+                    const drawData = this.drawing!;
+                    //drawData.drawLine(layer.data, this.color, this.cursor, this.cursorRadius, numSamples, this.prevPos, pos, ctrlX, ctrlY);
+                    break;
+                }
+                case 1:
                     break;
             }
 
-            layer.texture.bind();
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-            const width = this.gl.canvas.width;
-            const height = this.gl.canvas.height;
-            this.gl.viewport(0, 0, width, height);
-        }
+            this.prevPrevPos[0] = this.prevPos[0];
+            this.prevPrevPos[1] = this.prevPos[1];
 
+            this.prevPos[0] = pos[0];
+            this.prevPos[1] = pos[1];
+        }
+    }
+
+    changeCursor(position: [number, number]): void {
+        this.cursorScale[0] = position[0];
+        this.cursorScale[1] = position[1];
+    }
+
+    sendDraw(): void {
+        let msg: DrawMessage = new DrawMessage();
+        msg.type = 0;
+        msg.layer = this.currentNode;
+        msg.brush = this.currentBrush;
+        msg.size = this.cursorRadius;
+        //msg.positions = draw
+        msg.offset = new Position(this.offset[0], this.offset[1]);
+        msg.color[0] = this.color[0];
+        msg.color[1] = this.color[1];
+        msg.color[2] = this.color[2];
+        msg.ratio.x = this.canvasRatio[0];
+        msg.ratio.y = this.canvasRatio[1];
+        msg.cursorScale[0] = this.cursorScale[0];
+        msg.cursorScale[1] = this.cursorScale[1];
+        msg.cursorScale[2] = this.cursorScale[2];
+
+        //drawpositions clear
+    }
+
+    sendLayerRename(nameIn: string, locationIn: number): void {
+        let msg: NodeRenameMessage = new NodeRenameMessage();
+        msg.type = 2;
+        msg.name = nameIn;
+        msg.location = locationIn;
     }
 
     clear(): void {
@@ -324,111 +429,49 @@ export class Render {
     }
 
     draw(data: RenderData): void {
+
         data.va.bind();
         data.shader.bind();
         data.texture.bind();
+
         this.gl.drawElements(this.gl.TRIANGLES, data.ib.getCount(), this.gl.UNSIGNED_INT, 0);
     }
 
-    render(): void {
-        // Implement full render logic
+    renderDrawMessage(): void {
+        //uhm Bence
     }
 
     renderLayers(): void {
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         for (let item of this.layers) {
             const layer: Layer = this.nodes.get(item) as Layer;
-            if (layer.visible) {
-                this.draw(layer.data);
-            }
+            layer.data.shader.bind();
+            layer.data.shader.setUniform1f("opacity", layer.opacity / 100);
+            this.draw(layer.data);
         }
+        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
     }
 
     renderCursor(): void {
-        let now: [number, number];
-        if (this.callBack) {
-            now = this.callBack.cursorPosition();
-        }
-        else {
-            now = [0, 0]
-        }
+        let now: [number, number] = this.callBack!.cursorPosition();
         this.drawing?.brushToPosition(this.cursor, this.cursorRadius, this.identityRatio, this.identityOffset, this.cursorScale, now);
-        this.draw(this.cursor);
     }
 
-
-    renderDrawMessage(drawMessage: DrawMessage): void {
-        try {
-            const node = this.nodes.get(this.currentNode);
-            if (node instanceof Layer) {
-                const layer = node.data;
-                this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, layer.fbo);
-                this.gl.viewport(0, 0, this.canvasSize[0], this.canvasSize[1]);
-                this.cursor.shader.setUniform3f("Kolor", drawMessage.color[0], drawMessage.color[1], drawMessage.color[2]);
-                const offsetReceive: [number, number] = drawMessage.offset;
-                const canvasRatioReceive: [number, number] = drawMessage.ratio;
-                const offset: [number, number]  = offsetReceive;
-                const radius: number = drawMessage.size;
-                for (let index = 0; index < array.length; index++) {
-                    const element = array[index];
-                    
+    render(): void{
+        this.clear();
+        if (this.inited) {
+            this.renderLayers();
+            this.renderCursor();
+            const pos: [number, number] = this.callBack!.cursorPosition();
+            if (this.online) {
+                if (this.currentPos[0] != pos[0] || this.currentPos[1] != pos[1]) {
+                    let posSend : Position = new Position();
+                    posSend.x = pos[0];
+					posSend.y = pos[1];
+                    this.currentPos[0] = pos[0];
+					this.currentPos[1] = pos[1];
                 }
             }
         }
-
-    sendDraw(): void {
-            // Implement sending draw data
-        }
-
-        sendLayerRename(name: string, location: number): void {
-            // Implement renaming layer logic
-        }
-
-        getParent(id: number): number {
-            for (const foldrIndex of this.folders) {
-                Folder
-            }
-            return -1;
-        }
-
-        createLayer(parent: number): number {
-            return -1;
-        }
-
-        createFolder(parent: number): number {
-            return -1;
-        }
-
-        removeLayer(index: number): void {
-            // Implement removing layer logic
-        }
-
-        removeFolder(index: number): void {
-            // Implement removing folder logic
-        }
-
-        changeBrush(index: number): void {
-            // Implement brush change logic
-        }
-
-        setOnline(value: boolean): void {
-            this.online = value;
-        }
-
-        getOnline(): boolean {
-            return this.online;
-        }
-
-        processTasks(): void {
-            let task: DrawMessage | null;
-            while((task = this.taskQueue.pop()) !== null) {
-            this.renderDrawMessage(task);
-        }
     }
-
-
-    swapView(): void {
-        // Implement view swapping logic
-    }
-
-
 }
