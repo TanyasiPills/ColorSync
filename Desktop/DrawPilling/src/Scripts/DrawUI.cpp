@@ -70,6 +70,10 @@ MyTexture sizecursor;
 
 MyTexture adminCrown;
 
+MyTexture deleteStuff;
+MyTexture addFolder;
+MyTexture addLayer;
+
 MyTexture icons[6];
 
 std::random_device rd;
@@ -109,33 +113,41 @@ void InitBrushIcons()
 {
 	playerCursor.Init("Resources/Textures/user.png");
 	playerCursor.TransparencyCorrection();
+	playerCursor.BlendCorrection();
 
 	cursor.Init("Resources/icons/cursorBrush.png");
 	cursor.TransparencyCorrection();
+	cursor.BlendCorrection();
 	icons[0] = cursor;
 
 	pen.Init("Resources/icons/penBrush.png");
 	pen.TransparencyCorrection();
+	pen.BlendCorrection();
 	icons[1] = pen;
 
 	eraser.Init("Resources/icons/eraser.png");
 	eraser.TransparencyCorrection();
+	eraser.BlendCorrection();
 	icons[2] = eraser;
 	
 	air.Init("Resources/icons/airBrush.png");
 	air.TransparencyCorrection();
+	air.BlendCorrection();
 	icons[3] = air;
 
 	water.Init("Resources/icons/waterBrush.png");
 	water.TransparencyCorrection();
+	water.BlendCorrection();
 	icons[4] = water;
 
 	chalk.Init("Resources/icons/chalkBrush.png");
 	chalk.TransparencyCorrection();
+	chalk.BlendCorrection();
 	icons[5] = chalk;
 
-	sizecursor.Init("Resources/Textures/penBrush.png");
+	sizecursor.Init("Resources/icons/size.png");
 	sizecursor.TransparencyCorrection();
+	sizecursor.BlendCorrection();
 }
 
 void DrawUI::InitData()
@@ -153,11 +165,27 @@ void DrawUI::InitData()
 		std::cerr << "No password in appdata" << std::endl;
 	}
 	visible.Init("Resources/icons/eyesOpen.png");
+	visible.BlendCorrection();
 	notVisible.Init("Resources/icons/eyeClosed.png");
+	notVisible.BlendCorrection();
 	folderLayer.Init("Resources/icons/folderLayer.png");
+	folderLayer.BlendCorrection();
 	layerLayer.Init("Resources/icons/layer.png");
+	layerLayer.BlendCorrection();
 
 	adminCrown.Init("Resources/icons/crown.png");
+	adminCrown.BlendCorrection();
+
+	deleteStuff.Init("Resources/icons/trash.png");
+	sizecursor.TransparencyCorrection();
+	adminCrown.BlendCorrection();
+	addFolder.Init("Resources/icons/newFolder.png");
+	sizecursor.TransparencyCorrection();
+	adminCrown.BlendCorrection();
+	addLayer.Init("Resources/icons/newLayer.png");
+	sizecursor.TransparencyCorrection();
+	adminCrown.BlendCorrection();
+
 
 	isOnline = renderer->GetOnline();
 
@@ -326,7 +354,9 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 		sliderVal -= 1.0f;
 		sliderVal *= 2.0f;
 		if (sliderVal == 0.0f) sliderVal = 1.0f;
-		ImGui::SliderInt("##Scale", (int*)&sliderVal, 1, 16);
+		int visual = (int)sliderVal;
+		ImGui::SliderInt("##Scale", &visual, 1, 16);
+		sliderVal = visual;
 		if (sliderVal == 1.0f) sliderVal = 0.0f;
 		sliderVal /= 2.0f;
 		sliderVal += 1.0f;
@@ -351,7 +381,7 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 			ImVec2 cursorPos = ImVec2(pos.x + size.x / 2 - iconSize.x / 2, pos.y);
 			ImGui::SetCursorScreenPos(cursorPos);
 
-			float zoom = 0.025f * index;
+			float zoom = 0.04f * index;
 			Lss::Image(sizecursor.GetId(), iconSize, 0, ImVec2(zoom, zoom), ImVec2(1 - zoom, 1 - zoom));
 			Lss::SetFontSize(2 * Lss::VH);
 
@@ -673,7 +703,7 @@ void DrawUI::LayerWindow()
 	ImGui::PopStyleVar();
 	itemHovered = !ImGui::IsWindowHovered();
 	Lss::SetFontSize(Lss::VH);
-	if (Lss::Button("+", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH)) {
+	if (ImGui::ImageButton("+layer", addLayer.GetId(), ImVec2(Lss::VW, Lss::VW))) {
 		int parentToSend = 0;
 		if (selectedLayer == -1) {
 			int parent = 0;
@@ -700,7 +730,8 @@ void DrawUI::LayerWindow()
 		renderer->nextFreeNodeIndex++;
 	}
 	if(ImGui::IsItemHovered()) itemHovered = true;
-	if (Lss::Button("+2", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	ImGui::SameLine();
+	if (ImGui::ImageButton("+folder", addFolder.GetId(), ImVec2(Lss::VW, Lss::VW)))
 	{
 		int parentToSend = 0;
 		if (selectedLayer == -1) {
@@ -728,7 +759,8 @@ void DrawUI::LayerWindow()
 		renderer->nextFreeNodeIndex++;
 	}
 	if (ImGui::IsItemHovered()) itemHovered = true;
-	if (Lss::Button("-", ImVec2(Lss::VW, 1.8f * Lss::VH), Lss::VH, SameLine))
+	ImGui::SameLine();
+	if (ImGui::ImageButton("-minden", deleteStuff.GetId(), ImVec2(Lss::VW, Lss::VW)))
 	{
 		if (selectedLayer != -1) {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
@@ -797,11 +829,11 @@ void DrawUI::ChatWindow()
 	Lss::End();
 	ImGui::EndChild();
 	ImGui::Separator();
-	ImGui::BeginChild("ChatInput", ImVec2(0, 2.5f * Lss::VH), false);
 
 	static char inputBuffer[256] = "";
 
-	if (Lss::InputText("chatInput", inputBuffer, sizeof(inputBuffer), ImVec2(avail.x, 2*Lss::VH), 0, ImGuiInputTextFlags_EnterReturnsTrue))
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = ImVec4(0.0627f, 0.0627f, 0.1451f, 1.0f);
+	if (Lss::InputText("chatInput", inputBuffer, sizeof(inputBuffer), ImVec2(avail.x, 2*Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		if (strlen(inputBuffer) > 0)
 		{
@@ -813,7 +845,7 @@ void DrawUI::ChatWindow()
 		ImGui::SetKeyboardFocusHere(-1);
 	}
 	Lss::End();
-	ImGui::EndChild();
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = ImVec4(0.1059f, 0.1059f, 0.2980f, 1.0f);
 
 	ChatWindowSize = ImGui::GetWindowSize();
 	rightSize = ChatWindowSize.x;
@@ -908,6 +940,7 @@ void DrawUI::InitWindow()
 
 						canvasInitWindow = false;
 						inited = true;
+						selectedLayer = 2;
 					}
 					else {
 						if (width > 0 && height > 0) {
@@ -918,6 +951,7 @@ void DrawUI::InitWindow()
 
 							canvasInitWindow = false;
 							inited = true;
+							selectedLayer = 2;
 						}
 					}
 				}

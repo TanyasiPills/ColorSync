@@ -22,6 +22,7 @@ public:
 	void UnBind() const;
 
 	void TransparencyCorrection();
+	void BlendCorrection();
 
 	unsigned int GetId() const;
 

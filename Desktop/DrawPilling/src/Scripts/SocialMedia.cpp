@@ -103,8 +103,22 @@ std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQ
 void SocialMedia::LoadTextures()
 {
     notLikedTexture.Init("Resources/icons/notLiked.png");
+    notLikedTexture.Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     likedTexture.Init("Resources/icons/liked.png");
+    likedTexture.Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     commentTexture.Init("Resources/icons/comment.png");
+    commentTexture.Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
