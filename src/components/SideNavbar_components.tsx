@@ -30,8 +30,8 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
     }, [location]);
 
   return (
-    <div className={`sidebar left ${isOpen ? 'open' : 'closed'}`}>      
-      {closable && isOpen && (
+    <div className={`sidebar left ${isOpen ? 'open' : 'closed'} ${closable? 'closable' : ''}`}>      
+      {closable && (
         <List className="sidebar-handle" onClick={onClose} size={18} />
       )}
       <div className="sidebar-header">

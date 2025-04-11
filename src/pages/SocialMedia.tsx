@@ -336,7 +336,7 @@ export function SocialMedia() {
                         )}
                     </div>
                 </div>
-            )): <h1 className="error" style={{width:"100%"}}>No posts at this time</h1>}
+            )): <h1 className="error">No posts at this time</h1>}
         </div>
     );
 }

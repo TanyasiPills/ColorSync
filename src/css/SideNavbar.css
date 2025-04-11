@@ -21,6 +21,14 @@
 
 .sidebar.closed {
   width: 0;
+  visibility: collapse;
+}
+
+.sidebar.closable {
+  position: absolute;
+  top: 0px;
+  left: 0;
+  position: fixed;
 }
 
 .sidebar.open{

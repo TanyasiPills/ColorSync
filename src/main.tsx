@@ -7,10 +7,10 @@ import WebGLCanvas from './pages/webgl/WebGLCanvas'
 import App from './App'
 import SideNavbar from './components/SideNavbar_components'
 import { SocialMedia } from './pages/SocialMedia'
-import { Search } from 'react-bootstrap-icons'
 import { Profile } from './pages/Profile'
 import RightSidebar from './components/RightSidebar_components'
 import { Test } from './pages/Test'
+import { Search } from './pages/Search'
 
 const MainLayout: React.FC = () => {
   const location = useLocation();

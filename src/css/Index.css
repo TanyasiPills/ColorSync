@@ -12,6 +12,11 @@
   --textCol: #A5A0D4;
 }
 
+.overall-layout.sidebar.closable.open {
+  margin-left: 15%;
+  position: fixed;
+}
+
 #root {
   height: 100vh;
   background-color: var(--backgroundColor);

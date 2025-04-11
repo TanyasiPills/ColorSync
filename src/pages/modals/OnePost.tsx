@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import { Modal, Button, InputGroup, FormControl, Row, Col } from "react-bootstrap";
 import { Chat, Heart, HeartFill } from "react-bootstrap-icons";
-import "../css/modal.css";
+import "../../css/Modal.css";
 import { comment, modalProp, post } from "../../types";
 import { backendIp } from "../../constants";
 

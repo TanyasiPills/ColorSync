@@ -11,7 +11,7 @@
 
 .sideBar#left {
     border-right: 2px solid var(--borderCol);
-    background-color: #303050 !important;
+    background-color: var(--divCol) !important;
 }
 
 .sideBar#right {
