@@ -29,8 +29,10 @@ export const PostingToProfile: React.FC<modalProp> = ({ show, onHide }) => {
             setIsSubmitting(false);
             return;
         }
+
+        const isPublic = data.get("visibility") === "on";
         
-        sendingData.append("visibility", data.has("public") ? "public" : "private");
+        sendingData.append("visibility", isPublic ? "public" : "private");
 
         try {
             const res = await fetch(backendIp + '/images', {

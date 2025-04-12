@@ -69,17 +69,17 @@ export function Search() {
 
 
     const handleScroll = () => {
-      const searchDiv = document.getElementById("searchDiv");
-      if (!searchDiv) return;
-      const bottom = searchDiv.scrollHeight - searchDiv.scrollTop - searchDiv.clientHeight <= 500;
+      const postsSection = document.getElementById("postsSection");
+      if (!postsSection) return;
+      const bottom = postsSection.scrollHeight - postsSection.scrollTop - postsSection.clientHeight <= 500;
       if (bottom) {
         if (offset != null) loadPosts();
       }
     }
 
-    const searchDiv = document.getElementById("searchDiv");
-    if (searchDiv) {
-      searchDiv.addEventListener("scroll", handleScroll);
+    const postsSection = document.getElementById("postsSection");
+    if (postsSection) {
+      postsSection.addEventListener("scroll", handleScroll);
     }
 
   }, [searchQuery]);

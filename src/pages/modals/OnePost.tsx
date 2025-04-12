@@ -14,7 +14,7 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
     const [post, setPost] = useState<post | null>(null);
     const [newComment, setNewComment] = useState("");
     const [liked, setLiked] = useState(false);
-    const [showComments, setShowComments] = useState(true);
+    const [showComments, setShowComments] = useState(false);
     const cookies = new Cookies();
     const thisUser = cookies.get("AccessToken");
 
@@ -111,7 +111,6 @@ export const OnePost: React.FC<PostModalProps> = ({ show, onHide, postId }) => {
         if (show) {
             fetchPost();
             fetchLike();
-            setShowComments(true);
         }
     }, [show, postId]);
 

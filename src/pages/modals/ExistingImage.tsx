@@ -1,4 +1,4 @@
-import { Col, Modal, Row } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Cookies from "universal-cookie";
 import { backendIp } from "../../constants";
@@ -18,9 +18,13 @@ export const ExistingImage: React.FC<ExistingImageProps> = ({ show, onHide, onSe
     const [imageURL, setImageURL] = useState<string[]>();
 
     async function load() {
-        const header: any = {
-            "Authorization": "Bearer " + thisUser.access_token
-        };
+        if (!thisUser) return;
+        let header: any;
+        if (thisUser) {
+            header = {
+                "Authorization": "Bearer " + thisUser.access_token
+            };
+        }
 
         try {
             const imageResult = await fetch(backendIp + '/images/user/' + thisUser.id, { method: "GET", headers: header });

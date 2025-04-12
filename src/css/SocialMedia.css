@@ -1,7 +1,6 @@
 /* Container for the feed */
 #feed {
   width: 70%;
-  min-width: 70%;
   min-height: 1px;
   margin: 20px auto;
   scroll-behavior: smooth;
@@ -191,6 +190,7 @@ details summary {
 @media only screen and (max-width: 600px) {
   #feed {
     width: 100%;
+    font-size: xx-small;
   }
 
   .profile-img {
