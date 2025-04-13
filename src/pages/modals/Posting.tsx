@@ -24,13 +24,13 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
 
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" || event.key === "Space" && text.trim() !== "") {
+    if ((event.key === "Enter" || event.key === " ") && text.trim() !== "") {
       if (!tags.includes(text)) {
         event.preventDefault();
         setTags([...tags, text]);
         setText("");
       }
-    }
+    }    
   }
 
   function deleteTag(index: number) {

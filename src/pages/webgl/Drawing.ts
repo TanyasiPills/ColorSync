@@ -103,8 +103,8 @@ export class Drawing {
 
     initLayer(data: RenderData, textureData: Uint8Array): void {
         const positions: Float32Array = new Float32Array(16);
-        this.fillPositions(positions, xScale, yScale);
-        this.initData(data, positions, null);
+        this.fillPositions(positions, this.xScale, this.yScale);
+        this.initData(data, positions, null, 0, 1, textureData);
     }
 
     public initBrush(data: RenderData, radius: number, texture: string | null): void {

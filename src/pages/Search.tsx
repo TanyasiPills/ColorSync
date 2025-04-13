@@ -118,9 +118,11 @@ export function Search() {
         </div>
       </div>
       <div id="postsSection">
+        <div id="postImages">
           {posts && posts.map((post) => (
             <img src={backendIp + "/images/" + post.imageId} className="images" alt="Post" onClick={() => { handleImgPost(post.id) }} />
           ))}
+          </div>
       </div>
       <OnePost show={show} onHide={() => setShow(false)} postId={postId ?? 0} />
     </div>

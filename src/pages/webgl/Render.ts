@@ -212,7 +212,7 @@ export class Render {
         const index = this.nextFreeNodeIndex;
 
         let createdLayer: RenderData = new RenderData();
-        this.drawing?.initLayer(createdLayer, this.canvasRatio[0], this.canvasRatio[1]);
+        this.drawing?.initLayer(createdLayer);
 
         const newLayer = new Layer("NewLayer" + (this.layers.length + 1), index, createdLayer);
         this.nodes.set(index, newLayer);
