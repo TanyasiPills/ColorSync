@@ -11,8 +11,9 @@ export class Texture {
 
     public init(path: string): void;
     public init(width: number, height: number, transparent: number): void;
+    public init(data: Uint8Array , width: number, height: number): void;
 
-    public init(arg1: string | number, arg2?: number, arg3?: number): void {
+    public init(arg1: string | Uint8Array  | number, arg2?: number, arg3?: number): void {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         
         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -43,9 +44,9 @@ export class Texture {
             image.onerror = () => {
                 console.error("Failed to load texture:", arg1);
             };
-        } else {
-            this.width = arg1;
-            this.height = arg2!;
+        } else if (typeof arg1 === "number") {
+            this.width = arg2!;
+            this.height = arg3!;
 
             const data = new Uint8Array(this.width * this.height * 4);
             for (let i = 0; i < data.length; i++) {
@@ -65,6 +66,37 @@ export class Texture {
                 this.gl.UNSIGNED_BYTE,
                 data
             );
+
+            this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+        } else {
+            this.width = arg2!;
+            this.height = arg3!;
+
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+
+            this.gl.texImage2D(
+                this.gl.TEXTURE_2D,
+                0,
+                this.gl.RGBA,
+                this.width,
+                this.height,
+                0,
+                this.gl.RGBA,
+                this.gl.UNSIGNED_BYTE,
+                arg1
+            );
+
+            this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+
+            const texture = this.gl.createTexture();
+            this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
+            this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, 1);
+
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
 
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
         }

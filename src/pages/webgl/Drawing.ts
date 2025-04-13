@@ -16,8 +16,8 @@ export class Drawing {
     private canvasW: number;
     private canvasH: number;
 
-    private xScale:number;
-    private yScale:number;
+    private xScale: number;
+    private yScale: number;
 
     constructor(gl: WebGL2RenderingContext, canvasW: number, canvasH: number) {
         this.gl = gl;
@@ -35,9 +35,9 @@ export class Drawing {
         positions[12] = (-xScale) + xPos; positions[13] = yScale + yPos; positions[14] = 0.0; positions[15] = 1.0;
     }
 
-    initData(data: RenderData, positions: Float32Array, texture: string | null, shaderType: number = 0, transparent: number = 0): void {
+    initData(data: RenderData, positions: Float32Array, texture: string | null, shaderType: number = 0, transparent: number = 0, vectorOfTexture: Uint8Array = new Uint8Array): void {
         const indices: Uint32Array = new Uint32Array([0, 1, 2, 2, 3, 0]);
-        const vb: VertexBuffer = new VertexBuffer(this.gl, positions)
+        const vb: VertexBuffer = new VertexBuffer(this.gl, positions);
         var layout: VertexBufferLayout = new VertexBufferLayout();
         layout.pushFloat(2);
         layout.pushFloat(2);
@@ -46,19 +46,19 @@ export class Drawing {
         data.ib.init(indices);
 
         var shader: string;
-        if (shaderType == 0) {
-            shader = "Resources/Shaders/LayerShader.ts";
-        }
-        else {
-            shader = "Resources/Shaders/CursorShader.ts";
-        }
+        if (shaderType == 0) shader = "Resources/Shaders/LayerShader.ts";
+        else shader = "Resources/Shaders/CursorShader.ts";
         data.shader.bindShaderFile(shader);
         data.shader.bind();
         if (texture != null) {
             data.texture.init(texture);
         }
         else {
-            data.texture.init(this.canvasW, this.canvasH, transparent)
+            if (vectorOfTexture.length > 0) {
+                data.texture.init(vectorOfTexture, this.canvasW, this.canvasH);
+            } else {
+                data.texture.init(this.canvasW, this.canvasH, transparent)
+            }
         }
         data.texture.bind();
         data.shader.setUniform1i("u_Texture", 0);
@@ -77,16 +77,18 @@ export class Drawing {
         const positions: Float32Array = new Float32Array(16);
         var xScale;
         var yScale;
+        var xMult: number = this.canvasH / this.canvasW;
         if (canvasWIn >= canvasHIn) {
             canvasRatio = canvasHIn / canvasWIn;
-            xScale = 0.8;
+            xScale = 0.8 * xMult;
             yScale = canvasRatio * 0.8;
         }
         else {
             canvasRatio = canvasWIn / canvasHIn;
-            xScale = 0.8;
-            yScale = canvasRatio * 0.8;
+            xScale = 0.8 * canvasRatio * xMult;
+            yScale = 0.8;
         }
+
         this.fillPositions(positions, xScale, yScale);
         this.initData(data.data, positions, null);
 
@@ -101,10 +103,31 @@ export class Drawing {
         return data;
     }
 
-    initLayer(data: RenderData, textureData: Uint8Array): void {
+    initLayer(data: RenderData, textureData: Uint8Array = new Uint8Array): void {
         const positions: Float32Array = new Float32Array(16);
         this.fillPositions(positions, this.xScale, this.yScale);
         this.initData(data, positions, null, 0, 1, textureData);
+
+        data.fbo = this.gl.createFramebuffer();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, data.fbo);
+
+        if (data.texture) {
+            this.gl.framebufferTexture2D(
+                this.gl.FRAMEBUFFER,
+                this.gl.COLOR_ATTACHMENT0,
+                this.gl.TEXTURE_2D,
+                data.texture.getId(),
+                0
+            );
+        } else {
+            console.error("Error: texture is null or undefined!");
+        }
+
+        if (this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER) !== this.gl.FRAMEBUFFER_COMPLETE) {
+            console.error("Framebuffer not complete!");
+        }
+
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     }
 
     public initBrush(data: RenderData, radius: number, texture: string | null): void {
@@ -121,8 +144,10 @@ export class Drawing {
     brushToPosition(cursor: RenderData, radius: number, aspect: [number, number], offset: [number, number], scale: [number, number, number], position: [number, number]): void {
         const positions: Float32Array = new Float32Array(16);
         const yMult: number = aspect[0] / aspect[1];
-        this.fillPositions(positions, radius / aspect[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]);
+        this.fillPositions(positions, radius / aspect[0] * scale[0], radius * yMult / aspect[0] * scale[1], (position[0] - offset[0]) / aspect[0], (position[1] - offset[1]) / aspect[1]
+        );        
         const vb: VertexBuffer = new VertexBuffer(this.gl, positions);
+        
         cursor.va.setBuffer(vb);
         cursor.va.unbind();
     }

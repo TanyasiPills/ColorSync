@@ -4,6 +4,7 @@ import { IndexBuffer } from "./IndexBuffer";
 import { DrawMessage, NodeRenameMessage, Position, UserMoveMessage } from "./Messages";
 import { Shader } from "./Shader";
 import { VertexArray } from "./Shaders/VertexArray ";
+import { SocksManager } from "./SocksManager";
 import { Texture } from "./Texture";
 
 export class RenderData {
@@ -75,6 +76,7 @@ export class Render {
 
     private drawing: Drawing | null;
     private callBack: useRender | null;
+    private Smanager: SocksManager | null;
 
     public brushes: RenderData[] = [];
     public usersToMove: Map<number, UserMoveMessage> = new Map();
@@ -96,6 +98,7 @@ export class Render {
         this.gl = gl;
         this.cursor = new RenderData();
         this.dataForCanvas = new CanvasData();
+        this.Smanager = new SocksManager();
 
         this.drawing = null;
         this.callBack = null;
