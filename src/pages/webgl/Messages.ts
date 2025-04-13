@@ -8,10 +8,10 @@ export class Position {
     }
 }
 
-abstract class Message {
+export abstract class Message {
     type: number;
 
-    constructor(type: number) {
+    constructor(type: number = 0) {
         this.type = type;
     }
 }

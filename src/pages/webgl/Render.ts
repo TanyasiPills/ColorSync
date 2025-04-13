@@ -4,7 +4,7 @@ import { IndexBuffer } from "./IndexBuffer";
 import { DrawMessage, NodeRenameMessage, Position, UserMoveMessage } from "./Messages";
 import { Shader } from "./Shader";
 import { VertexArray } from "./Shaders/VertexArray ";
-import { SocksManager } from "./SocksManager";
+import { SManager } from "./SocksManager";
 import { Texture } from "./Texture";
 
 export class RenderData {
@@ -76,7 +76,7 @@ export class Render {
 
     private drawing: Drawing | null;
     private callBack: useRender | null;
-    private Smanager: SocksManager | null;
+    private Smanager: SManager | null;
 
     public brushes: RenderData[] = [];
     public usersToMove: Map<number, UserMoveMessage> = new Map();
@@ -93,12 +93,13 @@ export class Render {
     public nodes: Map<number, Node> = new Map();
     public folders: number[] = [];
     public layers: number[] = [];
+    public taskQueue: DrawMessage[] = [];
 
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
         this.cursor = new RenderData();
         this.dataForCanvas = new CanvasData();
-        this.Smanager = new SocksManager();
+        this.Smanager = new SManager();
 
         this.drawing = null;
         this.callBack = null;
@@ -151,7 +152,9 @@ export class Render {
         this.canvasRatio[1] = canvasData.canvasY;
     }
 
-
+    executeMainThreadTask(drawMessage: DrawMessage): void {
+        this.taskQueue.push(drawMessage);
+    }
 
     setDrawDataJa() {
         this.sentBrushSize = this.cursorRadius;
@@ -298,7 +301,7 @@ export class Render {
         (this.nodes.get(0) as Folder)?.addChild(index);
 
         if (this.online) {
-            this.SManager?.processHistory();
+            this.Smanager?.processHistory();
         }
 
         this.inited = true;

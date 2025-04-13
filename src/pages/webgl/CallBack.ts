@@ -56,7 +56,7 @@ export function useColorWheel() {
         const pixel = ctx.getImageData(x, y, 1, 1).data;
         const newRGB = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
         setRGBColor(newRGB);
-        localStorage.setItem("selectedColor", newRGB);
+        localStorage.setItem("currentRBG", newRGB);
         if (markerCW.current) {
             const brightness = (pixel[0] * 0.299) + (pixel[1] * 0.587) + (pixel[2] * 0.114);
             markerCW.current.style.borderColor = brightness < 28 ? "white" : "black";
