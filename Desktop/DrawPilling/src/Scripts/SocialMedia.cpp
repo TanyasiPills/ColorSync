@@ -894,9 +894,9 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     }
 
     ImVec2 valid = ImGui::GetContentRegionAvail();
-    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         int validWidth = width * 0.6f;
-            Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar);
             if (user == runtime.id) {
                 users[user].userImage = runtime.pfpTexture;
                 //data change
