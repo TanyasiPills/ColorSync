@@ -1143,7 +1143,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     float endPos = ImGui::GetCursorPosY();
                     
                     ImVec2 buttonSize = ImVec2(valid.x, 4 * Lss::VH);
-                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                    ImGui::SetCursorPosY(valid.y - buttonSize.y);
                     if (Lss::Button("Add##addImage", buttonSize, 3 * Lss::VH, Centered | Rounded))
                     {
                         std::string imagePath = Explorer::GetImagePath();
@@ -1159,7 +1159,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         }
                     }
 
-                    imageAddY = endPos - startPos + buttonSize.y + 4*Lss::VH;
+                    imageAddY = endPos - startPos + buttonSize.y + 2*Lss::VH;
                     if (imageAddY != imageAddYPrev) {
                         imageAddYPrev = imageAddY;
                         ImGui::CloseCurrentPopup();
