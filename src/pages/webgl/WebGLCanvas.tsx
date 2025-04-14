@@ -10,7 +10,6 @@ const WebGLCanvas: React.FC = () => {
   const clearButtonRef = useRef<HTMLButtonElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos } = useColorWheel();
-  const {  } = useReducer;
   
 
   useEffect(() => {

@@ -137,6 +137,11 @@ export class Render {
         localStorage.setItem("currentRGB", `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`);
     }
 
+    public getCanvasSize(): [number, number] {
+        console.log(`width: ${this.canvasSize[0]}, height: ${this.canvasSize[1]}`)
+        return this.canvasSize
+    }
+
     setDrawData(canvasWidthIn: number, canvasHeightIn: number): void {
         this.canvasSize[0] = canvasWidthIn;
         this.canvasSize[1] = canvasHeightIn;
@@ -463,7 +468,7 @@ export class Render {
         this.drawing?.brushToPosition(this.cursor, this.cursorRadius, this.identityRatio, this.identityOffset, this.cursorScale, now);
     }
 
-    render(): void{
+    render(): void {
         this.clear();
         if (this.inited) {
             this.renderLayers();
@@ -471,11 +476,11 @@ export class Render {
             const pos: [number, number] = this.callBack!.cursorPosition();
             if (this.online) {
                 if (this.currentPos[0] != pos[0] || this.currentPos[1] != pos[1]) {
-                    let posSend : Position = new Position();
+                    let posSend: Position = new Position();
                     posSend.x = pos[0];
-					posSend.y = pos[1];
+                    posSend.y = pos[1];
                     this.currentPos[0] = pos[0];
-					this.currentPos[1] = pos[1];
+                    this.currentPos[1] = pos[1];
                 }
             }
         }
