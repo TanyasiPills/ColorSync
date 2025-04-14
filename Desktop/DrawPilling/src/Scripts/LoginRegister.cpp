@@ -61,7 +61,7 @@ void LoginRegister::Login(bool& loginWindow)
             Lss::Text("Password", 2 * Lss::VH);
             static char passwordText[128] = "";
             Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
-            Lss::InputText("passwordInput", passwordText, sizeof(passwordText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "Password");
+            Lss::InputText("passwordInput", passwordText, sizeof(passwordText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_Password, 0, "Password");
 
             Lss::LeftTop(Lss::VW, 1.5f*Lss::VH);
             std::string name = (!registerOpen) ? "Sign In" : "Sign Up";

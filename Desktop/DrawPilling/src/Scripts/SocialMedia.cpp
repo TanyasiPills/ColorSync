@@ -397,6 +397,9 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::LeftTop(3.5f * Lss::VH, 0.5f*Lss::VH);
         float commentMax = validWidth - 7 * Lss::VH;
         float commentSize = 0.0f;
+
+        Lss::SetColor(ContainerBackground, LowHighlight);
+
         for (const auto& tags : post.tags)
         {
             Lss::SetFontSize(2.5f * Lss::VH);
@@ -413,6 +416,9 @@ void SocialMedia::MainPage(float& width, float& height)
             ImGui::EndChild();
             ImGui::SameLine();
         }
+
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+
         ImGui::NewLine();
         ImGui::PopStyleVar();
 
@@ -433,7 +439,7 @@ void SocialMedia::MainPage(float& width, float& height)
             Lss::Top(Lss::VH);
             if(contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH),Centered);
             else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
-            Lss::Top(Lss::VH);
+            Lss::LeftTop(Lss::VH,Lss::VH);
             Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
             Lss::End();
         ImGui::EndChild();
@@ -705,7 +711,7 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::Text("Share your thoughts", 2 * Lss::VH);
         static char inputtext[128] = "";
         Lss::LeftTop(1.2*Lss::VW, Lss::VH);
-        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "What's on your mind?");
 
 
         static std::vector<std::string> tags;
@@ -716,7 +722,7 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::LeftTop(Lss::VW, Lss::VH);
         Lss::Text("Tags", 2 * Lss::VH);
         Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
-        if (Lss::InputText("Tagsfortagspost", tagsText, sizeof(tagsText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Tags for your post :>"))
+        if (Lss::InputText("Tagsfortagspost", tagsText, sizeof(tagsText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Tags for your post"))
         {
             if (tagsText[0] != '\0') {
                 if (std::find(tags.begin(), tags.end(), tagsText) == tags.end())
@@ -957,7 +963,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
                     static char passText[128] = "";
                     if (passText[0] == '\0') std::strcpy(passText, runtime.password.c_str());
-                    Lss::InputText("passwordInput", passText, sizeof(passText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+                    Lss::InputText("passwordInput", passText, sizeof(passText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_Password, 0, "What is on your mind? :3");
 
                     Lss::LeftTop(Lss::VW, Lss::VH);
 ;
@@ -1372,33 +1378,6 @@ void SocialMedia::SettingsPage()
 
         ImGui::EndChild();
 
-
-        Lss::Text("Drawing Variables", 5 * Lss::VH);
-
-        ImGui::SameLine();
-        Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4);
-
-
-        Lss::Left(5 * Lss::VW);
-        Lss::Child("##DrawingVariables", ImVec2(0, 4.5f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-            Lss::Text("Undo count: ", 3 * Lss::VH);
-
-            ImGui::SameLine();
-            Lss::Top(0.25f * Lss::VH);
-            static int myInt = runtime.undoCount;
-            if (myInt >= 100) myInt = 99;
-            if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded))
-            {
-                runtime.undoCount = myInt;
-            }
-
-            Lss::End();
-
-        ImGui::EndChild();
-
-
         Lss::End();
 
     ImGui::EndChild();
@@ -1601,6 +1580,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                 Lss::LeftTop(3.5f * Lss::VH, 0.5f * Lss::VH);
                 float commentMax = validWidth - 7 * Lss::VH;
                 float commentSize = 0.0f;
+
+                Lss::SetColor(ContainerBackground, LowHighlight);
+
                 for (const auto& tags : searchedPost.tags)
                 {
                     Lss::SetFontSize(2.5f * Lss::VH);
@@ -1617,6 +1599,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                     ImGui::EndChild();
                     ImGui::SameLine();
                 }
+
+                Lss::SetColor(ContainerBackground, ContainerBackground);
+
                 ImGui::NewLine();
                 ImGui::PopStyleVar();
 
@@ -1650,7 +1635,7 @@ void SocialMedia::SearchPage(float& width, float& height)
                 Lss::Top(Lss::VH);
                 if (contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
                 else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
-                Lss::Top(Lss::VH);
+                Lss::LeftTop(Lss::VH,Lss::VH);
                 Lss::Text(std::to_string(searchedPost.likes), 4 * Lss::VH, SameLine);
                 Lss::End();
                 ImGui::EndChild();
@@ -2095,12 +2080,11 @@ void SocialMedia::LeftSide(float position, float width, float height)
 
     if (runtime.logedIn) {
         if (Lss::Button("Post", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            openStuff = true;
+            if(mode == 0) openStuff = true;
         }
         Lss::Top(1 * Lss::VH);
     }
 
-    Lss::Top(1 * Lss::VH);
     if (Lss::Button("Explore", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 0) mode = 0;
     }
