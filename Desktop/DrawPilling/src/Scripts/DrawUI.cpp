@@ -247,32 +247,6 @@ void DrawUI::DrawMenu() {
 			}
 			wasOpen = false;
 		}
-
-		if (ImGui::BeginMenu("Edit")) {
-			if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
-				// Handle Undo
-			}
-			if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
-				// Handle Redo
-			}
-			ImGui::Separator();
-			if (ImGui::MenuItem("Cut", "Ctrl+X")) {
-				// Handle Cut
-			}
-			if (ImGui::MenuItem("Copy", "Ctrl+C")) {
-				// Handle Copy
-			}
-			if (ImGui::MenuItem("Paste", "Ctrl+V")) {
-				// Handle Paste
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("View")) {
-			bool showGrid = true;
-			ImGui::MenuItem("Show Grid", nullptr, &showGrid);
-			ImGui::EndMenu();
-		}
 		Lss::End();
 		ImGui::EndMainMenuBar();
 	}
@@ -355,6 +329,8 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 
 		float sliderVal = (cursorRadius / scale) * 100;
 		int visual = (int)sliderVal;
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		ImGui::SetNextItemWidth(avail.x);
 		ImGui::SliderInt("##Scale", &visual, 1, 16);
 		bool sliderHeld = ImGui::IsItemActive();
 		if (sliderHeld) {
@@ -362,7 +338,6 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 			sliderVal = visual + floatPart;
 			cursorRadius = sliderVal * scale / 100.0f;
 		}
-
 
 		ImGui::Columns(3, nullptr, false);
 
@@ -783,6 +758,8 @@ void DrawUI::LayerWindow()
 	}
 	if (selectedLayer > -1) {
 		ImGui::SameLine();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x-3.5f*Lss::VW);
+		Lss::SetFontSize(Lss::VW);
 		ImGui::SliderInt("Opacity", &renderer->nodes[selectedLayer].get()->opacity, 0, 100);
 		ChangeOpacityChild(selectedLayer);
 	}

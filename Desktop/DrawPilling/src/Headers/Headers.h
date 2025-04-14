@@ -32,6 +32,7 @@
 #include <sstream>
 #include <math.h>
 #include <vector>
+#include <windows.h>
 
 #include "SessionManager.h"
 #include "VertexArray.h"

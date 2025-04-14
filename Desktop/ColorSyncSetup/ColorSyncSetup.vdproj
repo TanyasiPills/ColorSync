@@ -15,7 +15,13 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_05B563B2A39C46FABFA93310FF938C3F"
+        "MsmKey" = "8:_06753E4786794DA5AF5E8AA89F758504"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_07F0BA5838B34D6DB0DF63494B593FED"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -27,7 +33,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_1949762E7BFA428699833A77D8DFA193"
+        "MsmKey" = "8:_12437945B845401FAF7F5C2820677784"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -39,19 +45,19 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_23A2E3DF3ADC44FF8F75C03CDCD78754"
+        "MsmKey" = "8:_1D255B4512224577AA46828307625A13"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2D62C82124474A6C8B5D5A2152E0B05F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_32E18CE7A85A4CCEADDE898A3833EE5A"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_34266EFD990C4F94B998FE61EC7DBADA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -69,43 +75,49 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_3A5A364AAD8E468D834AE07F8CB8158D"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_3ADAC1625C31447EAC32056BE2345592"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_44F6CA0CB3844468976525389BE8962B"
+        "MsmKey" = "8:_3BFC71BAFF81423FA506502FB56B1E7C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_495D6B6857B94ECBA9EB2E60C5D39534"
+        "MsmKey" = "8:_60C0BD8107A84A2A94C65E8AF53B7F3E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4FDBFA8762BD4210A76DEDB32447C1D8"
+        "MsmKey" = "8:_687C3F98F93242038B22D1B999AEB23B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_59CCF5F8848F44E1B934FDDEED01C395"
+        "MsmKey" = "8:_6D8684B6BC1C4EA0A3F15BCD52B473BE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_6F7AD4527FC54B55ABF5AC381E9AA8E1"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6F887B528B7F5761E6692C670CB78585"
+        "OwnerKey" = "8:_358D857D154345869BB376ED24DB5553"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_720419D82605457389051D756AC70DA2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -129,13 +141,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7EA1D8E5B37849A38CC33E8F0CA6E1FA"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_83B0D6DD6237448186A5873BB0684EAB"
+        "MsmKey" = "8:_7FA13D42DAB84F8B9AC9E11F1140737C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -147,7 +153,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_9280C7452FEB4ED2AEFE42411E202963"
+        "MsmKey" = "8:_859F843FECDD42E2AE155AC6A25448F8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -159,13 +165,43 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_ABF5046D63464DBB82C8C79D4DF311E5"
+        "MsmKey" = "8:_A0D776F046D649C6BDAA1648C276EA57"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B1391D436DAC468E8FC46E0631C59911"
+        "MsmKey" = "8:_A29A342476AB431F9D1E809653415246"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A4CAF400CD56427396AE00DE7EE1F244"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AB58B7985EC54549ACC18F816C3B9522"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AB69527AA6B340AF886A58BB736324B1"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B2B8BBE1278E48098BE9E90ED7A9BD34"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B57E8BE960454796ACB40105D3484068"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -183,7 +219,19 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_C34F06162233444A85C4BF7616E06136"
+        "MsmKey" = "8:_C1AF985034024CAB9AF4D5691FED8998"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C22B9B17777B4770A97F748A051F8A68"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C84A91BD98444F24966674CE9EF32441"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -195,25 +243,13 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_CEADADF29B2B47E59B17F78EF8AA6B34"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_DAAF697B09A14D02A6E1768B7A1AF694"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_DD283C75A36B4AB68B86D26156885662"
         "OwnerKey" = "8:_358D857D154345869BB376ED24DB5553"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E6F0A2B78B3F44F2845A18CDAB8D0ADA"
+        "MsmKey" = "8:_E6A63A36075D449A989B381F30810AC1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -221,6 +257,12 @@
         {
         "MsmKey" = "8:_EC956D3E0309BFFE453C4238769935E0"
         "OwnerKey" = "8:_358D857D154345869BB376ED24DB5553"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EC9C8ED673DC4308A45B894B6A030F0F"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -253,6 +295,22 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
+            }
         }
         "Release"
         {
@@ -269,6 +327,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -290,10 +356,30 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_05B563B2A39C46FABFA93310FF938C3F"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_06753E4786794DA5AF5E8AA89F758504"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\cursorBrush.png"
-            "TargetName" = "8:cursorBrush.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\penBrush.png"
+            "TargetName" = "8:penBrush.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_07F0BA5838B34D6DB0DF63494B593FED"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folderFull.png"
+            "TargetName" = "8:folderFull.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -330,10 +416,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1949762E7BFA428699833A77D8DFA193"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_12437945B845401FAF7F5C2820677784"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\notLiked.png"
-            "TargetName" = "8:notLiked.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folderLayer.png"
+            "TargetName" = "8:folderLayer.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -370,10 +456,30 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_23A2E3DF3ADC44FF8F75C03CDCD78754"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1D255B4512224577AA46828307625A13"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eyesOpen.png"
-            "TargetName" = "8:eyesOpen.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\file.png"
+            "TargetName" = "8:file.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2D62C82124474A6C8B5D5A2152E0B05F"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\searchUser.png"
+            "TargetName" = "8:searchUser.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -410,52 +516,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_34266EFD990C4F94B998FE61EC7DBADA"
-            {
-            "SourcePath" = "8:D:\\letöltések\\snycIcon.ico"
-            "TargetName" = "8:snycIcon.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_35B4D5D0F33D4C81A7121EC40CDC6C6D"
             {
             "SourcePath" = "8:..\\DrawPilling\\Resources\\Textures\\user.png"
             "TargetName" = "8:user.png"
             "Tag" = "8:"
             "Folder" = "8:_B0F4FC0E7CE743EFB2BD9EBAD5E7027C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3A5A364AAD8E468D834AE07F8CB8158D"
-            {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eyeClosed.png"
-            "TargetName" = "8:eyeClosed.png"
-            "Tag" = "8:"
-            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -490,10 +556,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_44F6CA0CB3844468976525389BE8962B"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3BFC71BAFF81423FA506502FB56B1E7C"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folderLayer.png"
-            "TargetName" = "8:folderLayer.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\trash.png"
+            "TargetName" = "8:trash.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -510,10 +576,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_495D6B6857B94ECBA9EB2E60C5D39534"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_60C0BD8107A84A2A94C65E8AF53B7F3E"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folder.png"
-            "TargetName" = "8:folder.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\newFolder.png"
+            "TargetName" = "8:newFolder.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -530,30 +596,30 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4FDBFA8762BD4210A76DEDB32447C1D8"
-            {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\penBrush.png"
-            "TargetName" = "8:penBrush.png"
-            "Tag" = "8:"
-            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_59CCF5F8848F44E1B934FDDEED01C395"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_687C3F98F93242038B22D1B999AEB23B"
             {
             "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\comment.png"
             "TargetName" = "8:comment.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6D8684B6BC1C4EA0A3F15BCD52B473BE"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\layer.png"
+            "TargetName" = "8:layer.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -576,6 +642,46 @@
             "TargetName" = "8:Aptos.ttf"
             "Tag" = "8:"
             "Folder" = "8:_4625637520E244B095C53F17778A161A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6F887B528B7F5761E6692C670CB78585"
+            {
+            "SourcePath" = "8:MSWSOCK.dll"
+            "TargetName" = "8:MSWSOCK.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_720419D82605457389051D756AC70DA2"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\search.png"
+            "TargetName" = "8:search.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -650,30 +756,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7EA1D8E5B37849A38CC33E8F0CA6E1FA"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7FA13D42DAB84F8B9AC9E11F1140737C"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folderFull.png"
-            "TargetName" = "8:folderFull.png"
-            "Tag" = "8:"
-            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_83B0D6DD6237448186A5873BB0684EAB"
-            {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\chalkBrush.png"
-            "TargetName" = "8:chalkBrush.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eraser.png"
+            "TargetName" = "8:eraser.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -710,10 +796,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9280C7452FEB4ED2AEFE42411E202963"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_859F843FECDD42E2AE155AC6A25448F8"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\crown.png"
-            "TargetName" = "8:crown.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\notLiked.png"
+            "TargetName" = "8:notLiked.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -750,10 +836,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_ABF5046D63464DBB82C8C79D4DF311E5"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A0D776F046D649C6BDAA1648C276EA57"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\airBrush.png"
-            "TargetName" = "8:airBrush.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\waterBrush.png"
+            "TargetName" = "8:waterBrush.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -770,12 +856,112 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B1391D436DAC468E8FC46E0631C59911"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A29A342476AB431F9D1E809653415246"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\layer.png"
-            "TargetName" = "8:layer.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\cursorBrush.png"
+            "TargetName" = "8:cursorBrush.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A4CAF400CD56427396AE00DE7EE1F244"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eyesOpen.png"
+            "TargetName" = "8:eyesOpen.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AB58B7985EC54549ACC18F816C3B9522"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\size.png"
+            "TargetName" = "8:size.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AB69527AA6B340AF886A58BB736324B1"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eyeClosed.png"
+            "TargetName" = "8:eyeClosed.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B2B8BBE1278E48098BE9E90ED7A9BD34"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\folder.png"
+            "TargetName" = "8:folder.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B57E8BE960454796ACB40105D3484068"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\icon.ico"
+            "TargetName" = "8:icon.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -830,7 +1016,47 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C34F06162233444A85C4BF7616E06136"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C1AF985034024CAB9AF4D5691FED8998"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\airBrush.png"
+            "TargetName" = "8:airBrush.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C22B9B17777B4770A97F748A051F8A68"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\chalkBrush.png"
+            "TargetName" = "8:chalkBrush.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C84A91BD98444F24966674CE9EF32441"
             {
             "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\liked.png"
             "TargetName" = "8:liked.png"
@@ -870,46 +1096,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CEADADF29B2B47E59B17F78EF8AA6B34"
-            {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\file.png"
-            "TargetName" = "8:file.png"
-            "Tag" = "8:"
-            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DAAF697B09A14D02A6E1768B7A1AF694"
-            {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\eraser.png"
-            "TargetName" = "8:eraser.png"
-            "Tag" = "8:"
-            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DD283C75A36B4AB68B86D26156885662"
             {
             "SourcePath" = "8:Normaliz.dll"
@@ -930,10 +1116,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E6F0A2B78B3F44F2845A18CDAB8D0ADA"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E6A63A36075D449A989B381F30810AC1"
             {
-            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\waterBrush.png"
-            "TargetName" = "8:waterBrush.png"
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\crown.png"
+            "TargetName" = "8:crown.png"
             "Tag" = "8:"
             "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
             "Condition" = "8:"
@@ -968,6 +1154,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EC9C8ED673DC4308A45B894B6A030F0F"
+            {
+            "SourcePath" = "8:..\\DrawPilling\\Resources\\icons\\newLayer.png"
+            "TargetName" = "8:newLayer.png"
+            "Tag" = "8:"
+            "Folder" = "8:_7773A3DAD25F44DC88A815B36DBC6AF2"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F331875BF4AB4B789A8E95B11F4D8219"
@@ -1122,7 +1328,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:ColorSync"
         "ProductCode" = "8:{4D2C2FB4-D3E4-44A4-A39E-332F92E52F95}"
-        "PackageCode" = "8:{6E1DD1FB-F0B2-4573-90E3-AAF4D0A8443A}"
+        "PackageCode" = "8:{C0AE1546-2DDC-4477-9025-6919A8D9874A}"
         "UpgradeCode" = "8:{2121BFDC-0AF2-4517-902A-734517B441DC}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
@@ -1253,7 +1459,7 @@
             "Target" = "8:_358D857D154345869BB376ED24DB5553"
             "Folder" = "8:_D483898C7F314D8BB7B05A4D194C937B"
             "WorkingFolder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
-            "Icon" = "8:_34266EFD990C4F94B998FE61EC7DBADA"
+            "Icon" = "8:_B57E8BE960454796ACB40105D3484068"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_963F4F1AFA624C81B2B2FA2F78E41652"
@@ -1267,7 +1473,7 @@
             "Target" = "8:_358D857D154345869BB376ED24DB5553"
             "Folder" = "8:_52598D81AF7748CE8B68A25823FFE783"
             "WorkingFolder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
-            "Icon" = "8:_34266EFD990C4F94B998FE61EC7DBADA"
+            "Icon" = "8:_B57E8BE960454796ACB40105D3484068"
             "Feature" = "8:"
             }
         }
@@ -1671,7 +1877,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_358D857D154345869BB376ED24DB5553"
             {
-            "SourcePath" = "8:..\\x64\\Release\\ColorSyncDev.exe"
+            "SourcePath" = "8:..\\x64\\Debug\\ColorSync.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_0E433189CD5A475F8403CCE733E8B96D"
