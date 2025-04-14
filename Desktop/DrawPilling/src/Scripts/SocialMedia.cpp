@@ -472,7 +472,7 @@ void SocialMedia::MainPage(float& width, float& height)
 
         if (post.openComments) {
             static char text[256];
-            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Comment something :3"))
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Share your thoughts"))
             {
                 nlohmann::json jsonData;
                 jsonData["postId"] = post.id;
@@ -492,8 +492,9 @@ void SocialMedia::MainPage(float& width, float& height)
         }
         
         if (post.openComments) {
-            Lss::Text("Comments", 3 * Lss::VH);
+            Lss::Top(Lss::VH);
             if (!post.comments.empty()) {
+                Lss::Text("Comments", 3 * Lss::VH);
                 ImVec2 commentChildSize;
                 if (post.comments.size() == 1) {
                     commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
@@ -1687,7 +1688,7 @@ void SocialMedia::SearchPage(float& width, float& height)
 
                 if (searchedPost.openComments) {
                     static char text[256];
-                    if (Lss::InputText("commentToSend" + searchedPost.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Comment something :3"))
+                    if (Lss::InputText("commentToSend" + searchedPost.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Share your thoughts"))
                     {
                         nlohmann::json jsonData;
                         jsonData["postId"] = searchedPost.id;
@@ -1707,8 +1708,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                 }
 
                 if (searchedPost.openComments) {
-                    Lss::Text("Comments", 3 * Lss::VH);
+                    Lss::Top(Lss::VH);
                     if (!searchedPost.comments.empty()) {
+                        Lss::Text("Comments", 3 * Lss::VH);
                         ImVec2 commentChildSize;
                         if (searchedPost.comments.size() == 1) {
                             commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
