@@ -1,4 +1,4 @@
-import { useRender, useColorWheel } from "./CallBack";
+import { useRender } from "./CallBack";
 import { CanvasData, Drawing } from "./Drawing";
 import { IndexBuffer } from "./IndexBuffer";
 import { DrawMessage, NodeRenameMessage, Position, UserMoveMessage } from "./Messages";

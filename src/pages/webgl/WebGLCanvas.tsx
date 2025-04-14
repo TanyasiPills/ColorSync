@@ -5,12 +5,16 @@ import "../../css/WebGlCanvas.css"
 import { useColorWheel } from "./CallBack";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Render } from "./Render";
+import { WebGLData } from "../modals/WebGLData";
 
 const WebGLCanvas: React.FC = () => {
-  const clearButtonRef = useRef<HTMLButtonElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { colorWheelRef, colorColumnRef, RGBColor, cwColor, markerCW, markerC, markerCWPos } = useColorWheel();
-  
+  const [show, setShow] = useState(true);
+  const [canvasHeight, setCanvasHeight] = useState<number>(500);
+  const [canvasWidth, setCanvasWidth] = useState<number>(800); const height: number = 0;
+  const width: number = 0;
+
 
   useEffect(() => {
     drawColorWheel();
@@ -26,6 +30,9 @@ const WebGLCanvas: React.FC = () => {
       return;
     }
 
+    canvas.width = canvasHeight;
+    canvas.height = canvasWidth;
+
     const gl = canvas.getContext("webgl2");
 
     if (!gl) {
@@ -38,6 +45,9 @@ const WebGLCanvas: React.FC = () => {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     clearCanvas(gl);
+    const render: Render = new Render(gl);
+    render.render();
+
 
     /*var drawn: Float32Array[] = [];
     let isRunning = true;
@@ -89,18 +99,6 @@ const WebGLCanvas: React.FC = () => {
 
 
     //gl.drawArrays(gl.TRIANGLE_FAN, 0, drawn.length / 2);
-
-
-    const clearStuffOnCanvas = () => {
-      //drawn = [];
-    }
-
-    const clearButton = clearButtonRef.current;
-    if (clearButton) {
-      clearButton.addEventListener("click", () => {
-        clearStuffOnCanvas();
-      });
-    }
 
     return () => {
       //isRunning = false;
@@ -171,10 +169,10 @@ const WebGLCanvas: React.FC = () => {
         </div>
         <PanelGroup direction="vertical">
           <Panel defaultSize={50} minSize={5}>
-          <input type="range" min="0.01" max="1" step="0.01" defaultValue="0.1"/>
+            <input type="range" min="0.01" max="1" step="0.01" defaultValue="0.1" />
           </Panel>
           <PanelResizeHandle>
-            <hr/>
+            <hr />
           </PanelResizeHandle>
           <Panel defaultSize={50}>
             <p>itt majd még brush sizes</p>
@@ -183,13 +181,22 @@ const WebGLCanvas: React.FC = () => {
       </div>
       <PanelGroup direction="horizontal" style={{ flexGrow: 1 }}>
         <Panel defaultSize={80} minSize={60} className="canvasContainer">
-          <canvas id="gl-canvas" />
+          <canvas id="gl-canvas" ref={canvasRef} />
         </Panel>
-        <PanelResizeHandle/>
+        <PanelResizeHandle />
         <Panel defaultSize={20} id="right" className="sideBar">
           <p>Itt majd lesz valami</p>
         </Panel>
       </PanelGroup>
+      <WebGLData
+        show={show}
+        onHide={() => setShow(false)}
+        onData={(height, width) => {
+          setCanvasHeight(height);
+          setCanvasWidth(width);
+          setShow(false);
+        }}
+      />
     </div>
   );
 };
