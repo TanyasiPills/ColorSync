@@ -67,6 +67,8 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
+MyTexture searchTexture;
+MyTexture searchProfileTexture;
 
 bool needError = true;
 
@@ -103,22 +105,19 @@ std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQ
 void SocialMedia::LoadTextures()
 {
     notLikedTexture.Init("Resources/icons/notLiked.png");
-    notLikedTexture.Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    notLikedTexture.BlendCorrection();
 
     likedTexture.Init("Resources/icons/liked.png");
-    likedTexture.Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    likedTexture.BlendCorrection();
 
     commentTexture.Init("Resources/icons/comment.png");
-    commentTexture.Bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    commentTexture.BlendCorrection();
+
+    searchTexture.Init("Resources/icons/search.png");
+    searchTexture.BlendCorrection();
+
+    searchProfileTexture.Init("Resources/icons/searchUser.png");
+    searchProfileTexture.BlendCorrection();
 }
 
 void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
@@ -324,7 +323,7 @@ void SocialMedia::MainPage(float& width, float& height)
     ImGui::GetStyle().ChildBorderSize = 0.0f;
     ImVec2 valid = ImGui::GetContentRegionAvail();
     ImGui::SetCursorPosY(0);
-    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
+    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered, ImGuiWindowFlags_NoScrollbar);
 
     float scrollY = ImGui::GetScrollY();
     float scrollMaxY = ImGui::GetScrollMaxY();
@@ -1427,11 +1426,12 @@ void SocialMedia::SearchPage(float& width, float& height)
         ImGui::SameLine();
         Lss::Left(3*Lss::VH);
 
-        if (Lss::Button("SR", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH)) {
+        if (ImGui::ImageButton("SR", searchTexture.GetId(), ImVec2(4.5f * Lss::VH, 4.5f * Lss::VH))) {
             searchRequestMode = 1;
             hihi = true;
         }
-        if (Lss::Button("PF", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+        ImGui::SameLine();
+        if (ImGui::ImageButton("PF", searchProfileTexture.GetId(), ImVec2(4.5f * Lss::VH, 4.5f * Lss::VH)))
         {
             searchRequestMode = 2;
             std::cout << "mode: " << searchRequestMode << std::endl;
@@ -1548,7 +1548,7 @@ void SocialMedia::SearchPage(float& width, float& height)
                 }
             }
 
-            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, prevSize), Bordering | Rounded | Centered, ImGuiWindowFlags_NoDecoration))
+            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, prevSize), Bordering | Rounded | Centered, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
             {
                 float startPos = ImGui::GetCursorPosY();
 
