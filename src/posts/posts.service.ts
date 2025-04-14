@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma.service';
 import { SearchService } from 'src/search/search.service';
 import { existsSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
+import { CommentsController } from 'src/comments/comments.controller';
 
 @Injectable()
 export class PostsService {
@@ -152,8 +153,17 @@ export class PostsService {
     }
   }
 
-  async remove(id: number, userId: number): Promise<boolean> {
+  async remove(id: number, userId: number, forceDelete: boolean = false): Promise<boolean> {
     try {
+      const post = await this.db.post.findUnique({ where: { id, userId }, select: { imageForPost: true, imageId: true, comments: true} });
+      if (!post) throw new NotFoundException(`Post with id: ${id} not found that user: ${userId} can delete`);
+      if (post.comments && post.comments.length > 0) {
+        if (forceDelete) {
+          await Promise.all(post.comments.map(async (comment) => await this.db.comment.delete({ where: { id: comment.id } })));
+        } else {
+          throw new ConflictException("You can't delete a post with comments")
+        }
+      }
       const result = await this.db.post.delete({ where: { id, userId } });
       if (result) {
         await this.elastic.deletePost(id);

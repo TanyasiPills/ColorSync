@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException, Query, ParseBoolPipe } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -10,6 +10,7 @@ import { ImageCreateType, ImageType } from 'src/api.dto';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { OptionalAuthGuard } from 'src/auth/optional.guard';
 import * as sharp from 'sharp';
+import { UpdateImageDto } from './dto/update-image.dto';
 
 @Controller('images')
 export class ImagesController {
@@ -173,8 +174,8 @@ export class ImagesController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(204)
-  async remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    await this.imageService.remove(id, req.user.id);
+  async remove(@Param('id', ParseIntPipe) id: number, @Req() req: any, @Query('forceDelete') forceDelete: string) {
+    await this.imageService.remove(id, req.user.id, forceDelete == "true");
   }
 
   /**
@@ -185,14 +186,14 @@ export class ImagesController {
    */
   @ApiResponse({ status: 200, description: "Image data succesfully updated", type: ImageType })
   @ApiResponse({ status: 401, description: "Invalid token" })
-  @ApiResponse({ status: 404, description: "Image not found that the user can delete" })
+  @ApiResponse({ status: 404, description: "Image not found that the user can udpate" })
+  @ApiResponse({ status: 409, description: "The image is part of a post, so it can't be updated" })
   @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the image" })
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateImageDto, @Req() req: any) {
-    if (dto.visibility == null) throw new HttpException('Visibility is required', HttpStatus.BAD_REQUEST);
-    return this.imageService.update(id, req.user.id, dto.visibility);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateImageDto, @Req() req: any) {
+    return this.imageService.update(id, req.user.id, dto);
   }
 }

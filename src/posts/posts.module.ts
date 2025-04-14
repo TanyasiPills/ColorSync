@@ -8,6 +8,7 @@ import { ImagesModule } from 'src/images/images.module';
 @Module({
   controllers: [PostsController],
   providers: [PostsService, PrismaService],
-  imports: [SearchModule, ImagesModule]
+  imports: [SearchModule, ImagesModule],
+  exports: [PostsService]
 })
 export class PostsModule {}

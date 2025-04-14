@@ -24,8 +24,6 @@ export class Room {
     this.history = new History(30);
     this.history.connect(ownerUser.id);
     owner.join(name);
-
-    console.log("room width: ", width);
   }
 
   public static init(server: Server): void {
