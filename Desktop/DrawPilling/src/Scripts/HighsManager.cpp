@@ -313,11 +313,23 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+		if (res != CURLE_OK)
+		{
+			std::cerr << "Curl failed nya: " << curl_easy_strerror(res) << std::endl;
+		}
+
 		curl_slist_free_all(headers);
 		curl_easy_cleanup(curl);
 
+
+		std::cout << http_code << std::endl;
+
 		if (http_code != 200 && http_code != 201 && http_code != 204)
 		{
+			/*
+			nlohmann::json jsonResponse = nlohmann::json::parse(result);
+			std::cout << jsonResponse.dump(4) << std::endl;
+			*/
 			std::cerr << "Get voided bitch" << std::endl;
 			return nullptr;
 		}

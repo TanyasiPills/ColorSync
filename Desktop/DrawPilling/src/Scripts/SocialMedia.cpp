@@ -450,9 +450,6 @@ void SocialMedia::MainPage(float& width, float& height)
             }
             nlohmann::json jsonData;
             jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
-            if (jsonData.is_null()) {
-                std::cout << "couldn't post like" << std::endl;
-            }
         }
 
         ImGui::SameLine();
@@ -509,7 +506,13 @@ void SocialMedia::MainPage(float& width, float& height)
                 for (auto it = post.comments.rbegin(); it != post.comments.rend(); ++it)
                 {
                     Comment& comment = *it;
-                    if (!users[comment.userId].pPicLoaded) continue;
+                    if (!users[comment.userId].pPicLoaded) {
+                        if (comment.userId == runtime.id) {
+                            users[comment.userId].userImage = runtime.pfpTexture;
+                            users[comment.userId].pPicLoaded = true;
+                        }
+                        continue;
+                    }
 
                     Lss::SetColor(ContainerBackground, LowHighlight);
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
@@ -870,14 +873,17 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     static int selectedImage = -1;
     static bool imageViewOpen = false;
     static bool prevImageViewOpen = false;
-    static ImVec2 imageViewSize;
+    static ImVec2 imageViewSize; 
+
+    static bool thereIsBio = true;
 
     static std::string fileName;
 
-    if (users[user].bio.empty()) {
+    if (thereIsBio && users[user].bio.empty()) {
         nlohmann::json result = HManager::Request(("users/" + std::to_string(user)).c_str(), "", GET);
-        if(!result["profile_description"].is_null())
+        if (!result["profile_description"].is_null())
             users[user].bio = result["profile_description"];
+        else thereIsBio = false;
     }
 
     if (needImages) {
@@ -890,6 +896,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
         int validWidth = width * 0.6f;
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (user == runtime.id) {
+                users[user].userImage = runtime.pfpTexture;
                 //pfp change
                 if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
                 {
@@ -1001,7 +1008,11 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                                 if (runtime.username != usernameText) runtime.username = usernameText;
                                 if (runtime.email != emailText) runtime.email = emailText;
                                 if (runtime.password != passText) runtime.password = passText;
-                                if (users[user].bio != detailText) users[user].bio = "";
+                                if (users[user].bio != detailText) users[user].bio = detailText;
+
+                                std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
+                                auto* textureQueue = SocialMedia::GetTextureQueue();
+                                textureQueue->push(std::make_tuple(imageData, 0, 3));
                             }
                         }
                         else {

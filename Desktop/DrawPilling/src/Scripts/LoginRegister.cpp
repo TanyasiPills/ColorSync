@@ -47,7 +47,6 @@ void LoginRegister::Login(bool& loginWindow)
             {
                 Lss::LeftTop(Lss::VW, Lss::VH);
                 Lss::Text("Username", 2 * Lss::VH);
-                static char usernameText[128] = "";
                 Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
                 Lss::InputText("usernameInput", usernameText, sizeof(usernameText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "Username");
             }
