@@ -21,10 +21,12 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.colorsync.APIInstance;
 import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.MainActivity;
 import com.example.colorsync.R;
 import com.example.colorsync.UserManager;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.ImageViewHolder> {
     private List<ImageData> items;
@@ -56,6 +58,8 @@ public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.Ima
         public void bind(ImageData imageData) {
             this.item = imageData;
 
+            imageView.setOnClickListener(view -> MainActivity.getInstance().setFullscreenImage(imageView, item));
+
             GlideUrl url = new GlideUrl(
                     APIInstance.BASE_URL + "images/" + item.id,
                     new LazyHeaders.Builder()
@@ -82,7 +86,6 @@ public class ImageGridAdapter extends  RecyclerView.Adapter<ImageGridAdapter.Ima
 
 
     }
-
 
     @NonNull
     @Override

@@ -35,4 +35,65 @@
         app:itemIconSize="40dp" />
 
 
+
+    <com.example.colorsync.MaskedImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/fullscreenImage"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:elevation="10dp"
+        android:visibility="gone"
+        android:contentDescription="@string/fullscreen_imageCD"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/fsiUI_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/dark_top_fade"
+        android:visibility="gone"
+        android:elevation="15dp"
+        android:padding="10dp">
+
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/fsiUI_back"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:scaleType="fitCenter"
+            android:src="@drawable/back"
+            android:background="@null"
+            android:stateListAnimator="@animator/click_grow"
+            app:tint="@color/text"
+            android:contentDescription="@string/back_buttonCD" />
+
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/fsUI_options"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:scaleType="fitCenter"
+            android:src="@drawable/more"
+            android:background="@null"
+            android:stateListAnimator="@animator/click_grow"
+            app:tint="@color/text"
+            android:contentDescription="@string/options_buttonCD"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/fsiUI_background"
+        android:elevation="5dp"
+        android:background="@color/bgPrimary"
+        android:visibility="gone"/>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

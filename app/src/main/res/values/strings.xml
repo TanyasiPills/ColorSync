@@ -44,4 +44,9 @@
     <string name="back_buttonCD">back button</string>
     <string name="undoCD">undo button</string>
     <string name="emailText">Email:</string>
+    <string name="fullscreen_imageCD">fullscreen image</string>
+    <string name="options_buttonCD">options button</string>
+    <string name="make_publicText">Make public</string>
+    <string name="make_privateText">Make private</string>
+    <string name="deleteText">Delete</string>
 </resources>

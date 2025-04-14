@@ -180,6 +180,8 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
                     targetHeight = Math.min(targetHeight, maxHeight);
 
+                    Toast.makeText(context, "height: " + targetHeight, Toast.LENGTH_SHORT).show();
+
                     ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
                     heightAnimator.addUpdateListener(animation -> {
                         commentsView.getLayoutParams().height = (int) animation.getAnimatedValue();
@@ -190,8 +192,8 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     AnimatorSet animatorSet = new AnimatorSet();
                     animatorSet.playTogether(heightAnimator, rotationAnimator);
                     animatorSet.setDuration(500);
-                    commentsView.setVisibility(View.VISIBLE);
                     animatorSet.start();
+                    commentsView.post(() -> commentsView.setVisibility(View.VISIBLE));
                 } else {
                     int initialHeight = commentsView.getMeasuredHeight();
                     ValueAnimator heightAnimator = ValueAnimator.ofInt(initialHeight, 0);
@@ -240,6 +242,8 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             }
 
             commentsView.setAdapter(null);
+            commentsView.setVisibility(View.GONE);
+            commentsView.getLayoutParams().height = 0;
             showComments.setRotation(0f);
 
             commentsView.setLayoutManager(new LinearLayoutManager(showComments.getContext()));

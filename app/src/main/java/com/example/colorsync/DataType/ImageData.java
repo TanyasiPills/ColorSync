@@ -14,4 +14,8 @@ public class ImageData {
         this.userId = userId;
         this.visibility = visibility;
     }
+
+    public ImageData(String visibility) {
+        this.visibility = visibility;
+    }
 }

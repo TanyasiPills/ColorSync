@@ -4,6 +4,7 @@ import com.example.colorsync.DataType.Comment;
 import com.example.colorsync.DataType.CreateComment;
 import com.example.colorsync.DataType.IdType;
 import com.example.colorsync.DataType.ImageData;
+import com.example.colorsync.DataType.ImageVisibility;
 import com.example.colorsync.DataType.LoginRequest;
 import com.example.colorsync.DataType.Post;
 import com.example.colorsync.DataType.PostCreate;
@@ -18,6 +19,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -73,6 +75,10 @@ public interface APIService {
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token, @Path("id") int id);
     @GET("images")
     Call<List<ImageData>> getUserImages(@Header("Authorization") String token);
+    @PATCH("images/{id}")
+    Call<Void> updateImage(@Header("Authorization") String token, @Path("id") int id, @Body ImageVisibility visibility);
+    @DELETE("images/{id}")
+    Call<Void> deleteImage(@Header("Authorization") String token, @Path("id") int id, @Query("forceDelete") boolean forceDelete);
 
     @Multipart
     @POST("images")
