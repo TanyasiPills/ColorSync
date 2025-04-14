@@ -9,8 +9,8 @@ import SideNavbar from './components/SideNavbar_components'
 import { SocialMedia } from './pages/SocialMedia'
 import { Profile } from './pages/Profile'
 import RightSidebar from './components/RightSidebar_components'
-import { Test } from './pages/Test'
 import { Search } from './pages/Search'
+import Test from './pages/Test'
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
