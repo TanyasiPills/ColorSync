@@ -358,11 +358,9 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 		ImGui::SliderInt("##Scale", &visual, 1, 16);
 		bool sliderHeld = ImGui::IsItemActive();
 		if (sliderHeld) {
-			std::cout << visual << "; " << cursorRadius << std::endl;
 			float floatPart = fmodf(cursorRadius / scale * 100.0f, 1.0f);
 			sliderVal = visual + floatPart;
 			cursorRadius = sliderVal * scale / 100.0f;
-			std::cout << visual << "; " << cursorRadius << std::endl;
 		}
 
 
@@ -475,16 +473,6 @@ void DrawUI::ServerWindow()
 	ImGui::PopStyleVar();
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	Lss::SetFontSize(2 * Lss::VH);
-	/*
-	if (Lss::Button("Save", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
-	{
-		DataManager::SaveSyncData(savePath);
-	}
-	if (Lss::Button("Load", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
-	{
-		DataManager::LoadSyncData(savePath);
-	}
-	*/
 	if (isOnline) {
 		if (!usersGot) {
 			usersPtr = SManager::GetUsers();
@@ -494,13 +482,14 @@ void DrawUI::ServerWindow()
 		int sizeofarray = DrawUI::userPositions->size();
 		for (RoomUser user : *usersPtr)
 		{
-			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded);
+			Lss::Child("userOnServer" + std::to_string(user.id), ImVec2(avail.x, 4 * Lss::VH),false, Rounded, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+				Lss::Left(Lss::VH);
 				if (user.id == runtime.id) {
-					Lss::Text(user.username+" - ME", 4 * Lss::VH);
+					Lss::Text(user.username, 4 * Lss::VH);
 				}
 				else Lss::Text(user.username, 4 * Lss::VH);
 				if (user.admin) Lss::Image(adminCrown.GetId(), ImVec2(4*Lss::VH, 4*Lss::VH),SameLine);
-				if (SManager::AmIOwner()) {
+				if (SManager::AmIOwner() && user.id != runtime.id) {
 					if (Lss::Button("Kick", ImVec2(4 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH))
 						SManager::Kick(user.id);
 				}
@@ -522,7 +511,7 @@ void DrawUI::ServerWindow()
 	}
 	
 	else {
-		std::string text = "Wumpus is very sad :c";
+		std::string text = "The editor is in offline mode";
 		float textWidth = ImGui::CalcTextSize(text.c_str()).x;
 		ImGui::SetCursorPos(ImVec2(windowSize.x / 2 - textWidth / 2, windowSize.y / 2 - 2 * Lss::VH));
 		Lss::Text(text, 2 * Lss::VH);
@@ -708,7 +697,7 @@ void DrawUI::DeleteChilds(int& index)
 void DrawUI::LayerWindow()
 {
 	ImGui::SetNextWindowPos(ImVec2(windowSizeX - rightSize, ServerWindowSize.y+startPosY), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(rightSize, ChatWindowPos.y - LayerWindowPos.y));
+	ImGui::SetNextWindowSize(ImVec2(rightSize, LayerWindowSize.y));
 
 	itemHovered = false;
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
