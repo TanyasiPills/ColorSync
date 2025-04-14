@@ -49,6 +49,17 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_Border] = colorArray[Border];
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
 
+
+	ImGui::GetStyle().Colors[ImGuiCol_Header] = colorArray[HeavyHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = colorArray[LowHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_HeaderActive] = colorArray[HeavyHighlight];
+
+	ImGui::GetStyle().Colors[ImGuiCol_SliderGrab] = colorArray[HeavyHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive] = colorArray[HeavyHighlight];
+
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBgHovered] = colorArray[LowHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBgActive] = colorArray[Border];
+
 	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
 	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = colorArray[InputBg];
 	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = colorArray[Hint];

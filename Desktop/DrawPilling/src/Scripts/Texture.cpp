@@ -83,7 +83,7 @@ void MyTexture::Init(unsigned int widthIn, unsigned int heightIn, int transparen
 			}
 		}
 		else {
-			data[i] = 100;
+			data[i] = 255;
 		}
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

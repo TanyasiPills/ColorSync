@@ -350,29 +350,42 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 		ImGui::PopStyleVar();
-		float sliderVal = cursorRadius * scale * 100;
-		sliderVal -= 1.0f;
-		sliderVal *= 2.0f;
-		if (sliderVal == 0.0f) sliderVal = 1.0f;
+
+		static int lastVisual = -1;
+
+		float sliderVal = (cursorRadius / scale) * 100;
 		int visual = (int)sliderVal;
 		ImGui::SliderInt("##Scale", &visual, 1, 16);
-		sliderVal = visual;
-		if (sliderVal == 1.0f) sliderVal = 0.0f;
-		sliderVal /= 2.0f;
-		sliderVal += 1.0f;
-		
-		cursorRadius = sliderVal / 100.0f / scale;
+		bool sliderHeld = ImGui::IsItemActive();
+		if (sliderHeld) {
+			std::cout << visual << "; " << cursorRadius << std::endl;
+			float floatPart = fmodf(cursorRadius / scale * 100.0f, 1.0f);
+			sliderVal = visual + floatPart;
+			cursorRadius = sliderVal * scale / 100.0f;
+			std::cout << visual << "; " << cursorRadius << std::endl;
+		}
+
 
 		ImGui::Columns(3, nullptr, false);
+
+		if (sliderHeld && visual != lastVisual) {
+			for (int i = 1; i < 10; i++) {
+				int index = i - 1;
+				if ((index * 2 == visual) || (index == 0 && visual == 1)) selectedSize = index;
+			}
+			std::cout << selectedSize << std::endl;
+			std::cout << "ya" << std::endl;
+			lastVisual = visual;
+		}
 
 		for (int i = 1; i < 10; i++)
 		{
 			int index = i - 1;
-			if ((index * 0.01f + 0.01f) <= cursorRadius && cursorRadius < ((index + 1) * 0.01f + 0.01f)) selectedSize = index;
 
 			bool isSelected = (index == selectedSize);
 			if (ImGui::Selectable(("##" + std::to_string(index) + "sizes").c_str(), isSelected, 0, ImVec2(0, iconSize.y + 2 * Lss::VH))) {
-				cursorRadius = index * 0.01f + 0.01f;
+				float calcIndex = (index == 0) ? 1 : index * 2;
+				cursorRadius = calcIndex * scale / 100.0f;
 				selectedSize = index;
 			}
 

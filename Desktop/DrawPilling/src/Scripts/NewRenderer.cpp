@@ -570,7 +570,8 @@ void NewRenderer::RenderLayers()
 void NewRenderer::RenderCursor()
 {
 	double* now = Callback::GlCursorPosition();
-	NewDraw::BrushToPosition(window, cursor, cursorRadius, identityRatio, identityOffset, cursorScale, now);
+	float curRad = (tool == 0) ? 0.02f : cursorRadius;
+	NewDraw::BrushToPosition(window, cursor, curRad, identityRatio, identityOffset, cursorScale, now);
 	Draw(cursor);
 
 }
