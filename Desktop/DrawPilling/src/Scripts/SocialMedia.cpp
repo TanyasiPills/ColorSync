@@ -843,6 +843,7 @@ void SocialMedia::MainPage(float& width, float& height)
                 openStuff = false;
                 lastId = 0;
                 init = true;
+                Explorer::ResetPath();
             }
         }
 
@@ -898,7 +899,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
             Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
             if (user == runtime.id) {
                 users[user].userImage = runtime.pfpTexture;
-                //pfp change
+                //data change
                 if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
                 {
                     ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -996,6 +997,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                                 imageEditOpen = false;
                                 runtime.pfpTexture = userImageTexture.GetId();
                             }
+                            Explorer::ResetPath();
                         }
                         nlohmann::json userPatch;
                         if (runtime.username != usernameText) userPatch["username"] = usernameText;
@@ -1148,6 +1150,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     {
                         std::string imagePath = Explorer::GetImagePath();
                         if (imagePath.size() > 2 && userImageTexture.GetId() > 0) {
+                            Explorer::ResetPath();
                             std::string piranah;
                             if (privating) piranah = "private";
                             else piranah = "public";

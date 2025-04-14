@@ -38,13 +38,15 @@ const ImVec2 iconSize(50, 50);
 static bool showExplorer = true;
 bool fileAleardyExists = false;
 
-
-
 std::vector<std::string> driveList;
 std::vector<const char*> items;
 
 std::string imagePath = "";
 static char tempPath[200] = "";
+
+void Explorer::ResetPath() {
+    imagePath = "";
+}
 
 std::string Explorer::GetImagePath()
 {
