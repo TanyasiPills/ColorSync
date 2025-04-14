@@ -2,6 +2,7 @@ import { backendIp } from "../../constants"
 import { DrawMessage, Message, NodeAddMessage, NodeDeleteMessage, NodeRenameMessage } from "./Messages"
 import { Folder, Render } from "./Render"
 import { io, Socket } from "socket.io-client"
+import { RuntimeData } from "./DataManager"
 
 export enum ActionType {
     Draw,
@@ -17,7 +18,7 @@ export class SManager {
     private socket: Socket | null = null
     private onServer: boolean = false
     private rendererSocks: Render | null = null
-    private runtime: RuntimeDataManager = RuntimeDataManager.getInstance()
+    private runtime: RuntimeData = RuntimeData.getInstance()
     private canvasSizes: [number, number] = [0, 0]
     private users: RoomUser[] = []
     private history: any[] = []
@@ -166,12 +167,12 @@ export class SManager {
     onPositionMessage(data: any): void {
         const userId = data.userId
         const userPos = { x: data.position.x, y: data.position.y }
-        if (DrawUI.userPositions.has(userId)) {
+        /*if (DrawUI.userPositions.has(userId)) {
             const user = DrawUI.userPositions.get(userId)
             if (user) {
                 user.pos = userPos
             }
-        }
+        }*/
     }
 
     sendPositionMessage(cursorPos: Position): void {
@@ -207,7 +208,6 @@ export class SManager {
                 }
                 this.history = data.history
                 this.canvasSizes = [data.width, data.height]
-                DrawUI.canInit = true
                 break
             default:
                 break
@@ -289,7 +289,6 @@ export class SManager {
         const username = data.username
         const message = data.message
         const messageObject: { [key: string]: string } = { username, message }
-        DrawUI.getMsg(messageObject)
     }
 
     sendMsg(msg: string): void {

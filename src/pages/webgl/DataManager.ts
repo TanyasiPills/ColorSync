@@ -318,14 +318,32 @@ export const Explorer = {
     setRecents(recents: FolderSave[]): void { }
 }
 
-export const RuntimeData = (function () {
-    let instance: { username: string, token: string, ip: string, password: string } | null = null
-    return {
-        getInstance: function () {
-            if (!instance) {
-                instance = { username: '', token: '', ip: '', password: '' }
-            }
-            return instance
+export class RuntimeData {
+    private static instance: RuntimeData
+
+    ip = ''
+    token = ''
+
+    username = ''
+    password = ''
+    email = ''
+
+    logedIn = true
+    id = -1
+
+    pfpTexture = 0
+
+    undoCount = 30
+
+    liked: Set<number> = new Set()
+
+    private constructor() {}
+
+    static getInstance(): RuntimeData {
+        if (!RuntimeData.instance) {
+            RuntimeData.instance = new RuntimeData()
         }
+        return RuntimeData.instance
     }
-})()
+}
+
