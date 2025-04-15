@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException, Query, ParseBoolPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpCode, HttpException, HttpStatus, UploadedFile, UseInterceptors, ParseIntPipe, Res, NotFoundException, Query, ParseBoolPipe, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -7,14 +7,24 @@ import { diskStorage } from 'multer';
 import { basename, extname, join, resolve } from 'path';
 import { ApiBearerAuth, ApiConsumes, ApiBody, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ImageCreateType, ImageType } from 'src/api.dto';
-import { existsSync, mkdirSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, statSync, unlinkSync } from 'fs';
 import { OptionalAuthGuard } from 'src/auth/optional.guard';
 import * as sharp from 'sharp';
 import { UpdateImageDto } from './dto/update-image.dto';
+import { platform } from 'os';
+import * as ffi from 'ffi-napi';
+import * as ref from 'ref-napi';
 
 @Controller('images')
 export class ImagesController {
-  constructor(private readonly imageService: ImagesService) { }
+  private readonly logger;
+  constructor(private readonly imageService: ImagesService) {
+    this.logger = new Logger(ImagesController.name);
+   }
+
+  async onModuleInit() {
+    if (platform() != "win32") this.logger.warn("The application is not running on Windows, some features won't work.");
+  }
 
   /**
    * Uploades a image
@@ -49,14 +59,14 @@ export class ImagesController {
   @Post()
   async create(@Body() createImageDto: CreateImageDto, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
-      throw new HttpException('File upload failed!.', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('File upload failed!.');
     }
 
     const result = await this.imageService.create(createImageDto, file, req.user.id);
     if (!result) {
       const path = resolve(file.path);
       if (existsSync(path)) unlinkSync(path);
-      throw new HttpException('Image upload failed!.', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new InternalServerErrorException('Image upload failed!.');
     }
 
     return { id: result.id };
@@ -159,6 +169,7 @@ export class ImagesController {
       res.type("image/" + format);
       image.pipe(res);
     }
+    image.destroy();
   }
 
   /**
@@ -175,7 +186,42 @@ export class ImagesController {
   @Delete(':id')
   @HttpCode(204)
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req: any, @Query('forceDelete') forceDelete: string) {
-    await this.imageService.remove(id, req.user.id, forceDelete == "true");
+    try {
+      await this.imageService.remove(id, req.user.id, forceDelete == "true");
+    } catch (error) {
+      if (error.code == "EPERM") {
+        const path = error.path;
+        const cache = resolve(`uploads/cache/${basename(path)}`);
+
+        this.markForDeletion(path);
+        if (existsSync(cache)) {
+          try {
+            unlinkSync(cache);
+          } catch (error) {
+            this.markForDeletion(cache);
+          }
+        }
+      }
+      else throw error;
+    }
+  }
+
+  private markForDeletion(path: string) {
+    if (platform() != "win32") {
+      this.logger.error(`Error deleting file (${path}), can only mark it for deletion on Windows`);
+      return;
+    }
+
+    const kernel32 = ffi.Library('kernel32', {
+      "MoveFileExW": [
+        "bool",
+        [ref.types.CString, ref.types.CString, "uint32"]
+      ]
+    });
+    const pathPtr = Buffer.from(path, 'utf16le');
+    const result = kernel32.MoveFileExW(pathPtr, null, 0x00000004);
+    if (result) this.logger.warn((`Couldn't delete file (${path}), marked for deletion`));
+    else  this.logger.error(`Error deleting file (${path}), can only mark it for deletion with admin rights`);
   }
 
   /**

@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException, UnauthorizedException
 import { CreateImageDto } from './dto/create-image.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Visibility } from '@prisma/client';
-import { existsSync, unlinkSync } from 'fs';
+import { existsSync, statSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { SearchService } from 'src/search/search.service';
@@ -62,7 +62,6 @@ export class ImagesService {
     }
     if (promises) await Promise.all(promises);
     await this.db.image.update({ where: { id, userId }, data: { visibility: dto.visibility } });
-    console.log(promises.length);
   }
 
   async remove(id: number, userId: number, forceDelete: boolean) {

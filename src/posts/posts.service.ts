@@ -23,6 +23,7 @@ export class PostsService {
         else throw new ConflictException(`Image with id: ${createPostDto.imageId} is private`); 
       }
     }
+    if (createPostDto.tags) createPostDto.tags = createPostDto.tags.map(e => e.trim().replace(/\s+/g, '_'));
     const post: any = await this.db.post.create({
       data:
       {

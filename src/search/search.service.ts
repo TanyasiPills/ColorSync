@@ -92,7 +92,7 @@ export class SearchService implements OnModuleInit {
 
   async searchPosts(searchText: string, searchTags: string[], offset: number = 0, take: number = 10, userId: number = undefined): Promise<number[]> {
     if (searchTags) searchTags = searchTags.map(e => e.toLowerCase());
-    if (searchText == "") searchText == undefined;
+    if (searchText == "") searchText = undefined;
     
     const userPreferences: { queries: { text: string, weight: number }[], tags: { name: string, weight: number }[] } = {queries: [], tags: []};
 

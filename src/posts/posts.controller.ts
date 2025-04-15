@@ -100,6 +100,7 @@ export class PostsController {
   search(@Query('tags') tags: string[], @Query('q') q: string, @Query('take') take: string, @Query('offset') offset: string, @Query('imageOnly') imageOnly: string = "1", @Req() req: any) {
     if (!tags) tags = [];
     else if (!Array.isArray(tags)) tags = [tags];
+    console.log("query: ", q, tags, offset)
     return this.postService.search(tags, q, take, offset, imageOnly == '1', req.user ? req.user.id : undefined);
   }
 
