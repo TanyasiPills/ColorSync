@@ -24,13 +24,13 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
 
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if ((event.key === "Enter" || event.key === " ") && text.trim() !== "") {
-      if (!tags.includes(text)) {
-        event.preventDefault();
-        setTags([...tags, text]);
-        setText("");
-      }
-    }    
+      if ((event.key === "Enter" || event.key == " ") && text.trim() !== "") {
+        if (!tags.includes(text)) {
+          event.preventDefault();
+          setTags([...tags, text]);
+          setText("");
+        }
+    }
   }
 
   function deleteTag(index: number) {
@@ -49,23 +49,21 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
       sendingData.append(`tags[${index}]`, tag);
     });
     sendingData.append("text", data.get("text")!);
-    
+
     if (newImage) {
       sendingData.append("file", newImage);
     }
 
-    if (selectedImage && selectedImageVisibility === visibility.private) {
-      const confirmPost = window.confirm("This image is private. If you post it, it will be changed to public. Do you want to continue?");
-      if (!confirmPost) {        
+    if (selectedImage && selectedImageVisibility == visibility.private) {
+      const confirmed = await confirm("You selected a private image. Post it as public?");
+      if (!confirmed) {
         setSelectedImage(undefined);
         setSelectedImageVisibility(undefined);        
         return;
-      } else {        
+      } else {
         sendingData.append("imageId", selectedImage.toString());
         sendingData.append("forcePost", "true");
       }
-    } else if (selectedImage) {
-      sendingData.append("imageId", selectedImage.toString());
     }
 
     try {
@@ -189,7 +187,7 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
         onHide={() => setShowExistingImageModal(false)}
         onSelectImage={(imageId, imageVisibility) => {
           setSelectedImage(imageId);
-          setSelectedImageVisibility(imageVisibility); 
+          setSelectedImageVisibility(imageVisibility);
           handleExistingImageSelection;
           setShowExistingImageModal(false);
         }}
