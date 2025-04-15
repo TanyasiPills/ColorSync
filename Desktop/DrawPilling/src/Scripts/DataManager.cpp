@@ -5,6 +5,9 @@
 #include "NewDraw.h"
 #include <windows.h>
 
+//This whole script works on saving data between runtimes
+
+
 
 ApplicationData appdata;
 
@@ -18,6 +21,7 @@ void DataManager::SetRenderer(NewRenderer& rendererIn)
     renderer = &rendererIn;
 }
 
+//These are saving user data for next sign in and recent folders, etc...
 
 void SetStringValue(char* dest, const char* value, size_t size) {
     std::strncpy(dest, value, size - 1);
@@ -45,6 +49,21 @@ void WriteFolder(std::ofstream& file, std::vector<FolderSave> folders) {
     }
 }
 
+void ReadFolder(std::ifstream& file, std::vector<FolderSave>& folders) {
+    for (auto& folder : folders) {
+        int folderNameSize = 0;
+        int folderPathSize = 0;
+
+        file.read(reinterpret_cast<char*>(&folderNameSize), sizeof(folderNameSize));
+        file.read(reinterpret_cast<char*>(&folderPathSize), sizeof(folderPathSize));
+
+        folder.name.resize(folderNameSize);
+        folder.path.resize(folderPathSize);
+
+        file.read(&folder.name[0], folderNameSize);
+        file.read(&folder.path[0], folderPathSize);
+    }
+}
 
 void SaveAppDataData(const ApplicationData& data, const std::string& filename) {
     std::ofstream file(filename, std::ios::binary);
@@ -61,22 +80,6 @@ void SaveAppDataData(const ApplicationData& data, const std::string& filename) {
         int favsSize = data.favs.size();
         file.write(reinterpret_cast<const char*>(&favsSize), sizeof(favsSize));
         WriteFolder(file, data.favs);
-    }
-}
-
-void ReadFolder(std::ifstream& file, std::vector<FolderSave>& folders) {
-    for (auto& folder : folders) {
-        int folderNameSize = 0;
-        int folderPathSize = 0;
-
-        file.read(reinterpret_cast<char*>(&folderNameSize), sizeof(folderNameSize));
-        file.read(reinterpret_cast<char*>(&folderPathSize), sizeof(folderPathSize));
-
-        folder.name.resize(folderNameSize);
-        folder.path.resize(folderPathSize);
-
-        file.read(&folder.name[0], folderNameSize);
-        file.read(&folder.path[0], folderPathSize);
     }
 }
 
@@ -130,6 +133,9 @@ void DataManager::SaveAppData()
     SaveAppDataData(appdata, "appdata.bin");
 }
 
+
+
+//And these are saving sync data, the data of a drawing
 
 void SetSyncData()
 {

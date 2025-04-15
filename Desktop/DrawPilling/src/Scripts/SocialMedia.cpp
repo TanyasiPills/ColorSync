@@ -72,6 +72,29 @@ MyTexture searchProfileTexture;
 
 bool needError = true;
 
+std::unordered_map<GLuint, int> imageIndexes;
+
+// initialization
+void SocialMedia::LoadTextures()
+{
+    notLikedTexture.Init("Resources/icons/notLiked.png");
+    notLikedTexture.BlendCorrection();
+
+    likedTexture.Init("Resources/icons/liked.png");
+    likedTexture.BlendCorrection();
+
+    commentTexture.Init("Resources/icons/comment.png");
+    commentTexture.BlendCorrection();
+
+    searchTexture.Init("Resources/icons/search.png");
+    searchTexture.BlendCorrection();
+
+    searchProfileTexture.Init("Resources/icons/searchUser.png");
+    searchProfileTexture.BlendCorrection();
+}
+
+
+//parsing/processing data for visuals
 std::string CalcTime(std::chrono::system_clock::time_point time)
 {
     auto now = std::chrono::system_clock::now();
@@ -95,31 +118,202 @@ std::string CalcTime(std::chrono::system_clock::time_point time)
     return outTime;
 }
 
-std::unordered_map<GLuint, int> imageIndexes;
+std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::string& timeData)
+{
+    std::tm tm = {};
+    std::istringstream ss(timeData);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    std::time_t timeUtc = std::mktime(&tm);
 
+    std::time_t locTime = timeUtc + 3600;
+    return std::chrono::system_clock::from_time_t(locTime);
+}
+
+void SocialMedia::GetPosts()
+{
+    if (runtime.ip[0] == '\0') {
+        if (needError) {
+            std::cout << "runtimeIp not set\n";
+            needError = false;
+        }
+        init = true;
+        return;
+    }
+    nlohmann::json jsonData = HManager::Request(("posts?offset=" + std::to_string(lastId) + "&take=10").c_str(), "", GET);
+    if (jsonData["offset"].is_null()) {
+        std::cout << "no data left to steal :c\n";
+        init = false;
+        return;
+    }
+    for (const auto& postJson : jsonData["data"]) {
+        Post post;
+        post.id = postJson["id"];
+        post.userId = postJson["user"]["id"];
+        if (users.find(post.userId) == users.end()) {
+            User user;
+            user.username = postJson["user"]["username"];
+            user.userImage = -1;
+            users[post.userId] = user;
+        }
+        if (postJson["imageId"].is_null()) post.imageId = -1;
+        else post.imageId = postJson["imageId"];
+        post.text = postJson["text"];
+        post.time = ParsePostTime(postJson["date"]);
+        post.likes = postJson["likes"];
+
+        for (const auto& tags : postJson["tags"]) {
+            post.tags.push_back(tags);
+        }
+
+        for (const auto& commentJson : postJson["comments"]) {
+            Comment comment;
+            comment.id = commentJson["id"];
+            comment.userId = commentJson["user"]["id"];
+            comment.text = commentJson["text"];
+            if (users.find(comment.userId) == users.end()) {
+                User user;
+                user.username = commentJson["user"]["username"];
+                user.userImage = -1;
+                users[comment.userId] = user;
+            }
+            comment.time = ParsePostTime(commentJson["date"]);
+
+            post.comments.push_back(comment);
+        }
+        posts.push_back(post);
+    }
+
+    lastId = jsonData["offset"];
+    LoadImages();
+}
+
+void SocialMedia::LoadImages()
+{
+    for (int i = 0; i < posts.size(); i++)
+    {
+        std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
+    }
+}
+
+void SocialMedia::LoadDependencies(Post& post, int index)
+{
+
+    LoadImageJa(post.userId, 2);
+    try {
+        std::unique_lock<std::mutex> lock(postMutex);
+        std::vector<Comment> commentsHere;
+        for (Comment& comment : post.comments) {
+            commentsHere.push_back(comment);
+        }
+        lock.unlock();
+        for (Comment comment : commentsHere) {
+            LoadImageJa(comment.userId, 2);
+        }
+    }
+    catch (...)
+    {
+        std::cerr << "error while loading commnents" << std::endl;
+    }
+    if (post.imageId != -1) LoadImageJa(post.imageId, 1, index);
+    else post.picLoaded = true;
+}
+
+void SocialMedia::LoadImageJa(int dataId, int type, int postId)
+{
+    std::vector<uint8_t> imageData;
+    switch (type) {
+    case 1: {
+        if (dataId == -1)return;
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+    } break;
+    case 2: {
+        if (profilePics.find(dataId) != profilePics.end()) break;
+        else {
+            imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
+        }
+    } break;
+    case 5: {
+        //auto start = std::chrono::high_resolution_clock::now();
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+
+        //auto end = std::chrono::high_resolution_clock::now(); // End timing
+        //std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
+
+        //std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+    } break;
+    default:
+        break;
+    }
+    std::lock_guard<std::mutex> queueLock(textureQueueMutex);
+    textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
+}
+
+
+//processing data from threads
 std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
 {
 	return &textureQueue;
 }
 
-void SocialMedia::LoadTextures()
+void SocialMedia::ProcessThreads()
 {
-    notLikedTexture.Init("Resources/icons/notLiked.png");
-    notLikedTexture.BlendCorrection();
+    std::lock_guard<std::mutex> lock(textureQueueMutex);
+    while (!textureQueue.empty()) {
+        std::tuple<std::vector<uint8_t>, int, int> front = textureQueue.front();
+        textureQueue.pop();
+        std::vector<uint8_t> imageData = std::get<0>(front);
+        int dataId = std::get<1>(front);
+        int type = std::get<2>(front);
 
-    likedTexture.Init("Resources/icons/liked.png");
-    likedTexture.BlendCorrection();
+        switch (type)
+        {
+        case 1:
+            if (dataId == -2) {
+                searchedPost.image = HManager::ImageFromRequest(imageData, searchedPost.ratio);
+                searchedPost.picLoaded = true;
+            }
+            else {
+                posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
+                posts[dataId].picLoaded = true;
+            }
+            break;
+        case 2: {
+            float ratioAF = 0.0f;
+            GLuint profileImage;
+            if (!imageData.empty()) {
+                profileImage = HManager::ImageFromRequest(imageData, ratioAF);
+                profilePics[dataId] = profileImage;
+            }
+            else profileImage = profilePics[dataId];
 
-    commentTexture.Init("Resources/icons/comment.png");
-    commentTexture.BlendCorrection();
+            users[dataId].userImage = profileImage;
+            users[dataId].pPicLoaded = true;
 
-    searchTexture.Init("Resources/icons/search.png");
-    searchTexture.BlendCorrection();
-
-    searchProfileTexture.Init("Resources/icons/searchUser.png");
-    searchProfileTexture.BlendCorrection();
+        } break;
+        case 3: {
+            float ratioAF = 0.0f;
+            runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioAF);
+        } break;
+        case 4:
+        {
+            float ratioAF = 0.0f;
+            GLuint idForImage = HManager::ImageFromRequest(imageData, ratioAF);
+            imageIndexes[idForImage] = dataId;
+            userImages.emplace_back(idForImage);
+        } break;
+        case 5: {
+            images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
+        } break;
+        default:
+            break;
+        }
+    }
 }
 
+
+//functions for search
 void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
     std::istringstream stream(searchText);
     std::string word;
@@ -234,60 +428,6 @@ void SocialMedia::GetPostForSearch(const int& postId)
 	}
 }
 
-void SocialMedia::ProcessThreads()
-{
-    std::lock_guard<std::mutex> lock(textureQueueMutex);
-    while (!textureQueue.empty()) {
-        std::tuple<std::vector<uint8_t>, int, int> front = textureQueue.front();
-        textureQueue.pop();
-        std::vector<uint8_t> imageData = std::get<0>(front);
-        int dataId = std::get<1>(front);
-        int type = std::get<2>(front);
-
-        switch (type)
-        {
-        case 1:
-            if (dataId == -2) {
-				searchedPost.image = HManager::ImageFromRequest(imageData, searchedPost.ratio);
-				searchedPost.picLoaded = true;
-            }
-            else {
-				posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
-				posts[dataId].picLoaded = true;
-            }
-            break;
-        case 2: {
-            float ratioAF = 0.0f;
-            GLuint profileImage;
-            if (!imageData.empty()) {
-                profileImage = HManager::ImageFromRequest(imageData, ratioAF);
-                profilePics[dataId] = profileImage;
-            }
-            else profileImage = profilePics[dataId];
-
-		    users[dataId].userImage = profileImage;
-			users[dataId].pPicLoaded = true;
-
-            } break;
-        case 3: {
-                float ratioAF = 0.0f;
-                runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioAF);
-            } break;
-        case 4:
-            {
-                float ratioAF = 0.0f;
-                GLuint idForImage = HManager::ImageFromRequest(imageData, ratioAF);
-                imageIndexes[idForImage] = dataId;
-                userImages.emplace_back(idForImage);
-            } break;
-        case 5: {
-                images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
-            } break;
-        default:
-            break;
-        }
-    }
-}
 
 void SocialMedia::LoadProfile(int id)
 {
@@ -314,6 +454,24 @@ void SocialMedia::LoadProfile(int id)
     }
 }
 
+
+void RoomsRequest()
+{
+    nlohmann::json result = HManager::Request("rooms", "", GET);
+    if (result.is_null()) std::cerr << "Can't get rooms\n";
+    for (auto& item : result) {
+        Room roome;
+        roome.roomName = item["name"];
+        roome.ownerName = item["owner"]["username"];
+        roome.userCount = item["playerCount"];
+        roome.capacity = item["maxPlayers"];
+        roome.password = item["passwordRequired"];
+        rooms.emplace_back(roome);
+    }
+}
+
+
+//pages for social media
 void SocialMedia::MainPage(float& width, float& height)
 {
 
@@ -1788,21 +1946,6 @@ void SocialMedia::SearchPage(float& width, float& height)
     }
 }
 
-void RoomsRequest()
-{
-    nlohmann::json result = HManager::Request("rooms", "", GET);
-    if (result.is_null()) std::cerr << "Can't get rooms\n";
-    for (auto& item : result) {
-        Room roome;
-        roome.roomName = item["name"];
-        roome.ownerName = item["owner"]["username"];
-        roome.userCount = item["playerCount"];
-        roome.capacity = item["maxPlayers"];
-        roome.password = item["passwordRequired"];
-        rooms.emplace_back(roome);
-    }
-}
-
 void SocialMedia::RoomPage(float& width, float& height)
 {
     if (needRooms) {
@@ -2015,6 +2158,8 @@ void SocialMedia::RoomPage(float& width, float& height)
     Lss::End();
 }
 
+
+//main windows
 void SocialMedia::MainFeed(float position, float width, float height)
 {
     ImGui::GetStyle().WindowBorderSize = 0.0f;
@@ -2172,134 +2317,3 @@ void SocialMedia::RightSide(float position, float width, float height)
     ImGui::End();
 }
 
-std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::string& timeData) 
-{
-    std::tm tm = {};
-    std::istringstream ss(timeData);
-    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-    std::time_t timeUtc = std::mktime(&tm);
-
-    std::time_t locTime = timeUtc + 3600;
-    return std::chrono::system_clock::from_time_t(locTime);
-}
-
-void SocialMedia::GetPosts() 
-{
-    if (runtime.ip[0] == '\0') {
-        if (needError) {
-            std::cout << "runtimeIp not set\n";
-            needError = false;
-        }
-        init = true;
-        return;
-    }
-    nlohmann::json jsonData = HManager::Request(("posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
-    if (jsonData["offset"].is_null()) {
-        std::cout << "no data left to steal :c\n";
-        init = false;
-        return;
-    }
-    for (const auto& postJson : jsonData["data"]) {
-        Post post;
-        post.id = postJson["id"];
-        post.userId = postJson["user"]["id"];
-        if (users.find(post.userId) == users.end()) {
-            User user;
-            user.username = postJson["user"]["username"];
-            user.userImage = -1;
-            users[post.userId] = user;
-        }
-        if (postJson["imageId"].is_null()) post.imageId = -1;
-        else post.imageId = postJson["imageId"];
-        post.text = postJson["text"];
-        post.time = ParsePostTime(postJson["date"]);
-        post.likes = postJson["likes"];
-    
-		for (const auto& tags : postJson["tags"]) {
-			post.tags.push_back(tags);
-		}
-
-        for (const auto& commentJson : postJson["comments"]) {
-            Comment comment;
-            comment.id = commentJson["id"];
-            comment.userId = commentJson["user"]["id"];
-            comment.text = commentJson["text"];
-            if (users.find(comment.userId) == users.end()) {
-                User user;
-                user.username = commentJson["user"]["username"];
-                user.userImage = -1;
-                users[comment.userId] = user;
-            }
-            comment.time = ParsePostTime(commentJson["date"]);
-    
-            post.comments.push_back(comment);
-        }
-        posts.push_back(post);
-    }
-
-    lastId = jsonData["offset"];
-    LoadImages();
-}
-
-void SocialMedia::LoadImages() 
-{
-    for (int i = 0; i < posts.size(); i++)
-    {
-        std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
-    }
-}
-
-void SocialMedia::LoadDependencies(Post& post, int index) 
-{
-
-    LoadImageJa(post.userId, 2);
-    try {
-        std::unique_lock<std::mutex> lock(postMutex);
-        std::vector<Comment> commentsHere;
-        for (Comment& comment : post.comments) {
-            commentsHere.push_back(comment);
-        }
-        lock.unlock();
-        for (Comment comment : commentsHere) {
-            LoadImageJa(comment.userId, 2);
-        }
-    }
-    catch (...)
-    {
-        std::cerr << "error while loading commnents" << std::endl;
-    }
-    if (post.imageId != -1) LoadImageJa(post.imageId, 1, index);
-    else post.picLoaded = true;
-}
-
-void SocialMedia::LoadImageJa(int dataId, int type, int postId)
-{
-    std::vector<uint8_t> imageData;
-    switch (type) {
-    case 1: {
-        if (dataId == -1)return;
-        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
-        dataId = postId;
-        } break;
-    case 2: {
-            if (profilePics.find(dataId) != profilePics.end()) break;
-            else {
-                imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
-            }
-        } break;
-    case 5: {
-        //auto start = std::chrono::high_resolution_clock::now();
-        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
-        dataId = postId;
-
-        //auto end = std::chrono::high_resolution_clock::now(); // End timing
-        //std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
-
-        //std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
-        } break;
-    default:
-        break;
-    }
-    std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-    textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
-}

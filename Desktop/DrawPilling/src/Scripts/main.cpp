@@ -1,6 +1,8 @@
 #include "Headers.h"
 
+
 // Main code
+//set up the scripts then loop rendering
 int main()
 {
     ShowWindow(GetConsoleWindow(), SW_HIDE);

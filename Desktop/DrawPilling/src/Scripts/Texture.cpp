@@ -6,6 +6,11 @@
 MyTexture::MyTexture() : TO(0), localBuffer(nullptr), width(0), height(0), bpp(0)
 {
 }
+MyTexture::~MyTexture()
+{
+	glDeleteTextures(1, &TO);
+}
+
 
 void MyTexture::Init(std::vector<unsigned char> data, unsigned int canvasWidth, unsigned int canvasHeight)
 {
@@ -53,13 +58,6 @@ void MyTexture::Init(const std::string& path)
 	}
 }
 
-void MyTexture::TransparencyCorrection() {
-	glBindTexture(GL_TEXTURE_2D, TO);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 void MyTexture::Init(unsigned int widthIn, unsigned int heightIn, int transparent)
 {
 	width = widthIn;
@@ -92,10 +90,6 @@ void MyTexture::Init(unsigned int widthIn, unsigned int heightIn, int transparen
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-MyTexture::~MyTexture()
-{
-	glDeleteTextures(1, &TO);
-}
 
 void MyTexture::Bind(unsigned int slot) const
 {
@@ -108,10 +102,12 @@ void MyTexture::UnBind() const
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+
 unsigned int MyTexture::GetId() const
 {
 	return TO;
 }
+
 
 void MyTexture::BlendCorrection()
 {
@@ -120,4 +116,11 @@ void MyTexture::BlendCorrection()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	UnBind();
+}
+
+void MyTexture::TransparencyCorrection() {
+	glBindTexture(GL_TEXTURE_2D, TO);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

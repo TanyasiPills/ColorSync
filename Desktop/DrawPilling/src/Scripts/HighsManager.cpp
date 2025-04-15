@@ -8,7 +8,6 @@ static auto& runtime = RuntimeData::getInstance();
 
 class SocialMedia;
 
-constexpr size_t MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -21,6 +20,7 @@ size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) 
 	buffer.insert(buffer.end(), static_cast<uint8_t*>(ptr), static_cast<uint8_t*>(ptr) + totalSize);
 	return totalSize;
 }
+
 
 void HManager::InitUser()
 {
@@ -76,6 +76,7 @@ void HManager::Down()
 {
 	curl_global_cleanup();
 }
+
 
 nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags, bool forcePost)
 {
@@ -365,6 +366,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		return nlohmann::json{};
 	}
 }
+
 
 std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 {

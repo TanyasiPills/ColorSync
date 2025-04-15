@@ -9,6 +9,8 @@ static auto& runtime = RuntimeData::getInstance();
 static bool loginOpen = false;
 static bool registerOpen = false;
 
+//sign in, sign up window
+
 void LoginRegister::Login(bool& loginWindow) 
 {
     if (loginWindow || loginOpen) {

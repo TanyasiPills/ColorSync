@@ -19,6 +19,7 @@ bool AreColorsEqual(const ImVec4& col1, const ImVec4& col2, float epsilon = 0.01
 		fabs(col1.w - col2.w) < epsilon;
 }
 
+
 void fillPositions(float* positions, float xScale = 0.0, float yScale = 0.0, float xPos = 0.0, float yPos = 0.0) {
 	positions[0] = (-xScale) + xPos; positions[1] = (-yScale) + yPos; positions[2] = 0.0f; positions[3] = 0.0f;
 	positions[4] = xScale + xPos; positions[5] = (-yScale) + yPos; positions[6] = 1.0f; positions[7] = 0.0f;
@@ -118,7 +119,6 @@ CanvasData NewDraw::initCanvas(unsigned int canvasWidthIn, unsigned int canvasHe
 	return data;
 }
 
-
 void NewDraw::initLayer(RenderData& data, std::vector<unsigned char> textureData)
 {
 	float positions[16];
@@ -152,6 +152,7 @@ void NewDraw::InitBrush(RenderData& data, float& radius, std::string texture)
 	}
 }
 
+
 void NewDraw::BrushToPosition(GLFWwindow* window, RenderData& cursor, float& radius, float* aspect, float* offset, float* scale, double* position, int debug) {
 	float positions[16];
 	float yMult = aspect[0] / aspect[1];
@@ -169,6 +170,8 @@ void NewDraw::MoveCanvas(RenderData& canvas, float* size, float* offset) {
 	canvas.va->UnBind();
 }
 
+
+//working but not implemented for performance issues
 void FloodFill(int x, int y, ImVec4& targetColor, ImVec4& fillColor, std::vector<unsigned char>& pixels, std::vector<bool>& visited) {
 	if (AreColorsEqual(targetColor, fillColor)) return;
 

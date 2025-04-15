@@ -7,21 +7,6 @@
 std::vector<FolderSave> favorites;
 std::vector<FolderSave> recent;
 
-std::vector<FolderSave>* Explorer::GetFavorites() {
-    return &favorites;
-}
-
-std::vector<FolderSave>* Explorer::GetRecents() {
-    return &recent;
-}
-
-void Explorer::SetFavorites(std::vector<FolderSave> fvs) {
-    favorites = fvs;
-}
-void Explorer::SetRecents(std::vector<FolderSave> rcnts) {
-    recent = rcnts;
-}
-
 const char* formats[] = {".jpg", ".png", "All recognized - jpg/png", ".sync"};
 static std::string currentPath = "C:\\";
 static std::string selectedFile;
@@ -44,6 +29,34 @@ std::vector<const char*> items;
 std::string imagePath = "";
 static char tempPath[200] = "";
 
+//Functions for saving userdata to appdata and back
+
+std::vector<FolderSave>* Explorer::GetFavorites() {
+    return &favorites;
+}
+
+std::vector<FolderSave>* Explorer::GetRecents() {
+    return &recent;
+}
+
+void Explorer::SetFavorites(std::vector<FolderSave> fvs) {
+    favorites = fvs;
+}
+
+void Explorer::SetRecents(std::vector<FolderSave> rcnts) {
+    recent = rcnts;
+}
+
+
+void Explorer::Init()
+{
+    folderTexture.Init("Resources/icons/folder.png");
+    folderFullTexture.Init("Resources/icons/folderFull.png");
+    fileTexture.Init("Resources/icons/file.png");
+    LoadDrives();
+}
+
+
 void Explorer::ResetPath() {
     imagePath = "";
 }
@@ -52,6 +65,7 @@ std::string Explorer::GetImagePath()
 {
     return imagePath;
 }
+
 
 void LoadDrives() {
     driveList.clear();
@@ -82,18 +96,34 @@ bool HasSpecificExtension(const std::string& file, const std::string& ext) {
     return file.substr(pos) == ext;
 }
 
-void Explorer::Init()
+bool ValidFormat(int& currentId, std::string& newPath)
 {
-    folderTexture.Init("Resources/icons/folder.png");
-    folderFullTexture.Init("Resources/icons/folderFull.png");
-    fileTexture.Init("Resources/icons/file.png");
-    LoadDrives();
+    switch (currentId)
+    {
+    case 0:
+        if (!HasSpecificExtension(newPath, ".jpg")) return false;
+        break;
+    case 1:
+        if (!HasSpecificExtension(newPath, ".png")) return false;
+        break;
+    case 2:
+        if (!(HasSpecificExtension(newPath, ".jpg") || HasSpecificExtension(newPath, ".png"))) return false;
+        break;
+    case 3:
+        if (!HasSpecificExtension(newPath, ".sync")) return false;
+        break;
+    default:
+        break;
+    }
+    return true;
 }
+
 
 bool Explorer::Exists()
 {
     return fileAleardyExists;
 }
+
 bool IsFolderEmpty(const std::string& folderPath) {
     std::string searchPath = folderPath + "\\*"; 
     WIN32_FIND_DATA findData;
@@ -114,6 +144,26 @@ bool IsFolderEmpty(const std::string& folderPath) {
     FindClose(hFind);
     return !hasFiles;
 }
+
+
+std::vector<std::string> Explorer::GetFilesInDirectory(const std::string& directory) {
+    std::vector<std::string> files;
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile((directory + "\\*").c_str(), &findFileData);
+
+    if (hFind == INVALID_HANDLE_VALUE) return files;
+
+    do {
+        if (strcmp(findFileData.cFileName, ".") != 0 && strcmp(findFileData.cFileName, "..") != 0) {
+            files.push_back(findFileData.cFileName);
+        }
+    } while (FindNextFile(hFind, &findFileData));
+    FindClose(hFind);
+
+    return files;
+}
+
+//FileExplorer UI elements
 
 void SearchBar()
 {
@@ -162,28 +212,6 @@ void SearchBar()
             favorites.emplace_back(lastFolder, currentPath);
         }
     }
-}
-
-bool ValidFormat(int& currentId, std::string& newPath) 
-{
-    switch (currentId)
-    {
-    case 0:
-        if (!HasSpecificExtension(newPath, ".jpg")) return false;
-        break;
-    case 1:
-        if (!HasSpecificExtension(newPath, ".png")) return false;
-        break;
-    case 2:
-        if (!(HasSpecificExtension(newPath, ".jpg") || HasSpecificExtension(newPath, ".png"))) return false;
-        break;
-    case 3:
-        if (!HasSpecificExtension(newPath, ".sync")) return false;
-        break;
-    default:
-        break;
-    }
-    return true;
 }
 
 void SideBar(float& childHeight)
@@ -440,19 +468,3 @@ void Explorer::FileExplorerUI(bool* creatorStuff, int idForFormat) {
     ImGui::PopStyleColor(3);
 }
 
-std::vector<std::string> Explorer::GetFilesInDirectory(const std::string& directory) {
-    std::vector<std::string> files;
-    WIN32_FIND_DATA findFileData;
-    HANDLE hFind = FindFirstFile((directory + "\\*").c_str(), &findFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE) return files;
-
-    do {
-        if (strcmp(findFileData.cFileName, ".") != 0 && strcmp(findFileData.cFileName, "..") != 0) {
-            files.push_back(findFileData.cFileName);
-        }
-    } while (FindNextFile(hFind, &findFileData));
-    FindClose(hFind);
-
-    return files;
-}

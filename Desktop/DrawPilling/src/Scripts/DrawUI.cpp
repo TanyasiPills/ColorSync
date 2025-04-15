@@ -104,6 +104,11 @@ std::string savePath = "";
 
 float startPosY = 0.0f;
 
+static float color[3] = { 0.0f, 0.0f, 0.0f };
+
+
+//initialization
+
 void DrawUI::SetRenderer(NewRenderer& rendererIn) {
 	renderer = &rendererIn;
 	std::cout << "Is online: " << isOnline << std::endl;
@@ -192,7 +197,172 @@ void DrawUI::InitData()
 	InitBrushIcons();
 }
 
-static float color[3] = { 0.0f, 0.0f, 0.0f };
+//function for folder tree management
+
+void ChangeOpacityChild(int& index)
+{
+	if (Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get())) {
+		std::vector<int> childrenCopy = foldy->childrenIds;
+
+		for (int child : childrenCopy)
+		{
+			if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+			if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+			{
+				ChangeOpacityChild(child);
+			}
+			renderer->nodes[child]->opacity = foldy->opacity;
+		}
+	}
+}
+
+void ChangeVisibilityChild(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			ChangeVisibilityChild(child);
+		}
+		renderer->nodes[child]->visible = foldy->visible;
+	}
+}
+
+void DrawUI::DeleteChilds(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			DeleteChilds(child);
+			renderer->RemoveFolder(child);
+		}
+		else {
+			renderer->RemoveLayer(child);
+		}
+	}
+	foldy->childrenIds.clear();
+}
+
+ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
+	ImGui::SetCursorPos(cursorPos);
+	float x = ImGui::GetContentRegionAvail().x;
+	float cursorX = ImGui::GetCursorPosX();
+	Node* nody = &node;
+	Folder* foldy = nullptr;
+
+	bool isFolder = dynamic_cast<Folder*>(&node) != nullptr;
+	if (isFolder) foldy = dynamic_cast<Folder*>(&node);
+	if (!nody) return cursorPos;
+	if (nody->selected && selectedLayer != nody->id) nody->selected = false;
+	if (nody->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
+	if (isFolder) {
+		if (foldy->id == 0) {
+			for (int childId : foldy->childrenIds) {
+				Node* childNode = renderer->nodes[childId].get();
+				cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
+			}
+			return cursorPos;
+		}
+	}
+
+	Lss::Child(std::to_string(nody->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
+	Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
+	if (nody->visible) Lss::Image(visible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	else Lss::Image(notVisible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	Lss::End();
+	ImGui::EndChild();
+
+	if (ImGui::IsItemClicked()) {
+		nody->visible = !nody->visible;
+		if (isFolder) ChangeVisibilityChild(nody->id);
+		itemHovered = true;
+	}
+
+	ImGui::SameLine();
+	Lss::Left(-0.2 * Lss::VW);
+
+	Lss::Child(std::to_string(nody->id), ImVec2(x - 3 * Lss::VH, 3 * Lss::VH));
+	Lss::SetFontSize(2 * Lss::VH);
+	float validWidth = ImGui::GetContentRegionAvail().x;
+	std::string percent = std::to_string(nody->opacity) + "%%";
+	float textSize = ImGui::CalcTextSize((percent).c_str()).x;
+	Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
+	if (isFolder) Lss::Image(folderLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	else Lss::Image(layerLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
+	if (!nody->editing) {
+		ImGui::SameLine();
+		Lss::Text(nody->name, 2 * Lss::VH);
+	}
+	else {
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(100);
+		static char editBuffer[256] = "";
+		bool editing = ImGui::InputText("##editinput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+		ImGui::SetKeyboardFocusHere(-1);
+		if (editing) {
+			if (strlen(editBuffer) > 0 && nody->name != editBuffer) {
+				nody->name = editBuffer;
+				memset(editBuffer, 0, sizeof(editBuffer));
+				nody->editing = false;
+				if (renderer->GetOnline() == true) {
+					NodeRenameMessage renameMessage;
+					renameMessage.name = nody->name;
+					renameMessage.location = nody->id;
+					renameMessage.type = RenameNode;
+					SManager::SendAction(renameMessage);
+				}
+			}
+		}
+	}
+	ImGui::SetCursorPos(ImVec2(validWidth - textSize - Lss::VW, 0.5f * Lss::VH));
+	Lss::Text(percent, 2 * Lss::VH);
+
+	Lss::End();
+	ImGui::EndChild();
+	if (ImGui::IsItemClicked()) {
+		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+			std::cout << "pressed on: " << nody->name << std::endl;
+			nody->editing = true;
+		}
+		else {
+			if (isFolder) foldy->open = !foldy->open;
+			else renderer->currentNode = nody->id;
+		}
+
+		nody->selected = true;
+		selectedLayer = nody->id;
+		itemHovered = true;
+	}
+
+	if (nody->selected) Lss::SetColor(ContainerBackground, ContainerBackground);
+
+	if (isFolder && foldy->open) {
+		cursorPos = ImGui::GetCursorPos();
+		for (int childId : foldy->childrenIds) {
+			cursorPos.x = cursorX;
+			cursorPos.x += 2 * Lss::VW;
+			Node* childNode = renderer->nodes[childId].get();
+			cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
+		}
+		cursorPos.x += 2 * Lss::VW;
+	}
+	return ImGui::GetCursorPos();
+}
+
 
 void DrawUI::SetColor(float* colorIn)
 {
@@ -200,6 +370,35 @@ void DrawUI::SetColor(float* colorIn)
 	color[1] = colorIn[1];
 	color[2] = colorIn[2];
 }
+
+
+void DrawUI::PlayerVisualization() {
+	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
+	bool open = true;
+	Lss::SetFontSize(2 * Lss::VH);
+	for (auto& pair : *userPositions) {
+		UserPos posy = pair.second;
+		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
+		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
+		ImGui::SetNextWindowSize(size);
+		posy.pos.x = (posy.pos.x + 1.0f) / 2;
+		posy.pos.y = (posy.pos.y + 1.0f) / 2;
+		ImVec2 realPos = ImVec2(windowSize.x * posy.pos.x, windowSize.y - (windowSize.y * posy.pos.y));
+		ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2), realPos.y - (size.y / 3)));
+		ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
+		Lss::Top(0.25f * Lss::VH);
+		Lss::Image(playerCursor.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[posy.color]);
+		ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[posy.color];
+		Lss::Text(posy.name, 1.5f * Lss::VH, Centered);
+		Lss::SetColor(Font, Font);
+		Lss::End();
+		ImGui::End();
+		Lss::End();
+	}
+}
+
+
+//windows for interactions
 
 void DrawUI::DrawMenu() {
 	static bool openExplorer = false;
@@ -253,31 +452,6 @@ void DrawUI::DrawMenu() {
 	Lss::End();
 
 	startPosY = ImGui::GetCursorPosY() + ImGui::GetStyle().ItemSpacing.y + ImGui::GetStyle().FramePadding.y;
-}
-
-void DrawUI::PlayerVisualization() {
-	ImVec2 windowSize = ImGui::GetIO().DisplaySize;
-	bool open = true;
-	Lss::SetFontSize(2 * Lss::VH);
-	for (auto& pair : *userPositions) {
-		UserPos posy = pair.second;
-		ImVec2 textSize = ImGui::CalcTextSize(posy.name.c_str());
-		ImVec2 size = ImVec2(textSize.x, textSize.y + 4 * Lss::VH);
-		ImGui::SetNextWindowSize(size);
-		posy.pos.x = (posy.pos.x + 1.0f) / 2;
-		posy.pos.y = (posy.pos.y + 1.0f) / 2;
-		ImVec2 realPos = ImVec2(windowSize.x * posy.pos.x, windowSize.y - (windowSize.y * posy.pos.y));
-		ImGui::SetNextWindowPos(ImVec2(realPos.x - (size.x / 2), realPos.y - (size.y / 3)));
-		ImGui::Begin("palyerWindow", &open, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground);
-			Lss::Top(0.25f * Lss::VH);
-			Lss::Image(playerCursor.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH), Centered, ImVec2(0, 0), ImVec2(1, 1), userColors[posy.color]);
-			ImGui::GetStyle().Colors[ImGuiCol_Text] = userColors[posy.color];
-			Lss::Text(posy.name, 1.5f * Lss::VH, Centered);
-			Lss::SetColor(Font, Font);
-			Lss::End();
-		ImGui::End();
-		Lss::End();
-	}
 }
 
 void DrawUI::ColorWindow(RenderData& cursor)
@@ -503,170 +677,6 @@ void DrawUI::ServerWindow()
 	if (ServerWindowSize.x < 200) {
 		rightSize = 200;
 	}
-}
-
-void ChangeOpacityChild(int& index)
-{
-	if (Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get())) {
-		std::vector<int> childrenCopy = foldy->childrenIds;
-
-		for (int child : childrenCopy)
-		{
-			if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
-
-			if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
-			{
-				ChangeOpacityChild(child);
-			}
-			renderer->nodes[child]->opacity = foldy->opacity;
-		}
-	}
-}
-
-void ChangeVisibilityChild(int& index)
-{
-	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
-
-	std::vector<int> childrenCopy = foldy->childrenIds;
-
-	for (int child : childrenCopy)
-	{
-		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
-
-		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
-		{
-			ChangeVisibilityChild(child);
-		}
-		renderer->nodes[child]->visible = foldy->visible;
-	}
-}
-
-ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
-	ImGui::SetCursorPos(cursorPos);
-	float x = ImGui::GetContentRegionAvail().x;
-	float cursorX = ImGui::GetCursorPosX();
-	Node* nody = &node;
-	Folder* foldy = nullptr;
-
-	bool isFolder = dynamic_cast<Folder*>(&node) != nullptr;
-	if (isFolder) foldy = dynamic_cast<Folder*>(&node);
-	if (!nody) return cursorPos;
-	if (nody->selected && selectedLayer != nody->id) nody->selected = false;
-	if (nody->selected) Lss::SetColor(ContainerBackground, HeavyHighlight);
-	if (isFolder) {
-		if (foldy->id == 0) {
-			for (int childId : foldy->childrenIds) {
-				Node* childNode = renderer->nodes[childId].get();
-				cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
-			}
-			return cursorPos;
-		}
-	}
-
-	Lss::Child(std::to_string(nody->id) + "visibility", ImVec2(3 * Lss::VH, 3 * Lss::VH));
-	Lss::LeftTop(0.25f * Lss::VW, 0.5f * Lss::VH);
-	if (nody->visible) Lss::Image(visible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
-	else Lss::Image(notVisible.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
-	Lss::End();
-	ImGui::EndChild();
-
-	if (ImGui::IsItemClicked()) {
-		nody->visible = !nody->visible;
-		if(isFolder) ChangeVisibilityChild(nody->id);
-		itemHovered = true;
-	}
-
-	ImGui::SameLine();
-	Lss::Left(-0.2 * Lss::VW);
-
-	Lss::Child(std::to_string(nody->id), ImVec2(x - 3 * Lss::VH, 3 * Lss::VH));
-	Lss::SetFontSize(2 * Lss::VH);
-	float validWidth = ImGui::GetContentRegionAvail().x;
-	std::string percent = std::to_string(nody->opacity) + "%%";
-	float textSize = ImGui::CalcTextSize((percent).c_str()).x;
-	Lss::LeftTop(Lss::VH + 0.3f * Lss::VW, 0.5f * Lss::VH);
-	if (isFolder) Lss::Image(folderLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
-	else Lss::Image(layerLayer.GetId(), ImVec2(2 * Lss::VH, 2 * Lss::VH));
-	if (!nody->editing) {
-		ImGui::SameLine();
-		Lss::Text(nody->name, 2 * Lss::VH);
-	}
-	else {
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(100);
-		static char editBuffer[256] = "";
-		bool editing = ImGui::InputText("##editinput", editBuffer, IM_ARRAYSIZE(editBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-		ImGui::SetKeyboardFocusHere(-1);
-		if (editing) {
-			if (strlen(editBuffer) > 0 && nody->name != editBuffer) {
-				nody->name = editBuffer;
-				memset(editBuffer, 0, sizeof(editBuffer));
-				nody->editing = false;
-				if (renderer->GetOnline() == true){
-					NodeRenameMessage renameMessage;
-					renameMessage.name = nody->name;
-					renameMessage.location = nody->id;
-					renameMessage.type = RenameNode;
-					SManager::SendAction(renameMessage);
-				}
-			}
-		}
-	}
-	ImGui::SetCursorPos(ImVec2(validWidth - textSize - Lss::VW, 0.5f * Lss::VH));
-	Lss::Text(percent, 2 * Lss::VH);
-
-	Lss::End();
-	ImGui::EndChild();
-	if (ImGui::IsItemClicked()) {
-		if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-			std::cout << "pressed on: " << nody->name << std::endl;
-			nody->editing = true;
-		}
-		else {
-			if (isFolder) foldy->open = !foldy->open;
-			else renderer->currentNode = nody->id;
-		}
-	
-		nody->selected = true;
-		selectedLayer = nody->id;
-		itemHovered = true;
-	}
-
-	if (nody->selected) Lss::SetColor(ContainerBackground, ContainerBackground);
-
-	if (isFolder && foldy->open) {
-		cursorPos = ImGui::GetCursorPos();
-		for (int childId : foldy->childrenIds) {
-			cursorPos.x = cursorX;
-			cursorPos.x += 2 * Lss::VW;
-			Node* childNode = renderer->nodes[childId].get();
-			cursorPos = DrawLayerTreeThree(*childNode, cursorPos);
-		}
-		cursorPos.x += 2 * Lss::VW;
-	}
-	return ImGui::GetCursorPos();
-}
-
-void DrawUI::DeleteChilds(int& index)
-{
-	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
-
-	std::vector<int> childrenCopy = foldy->childrenIds;
-
-	for (int child : childrenCopy)
-	{
-		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
-
-		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
-		{
-			DeleteChilds(child);
-			renderer->RemoveFolder(child);
-		}
-		else {
-			renderer->RemoveLayer(child);
-		}
-	}
-	foldy->childrenIds.clear();
 }
 
 void DrawUI::LayerWindow()
@@ -949,6 +959,9 @@ void DrawUI::InitWindow()
 		inited = true;
 	}
 }
+
+
+//chat networking
 
 void DrawUI::GetMsg(std::map<std::string, std::string> messageObject)
 {

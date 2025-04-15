@@ -15,10 +15,12 @@ VertexBuffer::~VertexBuffer()
 	GLCall(glDeleteBuffers(1, &VBO));
 }
 
+
 void VertexBuffer::Bind() const
 {
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, VBO));
 }
+
 void VertexBuffer::UnBind() const
 {
 	GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
