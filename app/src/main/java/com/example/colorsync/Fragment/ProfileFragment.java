@@ -343,7 +343,7 @@ public class ProfileFragment extends Fragment {
         loadImages();
     }
 
-    private void loadImages() {
+    public void loadImages() {
         MainActivity.getApi().getUserImages(UserManager.getBearer(), user.getId()).enqueue(new Callback<List<ImageData>>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override

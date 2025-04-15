@@ -44,6 +44,7 @@ import com.example.colorsync.DataType.ImageData;
 import com.example.colorsync.DataType.ImageVisibility;
 import com.example.colorsync.DataType.User;
 import com.example.colorsync.Fragment.HomeFragment;
+import com.example.colorsync.Fragment.ProfileFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Objects;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout fsiUI;
     private ImageButton fsiUI_back;
     private ImageButton fsiUI_options;
+    private boolean fsiUI_isOpen;
     private View fsiUI_background;
     private MainActivity.imageAnimationProperties fsiProps;
     private static MainActivity instance;
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
         instance = this;
         navbarUIOnly = false;
         openAddPost = false;
+        fsiUI_isOpen = false;
 
         constraintLayout = findViewById(R.id.main);
 
@@ -180,19 +183,24 @@ public class MainActivity extends AppCompatActivity {
                     .withEndAction(() -> fullscreenImage.setVisibility(View.GONE))
                     .setDuration(300);
 
-            ViewPropertyAnimator uiAnim = fsiUI.animate()
-                    .alpha(0f)
-                    .withEndAction(() -> fsiUI.setVisibility(View.GONE))
-                    .setDuration(300);
-
             ViewPropertyAnimator uiBackground = fsiUI_background.animate()
                     .alpha(0f)
                     .withEndAction(() -> fsiUI_background.setVisibility(View.GONE))
                     .setDuration(300);
 
+            if (fsiUI.getVisibility() == View.VISIBLE) {
+                fsiUI.animate()
+                        .alpha(0f)
+                        .withEndAction(() -> {
+                            fsiUI.setVisibility(View.GONE);
+                            fsiUI.setAlpha(1f);
+                        })
+                        .setDuration(300)
+                        .start();
+            }
+
             widthHeightSet.start();
             imageAnim.start();
-            uiAnim.start();
             uiBackground.start();
         });
 
@@ -271,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onResponse(Call<Void> call, Response<Void> response) {
                                         if (response.isSuccessful()) {
-                                            //TODO: update adapter
+                                            deleteClose();
                                         } else if (response.code() == 409) {
                                             new AlertDialog.Builder(MainActivity.this)
                                                     .setTitle("Couldn't delete image")
@@ -281,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
                                                             @Override
                                                             public void onResponse(Call<Void> call, Response<Void> response) {
                                                                 if (response.isSuccessful()) {
-                                                                    //TODO: update adapter
+                                                                    deleteClose();
                                                                 } else new AlertDialog.Builder(MainActivity.this)
                                                                         .setTitle("Error deleting image")
                                                                         .setMessage(response.message())
@@ -327,6 +335,10 @@ public class MainActivity extends AppCompatActivity {
             menu.show();
         });
 
+        fullscreenImage.setOnClickListener(this::openFsiUI);
+
+        fsiUI_background.setOnClickListener(this::openFsiUI);
+
 
         UserManager.loadToken(this)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -366,6 +378,41 @@ public class MainActivity extends AppCompatActivity {
                         }, throwable -> {
                             login();
                         });
+    }
+
+    private void deleteClose() {
+        Fragment currentFragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+
+        if (currentFragment instanceof ProfileFragment) {
+            ((ProfileFragment)currentFragment).loadImages();
+        }
+
+        fullscreenImage.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    fullscreenImage.setVisibility(View.GONE);
+                    fullscreenImage.setAlpha(1f);
+                })
+                .start();
+
+        fsiUI.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    fsiUI.setVisibility(View.GONE);
+                    fsiUI.setAlpha(1f);
+                })
+                .start();
+
+        fsiUI_background.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    fsiUI_background.setVisibility(View.GONE);
+                    fsiUI_background.setAlpha(1f);
+                })
+                .start();
     }
 
     private void navigatePop(int id, int destination) {
@@ -428,6 +475,72 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    private void openFsiUI(View v) {
+        ConstraintSet open = new ConstraintSet();
+        open.clone(constraintLayout);
+        open.connect(R.id.fsiUI_layout, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+        open.clear(R.id.fsiUI_layout, ConstraintSet.BOTTOM);
+        open.setVisibility(R.id.fsiUI_layout, View.VISIBLE);
+        open.clear(R.id.fullscreenImage);
+        open.clear(R.id.fsiUI_background);
+
+        ConstraintSet closed = new ConstraintSet();
+        closed.clone(constraintLayout);
+        closed.connect(R.id.fsiUI_layout, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+        closed.clear(R.id.fsiUI_layout, ConstraintSet.TOP);
+        closed.clear(R.id.fullscreenImage);
+        closed.clear(R.id.fsiUI_background);
+
+        ChangeBounds transition = new ChangeBounds();
+        transition.setDuration(200);
+
+        transition.excludeTarget(R.id.fullscreenImage, true);
+        transition.excludeTarget(R.id.fsiUI_background, true);
+
+        boolean opening = fsiUI.getVisibility() == View.GONE;
+        if (opening) {
+            closed.applyTo(constraintLayout);
+            fsiUI.setVisibility(View.VISIBLE);
+        } else {
+            transition.addListener(new android.transition.Transition.TransitionListener() {
+                @Override
+                public void onTransitionStart(android.transition.Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionEnd(android.transition.Transition transition) {
+                    fsiUI.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onTransitionCancel(android.transition.Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionPause(android.transition.Transition transition) {
+
+                }
+
+                @Override
+                public void onTransitionResume(android.transition.Transition transition) {
+
+                }
+            });
+        }
+
+        constraintLayout.post(() -> {
+            TransitionManager.beginDelayedTransition(constraintLayout, transition);
+            if (opening) {
+                open.applyTo(constraintLayout);
+            }
+            else {
+                closed.applyTo(constraintLayout);
+            }
+        });
     }
 
     private static class imageAnimationProperties {
@@ -517,11 +630,6 @@ public class MainActivity extends AppCompatActivity {
                                 .translationY(0)
                                 .setDuration(300);
 
-                        fsiUI.setAlpha(0f);
-
-                        ViewPropertyAnimator uiAnim = fsiUI.animate()
-                                .alpha(1f)
-                                .setDuration(300);
 
                         fsiUI_background.setAlpha(0f);
 
@@ -529,7 +637,6 @@ public class MainActivity extends AppCompatActivity {
                                 .alpha(1f)
                                 .setDuration(300);
 
-                        fsiUI.setVisibility(View.VISIBLE);
                         fsiUI_background.setVisibility(View.VISIBLE);
 
                         fullscreenImage.setMask(startWidth, startHeight);
@@ -538,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
 
                         widthHeightSet.start();
                         translateAnim.start();
-                        uiAnim.start();
+                        uiBackground.start();
 
                         fsiProps.startWidth = startWidth;
                         fsiProps.startHeight = startHeight;

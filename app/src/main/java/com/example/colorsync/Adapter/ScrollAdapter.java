@@ -172,15 +172,13 @@ public class ScrollAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             showCommentsContainer.setOnClickListener(v -> {
                 if (commentsView.getVisibility() == View.GONE) {
                     commentsView.measure(
-                            View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.AT_MOST),
+                            View.MeasureSpec.makeMeasureSpec(((View) commentsView.getParent()).getWidth(), View.MeasureSpec.EXACTLY),
                             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
                     );
 
                     int targetHeight = commentsView.getMeasuredHeight();
                     int maxHeight  = (int)(context.getResources().getDisplayMetrics().density * 300);
                     targetHeight = Math.min(targetHeight, maxHeight);
-
-                    Toast.makeText(context, "height: " + targetHeight, Toast.LENGTH_SHORT).show();
 
                     ValueAnimator heightAnimator = ValueAnimator.ofInt(0, targetHeight);
                     heightAnimator.addUpdateListener(animation -> {
