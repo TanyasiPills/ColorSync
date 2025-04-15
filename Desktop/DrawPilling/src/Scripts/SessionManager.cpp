@@ -20,6 +20,10 @@
 #include "WindowManager.h"
 
 
+//
+// This script initialize & shut down the program
+//
+
 SessionData Manager::Assembly(SessionData& data) {
 
 

@@ -16,6 +16,7 @@ std::vector<RoomUser> users;
 std::vector<sio::object_message::ptr> history;
 bool isAmOwner = false;
 
+//initialization
 void SManager::SetRenderer(NewRenderer& rendererIn)
 {
     rendererSocks = &rendererIn;
@@ -26,9 +27,14 @@ void SManager::SetMyOwnerState(bool in)
     isAmOwner = in;
 }
 
+//sending & recieving data from other scripts
 bool SManager::AmIOwner()
 {
     return isAmOwner;
+}
+std::vector<RoomUser>* SManager::GetUsers()
+{
+    return &users;
 }
 
 unsigned int* SManager::GetCanvasSize()
@@ -41,11 +47,7 @@ void SManager::SetCanvasSize(unsigned int width, unsigned int height)
     canvasSizes[1] = height;
 }
 
-std::vector<RoomUser>* SManager::GetUsers()
-{
-    return &users;
-}
-
+//basic functions for network
 void SManager::Connect(std::string ip, std::map<std::string, std::string> header, std::map<std::string, std::string> room)
 {
     std::string connectionIp = "http://" + ip + ":3000";
@@ -139,7 +141,9 @@ void ProcessAction(sio::object_message::ptr dataIn)
             int typeOfNode = data["node"]->get_int();
             int location = data["location"]->get_int();
             if (typeOfNode == 0) {
-                rendererSocks->CreateLayer(location);
+                DrawMessage msg;
+                msg.location = location;
+                rendererSocks->ExecuteMainThreadTask(msg);
             }
             else if (typeOfNode == 1) {
                 rendererSocks->CreateFolder(location);
@@ -173,7 +177,6 @@ void ProcessAction(sio::object_message::ptr dataIn)
         break;
     }
 }
-
 void SManager::ProcessHistory()
 {
     for (sio::object_message::ptr data : history)
@@ -183,6 +186,24 @@ void SManager::ProcessHistory()
     history.clear();
 }
 
+
+void SManager::Kick(unsigned int id) {
+    if (!onserver) return;
+
+    users.erase(std::remove_if(users.begin(), users.end(), [id](const RoomUser& user) {return user.id == id;}), users.end());
+
+    sio::message::ptr msg = sio::object_message::create();
+    sio::message::ptr data = sio::object_message::create();
+
+    data->get_map()["id"] = sio::int_message::create(id);
+    msg->get_map()["type"] = sio::string_message::create("kick");
+
+    msg->get_map()["data"] = data;
+
+    h.socket()->emit("manage", msg);
+}
+
+//recieving socket messages
 void SManager::OnPositionMessage(sio::event& ev) {
     sio::object_message::ptr dataIn = ev.get_message();
     int userId = dataIn->get_map()["userId"]->get_int();
@@ -196,20 +217,6 @@ void SManager::OnPositionMessage(sio::event& ev) {
         user.pos = userPos;
     }
 }
-
-void SManager::SendPositionMessage(Position cursorPos)
-{
-    sio::message::ptr msg = sio::object_message::create();
-
-    sio::message::ptr posObj = sio::object_message::create();
-    posObj->get_map()["x"] = sio::double_message::create(cursorPos.x);
-    posObj->get_map()["y"] = sio::double_message::create(cursorPos.y);
-
-    msg->get_map()["position"] = posObj;
-
-    h.socket()->emit("mouse", msg);
-}
-
 void SManager::OnSystemMessage(sio::event& ev)
 {
     std::cout << "[SYSTEM]: ";
@@ -258,147 +265,10 @@ void SManager::OnSystemMessage(sio::event& ev)
         break;
     }
 }
-
 void SManager::OnAction(sio::event& ev) {
     sio::object_message::ptr dataIn = ev.get_message();
     ProcessAction(dataIn);
 }
-
-void SManager::Kick(unsigned int id) {
-    if (!onserver) return;
-
-    sio::message::ptr msg = sio::object_message::create();
-    sio::message::ptr data = sio::object_message::create();
-
-    data->get_map()["id"] = sio::int_message::create(id);
-    msg->get_map()["type"] = sio::string_message::create("kick");
-
-    msg->get_map()["data"] = data;
-
-    h.socket()->emit("manage", msg);
-
-}
-
-void SManager::SendAction(Message& dataIn)
-{
-    if (!onserver) return;
-    sio::message::ptr msg = sio::object_message::create();
-    sio::message::ptr data = sio::object_message::create();
-
-    switch (dataIn.type)
-    {
-        case Draw:
-            try {
-                DrawMessage* draw = dynamic_cast<DrawMessage*>(&dataIn);
-                msg->get_map()["type"] = sio::int_message::create(Draw);
-                data->get_map()["layer"] = sio::int_message::create(draw->layer);
-                data->get_map()["brush"] = sio::int_message::create(draw->brush);
-                data->get_map()["size"] = sio::double_message::create(draw->size);
-                try {
-                    sio::message::ptr positionsArray = sio::array_message::create();
-                    for (int i = 0; i < draw->positions.size(); i++)
-                    {
-                        sio::message::ptr posObj = sio::object_message::create();
-                        posObj->get_map()["x"] = sio::double_message::create(draw->positions[i].x);
-                        posObj->get_map()["y"] = sio::double_message::create(draw->positions[i].y);
-                        positionsArray->get_vector().push_back(posObj);
-                    }
-                    data->get_map()["positions"] = positionsArray;
-
-                }
-                catch (...) {
-                    std::cerr << "Error parsing positions JSON" << std::endl;
-                }
-                try {
-                    sio::message::ptr offsetObj = sio::object_message::create();
-
-                    offsetObj->get_map()["x"] = sio::double_message::create(draw->offset.x);
-                    offsetObj->get_map()["y"] = sio::double_message::create(draw->offset.y);
-
-                    data->get_map()["offset"] = offsetObj;
-                }
-                catch (...) {
-                    std::cerr << "Error parsing offset JSON" << std::endl;
-                }
-                try {
-                    sio::message::ptr offsetObj = sio::object_message::create();
-
-                    offsetObj->get_map()["x"] = sio::double_message::create(draw->ratio.x);
-                    offsetObj->get_map()["y"] = sio::double_message::create(draw->ratio.y);
-
-                    data->get_map()["ratio"] = offsetObj;
-                }
-                catch (...) {
-                    std::cerr << "Error parsing ratio JSON" << std::endl;
-                }
-                try {
-                    sio::message::ptr colorObj = sio::object_message::create();
-
-                    colorObj->get_map()["r"] = sio::double_message::create(draw->color[0]);
-                    colorObj->get_map()["g"] = sio::double_message::create(draw->color[1]);
-                    colorObj->get_map()["b"] = sio::double_message::create(draw->color[2]);
-
-                    data->get_map()["color"] = colorObj;
-                }
-                catch (...) {
-                    std::cerr << "Error parsing color JSON" << std::endl;
-                }
-                try {
-                    sio::message::ptr cursorScaleObj = sio::object_message::create();
-
-                    cursorScaleObj->get_map()["x"] = sio::double_message::create(draw->cursorScale[0]);
-                    cursorScaleObj->get_map()["y"] = sio::double_message::create(draw->cursorScale[1]);
-                    cursorScaleObj->get_map()["z"] = sio::double_message::create(draw->cursorScale[2]);
-
-                    data->get_map()["CurSca"] = cursorScaleObj;
-                }
-                catch (...) {
-                    std::cerr << "Error parsing cursorscale JSON" << std::endl;
-                }
-            }
-            catch (...) {
-                std::cerr << "bad data type: not DrawMessage" << std::endl;
-            }
-            break;
-        case AddNode:
-            try {
-                NodeAddMessage* node = dynamic_cast<NodeAddMessage*>(&dataIn);
-                msg->get_map()["type"] = sio::int_message::create(AddNode);
-                data->get_map()["node"] = sio::int_message::create(node->nodeType);
-                data->get_map()["location"] = sio::int_message::create(node->location);
-            }
-            catch (...) {
-                std::cerr << "bad data type: not AddNodeMessage" << std::endl;
-            }
-            break;
-        case RenameNode:
-            try {
-                NodeRenameMessage* node = dynamic_cast<NodeRenameMessage*>(&dataIn);
-                msg->get_map()["type"] = sio::int_message::create(RenameNode);
-                data->get_map()["name"] = sio::string_message::create(node->name);
-                data->get_map()["location"] = sio::int_message::create(node->location);
-            }
-            catch (...) {
-                std::cerr << "bad data type: not RenameNodeMessage" << std::endl;
-            }
-            break;
-        case DeleteNode:
-            try {
-                NodeDeleteMessage* node = dynamic_cast<NodeDeleteMessage*>(&dataIn);
-                msg->get_map()["type"] = sio::int_message::create(DeleteNode);
-                data->get_map()["location"] = sio::int_message::create(node->location);
-            }
-            catch (...) {
-                std::cerr << "bad data type: not DeleteNodeMessage" << std::endl;
-            }
-        default:
-            break;
-    }
-    msg->get_map()["data"] = data;
-
-    h.socket()->emit("action", msg);
-}
-
 void SManager::OnMessage(sio::event& ev)
 {
     sio::object_message::ptr nem = ev.get_message();
@@ -411,6 +281,138 @@ void SManager::OnMessage(sio::event& ev)
 
 }
 
+//sending socket messages
+void SManager::SendAction(Message& dataIn)
+{
+    if (!onserver) return;
+    sio::message::ptr msg = sio::object_message::create();
+    sio::message::ptr data = sio::object_message::create();
+
+    switch (dataIn.type)
+    {
+    case Draw:
+        try {
+            DrawMessage* draw = dynamic_cast<DrawMessage*>(&dataIn);
+            msg->get_map()["type"] = sio::int_message::create(Draw);
+            data->get_map()["layer"] = sio::int_message::create(draw->layer);
+            data->get_map()["brush"] = sio::int_message::create(draw->brush);
+            data->get_map()["size"] = sio::double_message::create(draw->size);
+            try {
+                sio::message::ptr positionsArray = sio::array_message::create();
+                for (int i = 0; i < draw->positions.size(); i++)
+                {
+                    sio::message::ptr posObj = sio::object_message::create();
+                    posObj->get_map()["x"] = sio::double_message::create(draw->positions[i].x);
+                    posObj->get_map()["y"] = sio::double_message::create(draw->positions[i].y);
+                    positionsArray->get_vector().push_back(posObj);
+                }
+                data->get_map()["positions"] = positionsArray;
+
+            }
+            catch (...) {
+                std::cerr << "Error parsing positions JSON" << std::endl;
+            }
+            try {
+                sio::message::ptr offsetObj = sio::object_message::create();
+
+                offsetObj->get_map()["x"] = sio::double_message::create(draw->offset.x);
+                offsetObj->get_map()["y"] = sio::double_message::create(draw->offset.y);
+
+                data->get_map()["offset"] = offsetObj;
+            }
+            catch (...) {
+                std::cerr << "Error parsing offset JSON" << std::endl;
+            }
+            try {
+                sio::message::ptr offsetObj = sio::object_message::create();
+
+                offsetObj->get_map()["x"] = sio::double_message::create(draw->ratio.x);
+                offsetObj->get_map()["y"] = sio::double_message::create(draw->ratio.y);
+
+                data->get_map()["ratio"] = offsetObj;
+            }
+            catch (...) {
+                std::cerr << "Error parsing ratio JSON" << std::endl;
+            }
+            try {
+                sio::message::ptr colorObj = sio::object_message::create();
+
+                colorObj->get_map()["r"] = sio::double_message::create(draw->color[0]);
+                colorObj->get_map()["g"] = sio::double_message::create(draw->color[1]);
+                colorObj->get_map()["b"] = sio::double_message::create(draw->color[2]);
+
+                data->get_map()["color"] = colorObj;
+            }
+            catch (...) {
+                std::cerr << "Error parsing color JSON" << std::endl;
+            }
+            try {
+                sio::message::ptr cursorScaleObj = sio::object_message::create();
+
+                cursorScaleObj->get_map()["x"] = sio::double_message::create(draw->cursorScale[0]);
+                cursorScaleObj->get_map()["y"] = sio::double_message::create(draw->cursorScale[1]);
+                cursorScaleObj->get_map()["z"] = sio::double_message::create(draw->cursorScale[2]);
+
+                data->get_map()["CurSca"] = cursorScaleObj;
+            }
+            catch (...) {
+                std::cerr << "Error parsing cursorscale JSON" << std::endl;
+            }
+        }
+        catch (...) {
+            std::cerr << "bad data type: not DrawMessage" << std::endl;
+        }
+        break;
+    case AddNode:
+        try {
+            NodeAddMessage* node = dynamic_cast<NodeAddMessage*>(&dataIn);
+            msg->get_map()["type"] = sio::int_message::create(AddNode);
+            data->get_map()["node"] = sio::int_message::create(node->nodeType);
+            data->get_map()["location"] = sio::int_message::create(node->location);
+        }
+        catch (...) {
+            std::cerr << "bad data type: not AddNodeMessage" << std::endl;
+        }
+        break;
+    case RenameNode:
+        try {
+            NodeRenameMessage* node = dynamic_cast<NodeRenameMessage*>(&dataIn);
+            msg->get_map()["type"] = sio::int_message::create(RenameNode);
+            data->get_map()["name"] = sio::string_message::create(node->name);
+            data->get_map()["location"] = sio::int_message::create(node->location);
+        }
+        catch (...) {
+            std::cerr << "bad data type: not RenameNodeMessage" << std::endl;
+        }
+        break;
+    case DeleteNode:
+        try {
+            NodeDeleteMessage* node = dynamic_cast<NodeDeleteMessage*>(&dataIn);
+            msg->get_map()["type"] = sio::int_message::create(DeleteNode);
+            data->get_map()["location"] = sio::int_message::create(node->location);
+        }
+        catch (...) {
+            std::cerr << "bad data type: not DeleteNodeMessage" << std::endl;
+        }
+    default:
+        break;
+    }
+    msg->get_map()["data"] = data;
+
+    h.socket()->emit("action", msg);
+}
+void SManager::SendPositionMessage(Position cursorPos)
+{
+    sio::message::ptr msg = sio::object_message::create();
+
+    sio::message::ptr posObj = sio::object_message::create();
+    posObj->get_map()["x"] = sio::double_message::create(cursorPos.x);
+    posObj->get_map()["y"] = sio::double_message::create(cursorPos.y);
+
+    msg->get_map()["position"] = posObj;
+
+    h.socket()->emit("mouse", msg);
+}
 void SManager::SendMsg(std::string msg) {
     sio::message::ptr json_msg = sio::object_message::create();
     json_msg->get_map()["message"] = sio::string_message::create(msg);

@@ -8,7 +8,6 @@ static auto& runtime = RuntimeData::getInstance();
 
 class SocialMedia;
 
-constexpr size_t MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 	((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -21,6 +20,7 @@ size_t ImageWriteCallback(void* ptr, size_t size, size_t nmemb, void* userdata) 
 	buffer.insert(buffer.end(), static_cast<uint8_t*>(ptr), static_cast<uint8_t*>(ptr) + totalSize);
 	return totalSize;
 }
+
 
 void HManager::InitUser()
 {
@@ -76,6 +76,7 @@ void HManager::Down()
 {
 	curl_global_cleanup();
 }
+
 
 nlohmann::json HManager::PostRequest(std::string text, std::string path, int imageId, std::vector<std::string> tags, bool forcePost)
 {
@@ -313,11 +314,23 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		long http_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
+		if (res != CURLE_OK)
+		{
+			std::cerr << "Curl failed nya: " << curl_easy_strerror(res) << std::endl;
+		}
+
 		curl_slist_free_all(headers);
 		curl_easy_cleanup(curl);
 
+
+		std::cout << http_code << std::endl;
+
 		if (http_code != 200 && http_code != 201 && http_code != 204)
 		{
+			/*
+			nlohmann::json jsonResponse = nlohmann::json::parse(result);
+			std::cout << jsonResponse.dump(4) << std::endl;
+			*/
 			std::cerr << "Get voided bitch" << std::endl;
 			return nullptr;
 		}
@@ -353,6 +366,7 @@ nlohmann::json HManager::Request(std::string query, std::string body, Method met
 		return nlohmann::json{};
 	}
 }
+
 
 std::vector<uint8_t> HManager::ImageRequest(const std::string query)
 {

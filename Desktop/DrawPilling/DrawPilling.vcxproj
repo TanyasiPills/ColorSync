@@ -1034,10 +1034,13 @@
     <None Include="Resources\Shaders\Style.shader" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="icon.ico" />
     <Image Include="Resources\icons\airBrush.png" />
     <Image Include="Resources\icons\chalkBrush.png" />
+    <Image Include="Resources\icons\comment.png" />
     <Image Include="Resources\icons\crown.png" />
     <Image Include="Resources\icons\cursorBrush.png" />
+    <Image Include="Resources\icons\eraser.png" />
     <Image Include="Resources\icons\eyeClosed.png" />
     <Image Include="Resources\icons\eyesOpen.png" />
     <Image Include="Resources\icons\file.png" />
@@ -1046,8 +1049,14 @@
     <Image Include="Resources\icons\folderLayer.png" />
     <Image Include="Resources\icons\layer.png" />
     <Image Include="Resources\icons\liked.png" />
+    <Image Include="Resources\icons\newFolder.png" />
+    <Image Include="Resources\icons\newLayer.png" />
     <Image Include="Resources\icons\notLiked.png" />
     <Image Include="Resources\icons\penBrush.png" />
+    <Image Include="Resources\icons\search.png" />
+    <Image Include="Resources\icons\searchUser.png" />
+    <Image Include="Resources\icons\size.png" />
+    <Image Include="Resources\icons\trash.png" />
     <Image Include="Resources\icons\waterBrush.png" />
     <Image Include="Resources\Textures\airBrush.png" />
     <Image Include="Resources\Textures\charCoalBrush.png" />

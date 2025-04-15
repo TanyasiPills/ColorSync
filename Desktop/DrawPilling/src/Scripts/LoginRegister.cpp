@@ -9,6 +9,8 @@ static auto& runtime = RuntimeData::getInstance();
 static bool loginOpen = false;
 static bool registerOpen = false;
 
+//sign in, sign up window
+
 void LoginRegister::Login(bool& loginWindow) 
 {
     if (loginWindow || loginOpen) {
@@ -47,7 +49,6 @@ void LoginRegister::Login(bool& loginWindow)
             {
                 Lss::LeftTop(Lss::VW, Lss::VH);
                 Lss::Text("Username", 2 * Lss::VH);
-                static char usernameText[128] = "";
                 Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
                 Lss::InputText("usernameInput", usernameText, sizeof(usernameText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "Username");
             }
@@ -62,7 +63,7 @@ void LoginRegister::Login(bool& loginWindow)
             Lss::Text("Password", 2 * Lss::VH);
             static char passwordText[128] = "";
             Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
-            Lss::InputText("passwordInput", passwordText, sizeof(passwordText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "Password");
+            Lss::InputText("passwordInput", passwordText, sizeof(passwordText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_Password, 0, "Password");
 
             Lss::LeftTop(Lss::VW, 1.5f*Lss::VH);
             std::string name = (!registerOpen) ? "Sign In" : "Sign Up";

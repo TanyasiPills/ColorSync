@@ -167,7 +167,12 @@ public:
 	void ProcessTasks() {
 		DrawMessage task;
 		while (taskQueue.pop(task)) {
-			RenderDrawMessage(task);
+			if (task.location != -1) {
+				CreateLayer(task.location);
+			}
+			else {
+				RenderDrawMessage(task);
+			}
 		}
 	}
 

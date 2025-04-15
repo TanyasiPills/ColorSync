@@ -4,12 +4,20 @@
 
 VertexArray::VertexArray() 
 {
-	GLCall(glGenVertexArrays(1, &VAO));
+	if (!glfwGetCurrentContext()) {
+		std::cerr << "No OpenGL context active! Nyaa!\n";
+	}
+	else {
+		GLCall(glGenVertexArrays(1, &VAO));
+	}
+
 }
+
 VertexArray::~VertexArray() 
 {
 	GLCall(glDeleteVertexArrays(1, &VAO));
 }
+
 
 void VertexArray::SetLayout(const VertexBufferLayout& layoutIn)
 {
@@ -31,11 +39,13 @@ void VertexArray::SetBuffer(const VertexBuffer& vertexBuffer)
 	}
 }
 
+
 void VertexArray::Bind() const
 {
 
 	GLCall(glBindVertexArray(VAO));
 }
+
 void VertexArray::UnBind() const
 {
 	GLCall(glBindVertexArray(0));

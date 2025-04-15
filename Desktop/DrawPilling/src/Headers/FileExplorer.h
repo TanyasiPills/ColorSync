@@ -28,7 +28,10 @@ public:
 	static bool Exists();
 	static void FileExplorerUI(bool* creatorStuff, int idForFormat = 2);
 	static std::vector<std::string> GetFilesInDirectory(const std::string& directory);
+
 	static std::string GetImagePath();
+	static void ResetPath();
+
 	static std::vector<FolderSave>* GetFavorites();
 	static std::vector<FolderSave>* GetRecents();
 	static void SetFavorites(std::vector<FolderSave> fvs);

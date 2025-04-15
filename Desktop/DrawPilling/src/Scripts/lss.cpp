@@ -4,6 +4,11 @@
 #include "stb_image/stb_image.h"
 #include "Texture.h"
 
+
+//
+// This file is a wrapper aroun ImGui so that calling ui objects and costumizing them wont take one houndred line per UI element
+//
+
 static GLFWwindow* window = nullptr;
 
 bool centered = false;
@@ -49,6 +54,17 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	ImGui::GetStyle().Colors[ImGuiCol_Border] = colorArray[Border];
 	ImGui::GetStyle().Colors[ImGuiCol_Text] = colorArray[Font];
 
+
+	ImGui::GetStyle().Colors[ImGuiCol_Header] = colorArray[HeavyHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_HeaderHovered] = colorArray[LowHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_HeaderActive] = colorArray[HeavyHighlight];
+
+	ImGui::GetStyle().Colors[ImGuiCol_SliderGrab] = colorArray[HeavyHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive] = colorArray[HeavyHighlight];
+
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBgHovered] = colorArray[LowHighlight];
+	ImGui::GetStyle().Colors[ImGuiCol_FrameBgActive] = colorArray[Border];
+
 	ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);
 	ImGui::GetStyle().Colors[ImGuiCol_FrameBg] = colorArray[InputBg];
 	ImGui::GetStyle().Colors[ImGuiCol_TextDisabled] = colorArray[Hint];
@@ -65,6 +81,7 @@ void Lss::Init(GLFWwindow* windowIn, int screenWidth,  int screenHeight)
 	}
 }
 
+
 void ResetFont() {
 	for (size_t i = 0; i < fontPopCount; i++)
 	{
@@ -74,23 +91,19 @@ void ResetFont() {
 	haveFont = false;
 }
 
+void Lss::End() {
+	prevType = -1;
+	if (haveFont) ResetFont();
+}
+
+
 void Lss::SetColor(int region, int colorToSet) {
 	ImGui::GetStyle().Colors[regionArray[region]] = colorArray[colorToSet];
 }
 
-void Center(float itemWidth) {
-	float width = ImGui::GetWindowWidth();
-	ImGui::SetCursorPosX((width - itemWidth)*0.5f);
-}
-
-void CenterWindow() {
-	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-}
-
 void Lss::SetFontSize(float size) {
 	haveFont = true;
-	int type = (size/VH*2)-1;
+	int type = (size / VH * 2) - 1;
 	if (prevType != type) {
 		if (type >= 0 && type < fonts.size()) {
 			ImGui::PushFont(fonts[type]);
@@ -105,6 +118,19 @@ void Lss::SetFontSize(float size) {
 
 }
 
+
+void Center(float itemWidth) {
+	float width = ImGui::GetWindowWidth();
+	ImGui::SetCursorPosX((width - itemWidth)*0.5f);
+}
+
+void CenterWindow() {
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+}
+
+
+//windows
 void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWindowFlags windowFlags) {
 	if (flags & Centered && size.x > 0) Center(size.x);
 	if (flags & Rounded) {
@@ -129,6 +155,42 @@ void Lss::Child(std::string name, ImVec2 size, bool border, int flags, ImGuiWind
 	}
 }
 
+bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags, int windowFlags)
+{
+	if (*open) {
+		ImGui::OpenPopup(label.c_str());
+		ImGui::SetNextWindowSize(size);
+		if (flags & Trans) {
+			ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, colorArray[Transparent]);
+		}
+		if (flags & Centered) {
+			CenterWindow();
+		}
+		if (flags & Bordering) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
+		}
+		if (flags & Rounded) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		}
+	}
+	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
+
+	if (*open) {
+		if (flags & Trans) {
+			ImGui::PopStyleColor();
+		}
+		if (flags & Bordering) {
+			ImGui::PopStyleVar();
+		}
+		if (flags & Rounded) {
+			ImGui::PopStyleVar();
+		}
+	}
+	return isOpen;
+}
+
+
+//basic elements
 bool Lss::Button(std::string textIn, ImVec2 size, float textSizeIn, int flags) {
 	SetFontSize(textSizeIn);
 
@@ -277,40 +339,6 @@ bool Lss::InputInt(std::string label, int* value, ImVec2 size, int flags, int in
 	return modified;
 }
 
-bool Lss::Modal(std::string label, bool* open, ImVec2 size, int flags,int windowFlags)
-{
-	if (*open) {
-		ImGui::OpenPopup(label.c_str());
-		ImGui::SetNextWindowSize(size);
-		if (flags & Trans) {
-			ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, colorArray[Transparent]);
-		}
-		if (flags & Centered) {
-			CenterWindow();
-		}
-		if (flags & Bordering) {
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH/6);
-		}
-		if (flags & Rounded) {
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
-		}
-	}
-	bool isOpen = ImGui::BeginPopupModal(label.c_str(), open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | windowFlags);
-	
-	if (*open) {
-		if (flags & Trans) {
-			ImGui::PopStyleColor();
-		}
-		if (flags & Bordering) {
-			ImGui::PopStyleVar();
-		}
-		if (flags & Rounded) {
-			ImGui::PopStyleVar();
-		}
-	}
-	return isOpen;
-}
-
 void Lss::Separator(float thickness, float width, int color, int flags) {
 	if (flags & Centered) Center(width);
 
@@ -328,6 +356,7 @@ void Lss::Separator(float thickness, float width, int color, int flags) {
 }
 
 
+//functions for moving elemnts to correct positions
 void Lss::Left(float distance) {
 	float currentPosX = ImGui::GetCursorPosX();
 	ImGui::SetCursorPosX(currentPosX + distance);
@@ -353,19 +382,16 @@ void Lss::LeftTop(float leftIn, float topIn)
 	Lss::Left(leftIn);
 	Lss::Top(topIn);
 }
-
 void Lss::LeftBottom(float leftIn, float bottomIn)
 {
 	Lss::Left(leftIn);
 	Lss::Bottom(bottomIn);
 }
-
 void Lss::RightTop(float rightIn, float topIn)
 {
 	Lss::Right(rightIn);
 	Lss::Top(topIn);
 }
-
 void Lss::RightBottom(float rightIn, float bottomIn)
 {
 	Lss::Right(rightIn);
@@ -377,12 +403,7 @@ void Lss::Back() {
 	originalCursorPosition.x = -FLT_MAX;
 }
 
-
-void Lss::End() {
-	prevType = -1;
-	if (haveFont) ResetFont();
-}
-
+//bound checking
 bool Lss::InBound(ImVec2 pos, ImVec2 start, ImVec2 size)
 {
 	return !(pos.x < start.x || pos.x >(start.x + size.x) ||

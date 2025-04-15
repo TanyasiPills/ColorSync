@@ -67,9 +67,34 @@ int mode = 0; // 0 - social, 1 - settings, 2 - search, ...
 MyTexture notLikedTexture;
 MyTexture likedTexture;
 MyTexture commentTexture;
+MyTexture searchTexture;
+MyTexture searchProfileTexture;
 
 bool needError = true;
 
+std::unordered_map<GLuint, int> imageIndexes;
+
+// initialization
+void SocialMedia::LoadTextures()
+{
+    notLikedTexture.Init("Resources/icons/notLiked.png");
+    notLikedTexture.BlendCorrection();
+
+    likedTexture.Init("Resources/icons/liked.png");
+    likedTexture.BlendCorrection();
+
+    commentTexture.Init("Resources/icons/comment.png");
+    commentTexture.BlendCorrection();
+
+    searchTexture.Init("Resources/icons/search.png");
+    searchTexture.BlendCorrection();
+
+    searchProfileTexture.Init("Resources/icons/searchUser.png");
+    searchProfileTexture.BlendCorrection();
+}
+
+
+//parsing/processing data for visuals
 std::string CalcTime(std::chrono::system_clock::time_point time)
 {
     auto now = std::chrono::system_clock::now();
@@ -93,20 +118,202 @@ std::string CalcTime(std::chrono::system_clock::time_point time)
     return outTime;
 }
 
-std::unordered_map<GLuint, int> imageIndexes;
+std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::string& timeData)
+{
+    std::tm tm = {};
+    std::istringstream ss(timeData);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    std::time_t timeUtc = std::mktime(&tm);
 
+    std::time_t locTime = timeUtc + 3600;
+    return std::chrono::system_clock::from_time_t(locTime);
+}
+
+void SocialMedia::GetPosts()
+{
+    if (runtime.ip[0] == '\0') {
+        if (needError) {
+            std::cout << "runtimeIp not set\n";
+            needError = false;
+        }
+        init = true;
+        return;
+    }
+    nlohmann::json jsonData = HManager::Request(("posts?offset=" + std::to_string(lastId) + "&take=10").c_str(), "", GET);
+    if (jsonData["offset"].is_null()) {
+        std::cout << "no data left to steal :c\n";
+        init = false;
+        return;
+    }
+    for (const auto& postJson : jsonData["data"]) {
+        Post post;
+        post.id = postJson["id"];
+        post.userId = postJson["user"]["id"];
+        if (users.find(post.userId) == users.end()) {
+            User user;
+            user.username = postJson["user"]["username"];
+            user.userImage = -1;
+            users[post.userId] = user;
+        }
+        if (postJson["imageId"].is_null()) post.imageId = -1;
+        else post.imageId = postJson["imageId"];
+        post.text = postJson["text"];
+        post.time = ParsePostTime(postJson["date"]);
+        post.likes = postJson["likes"];
+
+        for (const auto& tags : postJson["tags"]) {
+            post.tags.push_back(tags);
+        }
+
+        for (const auto& commentJson : postJson["comments"]) {
+            Comment comment;
+            comment.id = commentJson["id"];
+            comment.userId = commentJson["user"]["id"];
+            comment.text = commentJson["text"];
+            if (users.find(comment.userId) == users.end()) {
+                User user;
+                user.username = commentJson["user"]["username"];
+                user.userImage = -1;
+                users[comment.userId] = user;
+            }
+            comment.time = ParsePostTime(commentJson["date"]);
+
+            post.comments.push_back(comment);
+        }
+        posts.push_back(post);
+    }
+
+    lastId = jsonData["offset"];
+    LoadImages();
+}
+
+void SocialMedia::LoadImages()
+{
+    for (int i = 0; i < posts.size(); i++)
+    {
+        std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
+    }
+}
+
+void SocialMedia::LoadDependencies(Post& post, int index)
+{
+
+    LoadImageJa(post.userId, 2);
+    try {
+        std::unique_lock<std::mutex> lock(postMutex);
+        std::vector<Comment> commentsHere;
+        for (Comment& comment : post.comments) {
+            commentsHere.push_back(comment);
+        }
+        lock.unlock();
+        for (Comment comment : commentsHere) {
+            LoadImageJa(comment.userId, 2);
+        }
+    }
+    catch (...)
+    {
+        std::cerr << "error while loading commnents" << std::endl;
+    }
+    if (post.imageId != -1) LoadImageJa(post.imageId, 1, index);
+    else post.picLoaded = true;
+}
+
+void SocialMedia::LoadImageJa(int dataId, int type, int postId)
+{
+    std::vector<uint8_t> imageData;
+    switch (type) {
+    case 1: {
+        if (dataId == -1)return;
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+    } break;
+    case 2: {
+        if (profilePics.find(dataId) != profilePics.end()) break;
+        else {
+            imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
+        }
+    } break;
+    case 5: {
+        //auto start = std::chrono::high_resolution_clock::now();
+        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
+        dataId = postId;
+
+        //auto end = std::chrono::high_resolution_clock::now(); // End timing
+        //std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
+
+        //std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+    } break;
+    default:
+        break;
+    }
+    std::lock_guard<std::mutex> queueLock(textureQueueMutex);
+    textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
+}
+
+
+//processing data from threads
 std::queue<std::tuple<std::vector<uint8_t>, int, int>>* SocialMedia::GetTextureQueue()
 {
 	return &textureQueue;
 }
 
-void SocialMedia::LoadTextures()
+void SocialMedia::ProcessThreads()
 {
-    notLikedTexture.Init("Resources/icons/notLiked.png");
-    likedTexture.Init("Resources/icons/liked.png");
-    commentTexture.Init("Resources/icons/comment.png");
+    std::lock_guard<std::mutex> lock(textureQueueMutex);
+    while (!textureQueue.empty()) {
+        std::tuple<std::vector<uint8_t>, int, int> front = textureQueue.front();
+        textureQueue.pop();
+        std::vector<uint8_t> imageData = std::get<0>(front);
+        int dataId = std::get<1>(front);
+        int type = std::get<2>(front);
+
+        switch (type)
+        {
+        case 1:
+            if (dataId == -2) {
+                searchedPost.image = HManager::ImageFromRequest(imageData, searchedPost.ratio);
+                searchedPost.picLoaded = true;
+            }
+            else {
+                posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
+                posts[dataId].picLoaded = true;
+            }
+            break;
+        case 2: {
+            float ratioAF = 0.0f;
+            GLuint profileImage;
+            if (!imageData.empty()) {
+                profileImage = HManager::ImageFromRequest(imageData, ratioAF);
+                profilePics[dataId] = profileImage;
+            }
+            else profileImage = profilePics[dataId];
+
+            users[dataId].userImage = profileImage;
+            users[dataId].pPicLoaded = true;
+
+        } break;
+        case 3: {
+            float ratioAF = 0.0f;
+            runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioAF);
+        } break;
+        case 4:
+        {
+            float ratioAF = 0.0f;
+            GLuint idForImage = HManager::ImageFromRequest(imageData, ratioAF);
+            imageIndexes[idForImage] = dataId;
+            userImages.emplace_back(idForImage);
+        } break;
+        case 5: {
+            images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
+        } break;
+        default:
+            break;
+        }
+    }
 }
 
+
+//functions for search
 void ParseSearchText(const char* searchText, std::vector<std::string>& tags, std::string& text) {
     std::istringstream stream(searchText);
     std::string word;
@@ -221,60 +428,6 @@ void SocialMedia::GetPostForSearch(const int& postId)
 	}
 }
 
-void SocialMedia::ProcessThreads()
-{
-    std::lock_guard<std::mutex> lock(textureQueueMutex);
-    while (!textureQueue.empty()) {
-        std::tuple<std::vector<uint8_t>, int, int> front = textureQueue.front();
-        textureQueue.pop();
-        std::vector<uint8_t> imageData = std::get<0>(front);
-        int dataId = std::get<1>(front);
-        int type = std::get<2>(front);
-
-        switch (type)
-        {
-        case 1:
-            if (dataId == -2) {
-				searchedPost.image = HManager::ImageFromRequest(imageData, searchedPost.ratio);
-				searchedPost.picLoaded = true;
-            }
-            else {
-				posts[dataId].image = HManager::ImageFromRequest(imageData, posts[dataId].ratio);
-				posts[dataId].picLoaded = true;
-            }
-            break;
-        case 2: {
-            float ratioAF = 0.0f;
-            GLuint profileImage;
-            if (!imageData.empty()) {
-                profileImage = HManager::ImageFromRequest(imageData, ratioAF);
-                profilePics[dataId] = profileImage;
-            }
-            else profileImage = profilePics[dataId];
-
-		    users[dataId].userImage = profileImage;
-			users[dataId].pPicLoaded = true;
-
-            } break;
-        case 3: {
-                float ratioAF = 0.0f;
-                runtime.pfpTexture = HManager::ImageFromRequest(imageData, ratioAF);
-            } break;
-        case 4:
-            {
-                float ratioAF = 0.0f;
-                GLuint idForImage = HManager::ImageFromRequest(imageData, ratioAF);
-                imageIndexes[idForImage] = dataId;
-                userImages.emplace_back(idForImage);
-            } break;
-        case 5: {
-                images[dataId] = HManager::ImageFromRequest(imageData, postImageRelation[dataId].ratio);
-            } break;
-        default:
-            break;
-        }
-    }
-}
 
 void SocialMedia::LoadProfile(int id)
 {
@@ -301,6 +454,24 @@ void SocialMedia::LoadProfile(int id)
     }
 }
 
+
+void RoomsRequest()
+{
+    nlohmann::json result = HManager::Request("rooms", "", GET);
+    if (result.is_null()) std::cerr << "Can't get rooms\n";
+    for (auto& item : result) {
+        Room roome;
+        roome.roomName = item["name"];
+        roome.ownerName = item["owner"]["username"];
+        roome.userCount = item["playerCount"];
+        roome.capacity = item["maxPlayers"];
+        roome.password = item["passwordRequired"];
+        rooms.emplace_back(roome);
+    }
+}
+
+
+//pages for social media
 void SocialMedia::MainPage(float& width, float& height)
 {
 
@@ -310,7 +481,7 @@ void SocialMedia::MainPage(float& width, float& height)
     ImGui::GetStyle().ChildBorderSize = 0.0f;
     ImVec2 valid = ImGui::GetContentRegionAvail();
     ImGui::SetCursorPosY(0);
-    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered); //ImGuiWindowFlags_NoScrollbar);
+    Lss::Child("Feed", ImVec2(valid.x, 0), true, Centered, ImGuiWindowFlags_NoScrollbar);
 
     float scrollY = ImGui::GetScrollY();
     float scrollMaxY = ImGui::GetScrollMaxY();
@@ -384,6 +555,9 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::LeftTop(3.5f * Lss::VH, 0.5f*Lss::VH);
         float commentMax = validWidth - 7 * Lss::VH;
         float commentSize = 0.0f;
+
+        Lss::SetColor(ContainerBackground, LowHighlight);
+
         for (const auto& tags : post.tags)
         {
             Lss::SetFontSize(2.5f * Lss::VH);
@@ -400,6 +574,9 @@ void SocialMedia::MainPage(float& width, float& height)
             ImGui::EndChild();
             ImGui::SameLine();
         }
+
+        Lss::SetColor(ContainerBackground, ContainerBackground);
+
         ImGui::NewLine();
         ImGui::PopStyleVar();
 
@@ -420,7 +597,7 @@ void SocialMedia::MainPage(float& width, float& height)
             Lss::Top(Lss::VH);
             if(contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH),Centered);
             else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
-            Lss::Top(Lss::VH);
+            Lss::LeftTop(Lss::VH,Lss::VH);
             Lss::Text(std::to_string(post.likes), 4 * Lss::VH, SameLine);
             Lss::End();
         ImGui::EndChild();
@@ -436,9 +613,6 @@ void SocialMedia::MainPage(float& width, float& height)
             }
             nlohmann::json jsonData;
             jsonData = HManager::Request(("posts/like/" + std::to_string(post.id)).c_str(), "", POST);
-            if (jsonData.is_null()) {
-                std::cout << "couldn't post like" << std::endl;
-            }
         }
 
         ImGui::SameLine();
@@ -461,7 +635,7 @@ void SocialMedia::MainPage(float& width, float& height)
 
         if (post.openComments) {
             static char text[256];
-            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Comment something :3"))
+            if (Lss::InputText("commentToSend"+post.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue,0, "Share your thoughts"))
             {
                 nlohmann::json jsonData;
                 jsonData["postId"] = post.id;
@@ -481,8 +655,9 @@ void SocialMedia::MainPage(float& width, float& height)
         }
         
         if (post.openComments) {
-            Lss::Text("Comments", 3 * Lss::VH);
+            Lss::Top(Lss::VH);
             if (!post.comments.empty()) {
+                Lss::Text("Comments", 3 * Lss::VH);
                 ImVec2 commentChildSize;
                 if (post.comments.size() == 1) {
                     commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
@@ -495,7 +670,13 @@ void SocialMedia::MainPage(float& width, float& height)
                 for (auto it = post.comments.rbegin(); it != post.comments.rend(); ++it)
                 {
                     Comment& comment = *it;
-                    if (!users[comment.userId].pPicLoaded) continue;
+                    if (!users[comment.userId].pPicLoaded) {
+                        if (comment.userId == runtime.id) {
+                            users[comment.userId].userImage = runtime.pfpTexture;
+                            users[comment.userId].pPicLoaded = true;
+                        }
+                        continue;
+                    }
 
                     Lss::SetColor(ContainerBackground, LowHighlight);
                     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
@@ -688,7 +869,7 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::Text("Share your thoughts", 2 * Lss::VH);
         static char inputtext[128] = "";
         Lss::LeftTop(1.2*Lss::VW, Lss::VH);
-        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+        Lss::InputText("Heoooo", inputtext, sizeof(inputtext), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, 0, 0, "What's on your mind?");
 
 
         static std::vector<std::string> tags;
@@ -699,7 +880,7 @@ void SocialMedia::MainPage(float& width, float& height)
         Lss::LeftTop(Lss::VW, Lss::VH);
         Lss::Text("Tags", 2 * Lss::VH);
         Lss::LeftTop(1.2 * Lss::VW, Lss::VH);
-        if (Lss::InputText("Tagsfortagspost", tagsText, sizeof(tagsText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Tags for your post :>"))
+        if (Lss::InputText("Tagsfortagspost", tagsText, sizeof(tagsText), ImVec2(26.6 * Lss::VW, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Tags for your post"))
         {
             if (tagsText[0] != '\0') {
                 if (std::find(tags.begin(), tags.end(), tagsText) == tags.end())
@@ -825,6 +1006,7 @@ void SocialMedia::MainPage(float& width, float& height)
                 openStuff = false;
                 lastId = 0;
                 init = true;
+                Explorer::ResetPath();
             }
         }
 
@@ -856,14 +1038,17 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     static int selectedImage = -1;
     static bool imageViewOpen = false;
     static bool prevImageViewOpen = false;
-    static ImVec2 imageViewSize;
+    static ImVec2 imageViewSize; 
+
+    static bool thereIsBio = true;
 
     static std::string fileName;
 
-    if (users[user].bio.empty()) {
+    if (thereIsBio && users[user].bio.empty()) {
         nlohmann::json result = HManager::Request(("users/" + std::to_string(user)).c_str(), "", GET);
-        if(!result["profile_description"].is_null())
+        if (!result["profile_description"].is_null())
             users[user].bio = result["profile_description"];
+        else thereIsBio = false;
     }
 
     if (needImages) {
@@ -872,11 +1057,12 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
     }
 
     ImVec2 valid = ImGui::GetContentRegionAvail();
-    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar);
+    Lss::Child("Feed", ImVec2(valid.x, 0), false, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
         int validWidth = width * 0.6f;
-            Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            Lss::Child("##user", ImVec2(validWidth, height), true, Centered, ImGuiWindowFlags_NoScrollbar);
             if (user == runtime.id) {
-                //pfp change
+                users[user].userImage = runtime.pfpTexture;
+                //data change
                 if (Lss::Modal("dataChange", &imageEditOpen, ImVec2(30 * Lss::VW, 48 * Lss::VH), Centered | Trans | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
                 {
                     ImVec2 valid = ImGui::GetContentRegionAvail();
@@ -935,7 +1121,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     ImGui::SetCursorPos(ImVec2(halfWidth + Lss::VH, yPos));
                     static char passText[128] = "";
                     if (passText[0] == '\0') std::strcpy(passText, runtime.password.c_str());
-                    Lss::InputText("passwordInput", passText, sizeof(passText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, 0, 0, "What is on your mind? :3");
+                    Lss::InputText("passwordInput", passText, sizeof(passText), ImVec2(halfWidthObj, 4 * Lss::VH), Rounded, ImGuiInputTextFlags_Password, 0, "What is on your mind? :3");
 
                     Lss::LeftTop(Lss::VW, Lss::VH);
 ;
@@ -974,6 +1160,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                                 imageEditOpen = false;
                                 runtime.pfpTexture = userImageTexture.GetId();
                             }
+                            Explorer::ResetPath();
                         }
                         nlohmann::json userPatch;
                         if (runtime.username != usernameText) userPatch["username"] = usernameText;
@@ -987,7 +1174,11 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                                 if (runtime.username != usernameText) runtime.username = usernameText;
                                 if (runtime.email != emailText) runtime.email = emailText;
                                 if (runtime.password != passText) runtime.password = passText;
-                                if (users[user].bio != detailText) users[user].bio = "";
+                                if (users[user].bio != detailText) users[user].bio = detailText;
+
+                                std::vector<uint8_t> imageData = HManager::ImageRequest(("users/" + std::to_string(runtime.id) + "/pfp").c_str());
+                                auto* textureQueue = SocialMedia::GetTextureQueue();
+                                textureQueue->push(std::make_tuple(imageData, 0, 3));
                             }
                         }
                         else {
@@ -1117,11 +1308,12 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                     float endPos = ImGui::GetCursorPosY();
                     
                     ImVec2 buttonSize = ImVec2(valid.x, 4 * Lss::VH);
-                    ImGui::SetCursorPosY(valid.y - buttonSize.y - 2 * Lss::VH);
+                    ImGui::SetCursorPosY(valid.y - buttonSize.y);
                     if (Lss::Button("Add##addImage", buttonSize, 3 * Lss::VH, Centered | Rounded))
                     {
                         std::string imagePath = Explorer::GetImagePath();
                         if (imagePath.size() > 2 && userImageTexture.GetId() > 0) {
+                            Explorer::ResetPath();
                             std::string piranah;
                             if (privating) piranah = "private";
                             else piranah = "public";
@@ -1133,7 +1325,7 @@ void SocialMedia::ProfilePage(float& width, float& height, int user)
                         }
                     }
 
-                    imageAddY = endPos - startPos + buttonSize.y + 4*Lss::VH;
+                    imageAddY = endPos - startPos + buttonSize.y + 2*Lss::VH;
                     if (imageAddY != imageAddYPrev) {
                         imageAddYPrev = imageAddY;
                         ImGui::CloseCurrentPopup();
@@ -1344,33 +1536,6 @@ void SocialMedia::SettingsPage()
 
         ImGui::EndChild();
 
-
-        Lss::Text("Drawing Variables", 5 * Lss::VH);
-
-        ImGui::SameLine();
-        Lss::Top(2.4f * Lss::VH);
-        Lss::Separator(2.0f, 0.0f, 4);
-
-
-        Lss::Left(5 * Lss::VW);
-        Lss::Child("##DrawingVariables", ImVec2(0, 4.5f * Lss::VH), false, Centered, ImGuiWindowFlags_NoScrollbar);
-
-            Lss::Text("Undo count: ", 3 * Lss::VH);
-
-            ImGui::SameLine();
-            Lss::Top(0.25f * Lss::VH);
-            static int myInt = runtime.undoCount;
-            if (myInt >= 100) myInt = 99;
-            if (Lss::InputInt("faku2", &myInt, ImVec2(4.2f * Lss::VH, 2.5f * Lss::VH), Rounded))
-            {
-                runtime.undoCount = myInt;
-            }
-
-            Lss::End();
-
-        ImGui::EndChild();
-
-
         Lss::End();
 
     ImGui::EndChild();
@@ -1398,11 +1563,12 @@ void SocialMedia::SearchPage(float& width, float& height)
         ImGui::SameLine();
         Lss::Left(3*Lss::VH);
 
-        if (Lss::Button("SR", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH)) {
+        if (ImGui::ImageButton("SR", searchTexture.GetId(), ImVec2(4.5f * Lss::VH, 4.5f * Lss::VH))) {
             searchRequestMode = 1;
             hihi = true;
         }
-        if (Lss::Button("PF", ImVec2(5 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, SameLine))
+        ImGui::SameLine();
+        if (ImGui::ImageButton("PF", searchProfileTexture.GetId(), ImVec2(4.5f * Lss::VH, 4.5f * Lss::VH)))
         {
             searchRequestMode = 2;
             std::cout << "mode: " << searchRequestMode << std::endl;
@@ -1519,7 +1685,7 @@ void SocialMedia::SearchPage(float& width, float& height)
                 }
             }
 
-            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, prevSize), Bordering | Rounded | Centered, ImGuiWindowFlags_NoDecoration))
+            if (Lss::Modal("searchedPost", &searchPostOpen, ImVec2(postWidth, prevSize), Bordering | Rounded | Centered, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
             {
                 float startPos = ImGui::GetCursorPosY();
 
@@ -1572,6 +1738,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                 Lss::LeftTop(3.5f * Lss::VH, 0.5f * Lss::VH);
                 float commentMax = validWidth - 7 * Lss::VH;
                 float commentSize = 0.0f;
+
+                Lss::SetColor(ContainerBackground, LowHighlight);
+
                 for (const auto& tags : searchedPost.tags)
                 {
                     Lss::SetFontSize(2.5f * Lss::VH);
@@ -1588,6 +1757,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                     ImGui::EndChild();
                     ImGui::SameLine();
                 }
+
+                Lss::SetColor(ContainerBackground, ContainerBackground);
+
                 ImGui::NewLine();
                 ImGui::PopStyleVar();
 
@@ -1621,7 +1793,7 @@ void SocialMedia::SearchPage(float& width, float& height)
                 Lss::Top(Lss::VH);
                 if (contains)Lss::Image(likedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
                 else Lss::Image(notLikedTexture.GetId(), ImVec2(4 * Lss::VH, 4 * Lss::VH), Centered);
-                Lss::Top(Lss::VH);
+                Lss::LeftTop(Lss::VH,Lss::VH);
                 Lss::Text(std::to_string(searchedPost.likes), 4 * Lss::VH, SameLine);
                 Lss::End();
                 ImGui::EndChild();
@@ -1662,7 +1834,7 @@ void SocialMedia::SearchPage(float& width, float& height)
 
                 if (searchedPost.openComments) {
                     static char text[256];
-                    if (Lss::InputText("commentToSend" + searchedPost.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Comment something :3"))
+                    if (Lss::InputText("commentToSend" + searchedPost.id, text, sizeof(text), ImVec2(widthForButtons, 4 * Lss::VH), Centered | Rounded, ImGuiInputTextFlags_EnterReturnsTrue, 0, "Share your thoughts"))
                     {
                         nlohmann::json jsonData;
                         jsonData["postId"] = searchedPost.id;
@@ -1682,8 +1854,9 @@ void SocialMedia::SearchPage(float& width, float& height)
                 }
 
                 if (searchedPost.openComments) {
-                    Lss::Text("Comments", 3 * Lss::VH);
+                    Lss::Top(Lss::VH);
                     if (!searchedPost.comments.empty()) {
+                        Lss::Text("Comments", 3 * Lss::VH);
                         ImVec2 commentChildSize;
                         if (searchedPost.comments.size() == 1) {
                             commentChildSize = ImVec2(ImGui::GetContentRegionAvail().x - 20, 11 * Lss::VH);
@@ -1773,24 +1946,10 @@ void SocialMedia::SearchPage(float& width, float& height)
     }
 }
 
-void RoomsRequest()
-{
-    nlohmann::json result = HManager::Request("rooms", "", GET);
-    if (result.is_null()) std::cerr << "Can't get rooms\n";
-    for (auto& item : result) {
-        Room roome;
-        roome.roomName = item["name"];
-        roome.ownerName = item["owner"]["username"];
-        roome.userCount = item["playerCount"];
-        roome.capacity = item["maxPlayers"];
-        roome.password = item["passwordRequired"];
-        rooms.emplace_back(roome);
-    }
-}
-
 void SocialMedia::RoomPage(float& width, float& height)
 {
     if (needRooms) {
+        rooms.clear();
         std::thread(&RoomsRequest).detach();
         needRooms = false;
     }
@@ -1805,7 +1964,7 @@ void SocialMedia::RoomPage(float& width, float& height)
     Lss::InputText("searchRoom", searchRoomText, sizeof(searchRoomText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Rounded);
     ImGui::SameLine();
     Lss::Left(0.05f * valid.x);
-    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH))
+    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH, Rounded))
     {
         openCreate = true;
     }
@@ -1914,27 +2073,40 @@ void SocialMedia::RoomPage(float& width, float& height)
         ImGui::EndPopup();
     }
 
-    if (Lss::Modal("Joinyup", &openJoin, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    static float joinHeight = 0.0f;
+    if (Lss::Modal("Joinyup", &openJoin, ImVec2(20 * Lss::VW, joinHeight), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
     {
+        float startPos = ImGui::GetCursorPosY();
+
         static char passWordText[256];
         if (!privateLobby) {
-            Lss::Text("Are you sure u want to join?", 4*Lss::VH, Centered);
-            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
+            Lss::Text("Are you sure u want to join?", 3*Lss::VH, Centered);
+            Lss::Top(Lss::VH);
+            Lss::Left(3 * Lss::VW);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded))
             {
                 std::map<std::string, std::string> header;
-                std::map<std::string, std::string> room;
+                std::map<std::string, std::string> room;//
                 header["token"] = runtime.token;
                 room["name"] = roomName;
                 room["create"] = "false";
                 SManager::Connect(runtime.ip.c_str(), header, room);
                 Callback::EditorSwapCallBack(true);
             }
-            Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine);
+            ImGui::SameLine();
+            Lss::Left(Lss::VW);
+            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded)){
+                ImGui::CloseCurrentPopup();
+                openJoin = false;
+            }
         } else {
             ImVec2 valid = ImGui::GetContentRegionAvail();
-            Lss::Text("Please enter the room's password:", Centered);
-            Lss::InputText("roomPassword", passWordText, sizeof(passWordText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Centered);
-            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH)) {
+            Lss::Text("Please enter the room's password:",2.5f*Lss::VH);
+            Lss::Left(Lss::VW);
+            Lss::InputText("roomPassword", passWordText, sizeof(passWordText), ImVec2(valid.x * 0.9f, 4 * Lss::VH), Rounded);
+            Lss::Top(Lss::VH);
+            Lss::Left(3 * Lss::VW);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded)) {
                 std::map<std::string, std::string> header;
                 std::map<std::string, std::string> room;
                 header["token"] = runtime.token;
@@ -1944,11 +2116,14 @@ void SocialMedia::RoomPage(float& width, float& height)
                 SManager::Connect(runtime.ip.c_str(), header, room);
                 Callback::EditorSwapCallBack(true);
             }
-            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
+            ImGui::SameLine();
+            Lss::Left(Lss::VW);
+            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded))
             {
                 ImGui::CloseCurrentPopup();
                 openJoin = false;
             }
+
         }
 
         if (ImGui::IsMouseClicked(0))
@@ -1962,12 +2137,25 @@ void SocialMedia::RoomPage(float& width, float& height)
             }
         }
 
+        Lss::Top(2 * Lss::VH);
+
+        float endPos = ImGui::GetCursorPosY();
+        float size = endPos - startPos;
+        if (size != joinHeight) {
+            joinHeight = size;
+            ImGui::CloseCurrentPopup();
+        }
+
         Lss::End();
         ImGui::EndPopup();
     }
 
+    Lss::Top(2 * Lss::VH);
+    ImVec2 originValid = valid;
+
     Lss::SetColor(ContainerBackground, Background);
     for (auto& room : rooms) {
+        valid.x = valid.x * 0.8f;
         Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 12.5f * Lss::VH), false, Centered);
         Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
         Lss::Text(room.roomName, 4 * Lss::VH);
@@ -1988,18 +2176,21 @@ void SocialMedia::RoomPage(float& width, float& height)
         Lss::LeftTop(Lss::VW, Lss::VH);
         Lss::Text(std::to_string(room.userCount) + "/" + std::to_string(room.capacity), 4 * Lss::VH);
         ImGui::SameLine();
-        float lockPos = valid.x - 6 * Lss::VW;
+        float lockPos = valid.x - 7 * Lss::VW;
         ImGui::SetCursorPosX(lockPos);
         Lss::Text((room.password) ? "Locked" : "", 4 * Lss::VH);
         Lss::End();
         ImGui::EndChild();
         Lss::Top(Lss::VH);
+        valid = originValid;
     }
     Lss::SetColor(ContainerBackground, ContainerBackground);
     ImGui::PopStyleVar();
     Lss::End();
 }
 
+
+//main windows
 void SocialMedia::MainFeed(float position, float width, float height)
 {
     ImGui::GetStyle().WindowBorderSize = 0.0f;
@@ -2065,12 +2256,11 @@ void SocialMedia::LeftSide(float position, float width, float height)
 
     if (runtime.logedIn) {
         if (Lss::Button("Post", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
-            openStuff = true;
+            if(mode == 0) openStuff = true;
         }
         Lss::Top(1 * Lss::VH);
     }
 
-    Lss::Top(1 * Lss::VH);
     if (Lss::Button("Explore", ImVec2(15 * Lss::VH, 5 * Lss::VH), 4 * Lss::VH, Invisible | Centered | Rounded)) {
         if (mode != 0) mode = 0;
     }
@@ -2158,134 +2348,3 @@ void SocialMedia::RightSide(float position, float width, float height)
     ImGui::End();
 }
 
-std::chrono::system_clock::time_point SocialMedia::ParsePostTime(const std::string& timeData) 
-{
-    std::tm tm = {};
-    std::istringstream ss(timeData);
-    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
-    std::time_t timeUtc = std::mktime(&tm);
-
-    std::time_t locTime = timeUtc + 3600;
-    return std::chrono::system_clock::from_time_t(locTime);
-}
-
-void SocialMedia::GetPosts() 
-{
-    if (runtime.ip[0] == '\0') {
-        if (needError) {
-            std::cout << "runtimeIp not set\n";
-            needError = false;
-        }
-        init = true;
-        return;
-    }
-    nlohmann::json jsonData = HManager::Request(("posts?offset=" + std::to_string(lastId)+"&take=10").c_str(), "", GET);
-    if (jsonData["offset"].is_null()) {
-        std::cout << "no data left to steal :c\n";
-        init = false;
-        return;
-    }
-    for (const auto& postJson : jsonData["data"]) {
-        Post post;
-        post.id = postJson["id"];
-        post.userId = postJson["user"]["id"];
-        if (users.find(post.userId) == users.end()) {
-            User user;
-            user.username = postJson["user"]["username"];
-            user.userImage = -1;
-            users[post.userId] = user;
-        }
-        if (postJson["imageId"].is_null()) post.imageId = -1;
-        else post.imageId = postJson["imageId"];
-        post.text = postJson["text"];
-        post.time = ParsePostTime(postJson["date"]);
-        post.likes = postJson["likes"];
-    
-		for (const auto& tags : postJson["tags"]) {
-			post.tags.push_back(tags);
-		}
-
-        for (const auto& commentJson : postJson["comments"]) {
-            Comment comment;
-            comment.id = commentJson["id"];
-            comment.userId = commentJson["user"]["id"];
-            comment.text = commentJson["text"];
-            if (users.find(comment.userId) == users.end()) {
-                User user;
-                user.username = commentJson["user"]["username"];
-                user.userImage = -1;
-                users[comment.userId] = user;
-            }
-            comment.time = ParsePostTime(commentJson["date"]);
-    
-            post.comments.push_back(comment);
-        }
-        posts.push_back(post);
-    }
-
-    lastId = jsonData["offset"];
-    LoadImages();
-}
-
-void SocialMedia::LoadImages() 
-{
-    for (int i = 0; i < posts.size(); i++)
-    {
-        std::thread(&SocialMedia::LoadDependencies, std::ref(posts[i]), i).detach();
-    }
-}
-
-void SocialMedia::LoadDependencies(Post& post, int index) 
-{
-
-    LoadImageJa(post.userId, 2);
-    try {
-        std::unique_lock<std::mutex> lock(postMutex);
-        std::vector<Comment> commentsHere;
-        for (Comment& comment : post.comments) {
-            commentsHere.push_back(comment);
-        }
-        lock.unlock();
-        for (Comment comment : commentsHere) {
-            LoadImageJa(comment.userId, 2);
-        }
-    }
-    catch (...)
-    {
-        std::cerr << "error while loading commnents" << std::endl;
-    }
-    if (post.imageId != -1) LoadImageJa(post.imageId, 1, index);
-    else post.picLoaded = true;
-}
-
-void SocialMedia::LoadImageJa(int dataId, int type, int postId)
-{
-    std::vector<uint8_t> imageData;
-    switch (type) {
-    case 1: {
-        if (dataId == -1)return;
-        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
-        dataId = postId;
-        } break;
-    case 2: {
-            if (profilePics.find(dataId) != profilePics.end()) break;
-            else {
-                imageData = HManager::ImageRequest(("users/" + std::to_string(dataId) + "/pfp").c_str());
-            }
-        } break;
-    case 5: {
-        //auto start = std::chrono::high_resolution_clock::now();
-        imageData = HManager::ImageRequest(("images/" + std::to_string(dataId)).c_str());
-        dataId = postId;
-
-        //auto end = std::chrono::high_resolution_clock::now(); // End timing
-        //std::chrono::duration<double, std::milli> duration = end - start; // Compute duration in milliseconds
-
-        //std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
-        } break;
-    default:
-        break;
-    }
-    std::lock_guard<std::mutex> queueLock(textureQueueMutex);
-    textureQueue.push(std::make_tuple(std::move(imageData), dataId, type));
-}

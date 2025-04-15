@@ -47,6 +47,7 @@ float prevPrevPos[2] = { 0,0 };
 unsigned int canvasSize[2] = {1,1};
 unsigned int currentBrush = 0;
 
+
 double currentPos[2] = { 0.0, 0.0};
 
 std::vector<Position> drawPositions;
@@ -54,92 +55,21 @@ Position sentOffset;
 float color[3];
 float sentBrushSize;
 
+
 bool online = false;
 
-void NewRenderer::SetOnline(bool value){
-	online = value;
-}
-bool NewRenderer::GetOnline() {
-	return online;
-}
-
-int NewRenderer::GetParent(int& id)
-{
-	for (int folderIndex : folders)
-	{
-		Folder* folder = dynamic_cast<Folder*>(nodes[folderIndex].get());
-
-		if (folder && std::find(folder->childrenIds.begin(), folder->childrenIds.end(), id) != folder->childrenIds.end()) {
-			return folderIndex;
-		}
-	}
-	return 0;
-}
-
-unsigned int* NewRenderer::GetCanvasSize()
-{
-	std::cout << "width: " << canvasSize[0] << ", height: " << canvasSize[1];
-
-	return canvasSize;
-}
-
-void NewRenderer::SetCanvasSize(unsigned int* sizes)
-{
-	canvasSize[0] = sizes[0];
-	canvasSize[1] = sizes[1];
-}
-int NewRenderer::CreateLayer(int& parent)
-{
-	int index = nextFreeNodeIndex;
-	layers.push_back(index);
-	RenderData createdLayer;
-	NewDraw::initLayer(createdLayer);
-	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
-	nextFreeNodeIndex++;
-	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
-	NewDraw::MoveCanvas(createdLayer, canvasRatio, offset);
-	return index;
-}
-int NewRenderer::CreateFolder(int& parent)
-{
-	int index = nextFreeNodeIndex;
-	nodes[index] = std::make_unique<Folder>("Folder", index);
-	folders.push_back(index);
-	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
-	return index;
-}
-
-void NewRenderer::RemoveLayer(int& index)
-{
-	auto it = std::find(layers.begin(), layers.end(), index);
-	if (it != layers.end())
-	{
-		layers.erase(it);
-		nodes.erase(index);
-	}
-}
-void NewRenderer::RemoveFolder(int& index)
-{
-	auto it = std::find(folders.begin(), folders.end(), index);
-	if (it != folders.end())
-	{
-		folders.erase(it);
-		nodes.erase(index);
-	}
-}
 
 void NewRenderer::Init(GLFWwindow* windowIn)
 {
 	SetMainThreadCallback([this](const DrawMessage& msg) {
 		taskQueue.push(msg);
-	});
+		});
 
 	window = windowIn;
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 }
-
 void NewRenderer::InitBrushes()
 {
 	brushes.clear();
@@ -172,13 +102,6 @@ void NewRenderer::InitBrushes()
 
 	cursor = brushes[0];
 }
-
-void NewRenderer::ChangeBrush(int index)
-{
-	cursor = brushes[index];
-	currentBrush = index;
-}
-
 void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasHeightIn)
 {
 	canvasSize[0] = canvasWidthIn;
@@ -193,7 +116,6 @@ void NewRenderer::SetDrawData(unsigned int& canvasWidthIn, unsigned int& canvasH
 	canvasRatio[0] = dataForCanvas.canvasX;
 	canvasRatio[1] = dataForCanvas.canvasY;
 }
-
 void NewRenderer::InitNewCanvas()
 {
 	nodes.clear();
@@ -224,6 +146,86 @@ void NewRenderer::InitNewCanvas()
 	inited = true;
 }
 
+
+void NewRenderer::SetOnline(bool value){
+	online = value;
+}
+bool NewRenderer::GetOnline() {
+	return online;
+}
+
+unsigned int* NewRenderer::GetCanvasSize()
+{
+	std::cout << "width: " << canvasSize[0] << ", height: " << canvasSize[1];
+
+	return canvasSize;
+}
+void NewRenderer::SetCanvasSize(unsigned int* sizes)
+{
+	canvasSize[0] = sizes[0];
+	canvasSize[1] = sizes[1];
+}
+
+
+int NewRenderer::GetParent(int& id)
+{
+	for (int folderIndex : folders)
+	{
+		Folder* folder = dynamic_cast<Folder*>(nodes[folderIndex].get());
+
+		if (folder && std::find(folder->childrenIds.begin(), folder->childrenIds.end(), id) != folder->childrenIds.end()) {
+			return folderIndex;
+		}
+	}
+	return 0;
+}
+int NewRenderer::CreateLayer(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	layers.push_back(index);
+	RenderData createdLayer;
+	NewDraw::initLayer(createdLayer);
+	nodes[index] = std::make_unique<Layer>("NewLayer"+std::to_string(layers.size()+1), index, createdLayer);
+	nextFreeNodeIndex++;
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	NewDraw::MoveCanvas(createdLayer, canvasRatio, offset);
+	return index;
+}
+int NewRenderer::CreateFolder(int& parent)
+{
+	int index = nextFreeNodeIndex;
+	nodes[index] = std::make_unique<Folder>("Folder", index);
+	folders.push_back(index);
+	dynamic_cast<Folder*>(nodes[parent].get())->AddChild(index);
+	return index;
+}
+void NewRenderer::RemoveLayer(int& index)
+{
+	auto it = std::find(layers.begin(), layers.end(), index);
+	if (it != layers.end())
+	{
+		layers.erase(it);
+		nodes.erase(index);
+	}
+}
+void NewRenderer::RemoveFolder(int& index)
+{
+	auto it = std::find(folders.begin(), folders.end(), index);
+	if (it != folders.end())
+	{
+		folders.erase(it);
+		nodes.erase(index);
+	}
+}
+
+
+void NewRenderer::ChangeBrush(int index)
+{
+	cursor = brushes[index];
+	currentBrush = index;
+}
+
+
 void NewRenderer::MoveLayers(static float* offsetIn)
 {
 	offset[0] = offsetIn[0];
@@ -233,6 +235,8 @@ void NewRenderer::MoveLayers(static float* offsetIn)
 		NewDraw::MoveCanvas(layer.data, canvasRatio, offset);
 	}
 }
+
+
 void NewRenderer::Zoom(static float scale, static float* offsetIn)
 {
 	canvasRatio[0] *= scale;
@@ -266,6 +270,14 @@ void NewRenderer::OnResize(float& x, float& y, float* offsetIn, float& yRatio) {
 	}
 }
 
+void NewRenderer::SetColor(float* colorIn) {
+	color[0] = colorIn[0];
+	color[1] = colorIn[1];
+	color[2] = colorIn[2];
+}
+
+
+//rendering the brushes to the canvas
 void NewRenderer::LoadPrevCursor(double* prevIn)
 {
 	prevPrevPos[0] = prevIn[0];
@@ -274,7 +286,6 @@ void NewRenderer::LoadPrevCursor(double* prevIn)
 	prevPos[0] = prevIn[0];
 	prevPos[1] = prevIn[1];
 }
-
 void NewRenderer::RenderCursorToCanvas()
 {
 	if (recieving) return;
@@ -284,8 +295,8 @@ void NewRenderer::RenderCursorToCanvas()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
-
 		double* pos = Callback::GlCursorPosition();
+
 		switch (tool)
 		{
 		case 1:
@@ -376,6 +387,14 @@ void NewRenderer::RenderCursorToCanvas()
 	}
 }
 
+
+//sending & recieving draw data over the network
+void NewRenderer::SetDrawDataJa()
+{
+	sentBrushSize = cursorRadius;
+	sentOffset.x = offset[0];
+	sentOffset.y = offset[1];
+}
 void NewRenderer::SendDraw() 
 {
 	DrawMessage msg;
@@ -397,46 +416,13 @@ void NewRenderer::SendDraw()
 
 	drawPositions.clear();
 }
-
-void NewRenderer::SendLayerRename(std::string nameIn, int locationIn) {
-	NodeRenameMessage msg;
-	msg.type = 2;
-	msg.name = nameIn;
-	msg.location = locationIn;
-}
-
-void NewRenderer::SetColor(float* colorIn) {
-	color[0] = colorIn[0];
-	color[1] = colorIn[1];
-	color[2] = colorIn[2];
-}
-
-void NewRenderer::SetDrawDataJa()
-{
-	sentBrushSize = cursorRadius;
-	sentOffset.x = offset[0];
-	sentOffset.y = offset[1];
-}
-void NewRenderer::Clear() 
-{
-	glClearColor(0.188, 0.188, 0.313, 0);
-	GLCall(glClear(GL_COLOR_BUFFER_BIT));
-}
-
-void NewRenderer::Draw(const RenderData& data)
-{
-	GLCall(data.va->Bind());
-	GLCall(data.shader->Bind());
-	GLCall(data.texture->Bind());
-	GLCall(glDrawElements(GL_TRIANGLES, data.ib->GetCount(), GL_UNSIGNED_INT, nullptr));
-}
-
 void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 {
 	try {
 		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get())) {
 			RenderData& layer = layerPtr->data;
 			if (layers[0] == drawMessage.layer) return;
+			if (drawMessage.positions.size() < 1) return;
 
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);
@@ -547,12 +533,31 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 			glViewport(0, 0, width, height);
 		}
 	}
-	catch (...){
+	catch (...) {
 		std::cerr << "cant render drawMessage, bad data" << std::endl;
 	}
 	recieving = false;
 }
 
+void NewRenderer::SendLayerRename(std::string nameIn, int locationIn) {
+	NodeRenameMessage msg;
+	msg.type = 2;
+	msg.name = nameIn;
+	msg.location = locationIn;
+}
+
+
+//rendering every action & item
+void NewRenderer::Draw(const RenderData& data)
+{
+	GLCall(data.va->Bind());
+	GLCall(data.shader->Bind());
+	GLCall(data.texture->Bind());
+	GLCall(glDrawElements(GL_TRIANGLES, data.ib->GetCount(), GL_UNSIGNED_INT, nullptr));
+}
+
+
+// render the drawing part
 void NewRenderer::RenderLayers()
 {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -566,15 +571,14 @@ void NewRenderer::RenderLayers()
 	}
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
-
 void NewRenderer::RenderCursor()
 {
 	double* now = Callback::GlCursorPosition();
-	NewDraw::BrushToPosition(window, cursor, cursorRadius, identityRatio, identityOffset, cursorScale, now);
+	float curRad = (tool == 0) ? 0.02f : cursorRadius;
+	NewDraw::BrushToPosition(window, cursor, curRad, identityRatio, identityOffset, cursorScale, now);
 	Draw(cursor);
 
 }
-
 void RenderImGui(bool& onUIIn)
 {
 	ImGui_ImplOpenGL3_NewFrame();
@@ -607,6 +611,8 @@ void RenderImGui(bool& onUIIn)
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+
+//rendering the social media part
 void RenderMenu()
 {
 	ImGui_ImplOpenGL3_NewFrame();
@@ -634,6 +640,7 @@ void RenderMenu()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+
 void NewRenderer::SwapView(bool isOnline)
 {
 	isEditor = !isEditor;
@@ -643,6 +650,11 @@ void NewRenderer::SwapView(bool isOnline)
 	}
 }
 
+void NewRenderer::Clear()
+{
+	glClearColor(0.188, 0.188, 0.313, 0);
+	GLCall(glClear(GL_COLOR_BUFFER_BIT));
+}
 void NewRenderer::Render()
 {
 	Clear();

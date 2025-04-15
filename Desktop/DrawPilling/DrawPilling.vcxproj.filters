@@ -2658,6 +2658,33 @@
     <Image Include="Resources\Textures\user.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\eraser.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\comment.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\newFolder.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\newLayer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\searchUser.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\search.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\size.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\icons\trash.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\fonts\Aptos.ttf" />

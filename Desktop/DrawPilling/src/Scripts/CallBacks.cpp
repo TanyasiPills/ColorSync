@@ -142,6 +142,8 @@ void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 	yRatio = (float)originalSizeX / originalSizeY;
 	float xRatio = 1;
 	renderer->OnResize(xRatio, xRatio, offset, yRatio);
+
+	//Hooks callbacks to certain events to manage them
 	glfwSetScrollCallback(window, scrollCallback);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 	glfwSetCursorPosCallback(window, CursorPosCallback);
@@ -151,6 +153,8 @@ void Callback::Init(GLFWwindow* window, NewRenderer& rendererIn)
 	glfwSetWindowCloseCallback(window, onCloseCallback);
 }
 
+
+//Cursor position in OpenGl cordinate space
 double* Callback::GlCursorPosition()
 {
 	return GlCursorPos;
