@@ -235,28 +235,6 @@ void ChangeVisibilityChild(int& index)
 	}
 }
 
-void DrawUI::DeleteChilds(int& index)
-{
-	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
-
-	std::vector<int> childrenCopy = foldy->childrenIds;
-
-	for (int child : childrenCopy)
-	{
-		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
-
-		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
-		{
-			DeleteChilds(child);
-			renderer->RemoveFolder(child);
-		}
-		else {
-			renderer->RemoveLayer(child);
-		}
-	}
-	foldy->childrenIds.clear();
-}
-
 ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	ImGui::SetCursorPos(cursorPos);
 	float x = ImGui::GetContentRegionAvail().x;
@@ -363,6 +341,28 @@ ImVec2 DrawLayerTreeThree(Node& node, ImVec2& cursorPos) {
 	return ImGui::GetCursorPos();
 }
 
+void DrawUI::DeleteChilds(int& index)
+{
+	Folder* foldy = dynamic_cast<Folder*>(renderer->nodes[index].get());
+
+	std::vector<int> childrenCopy = foldy->childrenIds;
+
+	for (int child : childrenCopy)
+	{
+		if (renderer->nodes.find(child) == renderer->nodes.end()) continue;
+
+		if (Folder* childFoldy = dynamic_cast<Folder*>(renderer->nodes[child].get()))
+		{
+			DeleteChilds(child);
+			renderer->RemoveFolder(child);
+		}
+		else {
+			renderer->RemoveLayer(child);
+		}
+	}
+	foldy->childrenIds.clear();
+}
+
 
 void DrawUI::SetColor(float* colorIn)
 {
@@ -461,6 +461,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Color", nullptr, ImGuiWindowFlags_NoTitleBar |  ImGuiWindowFlags_NoResize);
+	Lss::SetFontSize(2*Lss::VH);
 	ImGui::PopStyleVar();
 	ImGui::SetNextItemWidth(-1);
 	ImGui::ColorEdit3("##c", color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoLabel);
@@ -472,6 +473,7 @@ void DrawUI::ColorWindow(RenderData& cursor)
 	ColorWindowSize = ImGui::GetWindowSize();
 	leftSize = ColorWindowSize.x;
 	ColorWindowPos = ImGui::GetWindowPos();
+	Lss::End();
 	ImGui::End();
 	if (ColorWindowSize.x < 200) {
 		leftSize = 200;
@@ -498,6 +500,8 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, Lss::VH / 6);
 	ImGui::Begin("Size", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 		ImGui::PopStyleVar();
+
+		Lss::SetFontSize(2*Lss::VH);
 
 		static int lastVisual = -1;
 
@@ -557,6 +561,7 @@ void DrawUI::SizeWindow(float& cursorRadius, float scale)
 		SizeWindowSize = ImGui::GetWindowSize();
 		leftSize = SizeWindowSize.x;
 		SizeWindowPos = ImGui::GetWindowPos();
+		Lss::End();
 	ImGui::End();
 	if (SizeWindowSize.x < 200) {
 		leftSize = 200;
@@ -693,8 +698,8 @@ void DrawUI::LayerWindow()
 	if (ImGui::ImageButton("+layer", addLayer.GetId(), ImVec2(Lss::VW, Lss::VW))) {
 		int parentToSend = 0;
 		if (selectedLayer == -1) {
-			int parent = 0;
-			renderer->CreateLayer(parent);
+			parentToSend = 0;
+			renderer->CreateLayer(parentToSend);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
@@ -722,8 +727,8 @@ void DrawUI::LayerWindow()
 	{
 		int parentToSend = 0;
 		if (selectedLayer == -1) {
-			int parent = 0;
-			renderer->CreateFolder(parent);
+			parentToSend = 0;
+			renderer->CreateFolder(parentToSend);
 		}
 		else {
 			if (dynamic_cast<Folder*>(renderer->nodes[selectedLayer].get())) {
@@ -732,7 +737,7 @@ void DrawUI::LayerWindow()
 			}
 			else {
 				int parent = renderer->GetParent(selectedLayer);
-				parentToSend = selectedLayer;
+				parentToSend = parent;
 				renderer->CreateFolder(parent);
 			}
 		}

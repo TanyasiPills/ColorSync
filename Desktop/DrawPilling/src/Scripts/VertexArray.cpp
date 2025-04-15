@@ -4,7 +4,13 @@
 
 VertexArray::VertexArray() 
 {
-	GLCall(glGenVertexArrays(1, &VAO));
+	if (!glfwGetCurrentContext()) {
+		std::cerr << "No OpenGL context active! Nyaa!\n";
+	}
+	else {
+		GLCall(glGenVertexArrays(1, &VAO));
+	}
+
 }
 
 VertexArray::~VertexArray() 

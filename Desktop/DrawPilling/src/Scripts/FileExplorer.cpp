@@ -48,25 +48,6 @@ void Explorer::SetRecents(std::vector<FolderSave> rcnts) {
 }
 
 
-void Explorer::Init()
-{
-    folderTexture.Init("Resources/icons/folder.png");
-    folderFullTexture.Init("Resources/icons/folderFull.png");
-    fileTexture.Init("Resources/icons/file.png");
-    LoadDrives();
-}
-
-
-void Explorer::ResetPath() {
-    imagePath = "";
-}
-
-std::string Explorer::GetImagePath()
-{
-    return imagePath;
-}
-
-
 void LoadDrives() {
     driveList.clear();
     items.clear();
@@ -88,6 +69,25 @@ void LoadDrives() {
         items.push_back(drive.c_str());
     }
 }
+
+void Explorer::Init()
+{
+    folderTexture.Init("Resources/icons/folder.png");
+    folderFullTexture.Init("Resources/icons/folderFull.png");
+    fileTexture.Init("Resources/icons/file.png");
+    LoadDrives();
+}
+
+
+void Explorer::ResetPath() {
+    imagePath = "";
+}
+
+std::string Explorer::GetImagePath()
+{
+    return imagePath;
+}
+
 
 bool HasSpecificExtension(const std::string& file, const std::string& ext) {
     size_t pos = file.find_last_of(".");

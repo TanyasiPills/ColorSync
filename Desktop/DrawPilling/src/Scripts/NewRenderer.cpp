@@ -295,8 +295,8 @@ void NewRenderer::RenderCursorToCanvas()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 		glViewport(0, 0, canvasSize[0], canvasSize[1]);
-
 		double* pos = Callback::GlCursorPosition();
+
 		switch (tool)
 		{
 		case 1:
@@ -422,6 +422,7 @@ void NewRenderer::RenderDrawMessage(const DrawMessage& drawMessage)
 		if (Layer* layerPtr = dynamic_cast<Layer*>(nodes[drawMessage.layer].get())) {
 			RenderData& layer = layerPtr->data;
 			if (layers[0] == drawMessage.layer) return;
+			if (drawMessage.positions.size() < 1) return;
 
 			glBindFramebuffer(GL_FRAMEBUFFER, layer.fbo);
 			glViewport(0, 0, canvasSize[0], canvasSize[1]);

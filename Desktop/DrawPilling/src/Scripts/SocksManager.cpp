@@ -93,7 +93,6 @@ void SManager::Down()
     h.socket()->close();
 }
 
-
 void ProcessAction(sio::object_message::ptr dataIn)
 {
     int type = dataIn->get_map()["type"]->get_int();
@@ -142,7 +141,9 @@ void ProcessAction(sio::object_message::ptr dataIn)
             int typeOfNode = data["node"]->get_int();
             int location = data["location"]->get_int();
             if (typeOfNode == 0) {
-                rendererSocks->CreateLayer(location);
+                DrawMessage msg;
+                msg.location = location;
+                rendererSocks->ExecuteMainThreadTask(msg);
             }
             else if (typeOfNode == 1) {
                 rendererSocks->CreateFolder(location);
@@ -189,6 +190,8 @@ void SManager::ProcessHistory()
 void SManager::Kick(unsigned int id) {
     if (!onserver) return;
 
+    users.erase(std::remove_if(users.begin(), users.end(), [id](const RoomUser& user) {return user.id == id;}), users.end());
+
     sio::message::ptr msg = sio::object_message::create();
     sio::message::ptr data = sio::object_message::create();
 
@@ -198,7 +201,6 @@ void SManager::Kick(unsigned int id) {
     msg->get_map()["data"] = data;
 
     h.socket()->emit("manage", msg);
-
 }
 
 //recieving socket messages

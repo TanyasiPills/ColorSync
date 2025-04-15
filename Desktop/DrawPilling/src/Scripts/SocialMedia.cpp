@@ -1949,6 +1949,7 @@ void SocialMedia::SearchPage(float& width, float& height)
 void SocialMedia::RoomPage(float& width, float& height)
 {
     if (needRooms) {
+        rooms.clear();
         std::thread(&RoomsRequest).detach();
         needRooms = false;
     }
@@ -1963,7 +1964,7 @@ void SocialMedia::RoomPage(float& width, float& height)
     Lss::InputText("searchRoom", searchRoomText, sizeof(searchRoomText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Rounded);
     ImGui::SameLine();
     Lss::Left(0.05f * valid.x);
-    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH))
+    if (Lss::Button("Create", ImVec2(valid.x * 0.2f, 5 * Lss::VH), 4 * Lss::VH, Rounded))
     {
         openCreate = true;
     }
@@ -2072,27 +2073,40 @@ void SocialMedia::RoomPage(float& width, float& height)
         ImGui::EndPopup();
     }
 
-    if (Lss::Modal("Joinyup", &openJoin, ImVec2(20 * Lss::VW, 40 * Lss::VH), Centered | Trans, ImGuiWindowFlags_NoDecoration))
+    static float joinHeight = 0.0f;
+    if (Lss::Modal("Joinyup", &openJoin, ImVec2(20 * Lss::VW, joinHeight), Centered | Rounded | Bordering, ImGuiWindowFlags_NoDecoration))
     {
+        float startPos = ImGui::GetCursorPosY();
+
         static char passWordText[256];
         if (!privateLobby) {
-            Lss::Text("Are you sure u want to join?", 4*Lss::VH, Centered);
-            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH))
+            Lss::Text("Are you sure u want to join?", 3*Lss::VH, Centered);
+            Lss::Top(Lss::VH);
+            Lss::Left(3 * Lss::VW);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded))
             {
                 std::map<std::string, std::string> header;
-                std::map<std::string, std::string> room;
+                std::map<std::string, std::string> room;//
                 header["token"] = runtime.token;
                 room["name"] = roomName;
                 room["create"] = "false";
                 SManager::Connect(runtime.ip.c_str(), header, room);
                 Callback::EditorSwapCallBack(true);
             }
-            Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine);
+            ImGui::SameLine();
+            Lss::Left(Lss::VW);
+            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded)){
+                ImGui::CloseCurrentPopup();
+                openJoin = false;
+            }
         } else {
             ImVec2 valid = ImGui::GetContentRegionAvail();
-            Lss::Text("Please enter the room's password:", Centered);
-            Lss::InputText("roomPassword", passWordText, sizeof(passWordText), ImVec2(valid.x * 0.7f, 5 * Lss::VH), Centered);
-            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH)) {
+            Lss::Text("Please enter the room's password:",2.5f*Lss::VH);
+            Lss::Left(Lss::VW);
+            Lss::InputText("roomPassword", passWordText, sizeof(passWordText), ImVec2(valid.x * 0.9f, 4 * Lss::VH), Rounded);
+            Lss::Top(Lss::VH);
+            Lss::Left(3 * Lss::VW);
+            if (Lss::Button("Join", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded)) {
                 std::map<std::string, std::string> header;
                 std::map<std::string, std::string> room;
                 header["token"] = runtime.token;
@@ -2102,11 +2116,14 @@ void SocialMedia::RoomPage(float& width, float& height)
                 SManager::Connect(runtime.ip.c_str(), header, room);
                 Callback::EditorSwapCallBack(true);
             }
-            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 4 * Lss::VH, SameLine))
+            ImGui::SameLine();
+            Lss::Left(Lss::VW);
+            if (Lss::Button("Cancel", ImVec2(10 * Lss::VH, 4 * Lss::VH), 3 * Lss::VH, Rounded))
             {
                 ImGui::CloseCurrentPopup();
                 openJoin = false;
             }
+
         }
 
         if (ImGui::IsMouseClicked(0))
@@ -2120,12 +2137,25 @@ void SocialMedia::RoomPage(float& width, float& height)
             }
         }
 
+        Lss::Top(2 * Lss::VH);
+
+        float endPos = ImGui::GetCursorPosY();
+        float size = endPos - startPos;
+        if (size != joinHeight) {
+            joinHeight = size;
+            ImGui::CloseCurrentPopup();
+        }
+
         Lss::End();
         ImGui::EndPopup();
     }
 
+    Lss::Top(2 * Lss::VH);
+    ImVec2 originValid = valid;
+
     Lss::SetColor(ContainerBackground, Background);
     for (auto& room : rooms) {
+        valid.x = valid.x * 0.8f;
         Lss::Child(room.roomName + room.ownerName, ImVec2(valid.x, 12.5f * Lss::VH), false, Centered);
         Lss::LeftTop(Lss::VW, 0.5f * Lss::VH);
         Lss::Text(room.roomName, 4 * Lss::VH);
@@ -2146,12 +2176,13 @@ void SocialMedia::RoomPage(float& width, float& height)
         Lss::LeftTop(Lss::VW, Lss::VH);
         Lss::Text(std::to_string(room.userCount) + "/" + std::to_string(room.capacity), 4 * Lss::VH);
         ImGui::SameLine();
-        float lockPos = valid.x - 6 * Lss::VW;
+        float lockPos = valid.x - 7 * Lss::VW;
         ImGui::SetCursorPosX(lockPos);
         Lss::Text((room.password) ? "Locked" : "", 4 * Lss::VH);
         Lss::End();
         ImGui::EndChild();
         Lss::Top(Lss::VH);
+        valid = originValid;
     }
     Lss::SetColor(ContainerBackground, ContainerBackground);
     ImGui::PopStyleVar();

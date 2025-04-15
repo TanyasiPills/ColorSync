@@ -334,7 +334,9 @@ void SetRenderData()
             foldy->AddChild(child);
         }
         renderer->folders.push_back(folder.id);
+        index++;
     }
+    renderer->nextFreeNodeIndex = index;
 }
 
 void DataManager::SaveSyncData(std::string path)
