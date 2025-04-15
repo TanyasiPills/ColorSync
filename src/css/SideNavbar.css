@@ -81,3 +81,11 @@
   align-items: flex-start;
   justify-content: flex-start;
 }
+
+#icon{
+  display: inline-flex;
+  max-height: 40px;
+}
+.icon{
+  display: inline-flex;
+}

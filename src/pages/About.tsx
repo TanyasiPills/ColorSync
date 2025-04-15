@@ -3,7 +3,7 @@ import { Container, Row, Col, Button, Card } from 'react-bootstrap'
 function App() {
     return (
         <Container id="content" className="about-page py-5">
-            <h1 className="display-4 fw-bold mb-3">ColorSync</h1>
+            <img src="../../public/img/transparentTitleSided.png" alt="ColorSync" className='logoAbout' />
             <p className="lead text-secondary mb-5">a way to solve my relationship</p>
 
             <Row className="g-4">

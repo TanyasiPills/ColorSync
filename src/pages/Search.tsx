@@ -15,6 +15,7 @@ export function Search() {
   const cookies = new Cookies();
   const thisUser = cookies.get("AccessToken");
   let offset: number | null = 0;
+  let loading: boolean = false;
 
 
   async function loadUsers() {
@@ -29,6 +30,10 @@ export function Search() {
   }
 
   async function loadPosts() {
+    if (loading) {
+      return
+    }
+    loading = true;
     const tags: string[] = [];
     let text: string = "";
     if (searchQuery) {
@@ -60,14 +65,20 @@ export function Search() {
       const json = await result.json();
       setPosts(prev => [...prev, ...json.data])
       offset = json.offset;
+      loading = false;
+      if (json.data.length == 0 && offset){
+        loadPosts()
+      } 
     } else { console.log(await result.text()) }
   }
 
   useEffect(() => {
-    loadPosts()
+    setPosts([]);
+    loadPosts();
     loadUsers();
+  }, [searchQuery]);
 
-
+  useEffect(() => {
     const handleScroll = () => {
       const postsSection = document.getElementById("postsSection");
       if (!postsSection) return;
@@ -81,8 +92,7 @@ export function Search() {
     if (postsSection) {
       postsSection.addEventListener("scroll", handleScroll);
     }
-
-  }, [searchQuery]);
+  }, [])
 
   function Search(event: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(event.target.value);

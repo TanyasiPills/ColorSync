@@ -19,9 +19,12 @@ export const EnlargedImage: React.FC<EnlargedImageProps> = ({ show, onHide, imag
     useEffect(() => {
         if (imageId !== null) {
             const loadImage = async () => {
-                const header: any = {
-                    "Authorization": "Bearer " + thisUser.access_token,
-                };
+                let header: any;
+                if (thisUser) {
+                    header = {
+                        "Authorization": "Bearer " + thisUser.access_token,
+                    };
+                }
 
                 try {
                     const result = await fetch(backendIp + '/images/' + imageId, {
@@ -42,7 +45,7 @@ export const EnlargedImage: React.FC<EnlargedImageProps> = ({ show, onHide, imag
 
             loadImage();
         }
-    }, [imageId, thisUser.access_token]);
+    }, [imageId]);
 
     return (
         <Modal show={show} onHide={onHide} size="lg" centered dialogClassName="transparent-modal">

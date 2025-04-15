@@ -35,7 +35,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
         <List className="sidebar-handle" onClick={onClose} size={18} />
       )}
       <div className="sidebar-header">
-        <h2>ColorSync</h2>
+        <img src="../../public/img/icon.png" alt="icon" id='icon' /><h2 className='icon'>ColorSync</h2>
       </div>
       <nav>
         <a href="/" className="sidebar-link">Socail Media</a>
