@@ -54,12 +54,18 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
       sendingData.append("file", newImage);
     }
 
-    if (selectedImage) {
+    if (selectedImage && selectedImageVisibility === visibility.private) {
+      const confirmPost = window.confirm("This image is private. If you post it, it will be changed to public. Do you want to continue?");
+      if (!confirmPost) {        
+        setSelectedImage(undefined);
+        setSelectedImageVisibility(undefined);        
+        return;
+      } else {        
+        sendingData.append("imageId", selectedImage.toString());
+        sendingData.append("forcePost", "true");
+      }
+    } else if (selectedImage) {
       sendingData.append("imageId", selectedImage.toString());
-    }
-
-    if (selectedImageVisibility === visibility.private) {
-      sendingData.append("forcePost", "true");
     }
 
     try {

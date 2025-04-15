@@ -4,7 +4,6 @@
   padding-top: 2%;
   padding-left: 0.5%;
   background-color: var(--divCol);  
-  transition: width 0.5s ease;
   flex: 0 0 15%;
   min-width: 200px;
 }
@@ -16,7 +15,6 @@
   background: linear-gradient(90deg, #ae21ff, #b00b69, #1467ff, #ff006a);
   -webkit-background-clip: text;
   background-clip: text;
-  transition: transform 2s ease-in-out;
 }
 
 .sidebar.closed {
@@ -43,7 +41,6 @@
   padding: 0;
   margin: 0;
   text-decoration: none;
-  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .sidebar-link:hover {
@@ -55,6 +52,8 @@
   position: absolute;
   top: 50%;
   width: 10%;
+  max-width: 40px;
+  max-height: 40px;
   aspect-ratio: 1 !important;
   background-color: transparent;
   border: 2px solid var(--borderCol);

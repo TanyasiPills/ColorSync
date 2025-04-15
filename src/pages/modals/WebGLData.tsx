@@ -6,7 +6,7 @@ import Cookies from 'universal-cookie';
 import { backendIp } from '../../constants';
 
 interface WebGLDataProp extends modalProp {
-    onData: (height: number, width: number, isOline: boolean, roomName?: string, roomPass?: string) => void;
+    onData: (height: number, width: number, roomName?: string, roomPass?: string) => void;
 }
 
 
@@ -14,7 +14,6 @@ export const WebGLData: React.FC<WebGLDataProp> = ({ show, onHide, onData }) => 
 
     const [canvasHeight, setCanvasHeight] = useState<number>(0);
     const [canvasWidth, setCanvasWidth] = useState<number>(0);
-    const [isOnline, setIsOnline] = useState<boolean>(false);
     const [roomName, setRoomName] = useState<string | undefined>(undefined);
     const [roomPass, setRoomPass] = useState<string | undefined>(undefined);
 

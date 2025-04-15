@@ -2,7 +2,7 @@ import { Container, Row, Col, Button, Card } from 'react-bootstrap'
 
 function App() {
     return (
-            <Container id="content" className="about-page py-5">
+        <Container id="content" className="about-page py-5">
             <h1 className="display-4 fw-bold mb-3">ColorSync</h1>
             <p className="lead text-secondary mb-5">a way to solve my relationship</p>
 
@@ -29,7 +29,7 @@ function App() {
                     <Card className="h-100 about-card">
                         <Card.Body>
                             <Card.Title>Need More Info?</Card.Title>
-                            <Button variant="primary" className="mb-2 w-100 buttons">See our Wiki</Button>
+                            <Button as="a" href="https://github.com/TanyasiPills/ColorSync/wiki" target="_blank" rel="noopener noreferrer" className="mb-2 w-100 buttons">See our Wiki</Button>
                         </Card.Body>
                     </Card>
                 </Col>

@@ -39,7 +39,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
       </div>
       <nav>
         <a href="/" className="sidebar-link">Socail Media</a>
-        {thisUser && <a href="/Draw" className="sidebar-link">Draw Online</a>}
+        {/*thisUser && <a href="/Draw" className="sidebar-link">Draw Online</a>*/}
         {canPost? <p onClick={() => setShowPosting(true)} className="sidebar-link">Post</p> : null}
         <a href="/Search" className="sidebar-link">Search</a>
         <a href="/About" className="sidebar-link">About</a>
