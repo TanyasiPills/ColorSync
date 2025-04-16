@@ -7,9 +7,6 @@ import Cookies from 'universal-cookie';
 import { ExistingImage } from './ExistingImage';
 import { backendIp } from '../../constants';
 
-/**
- *  what it does
- */
 export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
 
   const [validated, setValidated] = useState(false);
@@ -64,6 +61,8 @@ export const Posting: React.FC<modalProp> = ({ show, onHide }) => {
         sendingData.append("imageId", selectedImage.toString());
         sendingData.append("forcePost", "true");
       }
+    } else if (selectedImage && selectedImageVisibility == visibility.public){
+      sendingData.append("imageId", selectedImage.toString());
     }
 
     try {
