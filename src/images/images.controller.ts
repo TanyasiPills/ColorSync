@@ -181,6 +181,7 @@ export class ImagesController {
   @ApiResponse({ status: 404, description: "Image not found, or the user can't delete that image" })
   @ApiBearerAuth()
   @ApiParam({ name: "id", description: "The id of the image" })
+  @ApiQuery({ name: "forceDelete", description: "Force delete the image, even if it is used in a post", required: false, type: Boolean })
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')

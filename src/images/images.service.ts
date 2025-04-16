@@ -49,7 +49,6 @@ export class ImagesService {
   }
 
   async update(id: number, userId: number, dto: UpdateImageDto) {
-    console.log(id, dto, userId);
     const image = await this.db.image.findUnique({ where: { id, userId }, select: { id: true, date: true, visibility: true, userId: true, posts: true } });
     if (!image) throw new NotFoundException(`Image with id: ${id} not found that user: ${userId} can update`);
     let promises: Promise<any>[];
