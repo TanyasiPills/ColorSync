@@ -22,10 +22,6 @@ export class ImagesController {
     this.logger = new Logger(ImagesController.name);
    }
 
-  async onModuleInit() {
-    if (platform() != "win32") this.logger.warn("The application is not running on Windows, some features won't work.");
-  }
-
   /**
    * Uploades a image
    * @param createImageDto The data to upload the image

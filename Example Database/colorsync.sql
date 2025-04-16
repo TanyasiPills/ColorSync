@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 16, 2025 at 01:02 PM
+-- Generation Time: Apr 16, 2025 at 06:25 PM
 -- Server version: 10.4.17-MariaDB
 -- PHP Version: 8.0.0
 
@@ -215,12 +215,12 @@ INSERT INTO `post` (`id`, `userId`, `imageId`, `text`, `date`, `imageForPost`, `
 (23, 4, 23, 'i will stab you', '2025-03-18 09:59:15.964', 1, 0),
 (26, 4, 24, 'my breakfast', '2025-03-18 10:23:16.196', 1, 2),
 (27, 4, NULL, 'no image', '2025-03-18 10:23:52.332', 0, 0),
-(28, 4, NULL, 'no bitches', '2025-03-18 10:24:55.680', 0, 0),
-(29, 4, NULL, 'small pp', '2025-03-18 10:25:25.797', 0, 0),
+(28, 4, NULL, 'no', '2025-03-18 10:24:55.680', 0, 0),
+(29, 4, NULL, 'small', '2025-03-18 10:25:25.797', 0, 0),
 (30, 4, NULL, 'scroll up', '2025-03-18 10:36:53.243', 0, 0),
 (31, 4, NULL, 'no scroll', '2025-03-18 10:37:04.790', 0, 0),
 (32, 4, NULL, 'scroll no frfr rn no cap', '2025-03-18 10:38:33.501', 0, 1),
-(33, 4, NULL, 'no pp', '2025-03-18 10:44:11.634', 0, 0),
+(33, 4, NULL, 'no', '2025-03-18 10:44:11.634', 0, 0),
 (34, 4, NULL, 'no scroll this time on god frfr', '2025-03-18 10:45:25.221', 0, 0),
 (36, 1, NULL, 'wa?', '2025-03-18 10:50:26.565', 0, 0),
 (37, 1, NULL, 'wa?', '2025-03-18 10:50:48.353', 0, 2),
@@ -327,43 +327,6 @@ INSERT INTO `tag` (`name`) VALUES
 ('w'),
 ('waifu'),
 ('wow');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `token`
---
-
-CREATE TABLE `token` (
-  `token` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `userId` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `token`
---
-
-INSERT INTO `token` (`token`, `userId`) VALUES
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkJvYiBUaGUgQnVpbGRlciIsInN1YiI6MSwiaWF0IjoxNzM5NzkxNjg3fQ.ooGRL9L5wzH6EmnGypFRja8nSxpZodItAP6Ug9Cu52s', 1),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im55YSIsInN1YiI6MiwiaWF0IjoxNzM5NzkxNzIzfQ.iP6SpvZQoMRv4UNJILojch6IFjM8PvJ_MrLkSH3aylw', 2),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IldpbGxpYW0iLCJzdWIiOjMsImlhdCI6MTczOTc5MTc5N30.jnmf9dSsXltax40HQwpOgMrzScImhkNF-kXzE4_iokE', 3),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlbnNoaS1zYW1hIiwic3ViIjo0LCJpYXQiOjE3NDA0OTMzNDN9.7c-0IdvJ33VWQ5Fyb_7jx4PhV_hrh-CwpRyQJRx7Nz8', 4),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im55YW5kcm9pZCIsInN1YiI6NSwiaWF0IjoxNzQwODQ0MTI1fQ.iO_BZ1n8GsFbpKS4AwlOMYmLEKQjXAnhBbOW4ktYQMM', 5),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1vbmlrYSIsInN1YiI6NiwiaWF0IjoxNzQyMjg0NjA3fQ.-fxl46QR1eL2cRZccP67s84NPCBe6_t52BLWcEeHG7k', 6),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImN1cnNlZE1hdHlpIiwic3ViIjo3LCJpYXQiOjE3NDI5NzcyNDN9.RiEaA03U1uSfinMYiMNUaMMJz-PLStRqeJ2uMTRWKF8', 7),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlZhbGFraSIsInN1YiI6OCwiaWF0IjoxNzQzNzU0Mzc1fQ.BdD_Cvhc0Xu1AYuWweJHgOQ1QF1iN-Hn4CUazExXGQA', 8),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFzZCIsInN1YiI6OSwiaWF0IjoxNzQ0MDQwNTUwfQ.MZVS5-R-Vd7gFRvgMD42J-eAClzwNn3xbr3W7zdrSiY', 9),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJzdWIiOjEwLCJpYXQiOjE3NDQyMjM5ODl9.3WbpBLjdYbKCnGNao5xVWKlsqOTeDmlNpkuVb9AdeC8', 10),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QyIiwic3ViIjoxMywiaWF0IjoxNzQ0MjI0MjA0fQ.JqwE8jzsPWoew2whPxnmgotWc3k0iOtgZKG7Vklu-5s', 13),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QzIiwic3ViIjoxNCwiaWF0IjoxNzQ0MjI0MjgzfQ.a_8WjTgtQM2geMhv5fh_3CcypFpQVf3IpH-mDIXZhPQ', 14),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkLDqWxhIiwic3ViIjoxNSwiaWF0IjoxNzQ0Mzg5MzYxfQ.cP7j7VlkmW2TiEbQvHpIsvi-ZGc18qHkpgp5DPvPEdU', 15),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkV4YW1wbGUgcHJvZmlsZSIsInN1YiI6MTYsImlhdCI6MTc0NDM4OTcwNH0.NGRxNtTe2IBkmtNfP9Rzzk1anh38ZeHGrkXLAMASC_Q', 16),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkV4YW1wbGVVc2VyIiwic3ViIjoxNywiaWF0IjoxNzQ0MzkxMDI4fQ.SnJQDOVoco-d45ZOjuKo4CA7Na-xteGxXPHJFqcaZxU', 17),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5ld1VzZXIiLCJzdWIiOjE4LCJpYXQiOjE3NDQzOTE1MDN9.vL4yN-wrvMIFExSrm401eVCF1frSgdj3bJubUQjHVD0', 18),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJUZXN0Iiwic3ViIjoxOSwiaWF0IjoxNzQ0MzkyNDc3fQ.Vmz1rZ7nv-XPIOuhMBBy47YaohQw3up2RUSC_s-Lqhk', 19),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkNvbG9yIiwic3ViIjoyMCwiaWF0IjoxNzQ0Mzk4MjgxfQ.lzu-AZzrQM7eR8vXbs5sJ3wITuUN9s9Jw2bfCpBPEVw', 20),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkVsZXBoYW50TG92ZXIiLCJzdWIiOjIxLCJpYXQiOjE3NDQzOTg5MjV9.Ri5J_vikP7MZfd-XLl6fNHevL5CbxZamT8lMeRPRz2w', 21),
-('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QiLCJzdWIiOjIyLCJpYXQiOjE3NDQ4MDExODB9.pMcnO-s1u20UYsSefI2OCjJbrYrK7Cd2opcSTOaRrG8', 22);
 
 -- --------------------------------------------------------
 
@@ -610,13 +573,6 @@ ALTER TABLE `tag`
   ADD UNIQUE KEY `Tag_name_key` (`name`);
 
 --
--- Indexes for table `token`
---
-ALTER TABLE `token`
-  ADD UNIQUE KEY `Token_token_key` (`token`),
-  ADD KEY `Token_userId_fkey` (`userId`);
-
---
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
@@ -688,12 +644,6 @@ ALTER TABLE `image`
 ALTER TABLE `post`
   ADD CONSTRAINT `Post_imageId_fkey` FOREIGN KEY (`imageId`) REFERENCES `image` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
   ADD CONSTRAINT `Post_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
-
---
--- Constraints for table `token`
---
-ALTER TABLE `token`
-  ADD CONSTRAINT `Token_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `_likedposts`
