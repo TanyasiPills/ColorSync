@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bgPrimary">#1F1F4C</color>
+    <color name="bgSecondary">#303060</color>
+    <color name="bgSmallHighlight">#35355A</color>
+    <color name="bgHighlight">#494873</color>
+    <color name="border">#7A74A6</color>
+    <color name="text">#A5A0D4</color>
+
+    <color name="bgAlpha">#801F1F4C</color>
+    <color name="bgSecondaryHighlight">#505080</color>
+    <color name="red">#bb2020</color>
+</resources>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Fragment.HomeFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+
+        <com.example.colorsync.SearchViewWithEmpty
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/search"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:iconifiedByDefault="false"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginTop="10dp"
+            app:queryHint="Search..."
+            android:background="@drawable/rounded_background"
+            android:padding="5dp" />
+
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:id="@+id/swipeLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/search"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycleView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/post_layout"
+                android:requiresFadingEdge="vertical" />
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="30dp"
+        android:id="@+id/addPostLayout"
+        android:background="@color/bgAlpha"
+        android:visibility="gone"
+        >
+        <androidx.cardview.widget.CardView
+            android:id="@+id/addPost_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:contentPadding="10dp"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="@null">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_description"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="@id/post_send"
+                    android:layout_marginEnd="50dp"
+                    android:hint="@string/AddPostDescriptionHint"
+                    android:textColorHint="@color/text"
+                    android:autofillHints="text"
+                    android:inputType="textMultiLine"
+                    android:maxLines="4"
+                    android:scrollbars="vertical"/>
+
+                <ImageButton
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:scaleType="fitCenter"
+                    android:id="@+id/post_send"
+                    app:layout_constraintTop_toTopOf="@id/post_description"
+                    app:layout_constraintBottom_toBottomOf="@id/post_description"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:contentDescription="@string/send_buttonDescription"
+                    android:src="@drawable/send"
+                    android:stateListAnimator="@animator/click_grow"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    app:tint="@color/text"/>
+
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_tagInput"
+                    app:layout_constraintStart_toStartOf="@id/post_description"
+                    app:layout_constraintTop_toBottomOf="@id/post_description"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintWidth_min="40dp"
+                    app:layout_constraintWidth_max="200dp"
+                    app:layout_constraintHorizontal_bias="0"
+                    android:hint="@string/tagHint"
+                    android:inputType="text"
+                    android:autofillHints="tag"
+                    android:textColor="@color/text"
+                    android:textColorHint="@color/text"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_tags"
+                    app:layout_constraintStart_toEndOf="@id/post_tagInput"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/post_description"
+                    app:layout_constraintHorizontal_bias="0"
+                    android:requiresFadingEdge="horizontal"
+                    />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/post_previewContainer"
+                    app:layout_constraintStart_toStartOf="@id/post_description"
+                    android:id="@+id/post_buttonBar"
+                    android:orientation="horizontal"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="15dp">
+                    <ImageButton
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:id="@+id/post_upload"
+                        android:src="@drawable/add"
+                        android:scaleType="fitXY"
+                        android:background="?android:selectableItemBackgroundBorderless"
+                        android:stateListAnimator="@animator/click_grow"
+                        app:tint="@color/text"
+                        android:contentDescription="@string/post_uploadCD"/>
+                    <ImageButton
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:id="@+id/post_add"
+                        android:src="@drawable/folder"
+                        android:scaleType="fitXY"
+                        android:background="?android:selectableItemBackgroundBorderless"
+                        android:stateListAnimator="@animator/click_grow"
+                        app:tint="@color/text"
+                        android:layout_marginStart="5dp"
+                        android:contentDescription="@string/post_addCD"/>
+                </LinearLayout>
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/post_previewContainer"
+                    app:layout_constraintStart_toStartOf="@id/post_description"
+                    app:layout_constraintTop_toBottomOf="@id/post_tagInput"
+                    android:visibility="gone">
+                     <ImageView
+                         android:layout_width="200dp"
+                         android:layout_height="200dp"
+                         app:layout_constraintStart_toStartOf="parent"
+                         app:layout_constraintEnd_toEndOf="parent"
+                         app:layout_constraintTop_toTopOf="parent"
+                         app:layout_constraintBottom_toBottomOf="parent"
+                         android:scaleType="centerCrop"
+                         android:adjustViewBounds="true"
+                         android:id="@+id/post_preview"
+                         android:contentDescription="@string/post_previewCD"
+                         />
+
+                    <ImageButton
+                        android:id="@+id/post_previewCancel"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:src="@drawable/close"
+                        android:scaleType="fitXY"
+                        app:tint="@color/text"
+                        android:background="@null"
+                        android:stateListAnimator="@animator/click_grow"
+                        android:contentDescription="@string/cancel_buttonCD"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintHeight_max="400dp"
+                    android:id="@+id/post_images"
+                    app:layout_constraintTop_toBottomOf="@id/post_buttonBar"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

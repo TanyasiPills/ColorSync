@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/changeVisibility" android:title="@string/make_privateText"/>
+    <item android:id="@+id/DeleteImage" android:title="@string/deleteText"/>
+</menu>
