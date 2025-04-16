@@ -18,7 +18,7 @@ const SideNavbar: React.FC<LeftNavbarProps> = ({ isOpen, onClose, closable }) =>
 
   function signOut() {
     cookies.remove("AccessToken");
-    window.location.reload();
+    window.location.href = '/'
   }
 
    useEffect(() => {
