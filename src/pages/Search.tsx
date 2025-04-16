@@ -20,7 +20,16 @@ export function Search() {
 
   async function loadUsers() {
     const params: any = {};
-    if (searchQuery) params.name = searchQuery;
+    if (searchQuery) {
+      const keywords = searchQuery.trim().split(/\s+/);
+      const nonHashtags = keywords.filter(k => !k.startsWith("#"));
+  
+      if (nonHashtags.length > 0) {
+        params.name = nonHashtags.join(" ");
+      } else {
+        params.name = keywords[0];
+      }
+    }
     const headers: any = { "Accept": "application/json" }
     if (thisUser) {
       headers["Authorization"] = "Bearer " + thisUser.access_token
