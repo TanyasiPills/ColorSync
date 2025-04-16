@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Client Test</title>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    var socket;
+    function connect() {
+      const token = document.getElementById("token").value;
+      const name = document.getElementById("name").value;
+      const password = document.getElementById("password").value;
+      const create = document.getElementById("create").checked;
+
+      socket = io('http://localhost:3000', {
+        extraHeaders: {
+          token: token,
+          password: password
+        },
+        query: {
+          name: name,
+          create: create,
+          width: 400,
+          height: 400
+        }
+      });
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server!');
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected from WebSocket server');
+      });
+
+      socket.on('message', (data) => {
+        console.log('Received message:', data);
+      });
+
+      socket.on('error', (error) => {
+        console.error('Error:', error.message);
+      });
+
+      socket.on('action', (action) => {
+        console.log("Recived action:", action);
+      });
+
+      socket.on('mouse', (data) => {
+        console.log("Recived mouse:", data);
+      });
+
+      socket.on('system message', (data) => {
+        console.log("Recived system message:", data);
+      });
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("passwordl").value;
+
+      console.log(password);
+      console.log(email);
+
+      const response = await fetch("http://localhost:3000/users/login", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+      const res = await response.json();
+      console.log(res);
+      const token = document.getElementById("token").value = res.access_token;
+    }
+
+    async function register() {
+      const email = document.getElementById("emailr").value;
+      const username = document.getElementById("usernamer").value;
+      const password = document.getElementById("passwordr").value;
+
+      const response = await fetch("http://localhost:3000/users", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, username })
+      });
+      console.log((await response.json()));
+    }
+
+    function send() {
+      const message = document.getElementById("message").value;
+      socket.emit("message", { message: message });
+    }
+
+    async function upload() {
+      const files = document.getElementById("file").files;
+      const token = document.getElementById("token").value;
+
+      if (files.length === 0) {
+        alert('No files :c');
+        return;
+      }
+
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch("http://localhost:3000/users/pfp", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      console.log("File upload: ", result);
+    }
+
+    async function uploadImage() {
+      const files = document.getElementById("fileImage").files;
+      const token = document.getElementById("token").value;
+      const visibility = document.getElementById("visibility").value;
+
+      if (files.length === 0) {
+        alert('No files :c');
+        return;
+      }
+
+      const file = files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('visibility', visibility);
+      const response = await fetch("http://localhost:3000/images", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log("File upload: ", response.ok);
+      const body = await response.message();
+      //document.getElementById("imageId").value = body.id;
+    }
+    async function post() {
+      const imageId = parseInt(document.getElementById("imageId").value);
+      const text = document.getElementById("postText").value;
+      const token = document.getElementById("token").value;
+
+      const response = await fetch("http://localhost:3000/posts", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ imageId, text })
+      });
+
+      console.log("post: ", response.ok);
+      console.log(await response.json());
+    }
+  </script>
+</head>
+
+<body>
+  <form onsubmit="connect(); return false;">
+    <label for="name">Room name:</label>
+    <input type="text" name="name" id="name">
+    <br>
+    <label for="password">Password:</label>
+    <input type="text" name="password" id="password">
+    <br>
+    <label for="create">Create:</label>
+    <input type="checkbox" name="create" id="create">
+    <br>
+    <label for="token">Token:</label>
+    <input type="text" name="token" id="token">
+    <br>
+    <input type="submit" value="Connect">
+  </form>
+  <br>
+  <form onsubmit="login(); return false;">
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email">
+    <br>
+    <label for="passwordl">Password:</label>
+    <input type="text" name="passwordl" id="passwordl">
+    <br>
+    <input type="submit" value="Login">
+  </form>
+  <br>
+  <form onsubmit="register(); return false;">
+    <label for="emailr">Email:</label>
+    <input type="email" name="emailr" id="emailr">
+    <br>
+    <label for="usernamer">Username:</label>
+    <input type="text" name="usernamer" id="usernamer">
+    <br>
+    <label for="passwordr">Password:</label>
+    <input type="text" name="passwordr" id="passwordr">
+    <br>
+    <input type="submit" value="Register">
+  </form>
+  <br>
+  <form onsubmit="try {send()} catch(error){console.log(error)} return false;">
+    <label for="message">Message:</label>
+    <input type="text" name="message" id="message">
+    <br>
+    <input type="submit" value="Send">
+  </form>
+  <br>
+  <form onsubmit="upload(); return false;">
+    <p>Profile Picture Upload</p>
+    <label for="file">File:</label>
+    <input type="file" name="file" id="file">
+    <br>
+    <input type="submit" value="Upload">
+  </form>
+  <form onsubmit="uploadImage(); return false;">
+    <p>Image Upload</p>
+    <label for="fileImage">File:</label>
+    <input type="file" name="fileImage" id="fileImage">
+    <br>
+    <label for="visibility">Visibility:</label>
+    <input type="text" name="visibility" id="visibility">
+    <br>
+    <input type="submit" value="Upload">
+  </form>
+  <form onsubmit="post(); return false;">
+    <p>Post</p>
+    <label for="imageId">Image Id:</label>
+    <input type="number" name="imageId" id="imageId">
+    <br>
+    <label for="postText">Text:</label>
+    <input type="text" name="postText" id="postText">
+    <br>
+    <input type="submit" value="Post">
+  </form>
+</body>
+</html>

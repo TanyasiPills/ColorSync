@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Websockets</title>
+  <style>
+    :root {
+      --bg: #101025;
+      --bg2: #17173F;
+      --bgHigh: #2F2F6F;
+      --bgHigh2: #353575;
+      --border: #7A74A6;
+      --text: #A5A0D4;
+    }
+
+    body {
+      padding: 5px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .endpoint {
+      width: 80%;
+      background-color: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .endpoint>div {
+      border-top: 1px solid var(--border);
+    }
+
+    .endpoint>*:first-child {
+      margin-top: 0;
+    }
+
+    .endpoint td:first-child {
+      display: grid;
+      padding: 5px;
+    }
+
+    .endpoint td:first-child>span {
+      font-size: smaller;
+      filter: brightness(80%);
+    }
+
+
+    .endpoint h2>span {
+      font-size: smaller;
+      filter: brightness(90%);
+    }
+
+    tr.required>td:first-child>span::after {
+      content: '*';
+      color: #FFB0B0;
+    }
+
+    .endpoint h3 {
+      margin-bottom: 0;
+    }
+
+    .types {
+      width: 100%;
+    }
+
+    .types td:first-child {
+      text-align: center;
+    }
+
+    .endpoint .sl {
+      font-size: x-large;
+    }
+
+    .endpoint .sl+h3 {
+      margin-top: 1px;
+    }
+
+    .sl>span {
+      font-size: large;
+      filter: brightness(90%);
+    }
+
+    h1>span {
+      font-size: large;
+      filter: brightness(90%);
+    }
+
+    a.docs {
+      float: right;
+      text-decoration: none;
+      color: var(--text);
+      margin: 15px;
+      transition: filter .2s ease;
+    }
+
+    a.docs:hover {
+      filter: brightness(150%);
+    }
+
+    .endpoint .mb {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="/docs" class="docs">HTML documentation</a>
+
+  <h1>Websocket <span>socket.io</span></h1>
+
+  <div class="endpoint">
+    <h2>join <span>Joining the socket</span></h2>
+    <div>
+      <h3>Headers</h3>
+      <table>
+        <tr class="required">
+          <td>token<span>string</span></td>
+          <td>Access token of the user</td>
+        </tr>
+        <tr>
+          <td>password<span>string</span></td>
+          <td>The password of the room</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Query</h3>
+      <table>
+        <tr class="required">
+          <td>name<span>string</span></td>
+          <td>Name of the room</td>
+        </tr>
+        <tr>
+          <td>create<span>boolean</span></td>
+          <td>Do you want to create the room or join, false = join, true = create, default is false</td>
+        </tr>
+        <tr>
+          <td>width<span>int</span></td>
+          <td>The width of the canvas, required when creating the room</td>
+        </tr>
+        <tr>
+          <td>height<span>int</span></td>
+          <td>The height of the canvas, required when creating the room</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Receive <span>system message</span></h3>
+      <h3 class="mb">Joining the room</h3>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>20 - Bad request format</li>
+        <li>30 - Invalid token</li>
+        <li>31 - Invalid password</li>
+        <li>40 - User is already logged in</li>
+        <li>41 - Name already in use</li>
+        <li>50 - Room not found</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>action <span>The draw actions</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>type<span>int</span></td>
+          <td>Type of the action</td>
+        </tr>
+        <tr>
+          <td>data<span>any</span></td>
+          <td>The data needed for the action</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <table class="types">
+              <tr>
+                <th>type</th>
+                <th>data</th>
+              </tr>
+              <tr>
+                <td>draw - 0</td>
+                <td>{layer: int, brush: int, size: float, offset: Position, ratio: Position, CurSca: Position3, color: {r: float, g: float, b: float} positions: Position[]}</td>
+              </tr>
+              <tr>
+                <td>add node - 1</td>
+                <td>{location: int, node: int}</td>
+              </tr>
+              <tr>
+                <td>rename node - 2</td>
+                <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
+                <td>undo - 3</td>
+                <td>null</td>
+              </tr>
+              <tr>
+                <td>redo - 4</td>
+                <td>null</td>
+              </tr>
+              <tr>
+                <td>delete node - 5</td>
+                <td>{location: int}</td>
+              </tr>
+              <tr>
+                <td>move node - 6</td>
+                <td>{node: int, to: int}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>type<span>string</span></td>
+          <td>Type of the action</td>
+        </tr>
+        <tr>
+          <td>data<span>any</span></td>
+          <td>The data needed for the action</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <table class="types">
+              <tr>
+                <th>type</th>
+                <th>data</th>
+              </tr>
+              <tr>
+                <td>draw - 0</td>
+                <td>{layer: int, brush: int, size: float, offset: Position, ratio: Position, CurSca: Position3, color: {r: float, g: float, b: float} positions: Position[]}</td>
+              </tr>
+              <tr>
+                <td>add node - 1</td>
+                <td>{name: string, location: int, node: int}</td>
+              </tr>
+              <tr>
+                <td>rename node - 2</td>
+                <td>{name: string, location: int}</td>
+              </tr>
+              <tr>
+                <td>undo - 3</td>
+                <td>{history: Action[], compilePosition: number}</td>
+              </tr>
+              <tr>
+                <td>redo - 4</td>
+                <td>Action</td>
+              </tr>
+              <tr>
+                <td>delete node - 5</td>
+                <td>{location: int}</td>
+              </tr>
+              <tr>
+                <td>move node - 6</td>
+                <td>{node: int, to: int}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>message <span>The messages sent in chat</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+        <tr class="required">
+          <td>userId<span>int</span></td>
+          <td>The id of the sender.</td>
+        </tr>
+        <tr class="required">
+          <td>username<span>string</span></td>
+          <td>The username of the sender.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>mouse <span>The position of the mouse</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>position<span>Position</span></td>
+          <td>The position of the mouse.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>userId<span>int</span></td>
+          <td>The id of the sender.</td>
+        </tr>
+        <tr class="required">
+          <td>position<span>Position</span></td>
+          <td>The position of the sender's mouse.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <div class="endpoint">
+    <h2>manage <span>The managment actions</span></h2>
+    <div>
+      <h3 class="sl">Send</h3>
+      <table>
+        <tr class="required">
+          <td>type<span>string</span></td>
+          <td>Type of the action</td>
+        </tr>
+        <tr>
+          <td>data<span>any</span></td>
+          <td>The data needed for the action</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>
+            <table class="types">
+              <tr>
+                <th>type</th>
+                <th>data</th>
+              </tr>
+              <tr>
+                <td>kick</td>
+                <td>{id: int}</td>
+              </tr>
+              <tr>
+                <td>changeOwner</td>
+                <td>{id: int}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Errors</h3>
+      <ul>
+        <li>10 - Not logged in</li>
+        <li>11 - Not in a room</li>
+        <li>20 - Bad request format</li>
+        <li>32 - Unauthorized</li>
+        <li>51 - User not found</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>error <span>Socket errors</span></h2>
+    <div>
+      <h3 class="sl">Listen</h3>
+      <table>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message.</td>
+        </tr>
+        <tr class="required">
+          <td>statusCode<span>int</span></td>
+          <td>The status code of the error.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>system message <span>The system messages</span></h2>
+    <div>
+      <h3 class="sl mb">Listen</h3>
+      <h3>Message from the server</h3>
+      <table>
+        <tr class="required">
+          <td>type = 0<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Other user joined the room</h3>
+      <table>
+        <tr class="required">
+          <td>type = 1<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the joined user</td>
+        </tr>
+        <tr class="required">
+          <td>username<span>string</span></td>
+          <td>The username of the user</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Other user disconnected the room</h3>
+      <table>
+        <tr class="required">
+          <td>type = 2<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the disconnected user</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3 id="joining the room">Joining the room</h3>
+      <table>
+        <tr class="required">
+          <td>type = 3<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>width<span>int</span></td>
+          <td>The width of the canvas</td>
+        </tr>
+        <tr class="required">
+          <td>height<span>int</span></td>
+          <td>The height of the canvas</td>
+        </tr>
+        <tr class="required">
+          <td>history<span>Action[]</span></td>
+          <td>All the past actions.</td>
+        </tr>
+        <tr class="required">
+          <td>compilePosition<span>int</span></td>
+          <td>Save the rendered image up to this index in the history.</td>
+        </tr>
+        <tr class="required">
+          <td>users<span>{id: int, username: string}[]</span></td>
+          <td>List of all the connected users.</td>
+        </tr>
+        <tr class="required">
+          <td>owner<span>int</span></td>
+          <td>The id of the owner.</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>Owner has been changed</h3>
+      <table>
+        <tr class="required">
+          <td>type = 4<span>int</span></td>
+          <td>The type of the system message</td>
+        </tr>
+        <tr class="required">
+          <td>message<span>string</span></td>
+          <td>The message sent by the server</td>
+        </tr>
+        <tr class="required">
+          <td>id<span>int</span></td>
+          <td>The id of the new owner</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>Types</h2>
+    <div>
+      <h3 id="action">Action</h3>
+      <p>{<br>
+        &emsp;type: string*<br>
+        &emsp;data: any<br>
+        }</p>
+    </div>
+    <div>
+      <h3 id="position">Postion</h3>
+      <p>{<br>
+        &emsp;x: float*<br>
+        &emsp;y: float*<br>
+        }</p>
+    </div>
+    <div>
+      <h3 id="position3">Postiion3</h3>
+      <p>{<br>
+        &emsp;x: float*<br>
+        &emsp;y: float*<br>
+        &emsp;z: float*<br>
+        }</p>
+    </div>
+  </div>
+</body>
+
+</html>
