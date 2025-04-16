@@ -1,0 +1,74 @@
+#profilData {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--backgroundColor);
+    padding: 10px;
+    box-shadow: 0 2px 5px var(--borderCol);
+}
+
+.d-flex {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    margin: 0;
+}
+
+#profilePic {
+    margin: 10px;
+    border-radius: 50%;
+    height: 75px;
+    width: 75px;
+    transition: all 1s ease;
+}
+
+#profilePic:hover {
+    border-radius: 0%;
+    transform: scale(1.3);
+}
+
+#userName {
+    margin: 0;
+}
+
+#myImages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    height: calc(100vh - 150px);
+}
+
+#col {
+    border-left: 2px solid var(--borderCol);
+    border-bottom: 2px solid var(--borderCol);
+    padding: 0;
+    margin: 0;
+    height: fit-content;
+}
+
+#col:nth-child(3n) {
+    border-right: 2px solid var(--borderCol);
+}
+
+.myImages-wrapper {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.square-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+
+.myImages-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

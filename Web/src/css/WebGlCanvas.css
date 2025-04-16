@@ -1,0 +1,227 @@
+.layout {
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.sideBar {
+    width: fit-content !important;
+    position: relative;
+    max-width: 15%;
+}
+
+.sideBar#left {
+    border-right: 2px solid var(--borderCol);
+    background-color: var(--divCol) !important;
+}
+
+.sideBar#right {
+    border-left: 2px solid var(--borderCol);
+    background-color: var(--backgroundColor) !important;
+}
+
+.canvasContainer {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+#gl-canvas {
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    background-color: white;
+}
+
+hr {
+    height: 2px;
+    background-color: var(--borderCol);
+    width: 100%;
+    border: none;
+}
+
+/*color*/
+.topRow {
+    width: 100%;
+    border-bottom: 2px solid var(--borderCol);
+    padding: 10px;
+    position: relative;
+
+}
+
+#Color {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    height: fit-content;
+    width: fit-content;
+}
+
+#colorWheel {
+    aspect-ratio: 1 !important;
+    flex-grow: 1;
+    position: relative;
+    cursor: crosshair;
+    border: 2px solid black;
+}
+
+#colorColumns {
+    aspect-ratio: 1/4;
+    position: relative;
+    border: 2px solid black;
+}
+
+#colorWheelDiv,
+#colorColDiv {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+}
+
+#marker {
+    width: 5%;
+    height: 5%;
+    border-radius: 50%;
+    border: 2px solid white;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: none;
+}
+
+#markerCol {
+    width: 100%;
+    height: 5%;
+    border-radius: 20%;
+    border: 2px solid white;
+    position: absolute;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#currentColor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid black;
+}
+
+
+/*extras*/
+
+button,
+input {
+    margin: 10px 0;
+    padding: 5px;
+}
+
+p {
+    margin-top: 20px;
+}
+
+/* Left Panel Range slider should take up maximum available height */
+.full-width-range {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Circle grid layout */
+.circle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    margin: 0 auto;
+    cursor: pointer;
+  }
+  
+  @media (min-width: 768px) {
+    .circle-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  #circle-sizes{
+    overflow: auto;
+  }
+
+.circle {
+    background-color: var(--divCol);
+    border: 2px solid var(--borderCol);
+    border-radius: 50%;
+    text-align: center;
+    color: var(--textCol);
+    font-size: 0.8rem;
+    align-self: center;
+    padding: 5px;
+    min-height: fit-content;
+    min-width: fit-content;
+    aspect-ratio: 1;
+}
+
+/* Icons grid layout */
+.icon-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.icon-item {
+    width: 30%;
+    text-align: center;
+}
+
+.icon-placeholder {
+    background-color: var(--divCol);
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--borderCol);
+    margin-bottom: 5px;
+}
+
+.icon-label {
+    color: var(--textCol);
+    font-size: 0.8rem;
+}
+
+/* Right Panel Styles */
+.room-header {
+    padding: 10px;
+    border-bottom: 1px solid var(--borderCol);
+}
+
+.layers-tree {
+    padding: 10px;
+    border-bottom: 1px solid var(--borderCol);
+    color: var(--textCol);
+}
+
+.layers-tree ul {
+    list-style-type: none;
+    padding-left: 1rem;
+}
+
+.chat-container {
+    position: relative;
+    height: calc(100% - 150px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: var(--backgroundColor);
+    color: var(--textCol);
+}
+
+.chat-input {
+    border: 1px solid var(--borderCol);
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}

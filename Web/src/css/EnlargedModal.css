@@ -1,0 +1,39 @@
+.transparent-modal .modal-content {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.transparent-modal .modal-body {
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    overflow: hidden;
+}
+
+.transparent-modal .modal-dialog {
+    margin: auto;
+    max-width: fit-content;
+    height: 100vh;
+}
+
+.transparent-modal .modal-header,
+.transparent-modal .modal-footer {
+    display: none;
+}
+
+.enlarged-img {
+    width: auto;
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
+    border: 5px solid var(--borderCol);
+}
