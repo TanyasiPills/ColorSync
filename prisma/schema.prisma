@@ -24,7 +24,6 @@ model User {
   posts Post[]
   images Image[]
   comments Comment[]
-  tokens Token[]
 
   likes Post[] @relation("LikedPosts")
 }
@@ -72,12 +71,6 @@ model Image {
   forPost Boolean @default(false)
 
   posts Post[]
-}
-
-model Token {
-  token String @unique
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId Int
 }
 
 enum Visibility {

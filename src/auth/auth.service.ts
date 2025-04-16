@@ -32,13 +32,8 @@ export class AuthService {
 
   async login(user: any) {
     const payload = {username: user.username, sub: user.id};
-    const storedToken = await this.db.token.findFirst({where: {userId: user.id}})
-    if (storedToken) return {access_token: storedToken.token, username: user.username, id: user.id, email: user.email};
-    else {
-      const token = await this.jwtService.sign(payload);
-      await this.db.token.create({data: {token: token, userId: user.id}});
-      return {access_token: token, username: user.username, id: user.id, email: user.email};
-    }
+    const token = await this.jwtService.sign(payload);
+    return {access_token: token, username: user.username, id: user.id, email: user.email};
   }
 
   async register(dto: CreateUserDto) {
