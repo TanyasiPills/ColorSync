@@ -30,6 +30,12 @@ In the settings menu(development menu), the server ip should be set to the ip of
 
 ---
 
+### Frontend
+If you want to run this website locally you need to run these commands in the terminal
+`npm i` and `npm run dev` for it to run
+
+---
+
 ### Backend
 
 #### Requirements  
