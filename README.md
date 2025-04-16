@@ -1,85 +1,41 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## Requirements  
+A mysql server on port 3306 (default) like [xampp](https://www.apachefriends.org/download.html)  
+[ElasticSearch](https://www.elastic.co/downloads/elasticsearch?tech=rtp&pg=en-elasticsearch-page&plcmt=hero&cta=eswt-24510-a) on port 9200 (default)  
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Setup
+1. Download the node packages  
+`npm install`  
+2. Create the `.env` file based on `.env.example `  
+3. Generate the prisma client  
+`npx prisma generate`  
+4. Generate a database based on prisma  
+`npx prisma db push` 
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### ElasticSearch
+&nbsp;&nbsp;&nbsp;&nbsp; Place [our config]((https://github.com/TanyasiPills/ColorSync/blob/main/docs/elasticsearch.yml)) (or create your own) into `\config\elastisearch.yml`
 
-## Description
+## Running
+Start mysql  
+Start ElasticSearch (run `bin\elasticsearch.bat` (or `bin/elasticsearch` on Linux))  
+Start the server `npm run start`
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Example Database
+You can download a example database from [main/Example Database/colorsync.sql](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/colorsync.sql).  
+You can download the images for the example database from [main/Example Database/uplodas.zip](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/uploads.zip), place the uploads folder inside the zip into the backend's folder.  
+Every user's password is test  
+Few emails:  
+* bob@bob.bob
+* colorful@color.color
+* wil@will.com
 
-## Project setup
 
-```bash
-$ npm install
-```
+## Note
+The backend reindexes the entire database on startup, which is not recommended for production use.
+To disable in search/search.service.ts onModuleInit() change `await this.reindexDatabase();` to `await this.createIndex();`
 
-## Compile and run the project
+## Api
+Check out the swagger documentation on /docs for the api documentation.
 
-```bash
-# development
-$ npm run start
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Database Model
+![database model](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/database%20model.png)
