@@ -28,19 +28,15 @@ git clone -b Desktop https://github.com/TanyasiPills/ColorSync.git
 In the settings menu(development menu), the server ip should be set to the ip of the server computer  
 ![image](https://github.com/user-attachments/assets/9be443f4-939a-4b04-a8f3-cdc4ffbd9db5)
 
-## License
+---
 
-This project is licensed under the MIT License  
-See the [LICENSE](./LICENSE) file for more info!
+### Backend
 
-
-# Backend
-
-## Requirements  
+#### Requirements  
 A mysql server on port 3306 (default) like [xampp](https://www.apachefriends.org/download.html)  
 [ElasticSearch](https://www.elastic.co/downloads/elasticsearch?tech=rtp&pg=en-elasticsearch-page&plcmt=hero&cta=eswt-24510-a) on port 9200 (default)  
 
-## Setup
+### Setup
 1. Download the node packages  
 `npm install`  
 2. Create the `.env` file based on `.env.example `  
@@ -49,15 +45,15 @@ A mysql server on port 3306 (default) like [xampp](https://www.apachefriends.org
 4. Generate a database based on prisma  
 `npx prisma db push` 
 
-### ElasticSearch
+#### ElasticSearch
 &nbsp;&nbsp;&nbsp;&nbsp; Place [our config]((https://github.com/TanyasiPills/ColorSync/blob/main/docs/elasticsearch.yml)) (or create your own) into `\config\elastisearch.yml`
 
-## Running
+### Running
 Start mysql  
 Start ElasticSearch (run `bin\elasticsearch.bat` (or `bin/elasticsearch` on Linux))  
 Start the server `npm run start`
 
-## Example Database
+### Example Database
 You can download a example database from [main/Example Database/colorsync.sql](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/colorsync.sql).  
 You can download the images for the example database from [main/Example Database/uplodas.zip](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/uploads.zip), place the uploads folder inside the zip into the backend's folder.  
 Every user's password is test  
@@ -67,14 +63,18 @@ Few emails:
 * wil@will.com
 
 
-## Note
+### Note
 The backend reindexes the entire database on startup, which is not recommended for production use.
 To disable in search/search.service.ts onModuleInit() change `await this.reindexDatabase();` to `await this.createIndex();`
 
-## Api
+### Api
 Check out the swagger documentation on /docs for the api documentation.
 
 
-## Database Model
+### Database Model
 ![database model](https://github.com/TanyasiPills/ColorSync/blob/main/Example%20Database/database%20model.png)
 
+## License
+
+This project is licensed under the MIT License  
+See the [LICENSE](./LICENSE) file for more info!
