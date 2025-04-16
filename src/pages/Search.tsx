@@ -69,10 +69,11 @@ export function Search() {
       if (json.data.length == 0 && offset){
         loadPosts()
       } 
-    } else { console.log(await result.text()) }
+    } else { console.log(await result.text()), loading = false }
   }
 
   useEffect(() => {
+    offset = 0;
     setPosts([]);
     loadPosts();
     loadUsers();
@@ -82,17 +83,19 @@ export function Search() {
     const handleScroll = () => {
       const postsSection = document.getElementById("postsSection");
       if (!postsSection) return;
+  
       const bottom = postsSection.scrollHeight - postsSection.scrollTop - postsSection.clientHeight <= 500;
-      if (bottom) {
-        if (offset != null) loadPosts();
+      if (bottom && offset !== null) {
+        loadPosts();
       }
-    }
-
+    };
+  
     const postsSection = document.getElementById("postsSection");
     if (postsSection) {
       postsSection.addEventListener("scroll", handleScroll);
+      return () => postsSection.removeEventListener("scroll", handleScroll);
     }
-  }, [])
+  }, []);  
 
   function Search(event: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(event.target.value);

@@ -43,7 +43,7 @@ function App() {
                             <Card.Text>
                                 Enjoy this <span className="rainbow-text">colorful</span> application on Android devices.
                             </Card.Text>
-                            <Button variant="primary" className="mb-2 w-100 buttons">Download</Button>
+                            <Button variant="primary" className="mb-2 w-100 buttons" as='a' href='../../public/files/app-realese.apk' download>Download</Button>
                         </Card.Body>
                     </Card>
                 </Col>
@@ -55,7 +55,7 @@ function App() {
                             <Card.Text>
                                 Enhance your workflow with our optimized desktop experience.
                             </Card.Text>
-                            <Button variant="dark" className="mb-2 w-100 buttons">Download</Button>
+                            <Button variant="dark" className="mb-2 w-100 buttons" as='a' href="../../public/files/ColorSyncSetup.msi" download>Download</Button>
                         </Card.Body>
                     </Card>
                 </Col>
